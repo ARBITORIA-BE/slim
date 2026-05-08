@@ -1,3 +1,4 @@
-// Phase 1.A에서 채워질 스키마 정의의 진입점.
-// 현재는 빈 export — Phase 1.1 이후 provider/tariff/tariff_snapshot 추가.
-export {};
+// 스키마 진입점. 새 테이블은 여기서 re-export 한다.
+// drizzle.config.ts → schema: './src/db/schema/index.ts'
+
+export * from './provider';
