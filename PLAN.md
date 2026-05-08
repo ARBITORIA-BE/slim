@@ -13,20 +13,20 @@
 
 **목표:** Pieter가 어떤 작업이든 시작할 수 있는 환경.
 
-- [ ] **0.1** 모노레포 초기화 (`pnpm init` + workspaces)
+- [x] **0.1** 모노레포 초기화 (`pnpm init` + workspaces)
   - DoD: `pnpm install`이 0 에러로 끝난다
-- [ ] **0.2** Next.js 15 (App Router) + TypeScript strict
+- [x] **0.2** Next.js 15 (App Router) + TypeScript strict
   - DoD: `pnpm typecheck` 0 에러 / strict, noUncheckedIndexedAccess 활성
-- [ ] **0.3** Tailwind 4 + shadcn/ui + 디자인 토큰
+- [x] **0.3** Tailwind 4 + shadcn/ui + 디자인 토큰
   - DoD: `<Button>`, `<Card>`, `<Input>` 3종이 `Slim` 브랜드 색으로 렌더
   - 토큰: `--color-bg`, `--color-fg`, `--color-primary`, `--color-accent` (CLAUDE.md 색상)
-- [ ] **0.4** Drizzle + Neon Postgres 연결
+- [x] **0.4** Drizzle + Neon Postgres 연결
   - DoD: `pnpm db:push`로 빈 스키마 마이그레이션 성공
-- [ ] **0.5** ESLint + Prettier + lint-staged + husky
+- [x] **0.5** ESLint + Prettier + lint-staged + husky
   - DoD: 커밋 시 자동 lint
-- [ ] **0.6** Vitest + Playwright 셋업
+- [x] **0.6** Vitest + Playwright 셋업
   - DoD: `pnpm test`, `pnpm test:e2e` 둘 다 빈 테스트로 통과
-- [ ] **0.7** `.claude/` 워크플로우 활성화 (이 문서, agents, hooks, harness)
+- [x] **0.7** `.claude/` 워크플로우 활성화 (이 문서, agents, hooks, harness)
   - DoD: `/verify-plan` 슬래시 커맨드가 응답한다
 
 **Phase 0 검증:** `pnpm harness:plan && pnpm typecheck && pnpm test`
@@ -39,7 +39,7 @@
 
 ### 1.A 스키마
 
-- [ ] **1.1** `provider` 테이블 (공급사 마스터)
+- [x] **1.1** `provider` 테이블 (공급사 마스터)
   - 필드: `id`, `country` (BE/NL/LU), `name`, `legal_name`, `vat_id`, `website`, `affiliate_status`
 - [ ] **1.2** `tariff` 테이블 (요금제)
   - 필드: `provider_id`, `category`, `name`, `currency`, `unit_price`, `fixed_fee`, `valid_from`, `valid_to`
@@ -182,14 +182,14 @@
 
 | 페이즈 | 항목 수 | 완료 | 차단 | 최종 업데이트 |
 |---|---|---|---|---|
-| 0 | 7 | 0 | 0 | — |
-| 1 | 13 | 0 | 0 | — |
+| 0 | 7 | 7 | 0 | — |
+| 1 | 13 | 1 | 0 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | — |
 | 3 | 7 | 0 | 0 | — |
 | 4 | 5 | 0 | 0 | — |
 | 5 | 6 | 0 | 0 | — |
 | 6 | 9 | 0 | 0 | — |
 | 7 | 5 | 0 | 0 | — |
-| **합계** | **61** | **0** | **0** | — |
+| **합계** | **61** | **8** | **0** | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
