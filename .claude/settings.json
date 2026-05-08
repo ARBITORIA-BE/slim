@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "claude-opus-4-7",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/prompt-context.sh",
+            "description": "사용자 메시지 처리 전 PLAN.md 현재 상태를 컨텍스트로 주입"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/pre-tool-guard.sh",
+            "description": "위험 명령(rm -rf, force push, secret 노출) 차단"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/pre-edit-baseline.sh",
+            "description": "편집 전 typecheck 베이스라인 캡처 (회귀 감지용)"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/post-edit-typecheck.sh",
+            "description": "편집 직후 영향 파일에 대한 fast typecheck"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/stop-gate.sh",
+            "description": "5단 게이트 종합 검증 — 통과 못 하면 사용자에게 보고하고 멈춤"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/subagent-handoff.sh",
+            "description": "서브에이전트 종료 시 결과를 메인 컨텍스트로 정리"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/session-start.sh",
+            "description": "세션 시작: PLAN 현재 페이즈 + 다음 미완료 항목 보고"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:e2e)",
+      "Bash(pnpm harness:*)",
+      "Bash(pnpm db:push)",
+      "Bash(pnpm db:studio)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)"
+    ],
+    "deny": [
+      "Bash(rm -rf*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)",
+      "Bash(*curl*api_key*)",
+      "Bash(*echo*SECRET*)"
+    ]
+  }
+}

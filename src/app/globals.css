@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #FAF7F2;
+  --color-bg-warm: #F2EBDD;
+  --color-fg: #1A2E29;
+  --color-fg-soft: #4A5C57;
+  --color-primary: #2D5A4F;
+  --color-accent: #E97462;
+  --color-muted: #8A958F;
+  --font-display: "Fraunces", ui-serif, serif;
+  --font-body: "Pretendard Variable", system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+}

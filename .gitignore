@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.env.local
+.env.*.local
+.claude/.baseline/
+public/reports/bias/*.json
+*.log
+.DS_Store

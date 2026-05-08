@@ -1,0 +1,78 @@
+{
+  "name": "slim",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Slim — 베네룩스 비교 플랫폼. 비교는 쉽게, 절약은 두툼하게.",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "next dev --turbo",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "preflight": "bash scripts/preflight.sh",
+    "bootstrap": "bash scripts/bootstrap.sh",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:e2e": "playwright test",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate",
+    "harness:plan": "tsx scripts/harness/verify-plan.ts",
+    "harness:data": "tsx scripts/harness/data-fidelity.ts",
+    "harness:price": "tsx scripts/harness/price-snapshot.ts",
+    "harness:bias": "tsx scripts/harness/bias-audit.ts",
+    "harness:e2e": "tsx scripts/harness/e2e-smoke.ts",
+    "harness:transparency": "tsx scripts/harness/transparency-audit.ts",
+    "harness:all": "pnpm harness:plan && pnpm harness:data && pnpm harness:bias",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "drizzle-orm": "^0.36.0",
+    "@neondatabase/serverless": "^0.10.0",
+    "@upstash/redis": "^1.34.0",
+    "inngest": "^3.27.0",
+    "zod": "^3.23.0",
+    "next-intl": "^3.20.0",
+    "tailwindcss": "^4.0.0",
+    "lucide-react": "^0.460.0",
+    "@sentry/nextjs": "^8.40.0",
+    "posthog-js": "^1.180.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "drizzle-kit": "^0.28.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0",
+    "prettier": "^3.3.0",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "jsdom": "^25.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.6.0",
+    "@playwright/test": "^1.48.0",
+    "tsx": "^4.19.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "glob": "^11.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ]
+  }
+}
