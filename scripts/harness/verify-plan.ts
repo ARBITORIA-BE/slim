@@ -33,7 +33,7 @@ async function parsePlan(path: string): Promise<PlanItem[]> {
   const items: PlanItem[] = [];
   const lines = text.split('\n');
 
-  const itemRe = /^- \[([ x~!])\] \*\*(\d+\.\d+(?:\.\d+)?)\*\* (.+)$/;
+  const itemRe = /^- \[([ x~!])\] \*\*([A-Z]\.\d+(?:\.[A-Za-z0-9]+)*|\d+(?:\.[A-Za-z0-9]+)*)\*\* (.+)$/;
   const fileRe = /`([^`]+\.(?:ts|tsx|js|jsx|sql|md))`/g;
 
   for (let i = 0; i < lines.length; i++) {

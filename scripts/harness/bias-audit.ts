@@ -82,7 +82,8 @@ async function main() {
   const stats: CategoryStat[] = [];
   const anomalies: Anomaly[] = [];
 
-  for (const row of rows as any[]) {
+  interface RankRow { category: string; total: number | string; affiliate: number | string }
+  for (const row of rows as unknown as RankRow[]) {
     const total = Number(row.total);
     const affiliate = Number(row.affiliate);
     const share = total > 0 ? affiliate / total : 0;
