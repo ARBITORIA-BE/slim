@@ -5,9 +5,19 @@
 
 set -euo pipefail
 
-# stdin으로 들어오는 JSON 파싱
+# stdin으로 들어오는 JSON 파싱 (jq 부재 환경 호환 — ADR-0002 D.2)
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // ""')
+if command -v jq >/dev/null 2>&1; then
+  COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""')
+else
+  # fallback: tool_input.command 첫 매치 추출. 이스케이프된 따옴표 처리.
+  COMMAND=$(printf '%s' "$INPUT" \
+    | grep -oE '"command"[[:space:]]*:[[:space:]]*"([^"\\]|\\.)*"' \
+    | head -1 \
+    | sed -E 's/.*"command"[[:space:]]*:[[:space:]]*"((([^"\\]|\\.)*))"/\1/' \
+    | sed 's/\\"/"/g; s/\\\\/\\/g')
+  COMMAND=${COMMAND:-}
+fi
 
 # 차단 패턴
 BLOCK_REASONS=()
