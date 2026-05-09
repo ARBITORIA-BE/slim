@@ -272,13 +272,13 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 - [ ] **1.5.3** `docs/runbook.md` 신설 — fetcher 깨졌을 때 대응 절차 (솔로
   운영용 self-rescue 체크리스트). 스텁 fetcher → 실 스크래핑 교체 가이드 포함
   (1.5.6과 연동).
-- [x] **1.5.4** `scripts/**` typecheck 복원 (P4 부채 청산). 완료 산출물:
-  (a) `tsconfig.json`의 `exclude: ["scripts/**"]` 제거 (b) `verify-plan.ts`의
-  regex match group을 `noUncheckedIndexedAccess` 정합화 (lines[i] / m[1..3] /
-  fm[1] / summaryMatch group narrowing) (c) `e2e-smoke.ts`의 playwright import
-  경로 `'playwright'` → `'@playwright/test'` (d) `bias-audit.ts`는 잔존 이슈
-  없음 (예상치 못한 통과). 결과: 9건 → 0 에러. 페이즈 1 처음으로 P4가
-  scripts/**까지 일관됨.
+- [x] **1.5.4** scripts/** typecheck 복원 (P4 부채 청산). 완료 산출물:
+  (a) `tsconfig.json`의 exclude에서 scripts/** 제거 (b) `scripts/harness/verify-plan.ts`
+  regex match group을 noUncheckedIndexedAccess 정합화 (lines[i] / m[1..3] /
+  fm[1] / summaryMatch group narrowing) (c) `scripts/harness/e2e-smoke.ts`의
+  playwright import 경로 'playwright' → '@playwright/test' (d) bias-audit는
+  잔존 이슈 없음. 결과: 9건 → 0 에러. 페이즈 1 처음으로 P4가 scripts/**까지
+  일관됨.
 - [x] **1.5.5** DB 인스턴스 일치 검증 자동화 (운영 안전 부채). 사고 근거:
   2026-05-09 — db:push가 production이 아닌 다른 Neon 브랜치(silent-darkness)
   에 적용되어 운영자가 production 브랜치 검증 시 0 tables 발견.
