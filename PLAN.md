@@ -106,8 +106,23 @@ pnpm test` + 위 DoD 모두 충족.
   - 리텐션: 90일 후 `raw_payload` + `price_payload` NULL화 — 메타 영구 보존 (T6, 1.5.2 cron 보조)
   - 결정 근거: [ADR-0006](docs/adr/0006-tariff-snapshot-schema.md) — Append-only (T1), 평탄화 5컬럼 + JSONB 미러 (T2), 정규화 JSON only (T3), confidence enum + reason (T4), anomaly 컬럼 + 비교 엔진 자동 제외 (T5), 90일 리텐션 (T6), DISTINCT ON 쿼리 (T7)
   - DoD: (1) `pnpm harness:data` Rule 4 통과 (`schema-tariff-snapshot-missing` warn 해소) (2) `pnpm db:generate`로 `drizzle/0002_eminent_sunset_bain.sql` 생성 — `CREATE TYPE confidence` + `CREATE TABLE tariff_snapshot` + FK + 인덱스 3개 (3) typecheck/lint/test 0 에러
-- [ ] **1.4** `comparison_request` (사용자 입력) — 익명 우선
-- [ ] **1.5** `comparison_result` (계산된 결과 + 사용된 스냅샷 ID 들)
+- [x] **1.4** `comparison_request` (사용자 입력) — **익명 우선 + GDPR 최소화** (ADR-0007)
+  - 파일: `src/db/schema/comparison_request.ts`
+  - 필드: `id` (uuid PK, 익명 — T1), `user_account_id` (uuid NULL — 페이즈 6 회원 결합 대비), `category` (tariff_category enum 재사용), `postal_code` (text NOT NULL — PC4), `household_type` enum (single/couple/family_3_plus), `current_provider_id` (uuid NULL → provider SET NULL), `input_attributes` (JSONB; 카테고리별 사용량 — Zod 단일 출처는 1.7에서 src/types/comparison-input.ts 신설), `created_at`, `pii_anonymized_at` (T4 cron 갱신 시각)
+  - **IP / fingerprint 컬럼 0** (헌법 §8 #1 / #5 — T5)
+  - 인덱스: `(category, postal_code)` (비교 엔진 hot path) · `(created_at)` (T4 cron) · `(user_account_id)` · `(pii_anonymized_at)`
+  - GDPR 정책: **합법근거 = Art. 6(1)(b) Contract performance** (1차) + (a) 어필리에이트 동의(페이즈 4.1) — T3. **리텐션** = 90일 후 `postal_code` PC2 일반화 + `input_attributes` NULL — T4. 1.5.2 cron 보조 작업.
+  - 결정 근거: [ADR-0007](docs/adr/0007-comparison-request-result-schema.md) — 익명 UUID (T1), 평탄화 + JSONB (T2), 합법근거 (T3), 리텐션 분리 (T4), IP 컬럼 0 (T5)
+  - DoD: (1) typecheck/lint/test 0 에러 (2) `pnpm db:generate`로 `drizzle/0003_silent_texas_twister.sql` 생성 — `CREATE TYPE household_type` + `CREATE TABLE comparison_request` + FK 1개 (provider SET NULL) + 인덱스 4개 (3) `pnpm harness:plan` + `pnpm harness:data` 통과
+- [x] **1.5** `comparison_result` (+ `comparison_result_item`) — **결과 영구 + 영구 링크** (ADR-0007)
+  - 파일: `src/db/schema/comparison_result.ts`
+  - **comparison_result** 필드: `id` (uuid PK), `request_id` (uuid NULL → comparison_request SET NULL — T8), `short_id` (text UNIQUE NOT NULL — nanoid 12자, T7), `top_monthly_saving_cents` (bigint), `top_yearly_saving_cents` (bigint), `top_tariff_snapshot_id` (uuid → tariff_snapshot RESTRICT), `locked_inputs` (JSONB — T9 90일 후 NULL), `engine_version` (text NOT NULL — 비교 엔진 1.11 버전), `created_at`, `pii_anonymized_at`
+  - **comparison_result_item** 필드 (1:N): `id`, `result_id` (uuid → comparison_result CASCADE), `rank` (integer NOT NULL), `tariff_snapshot_id` (uuid → tariff_snapshot RESTRICT), `monthly_saving_cents` (bigint NOT NULL), `yearly_saving_cents` (bigint NOT NULL), `caveats` (text[] — PLAN 1.13), `created_at`
+  - 인덱스: result `short_id` UNIQUE (영구 링크 lookup) · `(request_id)` · `(created_at)` (B2B 집계) · `(pii_anonymized_at)` ; item `(result_id, rank)` · `(tariff_snapshot_id)` (역추적)
+  - 영구 링크: `/r/[short_id]` (PLAN 3.6). nanoid 12 × alphabet 36 → 36^12 ≈ 4.7e18 공간.
+  - GDPR 정책: result 자체 **영구 보존** (영구 링크 + B2B Insights M24+). `locked_inputs` PII 파생물은 90일 후 NULL — T9.
+  - 결정 근거: [ADR-0007](docs/adr/0007-comparison-request-result-schema.md) — 1:N 자식 테이블 (T6), nanoid shortId (T7), requestId nullable+SET NULL (T8), lockedInputs 분리 + 90일 NULL (T9)
+  - DoD: (1) typecheck/lint/test 0 에러 (2) `pnpm db:generate`로 `drizzle/0003_silent_texas_twister.sql` 에 `CREATE TABLE comparison_result` + `CREATE TABLE comparison_result_item` + FK 4개 + 인덱스 6개 포함 (3) `nanoid` 의존 추가 (`pnpm add nanoid`) (4) `pnpm harness:plan` 통과
 
 ### 1.B 데이터 수집
 
@@ -154,6 +169,13 @@ pnpm test` + 위 DoD 모두 충족.
   파싱 helper)
 - [ ] **1.5.2** `pnpm harness:price` (가격 스냅샷 diff) 첫 가동 — 일 1회 cron
   + Sentry 알림 임계값 설정
+  - **보조 작업 1 (ADR-0006 §T6)**: 90일 초과 `tariff_snapshot.raw_payload` +
+    `price_payload` NULL화
+  - **보조 작업 2 (ADR-0007 §T4)**: 90일 초과 `comparison_request` 의
+    `postal_code` PC2 일반화 + `input_attributes` NULL → `pii_anonymized_at`
+    스탬프
+  - **보조 작업 3 (ADR-0007 §T9)**: 90일 초과 `comparison_result.locked_inputs`
+    NULL → `pii_anonymized_at` 스탬프
 - [ ] **1.5.3** `docs/runbook.md` 신설 — fetcher 깨졌을 때 대응 절차 (솔로
   운영용 self-rescue 체크리스트)
 - [ ] **1.5.4** `scripts/**` typecheck 복원 (P4 부채) — `tsconfig.json`의
@@ -347,7 +369,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
-| 1 | 13 | 3 | 0 | M1 ~ M3 | 2026-05-09 |
+| 1 | 13 | 5 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 4 | 0 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
@@ -357,7 +379,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 6 | 0 | 0 | M17 ~ M21 (조건부) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **76** | **11** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **76** | **13** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

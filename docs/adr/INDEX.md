@@ -15,6 +15,7 @@
 | [ADR-0004](0004-monetization-solo-side-rebalance.md) | MONETIZATION.md 솔로 사이드 재조정 — €0 인건비, €300 인프라 cap, 보수적 매출 가정 | Accepted | 2026-05-09 |
 | [ADR-0005](0005-tariff-schema-telecom.md) | `tariff` 테이블 스키마 (통신 BE) | Proposed | 2026-05-09 |
 | [ADR-0006](0006-tariff-snapshot-schema.md) | `tariff_snapshot` 테이블 스키마 (가격 시계열) | Proposed | 2026-05-09 |
+| [ADR-0007](0007-comparison-request-result-schema.md) | `comparison_request` + `comparison_result` 스키마 (GDPR + 익명성 + 영구 링크) | Proposed | 2026-05-09 |
 
 ---
 
@@ -67,3 +68,11 @@
 **요약**: PLAN 1.3 세 번째 테이블. ADR-0005 §결정 5(T5)의 마스터/스냅샷 분리 원칙을 직접 받아 *시계열 단독* 책임. **7개 결정 (T1~T7)**: (T1) Append-only insert — upsert/라운딩 없음, P3 사후 분석 가능. (T2) 평탄화 5컬럼 (monthly/activation/modem/promo) + JSONB `price_payload` 미러 — 비교 엔진 hot path 평탄화 + 진화 흡수. (T3) `raw_payload` = 정규화 JSON only (HTML 단편 X) — Neon free 0.5 GB 한계 대응. (T4) `confidence` 3값 enum + `confidence_reason` 텍스트 — UI 색상 매핑 + 운영자 자가 진단. (T5) `is_anomaly` boolean + `anomaly_reason` 텍스트, 1.5.2 harness:price 워커가 마킹, 비교 엔진 `NOT is_anomaly AND confidence != 'low'` 강제. (T6) 90일 후 `raw_payload` + `price_payload` NULL화 (메타 영구 보존), 1.5.2 cron 보조. (T7) `(tariff_id, fetched_at DESC)` 복합 인덱스 + DISTINCT ON 쿼리 — 마스터에 `current_snapshot_id` 추가 거부 (ADR-0005 §T5 분리 유지).
 
 **영향**: PLAN 1.3 원안 5필드를 15컬럼으로 재정의. `harness:data` Rule 4 warn → 통과. 1.5.2 `harness:price` 워커 알고리즘의 출발점. 1.11 비교 엔진의 "최신 스냅샷" 쿼리 패턴 결정. 결과 페이지 3.5 계산 근거 펼치기의 영구 추적 보장.
+
+### [ADR-0007: `comparison_request` + `comparison_result` 스키마 (GDPR + 익명성 + 영구 링크)](0007-comparison-request-result-schema.md)
+
+**상태**: Proposed (verifier 통과 후 Accepted로 격상 예정 — 단 §Legal review pending 의 T3/T9는 베타 직전 또는 M16 게이트에서 외부 감사 권장)
+
+**요약**: PLAN 1.4 + 1.5 두 테이블 동시 결정. FK + GDPR + 영구 링크가 얽혀 분리 설계 시 일관성이 깨지는 구조. **10개 결정 (T1~T10)**: (T1) 익명 UUID PK + `userAccountId` NULL 미리 (페이즈 6 회원 결합 대비, 세션 fingerprint 컬럼 0). (T2) 평탄화 4 + JSONB `inputAttributes` — Zod 단일 출처 `src/types/comparison-input.ts`. (T3) 합법근거 = **GDPR Art. 6(1)(b) Contract performance** (1차) + (a) Consent (어필리에이트 리다이렉트) — EDPB Guidelines 1/2024 / 2/2019 인용. (T4) 리텐션 분리 — request의 PII는 90일 후 PC2 일반화 + inputAttributes NULL, result는 영구 (영구 링크 + B2B Insights 호환). (T5) IP / fingerprint 컬럼 0 (헌법 §8 #1 / #5). (T6) `comparison_result` (1) ↔ `comparison_result_item` (N) — PLAN 3.2 비교 표 자연 매핑. (T7) 영구 링크 = nanoid 12자 (alphabet 36 × 12 = 4.7e18 공간). (T8) `requestId` nullable + `ON DELETE SET NULL` — GDPR 삭제 후에도 익명 결과 페이지 보존. (T9) `lockedInputs` JSONB = PII 파생물 봉인 + 90일 후 NULL. (T10) 비교 엔진 호출 = 동기 + 5초 timeout (Inngest 무료 티어 보호 + P2 5분 UX).
+
+**영향**: PLAN 1.4 (5필드 → 10컬럼) + 1.5 (2테이블, 18컬럼 + 5 FK) 재정의. 1.5.2 cron에 90일 PII 일반화 보조 작업 3개 추가. 1.11 비교 엔진의 입출력 모양 / 1.13 caveats 메커니즘 / 3.5 계산 근거 / 3.6 영구 링크 / 4.1 어트리뷰션 (별도 ADR) / 6.4 GDPR 도구 / MONETIZATION D B2B Insights (M24+) 호환성을 한 번에 결정. **Legal review pending**: T3 합법근거 (Contract vs Legitimate interest 외부 견해) + T9 결과의 PII 판정 (Recital 26 익명 분류) — 베타 직전 또는 M16 게이트.

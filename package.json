@@ -39,6 +39,7 @@
     "drizzle-orm": "^0.36.0",
     "inngest": "^3.27.0",
     "lucide-react": "^0.460.0",
+    "nanoid": "^5.1.11",
     "next": "^15.0.0",
     "next-intl": "^3.20.0",
     "posthog-js": "^1.180.0",
