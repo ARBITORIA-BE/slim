@@ -278,13 +278,14 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   import 경로 정리 (c) `bias-audit.ts` 잔존 type 이슈 정리. 9건 미만의 타입
   에러로 추정. 페이즈 1 진행 중에는 의도적으로 미뤄 둠 — 솔로 사이드 컨텍스트
   (FOUNDER.md) + 시간 배분 우선순위.
-- [ ] **1.5.5** DB 인스턴스 일치 검증 자동화 (운영 안전 부채). 사고 근거:
-  2026-05-09 — db:push가 production이 아닌 다른 Neon 브랜치에 적용되어 운영자가
-  production 브랜치 검증 시 0 tables 발견. scripts/verify-db.ts 작성 + 강화 완료
-  (host/endpoint 노출). 후속 작업: (a) verify-db.ts를 `pnpm verify:db` 스크립트로
-  package.json 등록 (b) stop-gate.sh 또는 CI에 통합해 매 커밋 전 host 일치 확인
-  (c) `.env.local.expected_host` 같은 *기대 host* 메모를 두고 verify-db.ts가
-  실제 host와 비교 — 불일치 시 게이트 실패. 페이즈 1.5 진입 시 실행.
+- [x] **1.5.5** DB 인스턴스 일치 검증 자동화 (운영 안전 부채). 사고 근거:
+  2026-05-09 — db:push가 production이 아닌 다른 Neon 브랜치(silent-darkness)
+  에 적용되어 운영자가 production 브랜치 검증 시 0 tables 발견.
+  완료 산출물: (a) `scripts/verify-db.ts` (host/endpoint 노출 + 기대값 비교)
+  (b) `pnpm verify:db` package.json 스크립트 등록 (c) `EXPECTED_DB_ENDPOINT`
+  env var를 `.env.local`/`.env.example`에 추가 — verify-db.ts가 actual과 비교,
+  불일치 시 exit 1 (d) `scripts/hooks/stop-gate.sh`에 Gate 5로 통합 (`.env.local`
+  부재 시 스킵해 CI 안전). 양방향 검증 완료 (일치=pass, 미스매치=exit 1).
 - [ ] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
   교체). PLAN 1.8 스텁 fetcher의 후속 부채.
   - `src/fetchers/proximus.ts`: 실 HTML fetch + 셀렉터 추출 로직. AbortController
@@ -488,7 +489,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 6 | 0 | 0 | M3 말 | 2026-05-09 |
+| 1.5 | 6 | 1 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
@@ -497,7 +498,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **79** | **21** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **79** | **22** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
