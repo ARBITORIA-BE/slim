@@ -8,6 +8,13 @@
       "when": 1778278146017,
       "tag": "0000_amusing_cyclops",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778323477184,
+      "tag": "0001_mighty_husk",
+      "breakpoints": true
     }
   ]
 }

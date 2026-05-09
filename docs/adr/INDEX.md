@@ -13,6 +13,7 @@
 | [ADR-0002](0002-build-gate-ownership.md) | Build gate 책임 분리 + Hook jq fallback 통일 | Accepted (+ Amendment 1) | 2026-05-09 |
 | [ADR-0003](0003-plan-realism-solo-side.md) | PLAN.md 리얼리즘 패스 — 솔로 사이드 + 카테고리 우선순위 + 운영 부채 트랙 | Accepted | 2026-05-09 |
 | [ADR-0004](0004-monetization-solo-side-rebalance.md) | MONETIZATION.md 솔로 사이드 재조정 — €0 인건비, €300 인프라 cap, 보수적 매출 가정 | Accepted | 2026-05-09 |
+| [ADR-0005](0005-tariff-schema-telecom.md) | `tariff` 테이블 스키마 (통신 BE) | Proposed | 2026-05-09 |
 
 ---
 
@@ -49,3 +50,11 @@
 **요약**: 풀타임 4명 가정의 비용 모델(M3 €15K, M6 €45K, M12 €90K)을 솔로 사이드 €300/월 cap으로 재조정. **8개 결정**: (1) 인건비 €0 (사이드 전제). (2) 인프라 €300/월 cap, 무료 티어 한계 도달 시점 + 격상 트리거 명시. (3) 법무 자체(legal 에이전트) + 베타 직전 1회 외부 감사 €800. (4) 매출 가정 50% 다운 — M12 €1,800, M16 €3,750, M24 €15,400. (5) Slim Plus 시작 시점 페이즈 6 → M18+ 이연. (6) 시드 모금 M24+ 이연, Vlaio/LU 그랜트 TVA 직후 1주 결정. (7) Slim Insights B2B M24+ 이연. (8) `docs/MONETIZATION-ACTUALS.md` 신설 (분기 자동 갱신).
 
 **영향**: MONETIZATION.md 비용/매출/마일스톤 게이트 재조정. **net positive 진입 시점 M6 → M8** (인건비 €0 효과로 더 빠름, 단 절대 매출 1/15~1/20 작음). ADR-0003과 짝. 회귀 트리거: 분기별 실제 비용/매출이 가정 ±50% 차이 시 Amendment.
+
+### [ADR-0005: `tariff` 테이블 스키마 (통신 BE)](0005-tariff-schema-telecom.md)
+
+**상태**: Proposed (verifier 통과 후 Accepted로 격상 예정)
+
+**요약**: PLAN 1.2 두 번째 테이블. 통신 BE(모바일/인터넷/번들/유선) 한정. **6개 결정 (T1~T6)**: (T1) 단일 테이블 + JSONB `attributes` — 솔로 디버깅 용이성. (T2) 가격은 BIGINT cents — 1.12 ±0.01€ DoD 수학적 보장. (T3) `commitment_months INT` (0=없음) + `early_termination_fee_cents NULL`. (T4) 프로모는 평탄화 (`promo_price_cents`/`promo_months`/`promo_description`) — 어트리뷰션 단순화. (T5) `tariff` = 마스터 (`is_active`, `last_seen_at`), 시계열은 1.3 `tariff_snapshot` 단독. (T6) `tariff_category` enum 4값 (`mobile`, `internet_fixed`, `bundle_internet_tv`, `landline`).
+
+**영향**: PLAN 1.2 원안 필드(`unit_price/fixed_fee/valid_from/valid_to`)를 통신 가정으로 재정의. 1.3 `tariff_snapshot`은 시계열만 책임. 1.7 fetcher 인터페이스 / 1.11 비교 엔진 / 1.12 12 케이스 / 4.1 `affiliate_click.tariff_id`의 모양을 결정.
