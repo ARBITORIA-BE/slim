@@ -37,8 +37,13 @@ async function parsePlan(path: string): Promise<PlanItem[]> {
   const fileRe = /`([^`]+\.(?:ts|tsx|js|jsx|sql|md))`/g;
 
   for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(itemRe);
-    if (!m) continue;
+    // noUncheckedIndexedAccess: lines[i]는 string | undefined.
+    // 빈 라인은 스킵, 비-undefined는 narrowing 후 사용.
+    const line = lines[i];
+    if (!line) continue;
+    const m = line.match(itemRe);
+    // capturing group 3개가 모두 매치되어야만 itemRe 자체가 매치됨 — m[1..3] 정의 보장.
+    if (!m || m[1] === undefined || m[2] === undefined || m[3] === undefined) continue;
     const item: PlanItem = {
       id: m[2],
       status: m[1] as PlanItem['status'],
@@ -47,10 +52,12 @@ async function parsePlan(path: string): Promise<PlanItem[]> {
     };
     // 다음 인덴트 라인에서 파일 경로 추출
     for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
-      if (!lines[j].startsWith('  ')) break;
+      const subLine = lines[j];
+      if (!subLine || !subLine.startsWith('  ')) break;
       let fm;
-      while ((fm = fileRe.exec(lines[j])) !== null) {
-        item.expectedFiles!.push(fm[1]);
+      while ((fm = fileRe.exec(subLine)) !== null) {
+        // fileRe의 group 1은 정의 보장 (괄호 안 캡처가 매치 조건)
+        if (fm[1] !== undefined) item.expectedFiles!.push(fm[1]);
       }
     }
     items.push(item);
@@ -90,7 +97,12 @@ async function main() {
   const text = await readFile('PLAN.md', 'utf-8');
   const summaryMatch = text.match(/\*\*합계\*\* \| \*\*(\d+)\*\* \| \*\*(\d+)\*\*/);
   if (summaryMatch) {
+    // 정규식 괄호 2개 모두 \d+ 강제이므로 매치 시 group 1/2 정의 보장.
+    // noUncheckedIndexedAccess는 보수적이라 narrowing 필요.
     const [, totalStr, doneStr] = summaryMatch;
+    if (totalStr === undefined || doneStr === undefined) {
+      throw new Error('summaryMatch 형식 비정상 — verify-plan 룰 갱신 필요');
+    }
     const expectedTotal = items.length;
     const expectedDone = items.filter((i) => i.status === 'x').length;
     if (parseInt(totalStr) !== expectedTotal) {

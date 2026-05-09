@@ -272,12 +272,13 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 - [ ] **1.5.3** `docs/runbook.md` 신설 — fetcher 깨졌을 때 대응 절차 (솔로
   운영용 self-rescue 체크리스트). 스텁 fetcher → 실 스크래핑 교체 가이드 포함
   (1.5.6과 연동).
-- [ ] **1.5.4** `scripts/**` typecheck 복원 (P4 부채) — `tsconfig.json`의
-  `exclude: ["scripts/**"]` 제거. 선결 작업: (a) `verify-plan.ts`의 regex match
-  group을 `noUncheckedIndexedAccess` 정합화 (b) `e2e-smoke.ts`의 playwright 타입
-  import 경로 정리 (c) `bias-audit.ts` 잔존 type 이슈 정리. 9건 미만의 타입
-  에러로 추정. 페이즈 1 진행 중에는 의도적으로 미뤄 둠 — 솔로 사이드 컨텍스트
-  (FOUNDER.md) + 시간 배분 우선순위.
+- [x] **1.5.4** `scripts/**` typecheck 복원 (P4 부채 청산). 완료 산출물:
+  (a) `tsconfig.json`의 `exclude: ["scripts/**"]` 제거 (b) `verify-plan.ts`의
+  regex match group을 `noUncheckedIndexedAccess` 정합화 (lines[i] / m[1..3] /
+  fm[1] / summaryMatch group narrowing) (c) `e2e-smoke.ts`의 playwright import
+  경로 `'playwright'` → `'@playwright/test'` (d) `bias-audit.ts`는 잔존 이슈
+  없음 (예상치 못한 통과). 결과: 9건 → 0 에러. 페이즈 1 처음으로 P4가
+  scripts/**까지 일관됨.
 - [x] **1.5.5** DB 인스턴스 일치 검증 자동화 (운영 안전 부채). 사고 근거:
   2026-05-09 — db:push가 production이 아닌 다른 Neon 브랜치(silent-darkness)
   에 적용되어 운영자가 production 브랜치 검증 시 0 tables 발견.
@@ -489,7 +490,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 6 | 1 | 0 | M3 말 | 2026-05-09 |
+| 1.5 | 6 | 2 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
@@ -498,7 +499,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **79** | **22** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **79** | **23** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
