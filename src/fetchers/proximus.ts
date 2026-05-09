@@ -32,13 +32,12 @@
  */
 
 import type { Fetcher, FetchOutcome } from './types';
-import { computeConfidence, checkMonthlySanity } from './confidence';
+import { checkMonthlySanity } from './confidence';
+import { makeStubConfidence, stubFailOutcome, STUB_REASON } from './_shared';
 
 // ─── 스텁 상수 ────────────────────────────────────────────────────────────
 
 const FETCHER_VERSION = 'proximus-be@2026-05-09';
-const STUB_REASON =
-  'stub fetcher — manual data 2026-05-09; replace with real scraper (PLAN 1.5.6)';
 
 /**
  * Proximus 공식 모바일 요금제 마스터 페이지.
@@ -53,28 +52,7 @@ const MOBILE_SOURCE_URL =
 const INTERNET_SOURCE_URL =
   'https://www.proximus.be/en/personal/products/internet/home-internet.html';
 
-// ─── Confidence 계산 (스텁은 항상 low) ──────────────────────────────────
-
-/**
- * 스텁 fetcher의 confidence는 ADR-0008 §T3 down-grade override로 항상 'low'.
- *
- * 왜 computeConfidence를 통과시키고도 low를 반환하는가?
- *   computeConfidence는 '실 스크래핑'의 sanity 체크 기반 판단이다.
- *   스텁은 실 HTTP fetch가 없으니 selectorMatched=false → 이미 low.
- *   명시적으로 down-grade를 선언해 의도를 코드에 새긴다.
- */
-function makeStubConfidence() {
-  // selectorMatched=false: 실 셀렉터 매칭이 없었으므로 기본값 low
-  const base = computeConfidence({
-    selectorMatched: false, // 스텁: 실 fetch 없음 → 셀렉터 매칭 없음
-    sanityChecks: [],
-    parseWarnings: [],
-  });
-  // down-grade only 규칙 준수: base가 이미 low이므로 override 불필요
-  return base;
-}
-
-// ─── Fetcher 구현 ─────────────────────────────────────────────────────────
+// ─── Fetcher 구현 (공통 helper는 _shared.ts) ────────────────────────────────
 
 export const proximus: Fetcher = {
   metadata: {
@@ -95,25 +73,14 @@ export const proximus: Fetcher = {
     const fetchedAt = new Date().toISOString();
 
     // ─── STUB_FAIL 환경변수 처리 (1.9 격리 수동 검증용) ───────────────────
-    // STUB_FAIL_PROXIMUS=1 시 실패 outcome 반환.
-    // 운영에서는 절대 설정하지 않는다 (테스트/디버깅 전용).
-    if (process.env['STUB_FAIL_PROXIMUS'] === '1') {
-      return {
-        ok: false,
-        error: {
-          fetcherSlug: 'proximus-be',
-          fetchedAt,
-          kind: 'network',
-          message:
-            'STUB_FAIL_PROXIMUS=1: simulated failure for 1.9 isolation testing',
-          rawPayload: {
-            stub: true,
-            fetcher_version: FETCHER_VERSION,
-            simulated_failure: true,
-          },
-        },
-      };
-    }
+    // _shared.ts의 stubFailOutcome 헬퍼 사용. 운영에서는 절대 설정하지 않는다.
+    const failure = stubFailOutcome(
+      'proximus-be',
+      'STUB_FAIL_PROXIMUS',
+      FETCHER_VERSION,
+      fetchedAt,
+    );
+    if (failure) return failure;
 
     // ─── 실 fetch 준비 코드 (현재 비활성 — 1.5.6에서 활성화) ───────────────
     // const controller = new AbortController();
