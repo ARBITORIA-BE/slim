@@ -2,3 +2,4 @@
 // drizzle.config.ts → schema: './src/db/schema/index.ts'
 
 export * from './provider';
+export * from './tariff';

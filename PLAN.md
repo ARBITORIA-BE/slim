@@ -97,8 +97,9 @@ pnpm test` + 위 DoD 모두 충족.
 
 - [x] **1.1** `provider` 테이블 (공급사 마스터)
   - 필드: `id`, `country` (BE/NL/LU), `name`, `legal_name`, `vat_id`, `website`, `affiliate_status`
-- [ ] **1.2** `tariff` 테이블 (요금제)
-  - 필드: `provider_id`, `category`, `name`, `currency`, `unit_price`, `fixed_fee`, `valid_from`, `valid_to`
+- [x] **1.2** `tariff` 테이블 (요금제) — **통신 BE 가정** (ADR-0005)
+  - 필드: `provider_id`, `category` (mobile/internet_fixed/bundle_internet_tv/landline), `name`, `slug`, `currency` (EUR), `monthly_price_cents` (BIGINT), `activation_fee_cents`, `modem_rental_cents`, `commitment_months` (0=없음), `early_termination_fee_cents`, `promo_price_cents`, `promo_months`, `promo_description`, `attributes` (JSONB; 카테고리별 변동 속성 — Zod 검증), `is_active`, `last_seen_at`, `source_url`
+  - 결정 근거: [ADR-0005](docs/adr/0005-tariff-schema-telecom.md) — 단일 테이블 + JSONB attributes (T1), BIGINT cents (T2), 시계열은 1.3 단독 (T5)
 - [ ] **1.3** `tariff_snapshot` (가격 시계열)
   - 필드: `tariff_id`, `fetched_at`, `source_url`, `raw_payload` (jsonb), `confidence` (high/medium/low)
 - [ ] **1.4** `comparison_request` (사용자 입력) — 익명 우선
@@ -336,7 +337,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
-| 1 | 13 | 1 | 0 | M1 ~ M3 | 2026-05-09 |
+| 1 | 13 | 2 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 3 | 0 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
@@ -346,7 +347,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 6 | 0 | 0 | M17 ~ M21 (조건부) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **75** | **9** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **75** | **10** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
