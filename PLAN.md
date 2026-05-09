@@ -153,12 +153,31 @@ pnpm test` + 위 DoD 모두 충족.
   - 결정 근거: [ADR-0008](docs/adr/0008-fetcher-interface-and-cron.md) §T1 (고정 모양 + 배열), §T2 (1 fetcher = 1 provider), §T3 (confidence 휴리스틱 + down-grade), §T4 (discriminated union), §T5 (metadata + registry 양립)
   - 1.8과 함께 신설 예정: `src/types/tariff-attributes.ts` (Zod, attributes 단일 출처) + `src/fetchers/confidence.ts` (computeConfidence 휴리스틱)
   - DoD: (1) typecheck/lint/test 0 에러 (2) `pnpm harness:data` Rule 1 통과 (`FetchResult` 식별자 보존) (3) `src/fetchers/types.test.ts` ≥4 테스트 (FetcherMetadata, TariffSnapshotInput mobile/internet, FetchResult, FetchOutcome union)
-- [ ] **1.8** Fetcher 3개 실 구현 (**통신 BE — 모바일/인터넷**):
-  - Proximus / Orange BE / Telenet
-  - 각 fetcher에 단위 테스트
-  - **scope cut 옵션 A**: 첫 출시는 2개 (Proximus + Telenet)로 축소 가능
+- [ ] **1.8** Fetcher **2개** 실 구현 (**통신 BE — 모바일/인터넷**) — scope cut
+  옵션 A 적용 ([ADR-0009](docs/adr/0009-scope-cut-fetcher-2-providers.md))
+  - **Proximus / Telenet** (BE 시장 합산 ≥ 75% 점유 — Telecompaper Q1 2025;
+    Proximus ~43% + Telenet ~32%)
+  - **Orange BE는 페이즈 5에서 평가 후 추가** (베타 `/data-sources` Orange BE
+    CTA click ≥ 20% 또는 운영자 판단 — ADR-0009 §검증 2)
+  - 파일: `src/fetchers/proximus.ts`, `src/fetchers/telenet.ts` (ADR-0008
+    `Fetcher` 객체 export + `src/fetchers/index.ts` registry 추가)
+  - 단위 테스트 2개: `src/fetchers/proximus.test.ts`, `src/fetchers/telenet.test.ts`
+  - 1.8과 함께 신설: `src/types/tariff-attributes.ts` (Zod, ADR-0005 §결정 1) +
+    `src/fetchers/confidence.ts` (computeConfidence, ADR-0008 §T3)
+  - DoD: (1) typecheck/lint/test 0 에러 (2) `pnpm dev` + Inngest devserver에서
+    `fetchers/run.requested` 수동 발사 시 2 fetcher 모두 ok 응답 (3) Inngest UI
+    에서 step run 카운트 ≤ 4/cron 확인 (4) `pnpm harness:data` Rule 1 통과
+    유지 (`FetchResult` 식별자 보존) (5) Neon DB에 `tariff_snapshot` 행 2
+    fetcher × N tariff 누적 확인
 - [ ] **1.9** Fetcher 실패 격리 (1개 실패해도 나머지는 진행)
-- [ ] **1.10** **투명성 페이지**: `/data-sources` — 모든 공급사 + 마지막 수집 시각 + 수집 방법 (API/스크래핑/수동) 공개
+- [ ] **1.10** **투명성 페이지**: `/data-sources` — 모든 공급사 + 마지막 수집
+  시각 + 수집 방법 (API/스크래핑/수동) 공개
+  - **제외 공급사 섹션** (헌법 P3 — "비교에서 제외된 공급사도 이름 밝힘"):
+    - **Orange BE** — "페이즈 5에서 평가 후 추가 예정" (ADR-0009). 베타
+      사용자 신호 수집용 **"Orange BE 비교 요청"** CTA 노출 → click event
+      측정 (ADR-0009 §검증 2: ≥ 20% 시 페이즈 5 우선)
+    - 기타 비교 불가 공급사도 동일 형식으로 노출 (`provider.excluded_reason`
+      필드 직접 표시 — ADR-0001)
 
 ### 1.C 비교 엔진
 
@@ -172,8 +191,10 @@ pnpm test` + 위 DoD 모두 충족.
 
 **Phase 1 검증:** `pnpm harness:data` — 모든 `tariff_snapshot`이 `source_url` + `fetched_at` 가짐.
 **Phase 1 현실 일정:** M1 ~ M3 (3개월). 합리화 근거: 스키마 4개 신설(1.2~1.5)은
-1주, fetcher 3개 × 평균 1주(스크래핑/파싱/단위 테스트) = 3주, 비교 엔진 + 12케이스
-실 청구서 수집 = 4주, 운영 부채 + 갑작스런 라이브러리 호환성 = +2주 버퍼.
+1주, fetcher **2개** × 평균 1주(스크래핑/파싱/단위 테스트) = **2주** (ADR-0009
+scope cut), 비교 엔진 + 12케이스 실 청구서 수집 = 4주, 운영 부채 + 갑작스런
+라이브러리 호환성 = +2주 버퍼. **fetcher -1주 마진은 1.12 청구서 수집 또는
+페이즈 1.5 부채에 흡수**.
 
 ---
 
@@ -182,8 +203,9 @@ pnpm test` + 위 DoD 모두 충족.
 **목표:** 페이즈 1에서 누적된 부채(=fetcher 마다 생긴 hack, 임시 type assertion,
 미작성 README)를 닫고 페이즈 2 진입.
 
-- [ ] **1.5.1** Fetcher 코드 공통화 — 3개 fetcher의 중복 추출 (HTTP retry, html
-  파싱 helper)
+- [ ] **1.5.1** Fetcher 코드 공통화 — **2개** fetcher의 중복 추출 (HTTP retry,
+  html 파싱 helper). N=2 표본은 패턴 검출이 약하므로 **추출 후보가 충분치
+  않으면 대기** — Orange BE 페이즈 5 추가(N=3) 시 재진입 가능 (ADR-0009 §결정 3)
 - [ ] **1.5.2** `pnpm harness:price` (가격 스냅샷 diff) 첫 가동 — 일 1회 cron
   + Sentry 알림 임계값 설정
   - **보조 작업 1 (ADR-0006 §T6)**: 90일 초과 `tariff_snapshot.raw_payload` +
@@ -282,6 +304,9 @@ pnpm test` + 위 DoD 모두 충족.
 - [ ] **4.6** **베타 모집** — Antwerpen / Brussels / Luxembourg 시티에서 100명
   - 채널: 한인 커뮤니티(Korean Society BE/NL/LU), Reddit r/belgium, salair-plus.com
     링크 (운영자 기존 자산), 한국어 트위터/스레드
+  - **모집 카피의 정직성 (헌법 P3 + ADR-0009)**: "현재 BE 시장 ≥ 75% 점유 2개
+    공급사(Proximus + Telenet)를 깊이 비교 중. Orange BE는 다음 페이즈에서
+    추가." 솔로 신생 사이트의 *비교 좁은 폭 + 깊은 신뢰* 포지셔닝과 일관.
   - **scope cut 옵션 E**: 50명으로 축소 가능 (피드백 신호엔 충분)
 - [ ] **4.7** 피드백 1주 + 반영
 - [ ] **4.8** PR 매체 컨택 (베타 후) — De Tijd / FD / Tech.eu / Bright / Trends
@@ -324,6 +349,10 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 
 ### 5.A 다음 카테고리 후보 (우선순위)
 
+- [ ] **5.0** **Orange BE fetcher 추가** (ADR-0009 §결정 1) — 페이즈 4 베타
+  `/data-sources` "Orange BE 비교 요청" CTA click ≥ 20% 시 우선. `src/fetchers/
+  orange-be.ts` 신설 (ADR-0008 인터페이스 그대로) + `src/fetchers/orange-be.test.ts`
+  + registry 1줄 추가. 추가 코드 ≈ 1주.
 - [ ] **5.1** **에너지 BE** (M17 ~ M19 예상) — 통신 fetcher/엔진 재사용 가능,
   벤치마크(CREG 인증 도구) 분석 후 차별화 포인트(투명성 KPI, 가격 시계열
   그래프)로 진입
@@ -393,10 +422,10 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
-| 5 | 6 | 0 | 0 | M17 ~ M21 (조건부) | 2026-05-09 |
+| 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **76** | **15** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **77** | **15** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
@@ -407,7 +436,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 
 ### Scope cut 옵션 (사용자 승인 후 적용)
 
-- 옵션 A: 1.8 fetcher 3개 → 2개 (Proximus + Telenet)
+- 옵션 A: 1.8 fetcher 3개 → 2개 (Proximus + Telenet) — **적용됨 (ADR-0009, 2026-05-09)**
 - 옵션 B: 1.12 알려진 케이스 12개 → 6개
 - 옵션 C: 2.5 OCR을 페이즈 2 → 페이즈 5로 미룸 (1-2개월 단축, 권장)
 - 옵션 D: 3.7 인쇄 뷰를 페이즈 3 → 페이즈 6으로 미룸
