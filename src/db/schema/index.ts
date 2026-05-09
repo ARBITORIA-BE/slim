@@ -3,3 +3,4 @@
 
 export * from './provider';
 export * from './tariff';
+export * from './tariff_snapshot';

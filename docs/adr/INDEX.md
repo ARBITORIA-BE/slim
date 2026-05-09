@@ -14,6 +14,7 @@
 | [ADR-0003](0003-plan-realism-solo-side.md) | PLAN.md 리얼리즘 패스 — 솔로 사이드 + 카테고리 우선순위 + 운영 부채 트랙 | Accepted | 2026-05-09 |
 | [ADR-0004](0004-monetization-solo-side-rebalance.md) | MONETIZATION.md 솔로 사이드 재조정 — €0 인건비, €300 인프라 cap, 보수적 매출 가정 | Accepted | 2026-05-09 |
 | [ADR-0005](0005-tariff-schema-telecom.md) | `tariff` 테이블 스키마 (통신 BE) | Proposed | 2026-05-09 |
+| [ADR-0006](0006-tariff-snapshot-schema.md) | `tariff_snapshot` 테이블 스키마 (가격 시계열) | Proposed | 2026-05-09 |
 
 ---
 
@@ -58,3 +59,11 @@
 **요약**: PLAN 1.2 두 번째 테이블. 통신 BE(모바일/인터넷/번들/유선) 한정. **6개 결정 (T1~T6)**: (T1) 단일 테이블 + JSONB `attributes` — 솔로 디버깅 용이성. (T2) 가격은 BIGINT cents — 1.12 ±0.01€ DoD 수학적 보장. (T3) `commitment_months INT` (0=없음) + `early_termination_fee_cents NULL`. (T4) 프로모는 평탄화 (`promo_price_cents`/`promo_months`/`promo_description`) — 어트리뷰션 단순화. (T5) `tariff` = 마스터 (`is_active`, `last_seen_at`), 시계열은 1.3 `tariff_snapshot` 단독. (T6) `tariff_category` enum 4값 (`mobile`, `internet_fixed`, `bundle_internet_tv`, `landline`).
 
 **영향**: PLAN 1.2 원안 필드(`unit_price/fixed_fee/valid_from/valid_to`)를 통신 가정으로 재정의. 1.3 `tariff_snapshot`은 시계열만 책임. 1.7 fetcher 인터페이스 / 1.11 비교 엔진 / 1.12 12 케이스 / 4.1 `affiliate_click.tariff_id`의 모양을 결정.
+
+### [ADR-0006: `tariff_snapshot` 테이블 스키마 (가격 시계열)](0006-tariff-snapshot-schema.md)
+
+**상태**: Proposed (verifier 통과 후 Accepted로 격상 예정)
+
+**요약**: PLAN 1.3 세 번째 테이블. ADR-0005 §결정 5(T5)의 마스터/스냅샷 분리 원칙을 직접 받아 *시계열 단독* 책임. **7개 결정 (T1~T7)**: (T1) Append-only insert — upsert/라운딩 없음, P3 사후 분석 가능. (T2) 평탄화 5컬럼 (monthly/activation/modem/promo) + JSONB `price_payload` 미러 — 비교 엔진 hot path 평탄화 + 진화 흡수. (T3) `raw_payload` = 정규화 JSON only (HTML 단편 X) — Neon free 0.5 GB 한계 대응. (T4) `confidence` 3값 enum + `confidence_reason` 텍스트 — UI 색상 매핑 + 운영자 자가 진단. (T5) `is_anomaly` boolean + `anomaly_reason` 텍스트, 1.5.2 harness:price 워커가 마킹, 비교 엔진 `NOT is_anomaly AND confidence != 'low'` 강제. (T6) 90일 후 `raw_payload` + `price_payload` NULL화 (메타 영구 보존), 1.5.2 cron 보조. (T7) `(tariff_id, fetched_at DESC)` 복합 인덱스 + DISTINCT ON 쿼리 — 마스터에 `current_snapshot_id` 추가 거부 (ADR-0005 §T5 분리 유지).
+
+**영향**: PLAN 1.3 원안 5필드를 15컬럼으로 재정의. `harness:data` Rule 4 warn → 통과. 1.5.2 `harness:price` 워커 알고리즘의 출발점. 1.11 비교 엔진의 "최신 스냅샷" 쿼리 패턴 결정. 결과 페이지 3.5 계산 근거 펼치기의 영구 추적 보장.

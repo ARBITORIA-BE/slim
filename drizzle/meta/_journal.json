@@ -15,6 +15,13 @@
       "when": 1778323477184,
       "tag": "0001_mighty_husk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778324778047,
+      "tag": "0002_eminent_sunset_bain",
+      "breakpoints": true
     }
   ]
 }
