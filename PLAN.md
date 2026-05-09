@@ -177,7 +177,7 @@ pnpm test` + 위 DoD 모두 충족.
     수동 검증 가능: 한 fetcher를 실패시켜도 다른 fetcher는 정상 진행됨을
     로그에서 확인. STUB_FAIL 케이스 포함 테스트:
     `src/fetchers/proximus.test.ts` + `src/fetchers/telenet.test.ts`
-- [ ] **1.10** **투명성 페이지**: `/data-sources` — 모든 공급사 + 마지막 수집
+- [x] **1.10** **투명성 페이지**: `/data-sources` — 모든 공급사 + 마지막 수집
   시각 + 수집 방법 (API/스크래핑/수동) 공개
   - **제외 공급사 섹션** (헌법 P3 — "비교에서 제외된 공급사도 이름 밝힘"):
     - **Orange BE** — "페이즈 5에서 평가 후 추가 예정" (ADR-0009). 베타
@@ -185,6 +185,14 @@ pnpm test` + 위 DoD 모두 충족.
       측정 (ADR-0009 §검증 2: ≥ 20% 시 페이즈 5 우선)
     - 기타 비교 불가 공급사도 동일 형식으로 노출 (`provider.excluded_reason`
       필드 직접 표시 — ADR-0001)
+  - DoD (실제 파일, ADR-0011 §T2 6개 항목 모두 구현):
+    - `src/app/data-sources/page.tsx` (RSC, ISR revalidate=3600)
+    - `src/engine/comparison-stats.ts` (getComparisonStatsByProvider)
+    - `src/engine/comparison-stats.test.ts` (5 테스트, 0 row 안전 처리)
+    - `src/fetchers/types.ts` (method union에 'stub' 추가 — ADR-0008 Amendment 1)
+    - `src/fetchers/proximus.ts` (method 'stub'으로 갱신)
+    - `src/fetchers/telenet.ts` (method 'stub'으로 갱신)
+  - 검증: typecheck/lint/test/harness:plan/harness:data/verify:db 전 통과
 
 ### 1.C 비교 엔진
 
@@ -225,12 +233,14 @@ pnpm test` + 위 DoD 모두 충족.
   - **12 케이스 확장 조건** (ADR-0010 Amendment 1 트리거): M3 시점 베타 청구서
     6개 추가 수집 시 6 → 12 확장. 추가 케이스 후보 = 모뎀 임대 / 24개월 번들
     amortize / family 다중 라인 / 다중 anomaly / 카테고리 혼합 입력 등 6종
-- [ ] **1.13** **caveats 메커니즘**: 결과에 항상 주의사항 (예: "이 요금제는 24개월 약정")
+- [x] **1.13** **caveats 메커니즘**: 결과에 항상 주의사항 (예: "이 요금제는 24개월 약정")
   - **함수 차원 완료**: ADR-0010 §T6 deriveCaveats() 순수 함수가 8 규칙 자동
     생성. `src/engine/caveats.ts` 에서 export.
+  - **함수 차원 완료 (ADR-0011 §T1)** — UI 노출은 페이즈 3 진입 시 별도 ADR.
+    /data-sources 페이지(1.10)에서 카테고리별 caveats 미리보기로 노출됨.
   - **사용자 노출 (이 항목의 잔여 작업)**: 결과 카드(3.1) / 비교 표(3.2) / 계산
     근거 펼치기(3.5) 어디에 어떻게 배치할지 = **페이즈 3.5 결정** (베타 사용자
-    피드백 입력 — M16 평가 게이트). 본 항목은 페이즈 3 진입 시 [x] 마킹.
+    피드백 입력 — M16 평가 게이트).
 
 **Phase 1 검증:** `pnpm harness:data` — 모든 `tariff_snapshot`이 `source_url` + `fetched_at` 가짐.
 **Phase 1 현실 일정:** M1 ~ M3 (3개월). 합리화 근거: 스키마 4개 신설(1.2~1.5)은
@@ -477,7 +487,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
-| 1 | 13 | 11 | 0 | M1 ~ M3 | 2026-05-09 |
+| 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 6 | 0 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
@@ -487,7 +497,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **79** | **19** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **79** | **21** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

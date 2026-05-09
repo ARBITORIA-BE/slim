@@ -69,10 +69,11 @@ export const telenet: Fetcher = {
     displayName: 'Telenet',
     country: 'BE',
     /**
-     * method='scraping': 실 스크래핑 *의도*. /data-sources(1.10) 투명성 노출용.
-     * 현재 스텁이지만 실 스크래핑 전환 시 코드 변경 없음.
+     * method='stub': 현재 개발용 고정 데이터 fetcher.
+     * ADR-0011 §T2 항목 3 — 스텁임을 /data-sources 페이지에 정직하게 노출 (P1).
+     * 1.5.6 실 스크래핑 전환 시 이 줄만 'scraping'으로 변경.
      */
-    method: 'scraping',
+    method: 'stub',
     version: FETCHER_VERSION,
     homepageUrl: 'https://www.telenet.be',
   },
