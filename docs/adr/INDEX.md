@@ -21,6 +21,7 @@
 | [ADR-0010](0010-comparison-engine.md) | 비교 엔진 (compare) — 절약액 계산 + caveats + 6 테스트 케이스 | Proposed | 2026-05-09 |
 | [ADR-0011](0011-data-sources-page-and-caveats-boundary.md) | `/data-sources` 투명성 페이지 + caveats 함수/UI 경계 (PLAN 1.10 + 1.13) | Accepted | 2026-05-09 |
 | [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md) | PLAN 1.5.6 실 스크래핑 진입 전 리스크 평가 + 분기 결정 (LOW/MEDIUM/HIGH) | Proposed (Appendix A 추가 — legal 에이전트, 2026-05-09) | 2026-05-09 |
+| [ADR-0015](0015-vercel-integration-and-d1-closure.md) | Vercel 통합 운영 결정 + PLAN D.1 마감 게이트 | Proposed (GATE-H 대기) | 2026-05-10 |
 
 ---
 
@@ -121,3 +122,12 @@
 **요약**: PLAN 1.5.6 (Proximus + Telenet 스텁 → 실 스크래핑 fetcher 전환) 진입 *전* 리스크 평가 + 분기 결정. 운영자 사전 학습(arbitoria.com Reddit/FB 광고 차단)을 명시 인용해 *통신사 봇 차단 가능성*을 출발점으로 둔다. **7개 평가 + 4 차원 가중 평균**: (1) robots.txt + TOS — Proximus/Telenet 모두 요금제 페이지 명시 차단 X, 점수 2 (Appendix A: Telenet HTML 페이지 약한 강도 조항 발견, 2.5로 조정). (2) HTML 안정성 — SSR + CMS, Telenet 리브랜딩 진행 위험, 점수 3-4. (3) 봇 차단 — Cloudflare/Akamai 사용 가능성 *높음* 보수 가정, 점수 3. (4) GDPR — 요금제 페이지 PII 0, IP reputation 모니터링 가능, 점수 2. (5) 대안 데이터 소스 — Daisycon/Awin 텔레콤 카테고리 활성(TVA 가입 자격), BIPT besttariff.be 권위 있으나 자동화 어려움, 수동 import는 P3 정합 가능, 점수 2-3. (6) 베타 시나리오 — 옵션 X(스텁+"추정값") 가능 → 베타 일정 영향 0, 점수 2. (7) 법적 검토 — legal 에이전트 1차 호출 *완료* (Appendix A), 외부 변호사 거부됨(ADR-0004), 점수 2-3. **4 차원 가중 평균 = 2.75 (갱신: 2.69 → 2.75) → MEDIUM**. **권장 분기 (옵션 C)**: 1.5.6을 페이즈 5/6으로 미룸, 그동안 1.5.4 (scripts/** typecheck 복원) → 1.5.2 (harness:price 첫 가동) → 1.5.3 (runbook) 부채 처리. 베타는 옵션 X(스텁) 진행. **거부 대안**: 평가 없이 즉시 진입(운영자 사전 학습 무시) / 무조건 stub(왜 미루는지 미명시).
 
 **영향**: PLAN 1.5.6 본문에 "ADR-0013 분기 결과 = MEDIUM, 페이즈 5/6 재평가" 인용 추가. 합계 표 변동 X (체크박스 마킹 X). ADR-0008 §T3 confidence 휴리스틱 / ADR-0009 시장 점유율 / ADR-0010 §T5 confidence floor 모두 변동 0. ADR-0011 §T2 항목 3 method 라벨 변경은 분기에 의존 (LOW: Telenet 'scraping' / MEDIUM: 변동 X / HIGH: 'manual' 도입 가능). MONETIZATION.md §A 윤리 가드레일 #1 정합성 검토 트리거 — 어필리에이트 피드 데이터 출처 채택 시 별도 ADR-0014 신설. **검증**: GATE-F 직후 분기 격상, LOW 채택 시 24h 모니터링 게이트, MEDIUM 채택 시 페이즈 5 진입 시 재평가, HIGH 채택 시 ADR-0014 (어필리에이트 피드 1차 데이터) 신설.
+
+### [ADR-0015: Vercel 통합 운영 결정 + PLAN D.1 마감 게이트](0015-vercel-integration-and-d1-closure.md)
+
+**상태**: Proposed (GATE-H 운영자 승인 통과 시 Accepted로 격상 예정). 본 ADR은 *결정 + 운영 가이드* 만 담음 — 코드/설정 변경 0 (D.1.a~d로 이미 적용됨).
+
+**요약**: ADR-0002 §결정 1 + Amendment 1을 *운영 단계*로 끌어옴. PLAN §D.1 DoD 4건 중 #2 (Vercel preview 1회 성공) + #3 (typecheck PR 차단) 가 운영자 Vercel 가입 미완료로 닫히지 않은 상태에서 본 ADR이 마감 게이트를 명시. **7개 결정 (T1~T7)**: (T1) CI/CD 흐름 = GitHub push 시 Vercel preview build + GitHub Actions ci.yml *동시* 실행, fail-fast. (T2) 자동 배포 = **production manual promote OFF + preview 자동 ON** (운영자 명시 결정 정합 + 베타 미시작 통제). (T3) 환경변수 = production / preview 분리 — production = `ep-fancy-fog-alt18340`, preview = Neon 신규 dev branch (운영자 가입 시 생성). EXPECTED_DB_ENDPOINT 가드 (1.5.5) 환경별 등록. (T4) Inngest 키 = production / preview 같은 키 (단순성 + 무료 티어 부담 0, 환경별 분리는 회귀 트리거 발동 시). (T5) Build gate = ADR-0002 정합 그대로 (Vercel 순수 빌드 + GitHub Actions 4단 게이트). (T6) PR comment = 둘 다 (Vercel bot preview URL + GitHub Actions Checks) — 명시성. (T7) 운영자 Vercel 가입 절차 = §Operator-Action-Step3 9단계 (가입 → GitHub 연동 → Neon dev branch 생성 → 자동 배포 OFF → 환경변수 4×2 등록 → Inngest 키 발급 → 첫 build 검증 → Pieter에 신호 → CLI 옵션). Vercel CLI 권장 (필수 아님, pnpm dlx). **거부 대안**: 직렬 CI/CD (fail-late) / production 자동 ON (베타 미시작 통제 손실) / 같은 endpoint (데이터 오염) / 환경별 Inngest 키 (솔로 부담) / Vercel buildCommand에 게이트 (ADR-0002 §대안 D 동형 거부).
+
+**영향**: PLAN §D.1 마감 게이트 명시 — DoD #2/#3 검증 책임자 매핑 (Step 2 Pieter 임시 PR + Step 3 운영자 가입 + Step 4 verifier). PLAN §D.1 [x] 마킹은 GATE-H + Step 2~4 모두 통과 후. 코드/설정 변경 0건 (next.config.ts / ci.yml / scripts/verify-db.ts / package.json 모두 그대로). 외부 의존성 0건 추가. 무료 티어 사용량 추정 0.1% 미만 (Vercel Hobby + Neon Free + Inngest Free) — ADR-0004 §결정 2 €300 cap 정합. **회귀 트리거**: (1) 베타 시작 시 자동 promote 재평가 (2) preview에서 production cron 발화 1건 → T4 분리 (3) Vercel Hobby 한도 80% 도달 → ADR-0004 격상 (4) Neon dev branch 한도 도달 (5) 운영자 가입 단계에서 막힘 1건 (6) D.1.c (main 브랜치 보호) 활성화 누락. **GATE 정의**: GATE-H = 본 ADR T1~T7 운영자 승인 → Accepted + Step 2~4 진행.
+
