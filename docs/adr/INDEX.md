@@ -17,6 +17,7 @@
 | [ADR-0006](0006-tariff-snapshot-schema.md) | `tariff_snapshot` 테이블 스키마 (가격 시계열) | Proposed | 2026-05-09 |
 | [ADR-0007](0007-comparison-request-result-schema.md) | `comparison_request` + `comparison_result` 스키마 (GDPR + 익명성 + 영구 링크) | Proposed | 2026-05-09 |
 | [ADR-0008](0008-fetcher-interface-and-cron.md) | Fetcher 인터페이스 + Inngest cron 인프라 | Proposed | 2026-05-09 |
+| [ADR-0009](0009-scope-cut-fetcher-2-providers.md) | PLAN 1.8 fetcher 갯수 축소 — 3개 → 2개 (Proximus + Telenet) | Accepted | 2026-05-09 |
 
 ---
 
@@ -85,3 +86,11 @@
 **요약**: PLAN 1.6 (Inngest cron) + 1.7 (Fetcher 인터페이스) 짝 결정. cron이 fetcher를 호출하므로 인터페이스 모양과 step 분할 정책이 한 ADR에 묶임. **10개 결정 (T1~T10)**: (T1) `FetchResult.data = TariffSnapshotInput[]` 고정 모양 — ADR-0005/0006 스키마와 1:1 매핑, fetcher가 매핑 책임. (T2) 1 fetcher = 1 provider의 *모든* tariff 배열 — Inngest free 50k exec/월 555배 안전 마진. (T3) Confidence는 표준 휴리스틱(`computeConfidence`) + fetcher down-grade override만 (up-grade 거부). (T4) Discriminated union 결과 — `{ ok: true; result } | { ok: false; error }`, 부분 성공 표현 + type-narrow + 1.9 격리 메커니즘. (T5) Metadata는 인터페이스 안 + registry는 `src/fetchers/index.ts` (둘 다 필요). (T6) Cron = 일 1회 `TZ=UTC 0 6 * * *` + `fetchers/run.requested` 수동 이벤트. (T7) Step 분할 = 네트워크 step + DB step 분리 (재시도 시 중복 insert 방지). (T8) Event = `fetchers/run.requested` (`only?` 필드로 디버깅). (T9) API route = `src/app/api/inngest/route.ts` + 두 환경변수 (INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY). (T10) DB 싱글턴 + step별 fresh logger.
 
 **영향**: PLAN 1.6 / 1.7 본문 갱신 (5줄 → 각 12줄). `src/fetchers/types.ts` 진화 + `src/fetchers/index.ts` (registry) + `src/lib/inngest.ts` (client) + `src/inngest/functions.ts` (cron + persist) + `src/app/api/inngest/route.ts` 신설. 1.8 fetcher 3개가 *본 ADR만 따라가면* 통과. 1.9 격리는 §T7 for-loop continue 패턴 자체가 메커니즘 — 추가 코드 0. 1.10 `/data-sources`는 `registry.map(f => f.metadata)` + `tariff.lastSeenAt` 으로 자연 구성. 외부 의존성 0건 추가 (Inngest는 페이즈 0에서 이미 dep).
+
+### [ADR-0009: PLAN 1.8 fetcher 갯수 축소 — 3개 → 2개 (Proximus + Telenet)](0009-scope-cut-fetcher-2-providers.md)
+
+**상태**: Accepted (운영자 직접 결정, 2026-05-09 — Kim Wonmin)
+
+**요약**: ADR-0003 §결정 6의 scope cut 옵션 A를 명시적으로 채택. **4개 결정**: (1) Orange BE 제외, Proximus + Telenet 2개 유지 — BE 통신 시장 합산 ≥ 75% 점유 (Telecompaper Q1 2025: Proximus ~43% + Telenet ~32%). 비교 의미를 잃지 않으면서 솔로 부담 -33%. Orange BE는 페이즈 5에서 평가 후 추가 (5.0 신설). (2) 페이즈 1 일정 1주 단축 (fetcher 3주 → 2주) — 1.12 청구서 12케이스 수집 또는 페이즈 1.5 부채 흡수에 마진. (3) 1.5.1 fetcher 공통화 가치 저하 (N=2 표본 약함) — Orange BE 페이즈 5 추가 시 N=3 회복. (4) 베타 모집 카피 + `/data-sources` 제외 공급사 섹션에 "Orange BE — 페이즈 5에서 평가 후 추가 예정" 명시 (헌법 P3). **거부 대안**: 3개 유지(시간 비용 vs 신호 가치 불균형) / 1개로 축소(비교 의미 0).
+
+**영향**: PLAN 1.8 (3 → 2 fetcher, DoD 갱신) + 1.10 (제외 섹션에 Orange BE + CTA) + 4.6 (베타 모집 카피) + 5.0 (Orange BE 추가 신설 항목) + scope cut 옵션 A 라인 "적용됨" 마킹. 페이즈 5 항목 수 6 → 7. 합계 76 → 77. ADR-0008 인터페이스 결정 / ADR-0005 / ADR-0006 스키마 / MONETIZATION.md §A 단가 가정 변동 0. 검증: M16 평가 게이트 4개 신호 + 베타 `/data-sources` Orange BE CTA click ≥ 20% / Inngest free 무료 티어 사용량 0.27%.
