@@ -10,7 +10,6 @@
  */
 
 import { db } from '../../src/db';   // 실제 빌드 시 alias 처리
-import { tariffSnapshot } from '../../src/db/schema';
 import { sql } from 'drizzle-orm';
 
 interface Anomaly {
@@ -20,6 +19,15 @@ interface Anomaly {
   today: number;
   changePct: number;
   reason?: string;
+}
+
+interface AnomalyRow {
+  tariff_id: string;
+  tariff_name: string;
+  provider: string;
+  yesterday_price: number | string;
+  today_price: number | string;
+  change_ratio: number | string;
 }
 
 const ANOMALY_THRESHOLD = 0.2; // ±20%
@@ -54,7 +62,7 @@ async function main() {
     WHERE ABS((t.price - y.price) / NULLIF(y.price, 0)) > ${ANOMALY_THRESHOLD}
   `);
 
-  const anomalies: Anomaly[] = (rows as any[]).map((r) => ({
+  const anomalies: Anomaly[] = (rows as unknown as AnomalyRow[]).map((r) => ({
     provider: r.provider,
     tariffId: r.tariff_id,
     yesterday: Number(r.yesterday_price),
