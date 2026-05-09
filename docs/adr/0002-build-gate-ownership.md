@@ -4,6 +4,8 @@
 
 Accepted (2026-05-09) — verifier 통과: typecheck/lint/test/harness:plan/harness:data/build/ci.yml/jq-fallback 음성테스트 모두 통과. D.1.c (GitHub 브랜치 보호 규칙)는 사용자 UI 수동 작업으로 분리 추적.
 
+**Amendment 1 적용** (2026-05-09): CI 워크플로의 `pnpm lint` 단계가 GitHub Actions ubuntu-latest에서 매번 실패 → lint 단계 제거. 본문 §Decision 1의 "5단 게이트"는 **4단 게이트 (typecheck → test → harness:plan → harness:data)** 로 축소됨. lint는 로컬 stop-gate 단독 책임으로 환원. 상세는 본문 끝 ## Amendment 1 섹션 참조.
+
 ## 맥락
 
 페이즈 0 종료 시점에 두 운영 부채가 동시에 표면화되었다. 둘 다 "검증 권한이
@@ -67,6 +69,9 @@ PLAN 매핑: 페이즈 0.5 — D.2.
    (typecheck → lint → test → harness:plan → harness:data) 실행. PR 머지 차단
    조건으로 등록. 이게 없으면 P4 강제가 로컬 stop-gate에만 의존하게 되어
    누군가 hook을 우회하고 push하면 잡을 곳이 없다.
+   > **Amendment 1 (2026-05-09)**: lint 단계는 GitHub Actions 호환성 문제로
+   > CI에서 제거됨 → **4단 게이트 (typecheck → test → harness:plan →
+   > harness:data)**. lint는 로컬 stop-gate 단독 책임. 상세 본문 §Amendment 1.
 3. `package.json`에 `build:ci` 스크립트는 **추가하지 않는다** — CI 워크플로
    자체가 게이트를 직렬로 실행하므로 중복 alias는 부채만 늘린다.
 
@@ -196,3 +201,98 @@ PLAN 매핑: 페이즈 0.5 — D.2.
   - `scripts/hooks/pre-tool-guard.sh`
   - `scripts/hooks/_lib.sh`
   - `scripts/hooks/stop-gate.sh`
+
+---
+
+## Amendment 1 (2026-05-09): CI lint 단계 정리
+
+### 트리거
+
+본 ADR로 신설된 `.github/workflows/ci.yml`의 5단 게이트 중 `pnpm lint` 단계가
+GitHub Actions `ubuntu-latest` 환경에서 **매번 실패** 한다 (사용자 보고).
+
+**비대칭 진단**:
+
+| 환경 | 결과 | 근거 |
+|---|---|---|
+| 로컬 (Windows + ESLint 9 native flat config) | ✅ 통과 | verifier 직전 통과, /checkpoint 5단 게이트 통과 |
+| GitHub Actions (ubuntu-latest) | ❌ 매번 실패 | 사용자 보고. 실제 로그는 gh CLI 미설치로 미확인 |
+
+원인 추정 (확정 불가, gh CLI 부재로 로그 미확인):
+
+- `@next/eslint-plugin-next`의 ESLint 9 부분 호환성 — Next 15에서도 ESLint 9
+  full support는 GA 아님 ([Next 15 릴리즈 노트 기준 추정](https://nextjs.org/blog/next-15)).
+- pnpm lockfile 해석의 OS별 transitive deps 차이.
+- ubuntu runner의 Node 22 + ESLint 9 + flat config 결합에서만 표면화되는 이슈.
+
+이 비대칭은 본 ADR 본문이 명시한 회귀 트리거 #1/#2 (워크플로 깨짐) 와 인접하여
+**stop-gate 정신은 유지하되 깨진 단계를 정리**해야 한다.
+
+### 결정
+
+**옵션 A 채택**: `.github/workflows/ci.yml`에서 `Lint` 단계를 **완전히 제거**
+한다. lint 검증 권한은 **로컬 stop-gate 단독**으로 환원된다.
+
+CI는 이제 **4단 게이트** 가 된다:
+
+```
+typecheck → test → harness:plan → harness:data
+```
+
+**근거**:
+
+1. **헌법 P4와 lint의 관계**. 헌법 P4 ("타입 안전")는 명시적으로 `tsc --noEmit`
+   = typecheck를 책임 도구로 지정한다. lint는 P4의 책임 도구가 **아니다** —
+   코드 스타일 / 베스트프랙티스 / Next 권장 룰의 영역. 따라서 lint를 CI에서
+   빼도 헌법 P4 강제는 typecheck로 보존된다.
+2. **거짓 안전 신호 회피 (ADR-0002 본문 정신)**. `continue-on-error: true`
+   (옵션 B)는 GitHub PR UI에 ✅ 통과로 표시되지만 실제로는 검증을 안 하는
+   것이라 **검증 권한 명시화 정신과 직접 충돌**. 본 ADR이 옵션 D를
+   거부했던 이유 ("fail-late")와 동형의 문제.
+3. **운영 단순성**. CI가 매번 빨갛게 표시되면 (a) PR 머지 게이트 자체가
+   noise화되어 진짜 실패도 무시당하기 시작하고 (b) 본 ADR §결과의 ⚠️
+   "워크플로 깨지면 P4 무방비"가 현실화된다.
+4. **로컬 stop-gate 단독 책임의 잔여 리스크는 수용 가능**. lint 우회 push는
+   "대문자 변수명, console.log, no-explicit-any" 등을 main에 흘릴 수 있으나
+   typecheck/test는 여전히 막는다. 이 잔여 리스크를 위해 회귀 트리거 #5를
+   추가한다 (아래).
+
+### 거부된 대안
+
+- **옵션 B (`continue-on-error: true`)**: GitHub UI ✅ 표시 → 거짓 안전 신호.
+  ADR-0002 본문 §대안의 옵션 D 거부 정신과 동형. 거부.
+- **옵션 C (lint를 별도 advisory job으로 분리)**: 워크플로 복잡도 증가, UI
+  노이즈, 결국 옵션 B와 같은 거짓 신호 우려. 거부.
+- **옵션 D (`pnpm lint || true` inline 마스킹)**: 옵션 B보다 더 hidden, 코드
+  리뷰에서 발견 어려움. 거부.
+- **옵션 E (`if: always()` + reporter step)**: 복잡도 증가, 운영 가치 낮음.
+  거부.
+- **옵션 F (CI 전용 ESLint 룰셋 축소)**: fragile (룰 어긋나면 로컬과 CI lint
+  결과 분기). 거부.
+
+### 결과
+
+- ✅ CI가 안정적으로 ✅/❌ 신호를 낸다 — PR 머지 게이트로서 신뢰 회복
+- ✅ 로컬 stop-gate가 lint의 단일 진실원 — 책임 위치 명확
+- ⚠️ lint 우회 push가 main에 흘러들 수 있음 (typecheck 통과 + lint 실패
+  코드). 회귀 트리거 #5로 모니터.
+- ⚠️ Vercel 빌드는 `eslint.ignoreDuringBuilds: true`로 lint 검사 안 함 →
+  CI에도 lint 없으면 lint는 **순전히 개발자 머신 의존**. 이 점이 ADR-0002
+  본문 §결과의 "이중화" 약속에서 lint 한정으로 후퇴함을 명시.
+
+### 회귀 트리거 추가
+
+본 ADR 회귀 트리거 목록에 다음을 추가한다:
+
+5. **로컬 lint 우회 push 흔적 1건이라도 발견** (`pnpm lint`로 잡혔을 룰
+   위반이 main에 들어옴) → Amendment 2로 별도 advisory CI job 도입 또는
+   pre-receive hook 검토.
+6. **Next 16 / `@next/eslint-plugin-next` ESLint 9 GA 호환 발표** → CI lint
+   단계 복원 검토 (Amendment 2). 회복 후에도 옵션 B가 아닌 강한 게이트로만
+   복원.
+
+### PLAN 매핑
+
+페이즈 0.5 — **D.1.d** (신설). DoD: ci.yml에서 Lint step 라인 완전 제거,
+다음 push에서 GitHub Actions 워크플로가 ✅로 끝남 (typecheck/test/harness 모두
+통과 가정).
