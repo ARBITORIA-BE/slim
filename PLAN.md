@@ -126,16 +126,33 @@ pnpm test` + 위 DoD 모두 충족.
 
 ### 1.B 데이터 수집
 
-- [ ] **1.6** Inngest cron 셋업 (시간당 1회 → **무료 티어 한계 고려해 일 1회로
-  시작**, 트래픽 늘면 격상)
-- [ ] **1.7** Fetcher 인터페이스 정의 (`src/fetchers/types.ts`)
-  ```ts
-  interface Fetcher {
-    providerId: string;
-    fetch(): Promise<FetchResult>;
-    // FetchResult는 source_url, fetched_at, confidence 강제
-  }
-  ```
+- [x] **1.6** Inngest cron 셋업 — **일 1회 06:00 UTC** (BE 07-08시), 무료 티어
+  555배 안전 마진 (ADR-0008)
+  - 파일: `src/lib/inngest.ts` (client) + `src/inngest/functions.ts` (cron) +
+    `src/app/api/inngest/route.ts` (App Router endpoint)
+  - 결정 근거: [ADR-0008](docs/adr/0008-fetcher-interface-and-cron.md) §T6 (일 1회
+    + 수동 이벤트), §T7 (네트워크 step + DB step 분리 → 재시도 시 중복 insert
+    방지), §T9 (App Router serve), §T10 (DB 싱글턴 + step별 logger)
+  - 환경변수 (`.env.example` 갱신): `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`
+    (production 필수; dev는 `npx inngest-cli@latest dev` devserver 자동 fallback)
+  - Cron: `TZ=UTC 0 6 * * *` (DST 회피) + `event: 'fetchers/run.requested'`
+    수동 트리거 (어드민/dev `only` 필드로 특정 fetcher만)
+  - 1.9 격리 메커니즘은 본 cron의 for-loop continue 패턴이 *자체*로 — 별도
+    코드 작업 0
+  - DoD: (1) typecheck/lint/test 0 에러 (2) `src/app/api/inngest/route.ts` 가
+    GET/POST/PUT export (3) `pnpm dev` + Inngest devserver(`inngest-cli@latest
+    dev`)에서 `daily-fetch-all` 함수 dashboard 발견 (4) registry 빈 배열 상태
+    에서도 cron 실행이 ok 응답 (no-op 안전)
+- [x] **1.7** Fetcher 인터페이스 정의 — **고정 모양 + discriminated union** (ADR-0008)
+  - 파일: `src/fetchers/types.ts` (인터페이스) + `src/fetchers/index.ts` (registry)
+  - `Fetcher` = `{ metadata: FetcherMetadata; fetch(): Promise<FetchOutcome> }`
+  - `FetcherMetadata` = `{ providerSlug, displayName, country, method (api/scraping/manual), version, homepageUrl }` — /data-sources(1.10) 단일 출처
+  - `FetchOutcome = { ok: true; result: FetchResult } | { ok: false; error: FetchError }` — type narrow 정확 + 부분 raw 보존
+  - `FetchResult.data: TariffSnapshotInput[]` — 한 fetcher = 한 provider의 *모든* tariff 배열 (Inngest exec 보호)
+  - `TariffSnapshotInput` 모양은 ADR-0005 + ADR-0006 스키마와 1:1 매핑 (cron persist step은 dumb mapper)
+  - 결정 근거: [ADR-0008](docs/adr/0008-fetcher-interface-and-cron.md) §T1 (고정 모양 + 배열), §T2 (1 fetcher = 1 provider), §T3 (confidence 휴리스틱 + down-grade), §T4 (discriminated union), §T5 (metadata + registry 양립)
+  - 1.8과 함께 신설 예정: `src/types/tariff-attributes.ts` (Zod, attributes 단일 출처) + `src/fetchers/confidence.ts` (computeConfidence 휴리스틱)
+  - DoD: (1) typecheck/lint/test 0 에러 (2) `pnpm harness:data` Rule 1 통과 (`FetchResult` 식별자 보존) (3) `src/fetchers/types.test.ts` ≥4 테스트 (FetcherMetadata, TariffSnapshotInput mobile/internet, FetchResult, FetchOutcome union)
 - [ ] **1.8** Fetcher 3개 실 구현 (**통신 BE — 모바일/인터넷**):
   - Proximus / Orange BE / Telenet
   - 각 fetcher에 단위 테스트
@@ -369,7 +386,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
-| 1 | 13 | 5 | 0 | M1 ~ M3 | 2026-05-09 |
+| 1 | 13 | 7 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 4 | 0 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
@@ -379,7 +396,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 6 | 0 | 0 | M17 ~ M21 (조건부) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **76** | **13** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **76** | **15** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

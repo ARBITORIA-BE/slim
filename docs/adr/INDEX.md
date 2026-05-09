@@ -16,6 +16,7 @@
 | [ADR-0005](0005-tariff-schema-telecom.md) | `tariff` 테이블 스키마 (통신 BE) | Proposed | 2026-05-09 |
 | [ADR-0006](0006-tariff-snapshot-schema.md) | `tariff_snapshot` 테이블 스키마 (가격 시계열) | Proposed | 2026-05-09 |
 | [ADR-0007](0007-comparison-request-result-schema.md) | `comparison_request` + `comparison_result` 스키마 (GDPR + 익명성 + 영구 링크) | Proposed | 2026-05-09 |
+| [ADR-0008](0008-fetcher-interface-and-cron.md) | Fetcher 인터페이스 + Inngest cron 인프라 | Proposed | 2026-05-09 |
 
 ---
 
@@ -76,3 +77,11 @@
 **요약**: PLAN 1.4 + 1.5 두 테이블 동시 결정. FK + GDPR + 영구 링크가 얽혀 분리 설계 시 일관성이 깨지는 구조. **10개 결정 (T1~T10)**: (T1) 익명 UUID PK + `userAccountId` NULL 미리 (페이즈 6 회원 결합 대비, 세션 fingerprint 컬럼 0). (T2) 평탄화 4 + JSONB `inputAttributes` — Zod 단일 출처 `src/types/comparison-input.ts`. (T3) 합법근거 = **GDPR Art. 6(1)(b) Contract performance** (1차) + (a) Consent (어필리에이트 리다이렉트) — EDPB Guidelines 1/2024 / 2/2019 인용. (T4) 리텐션 분리 — request의 PII는 90일 후 PC2 일반화 + inputAttributes NULL, result는 영구 (영구 링크 + B2B Insights 호환). (T5) IP / fingerprint 컬럼 0 (헌법 §8 #1 / #5). (T6) `comparison_result` (1) ↔ `comparison_result_item` (N) — PLAN 3.2 비교 표 자연 매핑. (T7) 영구 링크 = nanoid 12자 (alphabet 36 × 12 = 4.7e18 공간). (T8) `requestId` nullable + `ON DELETE SET NULL` — GDPR 삭제 후에도 익명 결과 페이지 보존. (T9) `lockedInputs` JSONB = PII 파생물 봉인 + 90일 후 NULL. (T10) 비교 엔진 호출 = 동기 + 5초 timeout (Inngest 무료 티어 보호 + P2 5분 UX).
 
 **영향**: PLAN 1.4 (5필드 → 10컬럼) + 1.5 (2테이블, 18컬럼 + 5 FK) 재정의. 1.5.2 cron에 90일 PII 일반화 보조 작업 3개 추가. 1.11 비교 엔진의 입출력 모양 / 1.13 caveats 메커니즘 / 3.5 계산 근거 / 3.6 영구 링크 / 4.1 어트리뷰션 (별도 ADR) / 6.4 GDPR 도구 / MONETIZATION D B2B Insights (M24+) 호환성을 한 번에 결정. **Legal review pending**: T3 합법근거 (Contract vs Legitimate interest 외부 견해) + T9 결과의 PII 판정 (Recital 26 익명 분류) — 베타 직전 또는 M16 게이트.
+
+### [ADR-0008: Fetcher 인터페이스 + Inngest cron 인프라](0008-fetcher-interface-and-cron.md)
+
+**상태**: Proposed (verifier 통과 후 Accepted로 격상 예정)
+
+**요약**: PLAN 1.6 (Inngest cron) + 1.7 (Fetcher 인터페이스) 짝 결정. cron이 fetcher를 호출하므로 인터페이스 모양과 step 분할 정책이 한 ADR에 묶임. **10개 결정 (T1~T10)**: (T1) `FetchResult.data = TariffSnapshotInput[]` 고정 모양 — ADR-0005/0006 스키마와 1:1 매핑, fetcher가 매핑 책임. (T2) 1 fetcher = 1 provider의 *모든* tariff 배열 — Inngest free 50k exec/월 555배 안전 마진. (T3) Confidence는 표준 휴리스틱(`computeConfidence`) + fetcher down-grade override만 (up-grade 거부). (T4) Discriminated union 결과 — `{ ok: true; result } | { ok: false; error }`, 부분 성공 표현 + type-narrow + 1.9 격리 메커니즘. (T5) Metadata는 인터페이스 안 + registry는 `src/fetchers/index.ts` (둘 다 필요). (T6) Cron = 일 1회 `TZ=UTC 0 6 * * *` + `fetchers/run.requested` 수동 이벤트. (T7) Step 분할 = 네트워크 step + DB step 분리 (재시도 시 중복 insert 방지). (T8) Event = `fetchers/run.requested` (`only?` 필드로 디버깅). (T9) API route = `src/app/api/inngest/route.ts` + 두 환경변수 (INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY). (T10) DB 싱글턴 + step별 fresh logger.
+
+**영향**: PLAN 1.6 / 1.7 본문 갱신 (5줄 → 각 12줄). `src/fetchers/types.ts` 진화 + `src/fetchers/index.ts` (registry) + `src/lib/inngest.ts` (client) + `src/inngest/functions.ts` (cron + persist) + `src/app/api/inngest/route.ts` 신설. 1.8 fetcher 3개가 *본 ADR만 따라가면* 통과. 1.9 격리는 §T7 for-loop continue 패턴 자체가 메커니즘 — 추가 코드 0. 1.10 `/data-sources`는 `registry.map(f => f.metadata)` + `tariff.lastSeenAt` 으로 자연 구성. 외부 의존성 0건 추가 (Inngest는 페이즈 0에서 이미 dep).
