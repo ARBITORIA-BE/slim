@@ -39,18 +39,30 @@
 규모는 작지만 P4 강제 위치(=헌법) 와 직결되어 ADR-0002로 결정 기록됨.
 
 > 헌장: [ADR-0002](docs/adr/0002-build-gate-ownership.md) — Build gate 책임
-> 분리 + Hook jq fallback 통일.
+> 분리 + Hook jq fallback 통일. **Amendment 1 (2026-05-09)**: CI lint 단계
+> 제거 → D.1.d 신설.
 
-- [ ] **D.1** Vercel build gate 책임 분리 (ADR-0002 Decision 1)
+- [ ] **D.1** Vercel build gate 책임 분리 (ADR-0002 Decision 1 + Amendment 1)
   - **D.1.a** `next.config.ts`에 `typescript.ignoreBuildErrors: true` +
     `eslint.ignoreDuringBuilds: true` 추가
   - **D.1.b** `.github/workflows/ci.yml` 신설 — push/PR마다 5단 게이트
     (typecheck → lint → test → harness:plan → harness:data) 직렬 실행
+    > Amendment 1으로 D.1.d에서 lint 단계 제거 → 실제 운영은 4단 게이트.
   - **D.1.c** `main` 브랜치 보호 규칙 (GitHub repo settings) — CI 통과 필수
     체크박스 활성화 (수동 작업, scribe가 운영 노트로 기록)
-  - DoD: (1) `next build` 로컬 통과 (2) Vercel preview 배포 1회 성공 (3)
-    의도적으로 typecheck를 깨는 PR이 GitHub Actions에서 ❌로 차단됨
-  - 검증: ADR-0002 §검증 방법 1
+  - **D.1.d** `.github/workflows/ci.yml`에서 `Lint` 단계 제거 (Amendment 1)
+    — GitHub Actions ubuntu-latest에서 `pnpm lint`가 ESLint 9 +
+    `@next/eslint-plugin-next` 호환성 이슈로 매번 실패. lint는 로컬
+    stop-gate 단독 책임으로 환원. `continue-on-error: true` 등 거짓 안전
+    신호 옵션은 거부됨 (ADR-0002 Amendment 1 §거부된 대안 참조).
+    - DoD: (1) ci.yml에서 `Lint` 단계 라인 완전 제거 (2) 다음 push에서
+      GitHub Actions 워크플로가 ✅로 끝남 (typecheck/test/harness 모두
+      통과 가정) (3) `pnpm lint`는 로컬 + Husky pre-commit에서 여전히
+      강제됨을 verifier가 확인
+  - DoD (D.1 전체): (1) `next build` 로컬 통과 (2) Vercel preview 배포 1회
+    성공 (3) 의도적으로 typecheck를 깨는 PR이 GitHub Actions에서 ❌로 차단됨
+    (4) D.1.d 적용 후 ci.yml이 4단 게이트로 안정 동작
+  - 검증: ADR-0002 §검증 방법 1 + Amendment 1 §결과
 - [x] **D.2** Hook jq fallback 통일 (ADR-0002 Decision 2)
   - [x] **D.2.a** `scripts/hooks/pre-tool-guard.sh:10`의 jq 의존 제거 — `_lib.sh`
     의 fallback 패턴(또는 동등한 인라인 sed/awk)으로 `tool_input.command` 추출
@@ -225,3 +237,5 @@ pnpm test` + 위 DoD 모두 충족.
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 0.5는 운영 부채 트랙으로, ADR-0002의 결정에 묶여 있다.
+> 페이즈 0.5의 "항목 수 = 2"는 **D.1, D.2 최상위 단위** 카운트이며,
+> Amendment 1로 추가된 D.1.d는 D.1의 서브태스크라 합계 변동 없음.
