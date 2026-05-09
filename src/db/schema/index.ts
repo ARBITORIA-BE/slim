@@ -4,3 +4,5 @@
 export * from './provider';
 export * from './tariff';
 export * from './tariff_snapshot';
+export * from './comparison_request';
+export * from './comparison_result';

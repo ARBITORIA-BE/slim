@@ -81,9 +81,12 @@ async function checkStaleLabel() {
 async function checkSchemaConstraints() {
   const schemas = await glob('src/db/schema/**/*.ts');
   let foundTariffSnapshot = false;
+  // 정의 파일만 매칭 — import 만 하는 파일(comparison_result 등)을 false-positive로 잡지 않도록
+  // pgTable('tariff_snapshot', ...) 의 실제 정의 위치만 본다.
+  const tariffSnapshotDefRe = /pgTable\(\s*['"]tariff_snapshot['"]/;
   for (const f of schemas) {
     const text = await readFile(f, 'utf-8');
-    if (!text.includes('tariffSnapshot')) continue;
+    if (!tariffSnapshotDefRe.test(text)) continue;
     foundTariffSnapshot = true;
     if (!/source_url.*notNull/s.test(text)) {
       violations.push({
