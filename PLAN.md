@@ -105,7 +105,7 @@ pnpm test` + 위 DoD 모두 충족.
   - 인덱스: `(tariff_id, fetched_at DESC)` (T7 비교 엔진 hot path) · `(is_anomaly)` · `(fetched_at DESC)`
   - 리텐션: 90일 후 `raw_payload` + `price_payload` NULL화 — 메타 영구 보존 (T6, 1.5.2 cron 보조)
   - 결정 근거: [ADR-0006](docs/adr/0006-tariff-snapshot-schema.md) — Append-only (T1), 평탄화 5컬럼 + JSONB 미러 (T2), 정규화 JSON only (T3), confidence enum + reason (T4), anomaly 컬럼 + 비교 엔진 자동 제외 (T5), 90일 리텐션 (T6), DISTINCT ON 쿼리 (T7)
-  - DoD: (1) `pnpm harness:data` Rule 4 통과 (`schema-tariff-snapshot-missing` warn 해소) (2) `pnpm db:generate`로 `drizzle/0002_*.sql` 생성 — `CREATE TYPE confidence` + `CREATE TABLE tariff_snapshot` + FK + 인덱스 3개 (3) typecheck/lint/test 0 에러
+  - DoD: (1) `pnpm harness:data` Rule 4 통과 (`schema-tariff-snapshot-missing` warn 해소) (2) `pnpm db:generate`로 `drizzle/0002_eminent_sunset_bain.sql` 생성 — `CREATE TYPE confidence` + `CREATE TABLE tariff_snapshot` + FK + 인덱스 3개 (3) typecheck/lint/test 0 에러
 - [ ] **1.4** `comparison_request` (사용자 입력) — 익명 우선
 - [ ] **1.5** `comparison_result` (계산된 결과 + 사용된 스냅샷 ID 들)
 
@@ -156,6 +156,12 @@ pnpm test` + 위 DoD 모두 충족.
   + Sentry 알림 임계값 설정
 - [ ] **1.5.3** `docs/runbook.md` 신설 — fetcher 깨졌을 때 대응 절차 (솔로
   운영용 self-rescue 체크리스트)
+- [ ] **1.5.4** `scripts/**` typecheck 복원 (P4 부채) — `tsconfig.json`의
+  `exclude: ["scripts/**"]` 제거. 선결 작업: (a) `verify-plan.ts`의 regex match
+  group을 `noUncheckedIndexedAccess` 정합화 (b) `e2e-smoke.ts`의 playwright 타입
+  import 경로 정리 (c) `bias-audit.ts` 잔존 type 이슈 정리. 9건 미만의 타입
+  에러로 추정. 페이즈 1 진행 중에는 의도적으로 미뤄 둠 — 솔로 사이드 컨텍스트
+  (FOUNDER.md) + 시간 배분 우선순위.
 
 **Phase 1.5 검증:** verifier — typecheck/lint/test 0 에러 + 신설 runbook 존재.
 
@@ -342,7 +348,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
 | 1 | 13 | 3 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 3 | 0 | 0 | M3 말 | 2026-05-09 |
+| 1.5 | 4 | 0 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
@@ -351,7 +357,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 6 | 0 | 0 | M17 ~ M21 (조건부) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **75** | **11** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **76** | **11** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
