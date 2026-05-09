@@ -23,6 +23,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
+    "verify:db": "tsx scripts/verify-db.ts",
     "harness:plan": "tsx scripts/harness/verify-plan.ts",
     "harness:data": "tsx scripts/harness/data-fidelity.ts",
     "harness:price": "tsx scripts/harness/price-snapshot.ts",

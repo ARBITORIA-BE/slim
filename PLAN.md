@@ -153,8 +153,12 @@ pnpm test` + 위 DoD 모두 충족.
   - 결정 근거: [ADR-0008](docs/adr/0008-fetcher-interface-and-cron.md) §T1 (고정 모양 + 배열), §T2 (1 fetcher = 1 provider), §T3 (confidence 휴리스틱 + down-grade), §T4 (discriminated union), §T5 (metadata + registry 양립)
   - 1.8과 함께 신설 예정: `src/types/tariff-attributes.ts` (Zod, attributes 단일 출처) + `src/fetchers/confidence.ts` (computeConfidence 휴리스틱)
   - DoD: (1) typecheck/lint/test 0 에러 (2) `pnpm harness:data` Rule 1 통과 (`FetchResult` 식별자 보존) (3) `src/fetchers/types.test.ts` ≥4 테스트 (FetcherMetadata, TariffSnapshotInput mobile/internet, FetchResult, FetchOutcome union)
-- [ ] **1.8** Fetcher **2개** 실 구현 (**통신 BE — 모바일/인터넷**) — scope cut
+- [x] **1.8** Fetcher **2개** 실 구현 (**통신 BE — 모바일/인터넷**) — scope cut
   옵션 A 적용 ([ADR-0009](docs/adr/0009-scope-cut-fetcher-2-providers.md))
+  - **스텁 fetcher 우선 채택** (실 스크래핑은 1.5.6 부채). FOUNDER.md 솔로
+    사이드 컨텍스트에서 실 스크래핑은 셀렉터 깨짐 + 디버깅 sink. 스텁으로
+    파이프라인(1.10~1.13) 통합 검증 먼저 진행. confidence='low' + stub=true로
+    P1 정직성 유지.
   - **Proximus / Telenet** (BE 시장 합산 ≥ 75% 점유 — Telecompaper Q1 2025;
     Proximus ~43% + Telenet ~32%)
   - **Orange BE는 페이즈 5에서 평가 후 추가** (베타 `/data-sources` Orange BE
@@ -162,14 +166,17 @@ pnpm test` + 위 DoD 모두 충족.
   - 파일: `src/fetchers/proximus.ts`, `src/fetchers/telenet.ts` (ADR-0008
     `Fetcher` 객체 export + `src/fetchers/index.ts` registry 추가)
   - 단위 테스트 2개: `src/fetchers/proximus.test.ts`, `src/fetchers/telenet.test.ts`
-  - 1.8과 함께 신설: `src/types/tariff-attributes.ts` (Zod, ADR-0005 §결정 1) +
+  - 신설: `src/types/tariff-attributes.ts` (Zod, ADR-0005 §결정 1) +
     `src/fetchers/confidence.ts` (computeConfidence, ADR-0008 §T3)
-  - DoD: (1) typecheck/lint/test 0 에러 (2) `pnpm dev` + Inngest devserver에서
-    `fetchers/run.requested` 수동 발사 시 2 fetcher 모두 ok 응답 (3) Inngest UI
-    에서 step run 카운트 ≤ 4/cron 확인 (4) `pnpm harness:data` Rule 1 통과
-    유지 (`FetchResult` 식별자 보존) (5) Neon DB에 `tariff_snapshot` 행 2
-    fetcher × N tariff 누적 확인
-- [ ] **1.9** Fetcher 실패 격리 (1개 실패해도 나머지는 진행)
+  - DoD: (1) typecheck/lint/test 0 에러 ✅ (2) `pnpm harness:data` Rule 1 통과
+    (`FetchResult` 식별자 보존) ✅ (3) registry에 2 fetcher 등록 ✅
+    (4~5: Inngest devserver + Neon DB 실 누적은 1.5.6 실 스크래핑 전환 시 재검증)
+- [x] **1.9** Fetcher 실패 격리 (1개 실패해도 나머지는 진행)
+  - ADR-0008 §T7 for-loop + continue 패턴이 격리 메커니즘 — 별도 코드 없음.
+  - **STUB_FAIL_PROXIMUS=1** / **STUB_FAIL_TELENET=1** 환경변수로 격리 동작
+    수동 검증 가능: 한 fetcher를 실패시켜도 다른 fetcher는 정상 진행됨을
+    로그에서 확인. STUB_FAIL 케이스 포함 테스트:
+    `src/fetchers/proximus.test.ts` + `src/fetchers/telenet.test.ts`
 - [ ] **1.10** **투명성 페이지**: `/data-sources` — 모든 공급사 + 마지막 수집
   시각 + 수집 방법 (API/스크래핑/수동) 공개
   - **제외 공급사 섹션** (헌법 P3 — "비교에서 제외된 공급사도 이름 밝힘"):
@@ -216,13 +223,31 @@ scope cut), 비교 엔진 + 12케이스 실 청구서 수집 = 4주, 운영 부�
   - **보조 작업 3 (ADR-0007 §T9)**: 90일 초과 `comparison_result.locked_inputs`
     NULL → `pii_anonymized_at` 스탬프
 - [ ] **1.5.3** `docs/runbook.md` 신설 — fetcher 깨졌을 때 대응 절차 (솔로
-  운영용 self-rescue 체크리스트)
+  운영용 self-rescue 체크리스트). 스텁 fetcher → 실 스크래핑 교체 가이드 포함
+  (1.5.6과 연동).
 - [ ] **1.5.4** `scripts/**` typecheck 복원 (P4 부채) — `tsconfig.json`의
   `exclude: ["scripts/**"]` 제거. 선결 작업: (a) `verify-plan.ts`의 regex match
   group을 `noUncheckedIndexedAccess` 정합화 (b) `e2e-smoke.ts`의 playwright 타입
   import 경로 정리 (c) `bias-audit.ts` 잔존 type 이슈 정리. 9건 미만의 타입
   에러로 추정. 페이즈 1 진행 중에는 의도적으로 미뤄 둠 — 솔로 사이드 컨텍스트
   (FOUNDER.md) + 시간 배분 우선순위.
+- [ ] **1.5.5** DB 인스턴스 일치 검증 자동화 (운영 안전 부채). 사고 근거:
+  2026-05-09 — db:push가 production이 아닌 다른 Neon 브랜치에 적용되어 운영자가
+  production 브랜치 검증 시 0 tables 발견. scripts/verify-db.ts 작성 + 강화 완료
+  (host/endpoint 노출). 후속 작업: (a) verify-db.ts를 `pnpm verify:db` 스크립트로
+  package.json 등록 (b) stop-gate.sh 또는 CI에 통합해 매 커밋 전 host 일치 확인
+  (c) `.env.local.expected_host` 같은 *기대 host* 메모를 두고 verify-db.ts가
+  실제 host와 비교 — 불일치 시 게이트 실패. 페이즈 1.5 진입 시 실행.
+- [ ] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
+  교체). PLAN 1.8 스텁 fetcher의 후속 부채.
+  - `src/fetchers/proximus.ts`: 실 HTML fetch + 셀렉터 추출 로직. AbortController
+    25s timeout 활성화. 파싱 경고 시 confidence='medium'.
+  - `src/fetchers/telenet.ts`: 동일 패턴.
+  - 셀렉터 안정성 검증 + sanity check 강화 → confidence='low' → 'medium'/'high'
+    격상 목표.
+  - `docs/runbook.md`(1.5.3)와 연동 — 셀렉터 깨짐 시 대응 절차.
+  - DoD: 실 Neon DB에 `tariff_snapshot` 행 2 fetcher × N tariff 누적 확인.
+    confidence='low' 비율 < 20% (스텁 100%에서 격상).
 
 **Phase 1.5 검증:** verifier — typecheck/lint/test 0 에러 + 신설 runbook 존재.
 
@@ -415,8 +440,8 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
-| 1 | 13 | 7 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 4 | 0 | 0 | M3 말 | 2026-05-09 |
+| 1 | 13 | 9 | 0 | M1 ~ M3 | 2026-05-09 |
+| 1.5 | 6 | 0 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
@@ -425,7 +450,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **77** | **15** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **79** | **17** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
