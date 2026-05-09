@@ -42,11 +42,39 @@ async function main() {
 
   // Neon endpoint name 추출 (host 첫 토큰)
   const epMatch = parsed.host.match(/^(ep-[a-z0-9-]+?)(-pooler)?\./);
-  if (epMatch) {
-    console.log(`  endpoint: ${epMatch[1]}`);
+  const actualEndpoint = epMatch?.[1];
+  if (actualEndpoint) {
+    console.log(`  endpoint: ${actualEndpoint}`);
     console.log(
       '  (Neon Console → 프로젝트 → Branches → Connection details에서 일치 확인)',
     );
+  }
+
+  // ─── 1.5.5 가드: 기대 endpoint와 실제 일치 검증 ─────────────────────────
+  // 사고: 2026-05-09 — db:push가 외부 endpoint(silent-darkness)로 적용됨.
+  // 해결: EXPECTED_DB_ENDPOINT env var를 .env.local에 두고 매 verify에서 비교.
+  // 운영자가 Neon production 브랜치 endpoint를 한 번 명시하면 불일치 시 게이트 차단.
+  const expectedEndpoint = process.env.EXPECTED_DB_ENDPOINT?.trim();
+  console.log('\n═══════════════════════════════════════════════════════════════');
+  console.log('🔒 Endpoint 가드 (PLAN 1.5.5)');
+  console.log('═══════════════════════════════════════════════════════════════');
+  if (!expectedEndpoint) {
+    console.log(
+      '  ⚠️  EXPECTED_DB_ENDPOINT 미설정 — 가드 skip (.env.local에 추가 권장)',
+    );
+    console.log(
+      `      예: EXPECTED_DB_ENDPOINT="${actualEndpoint ?? 'ep-...'}"`,
+    );
+  } else if (!actualEndpoint) {
+    console.log('  ❌ 실제 endpoint 추출 실패 — DATABASE_URL host 형식 확인 필요');
+    process.exit(1);
+  } else if (expectedEndpoint !== actualEndpoint) {
+    console.log(`  ❌ 미스매치: 기대=${expectedEndpoint} / 실제=${actualEndpoint}`);
+    console.log('      .env.local의 DATABASE_URL을 production 브랜치로 갱신하거나');
+    console.log('      EXPECTED_DB_ENDPOINT를 의도된 endpoint로 갱신.');
+    process.exit(1);
+  } else {
+    console.log(`  ✅ 일치: ${actualEndpoint}`);
   }
 
   console.log('\n═══════════════════════════════════════════════════════════════');

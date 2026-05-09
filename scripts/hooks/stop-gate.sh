@@ -67,6 +67,13 @@ if [[ -f "scripts/harness/bias-audit.ts" && "${RUN_BIAS_AUDIT:-false}" == "true"
   run_gate "Gate 4c bias" "pnpm harness:bias"
 fi
 
+# Gate 5: DB 인스턴스 일치 (PLAN 1.5.5)
+# 사고 재발 방지 — db:push가 외부 endpoint로 적용되는 케이스 차단.
+# .env.local 부재 (CI 등) 시 스킵해 안전.
+if [[ -f "scripts/verify-db.ts" && -f ".env.local" ]]; then
+  run_gate "Gate 5 db-endpoint" "pnpm verify:db"
+fi
+
 # 결과 조립
 SUMMARY=$(printf '%s\n' "${REPORT[@]}")
 
