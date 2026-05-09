@@ -20,7 +20,7 @@
 | [ADR-0009](0009-scope-cut-fetcher-2-providers.md) | PLAN 1.8 fetcher 갯수 축소 — 3개 → 2개 (Proximus + Telenet) | Accepted | 2026-05-09 |
 | [ADR-0010](0010-comparison-engine.md) | 비교 엔진 (compare) — 절약액 계산 + caveats + 6 테스트 케이스 | Proposed | 2026-05-09 |
 | [ADR-0011](0011-data-sources-page-and-caveats-boundary.md) | `/data-sources` 투명성 페이지 + caveats 함수/UI 경계 (PLAN 1.10 + 1.13) | Accepted | 2026-05-09 |
-| [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md) | PLAN 1.5.6 실 스크래핑 진입 전 리스크 평가 + 분기 결정 (LOW/MEDIUM/HIGH) | Proposed | 2026-05-09 |
+| [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md) | PLAN 1.5.6 실 스크래핑 진입 전 리스크 평가 + 분기 결정 (LOW/MEDIUM/HIGH) | Proposed (Appendix A 추가 — legal 에이전트, 2026-05-09) | 2026-05-09 |
 
 ---
 
@@ -116,8 +116,8 @@
 
 ### [ADR-0013: PLAN 1.5.6 실 스크래핑 진입 전 리스크 평가 + 분기 결정](0013-fetcher-real-scraping-risk-assessment.md)
 
-**상태**: Proposed (GATE-F 운영자 분기 검토 후 Accepted/Deferred 격상)
+**상태**: Proposed (GATE-F 운영자 분기 검토 후 Accepted/Deferred 격상). **Appendix A 추가** (legal 에이전트, 2026-05-09) — §평가 1 잔여 위험 부분 해소.
 
-**요약**: PLAN 1.5.6 (Proximus + Telenet 스텁 → 실 스크래핑 fetcher 전환) 진입 *전* 리스크 평가 + 분기 결정. 운영자 사전 학습(arbitoria.com Reddit/FB 광고 차단)을 명시 인용해 *통신사 봇 차단 가능성*을 출발점으로 둔다. **7개 평가 + 4 차원 가중 평균**: (1) robots.txt + TOS — Proximus/Telenet 모두 요금제 페이지 명시 차단 X, 점수 2. (2) HTML 안정성 — SSR + CMS, Telenet 리브랜딩 진행 위험, 점수 3-4. (3) 봇 차단 — Cloudflare/Akamai 사용 가능성 *높음* 보수 가정, 점수 3. (4) GDPR — 요금제 페이지 PII 0, IP reputation 모니터링 가능, 점수 2. (5) 대안 데이터 소스 — Daisycon/Awin 텔레콤 카테고리 활성(TVA 가입 자격), BIPT besttariff.be 권위 있으나 자동화 어려움, 수동 import는 P3 정합 가능, 점수 2-3. (6) 베타 시나리오 — 옵션 X(스텁+"추정값") 가능 → 베타 일정 영향 0, 점수 2. (7) 법적 검토 — legal 에이전트 1차 호출 권장, 외부 변호사 거부됨(ADR-0004), 점수 2-3. **4 차원 가중 평균 = 2.69 → 🟡 MEDIUM**. **권장 분기 (옵션 C)**: 1.5.6을 페이즈 5/6으로 미룸, 그동안 1.5.4 (scripts/** typecheck 복원) → 1.5.2 (harness:price 첫 가동) → 1.5.3 (runbook) 부채 처리. 베타는 옵션 X(스텁) 진행. **거부 대안**: 평가 없이 즉시 진입(운영자 사전 학습 무시) / 무조건 stub(왜 미루는지 미명시).
+**요약**: PLAN 1.5.6 (Proximus + Telenet 스텁 → 실 스크래핑 fetcher 전환) 진입 *전* 리스크 평가 + 분기 결정. 운영자 사전 학습(arbitoria.com Reddit/FB 광고 차단)을 명시 인용해 *통신사 봇 차단 가능성*을 출발점으로 둔다. **7개 평가 + 4 차원 가중 평균**: (1) robots.txt + TOS — Proximus/Telenet 모두 요금제 페이지 명시 차단 X, 점수 2 (Appendix A: Telenet HTML 페이지 약한 강도 조항 발견, 2.5로 조정). (2) HTML 안정성 — SSR + CMS, Telenet 리브랜딩 진행 위험, 점수 3-4. (3) 봇 차단 — Cloudflare/Akamai 사용 가능성 *높음* 보수 가정, 점수 3. (4) GDPR — 요금제 페이지 PII 0, IP reputation 모니터링 가능, 점수 2. (5) 대안 데이터 소스 — Daisycon/Awin 텔레콤 카테고리 활성(TVA 가입 자격), BIPT besttariff.be 권위 있으나 자동화 어려움, 수동 import는 P3 정합 가능, 점수 2-3. (6) 베타 시나리오 — 옵션 X(스텁+"추정값") 가능 → 베타 일정 영향 0, 점수 2. (7) 법적 검토 — legal 에이전트 1차 호출 *완료* (Appendix A), 외부 변호사 거부됨(ADR-0004), 점수 2-3. **4 차원 가중 평균 = 2.75 (갱신: 2.69 → 2.75) → MEDIUM**. **권장 분기 (옵션 C)**: 1.5.6을 페이즈 5/6으로 미룸, 그동안 1.5.4 (scripts/** typecheck 복원) → 1.5.2 (harness:price 첫 가동) → 1.5.3 (runbook) 부채 처리. 베타는 옵션 X(스텁) 진행. **거부 대안**: 평가 없이 즉시 진입(운영자 사전 학습 무시) / 무조건 stub(왜 미루는지 미명시).
 
 **영향**: PLAN 1.5.6 본문에 "ADR-0013 분기 결과 = MEDIUM, 페이즈 5/6 재평가" 인용 추가. 합계 표 변동 X (체크박스 마킹 X). ADR-0008 §T3 confidence 휴리스틱 / ADR-0009 시장 점유율 / ADR-0010 §T5 confidence floor 모두 변동 0. ADR-0011 §T2 항목 3 method 라벨 변경은 분기에 의존 (LOW: Telenet 'scraping' / MEDIUM: 변동 X / HIGH: 'manual' 도입 가능). MONETIZATION.md §A 윤리 가드레일 #1 정합성 검토 트리거 — 어필리에이트 피드 데이터 출처 채택 시 별도 ADR-0014 신설. **검증**: GATE-F 직후 분기 격상, LOW 채택 시 24h 모니터링 게이트, MEDIUM 채택 시 페이즈 5 진입 시 재평가, HIGH 채택 시 ADR-0014 (어필리에이트 피드 1차 데이터) 신설.

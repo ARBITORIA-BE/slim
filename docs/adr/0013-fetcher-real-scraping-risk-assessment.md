@@ -168,12 +168,14 @@
 
 | 공급사 | robots.txt 차단 | TOS 자동 수집 명시 금지 | 점수 (1=낮은리스크, 5=높은리스크) |
 |---|---|---|---|
-| Proximus | 요금제 페이지 차단 X (요청대로 fetch 가능) | Legal info 페이지에 명시 금지 *없음*. General Terms PDF 미열람. | **2** |
-| Telenet | 요금제 페이지 차단 X. `Allow: /` 관대. | Algemene voorwaarden PDF 미열람. | **2** |
+| Proximus | 요금제 페이지 차단 X (요청대로 fetch 가능) | Legal info 페이지에 명시 금지 *없음*. General Terms PDF 미열람. | **2** → **2** (Appendix A 갱신: PDF 파싱 실패, 명시 금지 미확인) |
+| Telenet | 요금제 페이지 차단 X. `Allow: /` 관대. | Algemene voorwaarden PDF 미열람 → Appendix A: 법적정보 페이지에 *직접적 명시 금지 없음*. 단 "intellectuele eigendom 보호 + 일반 금지 사용" 조항 존재 (약함). | **2** → **2.5** (약한 강도 조항 반영, 상세는 Appendix A) |
 
 **근거**: robots.txt가 명시 차단 안 하는 한 BE 법체계에서 *기본 허용*에 가까움
-(Ius Mentis 2015). 단 General Terms PDF 두 개를 legal 에이전트가 텍스트 추출 후
-재검토 필요 — 명시 금지 발견 시 점수 4로 격상.
+(Ius Mentis 2015). Appendix A legal 에이전트 검토 결과: Proximus General Terms PDF는
+WebFetch 파싱 실패로 텍스트 추출 불가. Telenet 법적정보 HTML 페이지(juridische-informatie)
+에서 일반적 금지 사용 조항 확인 (스크래핑 *직접* 언급 없음 — 약한 강도). PDF 본문
+확정 검토는 외부 변호사 또는 수동 열람 필요 — 잔여 불확실성 존재.
 
 ### 평가 2 — HTML 구조 안정성
 
@@ -272,13 +274,13 @@
 
 | 차원 | 점수 | 가중치 | 가중 점수 | 근거 |
 |---|---|---|---|---|
-| **1. 법적 리스크** (TOS + GDPR + IP reputation) | **2.3** | 0.30 | 0.69 | robots.txt 허용 + PII 부재 + IP reputation 관리 가능. 단 General Terms PDF 미검토 잔여 위험. |
+| **1. 법적 리스크** (TOS + GDPR + IP reputation) | **2.5** | 0.30 | 0.75 | robots.txt 허용 + PII 부재 + IP reputation 관리 가능. Telenet HTML 법적정보 페이지에서 일반 금지 사용 조항(약한 강도) 확인. 양사 General Terms PDF 텍스트 추출 실패 — 잔여 불확실성 존재 (Appendix A). |
 | **2. 기술적 리스크** (HTML 안정성 + 봇 차단) | **3.0** | 0.30 | 0.90 | Cloudflare/Akamai 보수 가정 + Telenet 리브랜딩 진행. 첫 fetch 전 검증 불가 — 운영자 사전 차단 학습이 직접 적용. |
 | **3. 베타 일정 영향** | **2.0** | 0.20 | 0.40 | 옵션 X (스텁 + 베타)가 *P3 정합 + 일정 무영향*. Y만 위험. |
 | **4. 솔로 사이드 시간 비용** (디버깅 부담) | **3.5** | 0.20 | 0.70 | 셀렉터 깨짐 디버깅 sink + Cheerio 학습 + 차단 시 우회 학습. FOUNDER.md 솔로 학습자 컨텍스트에서 가장 큰 미지수. |
-| **종합 가중 평균** | | | **2.69** | **MEDIUM** (2.1~3.5 구간) |
+| **종합 가중 평균** | | | **2.75** | **MEDIUM** (2.1~3.5 구간) — Appendix A 갱신 후 (2.69 → 2.75) |
 
-### 분류: 🟡 **MEDIUM** (2.69 / 5.0)
+### 분류: MEDIUM (2.75 / 5.0) [갱신: 2.69 → 2.75, Appendix A 법적 검토 반영]
 
 LOW (≤2.0) → MEDIUM (2.1~3.5) → HIGH (≥3.6)
 
@@ -517,3 +519,117 @@ TVA 발급 후 Daisycon/Awin 가입 시 — 본 ADR §평가 5 결론 (윤리 �
 ### 운영자 사전 학습 (대화 컨텍스트, 2026-05-09)
 - 외부 시스템 자동 차단 경험: Reddit 광고 차단, Facebook 광고 차단 (arbitoria.com
   운영 시기). 통신사 스크래핑은 더 정교한 차단 시스템 가능성 — 본 ADR이 명시 인용.
+
+---
+
+## Appendix A — General Terms 본문 검토 (legal 에이전트, 2026-05-09)
+
+### 검토 범위
+
+**Proximus** (시도한 URL):
+- `https://www.proximus.be/en/id_cr_warnland/personal/orphans/legal-information.html` — HTML 열람 성공, PDF 링크만 노출 (텍스트 본문 없음)
+- `https://www.proximus.be/dam/jcr:7a6be979-b712-4e0a-8dcf-7531f1772946/GTC` — PDF WebFetch 시도: Lorem Ipsum placeholder 판정 (텍스트 추출 실패)
+- `https://www.proximus.be/dam/jcr:925d1012-ee1b-439d-9449-b4c3b11567d4/cdn/sites/iportal/documents/pdfs/common/PDFS-of-Terms-and-conditions/GTC_ONE_20230101_ENG~2024-11-26-12-42-57~cache.pdf` — PDF WebFetch 시도: FlateDecode 압축 스트림, 텍스트 추출 실패
+- `https://www.proximus.be/dam/jcr:64abc4aa-f00f-45a8-b95b-083408e4fa3d/gtc-internet-aup-ss-slg-en.pdf` — PDF WebFetch 시도: 압축 스트림, 텍스트 추출 실패
+- `https://www.proximus.be/en/about/general-conditions` — HTTP 404
+- `https://www.proximus.be/en/legal` — HTTP 404
+
+**Telenet** (시도한 URL):
+- `https://www2.telenet.be/en/customer-service/legal/` — HTTP 404
+- `https://www2.telenet.be/nl/klantenservice/algemene-voorwaarden/` — HTTP 404
+- `https://www2.telenet.be/fr/service-clientele/conditions-generales/` — HTTP 404
+- `https://www2.telenet.be/content/dam/www-telenet-be/klantenservice/legal-auteursrechten/algemene-voorwaarden_update.pdf` — PDF WebFetch 시도: 그래픽/디자인 파일 판정, 텍스트 추출 실패
+- `https://www2.telenet.be/content/dam/www-telenet-touch/nl/klantenservice/downloads-(pdf)/telenet-residentieel-algemene-voorwaarden-23maart2025.pdf.coredownload.pdf` — PDF WebFetch 시도: FlateDecode 압축, 텍스트 추출 실패 (2025-03-23 최신판)
+- `https://www2.telenet.be/content/dam/www-telenet-touch/nl/klantenservice/downloads-(pdf)/algemene-voorwaarden-telenet-september-2024.pdf.coredownload.pdf` — HTTP 404
+- `https://www2.telenet.be/content/dam/www-telenet-be/klantenservice/downloads/algemene_voorwaarden_res_final_01032022.pdf` — PDF WebFetch 시도: 그래픽 파일 판정, 텍스트 추출 실패
+- `https://www2.telenet.be/residential/nl/klantenservice/algemeen/voorwaarden/juridische-informatie/` — **HTML 열람 성공, 텍스트 본문 추출 성공** (아래 참고)
+- `https://www2.telenet.be/nl/klantenservice/wat-zijn-de-algemene-voorwaarden-van-telenet/` — HTML 인덱스 페이지만, PDF 링크 목록
+
+**검색 키워드 (3개 언어)**:
+- 영어: automated access, automated retrieval, scraping, crawling, crawl, robot, bot, spider, data extraction, systematic access, automated means, mechanical means, harvest
+- 프랑스어: accès automatisé, extraction automatisée, robot, système automatisé, moyens automatisés, moyens mécaniques, données automatique, racler, racloir, exploration
+- 네덜란드어: geautomatiseerde toegang, automatische extractie, robot, systematische toegang, automatische middelen, mechanische middelen, gegevensextractie, schraapen, schrapen, verkennen
+
+### 발견 조항
+
+#### Proximus
+
+HTML 법적정보 페이지에서 발견된 조항 없음. 모든 약관은 PDF 링크로만 제공. 모든
+Proximus General Terms PDF는 WebFetch FlateDecode 압축 스트림 문제로 텍스트 추출
+실패 — 키워드 검색 불가. 따라서 **Proximus GTC PDF 내 자동 수집 명시 금지 조항
+존재 여부: 확인 불가**.
+
+#### Telenet
+
+**HTML 페이지 (`juridische-informatie`)에서 발견된 조항** (간접적, 약한 강도):
+
+1. **약함** "De teksten, tekeningen, foto's, films, beelden, gegevens, databanken,
+   software, namen, handels- en domeinnamen, merken, logo's en andere componenten
+   van de website zijn beschermd door intellectuele rechten" [+] 이를 "opslaan,
+   reproduceren, wijzigen, openbaar maken, distribueren of verzenden" 금지 — 명시적
+   출처: `https://www2.telenet.be/residential/nl/klantenservice/algemeen/voorwaarden/juridische-informatie/`
+
+   - 이 조항은 웹사이트 *콘텐츠*의 저장·재배포를 금지하는 *지적재산권 조항*이지,
+     *자동 접근 방법 자체*를 직접 금지하는 조항이 아님.
+   - 공개 요금제 가격 정보는 "데이터베이스 보호" 적용 여부가 별도 법적 판단 필요.
+
+2. **약함** "Het is verboden de website te gebruiken op een manier die schade
+   berokkent, vervormt, onderbreekt, stopzet of minder efficiënt maakt" (웹사이트를
+   손상시키거나 비효율적으로 만드는 방식으로 사용하는 것은 금지됨) — 동일 출처
+
+   - 이 조항은 *일반 금지 사용* 조항으로, 스크래핑이 서버에 실질적 부담을 주지
+     않는 한 직접 적용 논란 여지 있음. 단 1일 1회 요금제 페이지 fetch는 이 기준을
+     초과할 가능성 매우 낮음.
+
+**Telenet Algemene voorwaarden PDF (2025-03-23 최신판)**: WebFetch 텍스트 추출 실패.
+*스크래핑 직접 명시 금지 조항 존재 여부: 확인 불가*. 단 검색 엔진 결과에서
+Telenet 2024년 9월 약관에 대한 검색 시 "geautomatiseerde", "systematische" 키워드
+매칭 없음 (메타데이터 수준 간접 확인).
+
+### legal 에이전트 판정
+
+- **Proximus 명시 금지 강도**: 확인 불가 (PDF 파싱 전체 실패)
+- **Telenet 명시 금지 강도**: 약함 (HTML 법적정보 페이지 기준 — 직접 스크래핑 금지
+  조항 부재, 지적재산권 보호 + 일반 금지 사용 조항만 확인)
+- **평가 1 점수 갱신**: Proximus 2 유지 (불확실성 유지) / Telenet 2 → 2.5 (약한
+  강도 조항 반영) — 평균 2.0 → 2.25
+- **법적 리스크 차원 점수 갱신**: 2.3 → 2.5
+- **종합 점수 영향**: 2.69 → 2.75 (가중 기여분 0.06 증가)
+- **분기 권장**: **MEDIUM 유지** (2.75 — 임계값 3.6에서 0.85 차이)
+
+HIGH 격상 요건인 "명시 금지 강도 중간 이상 발견"은 충족되지 않음. 발견된 조항은
+약한 강도이며 공개 요금제 가격 스크래핑에 대한 직접 언급 없음.
+
+### 한계
+
+1. **PDF 파싱 전체 실패**: Proximus GTC PDF 4개, Telenet GTC PDF 4개 모두 WebFetch
+   로 FlateDecode 압축 스트림 텍스트 추출 불가. 이는 legal 에이전트 가장 큰 한계.
+   수동 열람(브라우저 직접 다운로드 + Ctrl+F) 또는 외부 도구(pdfminer, PDF.js)로만
+   확인 가능.
+2. **Wayback Machine 차단**: `web.archive.org` WebFetch 접근 불가 — 아카이브 캐시
+   경로 없음.
+3. **간접 확인 한계**: 검색 엔진 메타데이터 + HTML 페이지 텍스트만 확인 — 실제
+   GTC PDF 본문 텍스트는 0건 확보.
+4. **Telenet 리브랜딩 영향**: Liberty Global 합병 이후 일부 URL 구조 변경으로
+   직접 링크 다수 404 반환 — 현행 유효 URL 특정 어려움.
+
+### 외부 변호사 감사 권장 여부
+
+현재 발견 수준(약한 강도 + PDF 미확인)만으로는 **외부 변호사 즉시 감사 불필요**.
+단 다음 조건 중 하나 충족 시 베타 직전 €800 외부 감사 권장 (ADR-0004 §결정 3
+정합):
+
+- **조건 A**: 1.5.6 실 스크래핑 진입 전 운영자가 GTC PDF를 수동 열람해 "중간"
+  강도 이상 조항 발견 시 → 즉시 legal 에이전트 재호출 + 외부 변호사 감사 검토
+- **조건 B**: 실 fetch 후 Proximus/Telenet으로부터 중지 요청(cease & desist) 또는
+  법적 접촉 발생 시 → 외부 변호사 즉시 호출 (ADR-0013 Amendment 필요)
+- **조건 C**: 베타 진입 후 어필리에이트 수수료 발생 시 (수익 창출 시점) — CJEU
+  Ryanair 판례(가격 비교 목적 스크래핑 계약 위반)가 상업적 사용에 적용 가능성 ↑
+
+**2026-05-09 현재**: 조건 A/B/C 미충족 → 외부 변호사 감사 연기 유지.
+
+운영자 권고 후속 작업:
+1. Proximus GTC 최신판 + Telenet Algemene voorwaarden 2025년 3월 최신판을 브라우저로
+   직접 열람해 Ctrl+F로 "automated", "geautomatiseerde", "scrapen", "robot" 키워드
+   수동 검색 (약 30분 작업) — 가장 비용 효율적 잔여 위험 해소 방법.
+2. 결과를 본 Appendix A Amendment로 추가 기록.
