@@ -22,7 +22,8 @@ describe('ProximusFetcher — metadata', () => {
     expect(metadata.providerSlug).toBe('proximus-be');
     expect(metadata.displayName).toBe('Proximus');
     expect(metadata.country).toBe('BE');
-    expect(metadata.method).toBe('scraping');
+    // ADR-0011 §T2 항목 3 Amendment: 스텁 fetcher는 'stub' (1.5.6 실 스크래핑 전환 시 'scraping'으로 변경)
+    expect(metadata.method).toBe('stub');
     // version: "proximus-be@YYYY-MM-DD" 형식
     expect(metadata.version).toMatch(/^proximus-be@\d{4}-\d{2}-\d{2}$/);
     // homepageUrl: 실 URL

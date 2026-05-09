@@ -20,7 +20,8 @@ describe('TelenetFetcher — metadata', () => {
     expect(metadata.providerSlug).toBe('telenet-be');
     expect(metadata.displayName).toBe('Telenet');
     expect(metadata.country).toBe('BE');
-    expect(metadata.method).toBe('scraping');
+    // ADR-0011 §T2 항목 3 Amendment: 스텁 fetcher는 'stub' (1.5.6 실 스크래핑 전환 시 'scraping'으로 변경)
+    expect(metadata.method).toBe('stub');
     expect(metadata.version).toMatch(/^telenet-be@\d{4}-\d{2}-\d{2}$/);
     expect(metadata.homepageUrl).toBe('https://www.telenet.be');
   });

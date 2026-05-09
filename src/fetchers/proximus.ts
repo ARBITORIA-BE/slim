@@ -82,11 +82,11 @@ export const proximus: Fetcher = {
     displayName: 'Proximus',
     country: 'BE',
     /**
-     * method='scraping': 실 스크래핑 *의도*를 metadata에 표시.
-     * 현재는 스텁이지만, /data-sources 페이지(1.10)에서 "스크래핑 기반" 방법론을
-     * 미리 노출함으로써 실 스크래핑 전환 시 코드 변경 없음.
+     * method='stub': 현재 개발용 고정 데이터 fetcher.
+     * ADR-0011 §T2 항목 3 — 스텁임을 /data-sources 페이지에 정직하게 노출 (P1).
+     * 1.5.6 실 스크래핑 전환 시 이 줄만 'scraping'으로 변경.
      */
-    method: 'scraping',
+    method: 'stub',
     version: FETCHER_VERSION,
     homepageUrl: 'https://www.proximus.be',
   },

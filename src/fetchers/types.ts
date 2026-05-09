@@ -48,8 +48,12 @@ export interface FetcherMetadata {
    *   api      — 공식 API 응답 (가장 신뢰)
    *   scraping — HTML 파싱 (셀렉터 fragile 위험)
    *   manual   — 운영자가 손으로 입력 (캐치업용)
+   *   stub     — 개발용 고정 데이터 (페이즈 1 스텁 fetcher — ADR-0011 §T2 항목 3).
+   *              P1 정직성: confidence='low' + 이 라벨로 사용자에게 스텁임을 노출.
+   *              1.5.6 실 스크래핑 전환 시 'stub' → 'scraping' 으로 단일 라벨 변경.
+   *              ADR-0008 Amendment 1 트리거: 본 변경의 형식 근거는 ADR-0011 §T2 항목 3.
    */
-  readonly method: 'api' | 'scraping' | 'manual';
+  readonly method: 'api' | 'scraping' | 'manual' | 'stub';
   /**
    * 버전 식별자. ADR-0006 §T3 rawPayload.fetcher_version 으로 그대로 미러됨.
    * 권장 형식: "<providerSlug>@<YYYY-MM-DD>" (예: "proximus-be@2026-05-09").
