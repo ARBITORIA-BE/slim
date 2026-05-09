@@ -188,20 +188,57 @@ pnpm test` + 위 DoD 모두 충족.
 
 ### 1.C 비교 엔진
 
-- [ ] **1.11** 절약액 계산 로직 (`src/engine/compare.ts`)
-  - 순수 함수, 입력 = `(현재요금제, 사용량 프로파일, 후보 요금제[])`
-  - 출력 = `Comparison[]` (각 항목에 `monthly_saving`, `yearly_saving`, `confidence`, `caveats[]`)
-- [ ] **1.12** 단위 테스트: 알려진 케이스 12개 (실제 영수증 기반)
-  - DoD: 모든 케이스 ±0.01€ 이내
-  - **scope cut 옵션 B**: 6개로 축소 가능 (실 청구서 수집이 솔로에서 병목일 시)
+- [x] **1.11** 절약액 계산 로직 (`src/engine/compare.ts`) — **순수 함수 + 6 케이스
+  검증 + caveats 자동 생성** (ADR-0010)
+  - 파일: `src/engine/compare.ts` (메인 함수) + `src/engine/types.ts`
+    (CompareInput / CompareResult / TariffSnapshotLike / UsageProfile) +
+    `src/engine/caveats.ts` (deriveCaveats 순수 함수, T6 8 규칙)
+  - `compare(input: CompareInput): CompareResult` — 순수 함수, 입력 변형 X.
+    입력 = `(category, currentTariff: TariffSnapshotLike | null, usageProfile,
+    candidates[])`. 출력 = `{ engineVersion, ranked: ComparisonItem[],
+    topMonthlySavingCents, topYearlySavingCents, generatedAt, meta }`
+  - ComparisonItem = `{ tariffSnapshotId, rank, monthlySavingCents,
+    yearlySavingCents, confidence, caveats[], breakdown }`. breakdown 에
+    monthlyAvg12/24 + monthlySaving12/24 둘 다 보존 (PLAN 3.5 계산 근거 입력)
+  - 결정 근거: [ADR-0010](docs/adr/0010-comparison-engine.md) — 카테고리 동일
+    후보만 (T1), 사용량은 추천성/caveat 트리거만 (T2 — 헌법 §8 #2 가격 가공 X),
+    12개월 + 24개월 둘 다 breakdown (T3), 활성화 12개월 amortize + 위약금
+    caveat (T4), confidence min(현재, 후보) 보수적 (T5), deriveCaveats 순수
+    함수 (T6), 6 케이스 scope cut 옵션 B (T7)
+  - **engineVersion 하드코딩**: `compare@2026-05-09` — 영구 링크(3.6)의 결과
+    재현성 보장. ADR-0010 §"Engine version 정책" 변경 트리거 명시.
+  - DoD: (1) typecheck/lint/test 0 에러 (2) cents 정수 산술만 — `Math.round`
+    한 번 외 부동소수 0 (3) ADR-0010 §T7 6 케이스 + 추가 단위 테스트 ≥3건
+    (빈 candidates / 모두 confidence='low' / 자기 참조 / 카테고리 미스매치)
+    모두 통과
+- [x] **1.12** 단위 테스트: 알려진 케이스 **6개** (운영자 검증 가능 — ADR-0010 §T7) —
+  **scope cut 옵션 B 적용됨 (ADR-0010, 2026-05-09)**
+  - 파일: `src/engine/compare.test.ts`
+  - 6 케이스 (각 케이스의 expected monthlySavingCents 명시 — strict equality):
+    1. 평균 커플 모바일 (€25 → €15) — saving = 1000 cents
+    2. 저사용 1인 모바일 — saving = -500 cents (현재가 더 저렴, 음수)
+    3. 고사용 family 모바일 한도 초과 caveat
+    4. VDSL → 케이블 인터넷 (음의 절약 + 12개월 약정 + 프로모 첫 3개월)
+    5. 약정 vs 비약정 — 신규 가입자, 프로모 없는 게 12개월 평균 저렴
+    6. 신규 가입자 (currentTariff null) 엣지
+  - DoD: 모든 케이스 ±0.01€ 이내 (정수 cents 산술이므로 ±0 cent strict equality)
+  - **12 케이스 확장 조건** (ADR-0010 Amendment 1 트리거): M3 시점 베타 청구서
+    6개 추가 수집 시 6 → 12 확장. 추가 케이스 후보 = 모뎀 임대 / 24개월 번들
+    amortize / family 다중 라인 / 다중 anomaly / 카테고리 혼합 입력 등 6종
 - [ ] **1.13** **caveats 메커니즘**: 결과에 항상 주의사항 (예: "이 요금제는 24개월 약정")
+  - **함수 차원 완료**: ADR-0010 §T6 deriveCaveats() 순수 함수가 8 규칙 자동
+    생성. `src/engine/caveats.ts` 에서 export.
+  - **사용자 노출 (이 항목의 잔여 작업)**: 결과 카드(3.1) / 비교 표(3.2) / 계산
+    근거 펼치기(3.5) 어디에 어떻게 배치할지 = **페이즈 3.5 결정** (베타 사용자
+    피드백 입력 — M16 평가 게이트). 본 항목은 페이즈 3 진입 시 [x] 마킹.
 
 **Phase 1 검증:** `pnpm harness:data` — 모든 `tariff_snapshot`이 `source_url` + `fetched_at` 가짐.
 **Phase 1 현실 일정:** M1 ~ M3 (3개월). 합리화 근거: 스키마 4개 신설(1.2~1.5)은
 1주, fetcher **2개** × 평균 1주(스크래핑/파싱/단위 테스트) = **2주** (ADR-0009
-scope cut), 비교 엔진 + 12케이스 실 청구서 수집 = 4주, 운영 부채 + 갑작스런
-라이브러리 호환성 = +2주 버퍼. **fetcher -1주 마진은 1.12 청구서 수집 또는
-페이즈 1.5 부채에 흡수**.
+scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추가 -1주
+마진), 운영 부채 + 갑작스런 라이브러리 호환성 = +2주 버퍼. **fetcher -1주 +
+6케이스 -1주 = 합산 2주 마진**은 1.5.6 실 스크래핑 또는 페이즈 1.5 부채에
+흡수.
 
 ---
 
@@ -440,7 +477,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
-| 1 | 13 | 9 | 0 | M1 ~ M3 | 2026-05-09 |
+| 1 | 13 | 11 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 6 | 0 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
@@ -450,7 +487,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **79** | **17** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **79** | **19** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
@@ -462,7 +499,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 ### Scope cut 옵션 (사용자 승인 후 적용)
 
 - 옵션 A: 1.8 fetcher 3개 → 2개 (Proximus + Telenet) — **적용됨 (ADR-0009, 2026-05-09)**
-- 옵션 B: 1.12 알려진 케이스 12개 → 6개
+- 옵션 B: 1.12 알려진 케이스 12개 → 6개 — **적용됨 (ADR-0010, 2026-05-09)**
 - 옵션 C: 2.5 OCR을 페이즈 2 → 페이즈 5로 미룸 (1-2개월 단축, 권장)
 - 옵션 D: 3.7 인쇄 뷰를 페이즈 3 → 페이즈 6으로 미룸
 - 옵션 E: 4.6 베타 100명 → 50명

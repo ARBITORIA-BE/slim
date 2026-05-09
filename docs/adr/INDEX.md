@@ -18,6 +18,7 @@
 | [ADR-0007](0007-comparison-request-result-schema.md) | `comparison_request` + `comparison_result` 스키마 (GDPR + 익명성 + 영구 링크) | Proposed | 2026-05-09 |
 | [ADR-0008](0008-fetcher-interface-and-cron.md) | Fetcher 인터페이스 + Inngest cron 인프라 | Proposed | 2026-05-09 |
 | [ADR-0009](0009-scope-cut-fetcher-2-providers.md) | PLAN 1.8 fetcher 갯수 축소 — 3개 → 2개 (Proximus + Telenet) | Accepted | 2026-05-09 |
+| [ADR-0010](0010-comparison-engine.md) | 비교 엔진 (compare) — 절약액 계산 + caveats + 6 테스트 케이스 | Proposed | 2026-05-09 |
 
 ---
 
@@ -94,3 +95,11 @@
 **요약**: ADR-0003 §결정 6의 scope cut 옵션 A를 명시적으로 채택. **4개 결정**: (1) Orange BE 제외, Proximus + Telenet 2개 유지 — BE 통신 시장 합산 ≥ 75% 점유 (Telecompaper Q1 2025: Proximus ~43% + Telenet ~32%). 비교 의미를 잃지 않으면서 솔로 부담 -33%. Orange BE는 페이즈 5에서 평가 후 추가 (5.0 신설). (2) 페이즈 1 일정 1주 단축 (fetcher 3주 → 2주) — 1.12 청구서 12케이스 수집 또는 페이즈 1.5 부채 흡수에 마진. (3) 1.5.1 fetcher 공통화 가치 저하 (N=2 표본 약함) — Orange BE 페이즈 5 추가 시 N=3 회복. (4) 베타 모집 카피 + `/data-sources` 제외 공급사 섹션에 "Orange BE — 페이즈 5에서 평가 후 추가 예정" 명시 (헌법 P3). **거부 대안**: 3개 유지(시간 비용 vs 신호 가치 불균형) / 1개로 축소(비교 의미 0).
 
 **영향**: PLAN 1.8 (3 → 2 fetcher, DoD 갱신) + 1.10 (제외 섹션에 Orange BE + CTA) + 4.6 (베타 모집 카피) + 5.0 (Orange BE 추가 신설 항목) + scope cut 옵션 A 라인 "적용됨" 마킹. 페이즈 5 항목 수 6 → 7. 합계 76 → 77. ADR-0008 인터페이스 결정 / ADR-0005 / ADR-0006 스키마 / MONETIZATION.md §A 단가 가정 변동 0. 검증: M16 평가 게이트 4개 신호 + 베타 `/data-sources` Orange BE CTA click ≥ 20% / Inngest free 무료 티어 사용량 0.27%.
+
+### [ADR-0010: 비교 엔진 (compare) — 절약액 계산 + caveats + 6 테스트 케이스](0010-comparison-engine.md)
+
+**상태**: Proposed (verifier 통과 후 Accepted로 격상 예정)
+
+**요약**: PLAN 1.11 (절약액 계산 로직 = `src/engine/compare.ts`) + 1.12 (단위 테스트) 동시 결정. **scope cut 옵션 B 적용**: 12 → 6 케이스 (운영자 검증 가능). **7개 결정 (T1~T7)**: (T1) 카테고리 동일 후보만 비교 — 혼합 거부 (P1 정보 무결성). (T2) 사용량은 추천성/caveat 트리거만, 가격 가공 X — 헌법 §8 #2 직접 강제 (한도 초과 비용 추정 거부, 청구서 OCR 페이즈 5 진입 시 재논의). (T3) 12개월 + 24개월 두 시나리오 동시 계산 — `breakdown.monthlySaving12/24Cents` 둘 다 보존, PLAN 3.5 계산 근거 펼치기 입력. (T4) 활성화 비용은 12개월 amortize, 약정 위약금은 caveat — 사용자 약정 상태 미상 가정 (PLAN 2.4 선택 입력). (T5) Confidence 전파 = `min(현재, 후보)` 보수적 floor + ADR-0006 §T5 입력 단계 low/anomaly 자동 제외. (T6) `deriveCaveats(snapshot, profile, current?)` 순수 함수 — 8 규칙 매트릭스 (24m/12m 약정, 활성화, 프로모 12m 미만, mobile 한도 초과, EU 로밍, 4K 권장 미달, candidate medium, current 비-high). nl-BE 단일 문자열 (페이즈 2 i18n 도입 시 일괄 변환). (T7) 6 케이스 명세 — 평균 커플 / 저사용 1인 / 고사용 family / VDSL→케이블 / 약정 vs 비약정 / 신규 가입자. M3 베타 청구서 6개 추가 수집 시 Amendment 1로 12 케이스 확장. **engineVersion 하드코딩**: `compare@2026-05-09` — 영구 링크 (3.6) 결과 재현성 보장.
+
+**영향**: PLAN 1.11 + 1.12 [x] 마킹 + scope cut 옵션 B "적용됨 (ADR-0010, 2026-05-09)". 1.13 caveats 메커니즘은 *함수 차원 완료* (deriveCaveats), *사용자 노출* 은 페이즈 3.5 결정으로 분리. `src/engine/compare.ts` + `src/engine/types.ts` + `src/engine/caveats.ts` + `src/engine/compare.test.ts` 신설. 페이즈 1 합계 9 → 11 완료, 전체 17 → 19. ADR-0007 `comparison_result.engineVersion` 컬럼이 본 ADR `ENGINE_VERSION` 상수를 그대로 기록. 1.5.6 실 스크래핑 후 confidence 격상 시 본 ADR 변경 0 (T5 floor 정책 그대로). 외부 의존성 0건 추가 (zod 이미 dep, 본 ADR은 zod 미사용).
