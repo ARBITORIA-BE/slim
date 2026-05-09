@@ -26,7 +26,7 @@
     "verify:db": "tsx scripts/verify-db.ts",
     "harness:plan": "tsx scripts/harness/verify-plan.ts",
     "harness:data": "tsx scripts/harness/data-fidelity.ts",
-    "harness:price": "tsx scripts/harness/price-snapshot.ts",
+    "harness:price": "tsx --env-file=.env.local scripts/harness/price-snapshot.ts",
     "harness:bias": "tsx scripts/harness/bias-audit.ts",
     "harness:e2e": "tsx scripts/harness/e2e-smoke.ts",
     "harness:transparency": "tsx scripts/harness/transparency-audit.ts",

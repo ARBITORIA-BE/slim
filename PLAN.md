@@ -260,15 +260,21 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 - [ ] **1.5.1** Fetcher 코드 공통화 — **2개** fetcher의 중복 추출 (HTTP retry,
   html 파싱 helper). N=2 표본은 패턴 검출이 약하므로 **추출 후보가 충분치
   않으면 대기** — Orange BE 페이즈 5 추가(N=3) 시 재진입 가능 (ADR-0009 §결정 3)
-- [ ] **1.5.2** `pnpm harness:price` (가격 스냅샷 diff) 첫 가동 — 일 1회 cron
-  + Sentry 알림 임계값 설정
-  - **보조 작업 1 (ADR-0006 §T6)**: 90일 초과 `tariff_snapshot.raw_payload` +
-    `price_payload` NULL화
-  - **보조 작업 2 (ADR-0007 §T4)**: 90일 초과 `comparison_request` 의
-    `postal_code` PC2 일반화 + `input_attributes` NULL → `pii_anonymized_at`
-    스탬프
-  - **보조 작업 3 (ADR-0007 §T9)**: 90일 초과 `comparison_result.locked_inputs`
-    NULL → `pii_anonymized_at` 스탬프
+- [x] **1.5.2** harness:price (가격 스냅샷 diff) 첫 가동 — 일 1회 cron
+  + Sentry 알림 임계값 설정. 완료 산출물: `scripts/harness/price-snapshot.ts`
+  전면 재작성 (에너지 가정 unit_price → 통신 monthly_price_cents 컬럼 마이그레이션,
+  ±20% 임계값 유지). 4 작업 한 cron 묶음:
+  - **핵심 1**: 24h 윈도 가격 변동 ±20% 감지 (ADR-0006 §T5 anomaly 마킹 입력)
+  - **보조 작업 1 (ADR-0006 §T6)**: 90일 초과 tariff_snapshot.raw_payload +
+    price_payload NULL화 (UPDATE)
+  - **보조 작업 2 (ADR-0007 §T4)**: 90일 초과 comparison_request 의
+    postal_code PC2 일반화 + input_attributes NULL → pii_anonymized_at 스탬프
+  - **보조 작업 3 (ADR-0007 §T9)**: 90일 초과 comparison_result.locked_inputs
+    NULL → pii_anonymized_at 스탬프
+  - 운영: pnpm harness:price (`tsx --env-file=.env.local`로 dotenv 로드 — db
+    모듈이 import 시점 DATABASE_URL 체크하므로 인라인 dotenv config는 hoisting
+    문제). cron 등록은 페이즈 4.5.1 어드민 진입 시 Inngest 또는 Vercel cron.
+  - 첫 가동 결과: 0건 (DB 비어있음 — 스텁 fetcher가 아직 snapshot insert 안 함)
 - [ ] **1.5.3** `docs/runbook.md` 신설 — fetcher 깨졌을 때 대응 절차 (솔로
   운영용 self-rescue 체크리스트). 스텁 fetcher → 실 스크래핑 교체 가이드 포함
   (1.5.6과 연동).
@@ -490,7 +496,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 6 | 2 | 0 | M3 말 | 2026-05-09 |
+| 1.5 | 6 | 3 | 0 | M3 말 | 2026-05-09 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
@@ -499,7 +505,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **79** | **23** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
+| **합계** | **79** | **24** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-09 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
