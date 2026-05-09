@@ -27,13 +27,12 @@
  */
 
 import type { Fetcher, FetchOutcome } from './types';
-import { computeConfidence, checkMonthlySanity } from './confidence';
+import { checkMonthlySanity } from './confidence';
+import { makeStubConfidence, stubFailOutcome, STUB_REASON } from './_shared';
 
 // ─── 스텁 상수 ────────────────────────────────────────────────────────────
 
 const FETCHER_VERSION = 'telenet-be@2026-05-09';
-const STUB_REASON =
-  'stub fetcher — manual data 2026-05-09; replace with real scraper (PLAN 1.5.6)';
 
 /**
  * Telenet 공식 인터넷 요금제 마스터 페이지 (ADR-0005 §외부 사실에서 확인됨).
@@ -49,19 +48,7 @@ const MOBILE_SOURCE_URL =
 
 // ─── Confidence 계산 (스텁은 항상 low) ──────────────────────────────────
 
-/**
- * 스텁 fetcher의 confidence는 항상 'low'.
- * ADR-0008 §T3: down-grade override — selectorMatched=false이므로 base도 low.
- */
-function makeStubConfidence() {
-  return computeConfidence({
-    selectorMatched: false, // 스텁: 실 fetch 없음
-    sanityChecks: [],
-    parseWarnings: [],
-  });
-}
-
-// ─── Fetcher 구현 ─────────────────────────────────────────────────────────
+// ─── Fetcher 구현 (공통 helper는 _shared.ts) ────────────────────────────────
 
 export const telenet: Fetcher = {
   metadata: {
@@ -81,25 +68,14 @@ export const telenet: Fetcher = {
   async fetch(): Promise<FetchOutcome> {
     const fetchedAt = new Date().toISOString();
 
-    // ─── STUB_FAIL 환경변수 처리 (1.9 격리 수동 검증용) ───────────────────
-    // Proximus와 독립적으로 테스트 가능 — 한 fetcher 실패가 다른 fetcher에 영향 없음.
-    if (process.env['STUB_FAIL_TELENET'] === '1') {
-      return {
-        ok: false,
-        error: {
-          fetcherSlug: 'telenet-be',
-          fetchedAt,
-          kind: 'network',
-          message:
-            'STUB_FAIL_TELENET=1: simulated failure for 1.9 isolation testing',
-          rawPayload: {
-            stub: true,
-            fetcher_version: FETCHER_VERSION,
-            simulated_failure: true,
-          },
-        },
-      };
-    }
+    // ─── STUB_FAIL 환경변수 처리 (1.9 격리 수동 검증용) — _shared.ts 헬퍼 사용 ───
+    const failure = stubFailOutcome(
+      'telenet-be',
+      'STUB_FAIL_TELENET',
+      FETCHER_VERSION,
+      fetchedAt,
+    );
+    if (failure) return failure;
 
     // ─── 실 fetch 준비 코드 (현재 비활성 — 1.5.6에서 활성화) ───────────────
     // const controller = new AbortController();
