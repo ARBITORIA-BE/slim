@@ -9,7 +9,9 @@
  * CI: PR 머지 전 필수
  */
 
-import { chromium } from 'playwright';
+// @playwright/test re-exports browser bindings — 별도 'playwright' 패키지 X
+// (devDependency: @playwright/test ^1.48 — package.json)
+import { chromium } from '@playwright/test';
 
 const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 const MAX_DURATION_MS = 5 * 60 * 1000; // 5분
