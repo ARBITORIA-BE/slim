@@ -75,6 +75,19 @@
   - DoD: jq 부재 환경(Windows + PATH에서 jq 제거)에서 `rm -rf /` 입력 시
     차단 메시지 정상 출력
   - 검증: ADR-0002 §검증 방법 2
+- [ ] **D.3** ARBITORIA 정렬 follow-ups (ADR-0020 결정 3/4/6/7) — GATE-K
+  (페이즈 4 베타 진입) 직전 일괄 처리. 5 작업:
+  - **D.3.a** Vercel App을 ARBITORIA-BE org에 직접 설치 (현 redirect follow를
+    org 직접 권한으로 격상, 운영자 5분)
+  - **D.3.b** Vercel team scope 결정 — personal `kimwonmin91-4132s-projects`
+    유지 vs ARBITORIA team 신설 (별도 ADR-0021 트리거, 비용 영향 검토)
+  - **D.3.c** Vercel runtime env vars 등록 — production + preview 양쪽에
+    EXPECTED_DB_ENDPOINTS / INNGEST_EVENT_KEY / INNGEST_SIGNING_KEY 3개 추가
+  - **D.3.d** `slim.lu` 도메인 Vercel Domains 검증 + SSL 발급 (ADR-0020
+    §Appendix C 6단계, 운영자 ~10분)
+  - **D.3.e** Neon-side Vercel Integration 도입 검토 (PR마다 DB branch 자동
+    생성 — 페이즈 4 베타에서 사용자 데이터 격리 가치 큼, 별도 ADR-0022 트리거)
+  - 결정 근거: [ADR-0020](docs/adr/0020-arbitoria-inventory-and-alignment-corrections.md)
 
 **Phase 0.5 검증:** `pnpm harness:plan && pnpm typecheck && pnpm lint &&
 pnpm test` + 위 DoD 모두 충족.
@@ -294,10 +307,13 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   2026-05-09 — db:push가 production이 아닌 다른 Neon 브랜치(silent-darkness)
   에 적용되어 운영자가 production 브랜치 검증 시 0 tables 발견.
   완료 산출물: (a) `scripts/verify-db.ts` (host/endpoint 노출 + 기대값 비교)
-  (b) `pnpm verify:db` package.json 스크립트 등록 (c) `EXPECTED_DB_ENDPOINT`
-  env var를 `.env.local`/`.env.example`에 추가 — verify-db.ts가 actual과 비교,
-  불일치 시 exit 1 (d) `scripts/hooks/stop-gate.sh`에 Gate 5로 통합 (`.env.local`
-  부재 시 스킵해 CI 안전). 양방향 검증 완료 (일치=pass, 미스매치=exit 1).
+  (b) `pnpm verify:db` package.json 스크립트 등록 (c) `EXPECTED_DB_ENDPOINTS`
+  env var (allowlist) — `.env.local`/`.env.example`에 추가, verify-db.ts가
+  actual과 비교, 미스매치 시 exit 1 (d) `scripts/hooks/stop-gate.sh`에 Gate 5
+  로 통합 (`.env.local` 부재 시 스킵해 CI 안전). 양방향 검증 완료.
+  *참고 (ADR-0020 §결정 4)*: Vercel runtime의 `EXPECTED_DB_ENDPOINTS`는 미등록
+  상태 — 페이즈 4 베타 진입 (GATE-K) 직전 D.3에서 등록 예정. 현 stop-gate는
+  로컬에서만 동작.
 - [ ] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
   교체). PLAN 1.8 스텁 fetcher의 후속 부채.
   - `src/fetchers/proximus.ts`: 실 HTML fetch + 셀렉터 추출 로직. AbortController
@@ -507,7 +523,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 2 | 1 | 0 | M0 잔여 | 2026-05-09 |
+| 0.5 | 3 | 1 | 0 | M0 잔여 + GATE-K 직전 | 2026-05-10 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 5 | 0 | M3 말 | 2026-05-10 |
 | 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
@@ -518,7 +534,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **80** | **26** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-10 |
+| **합계** | **81** | **26** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-10 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
