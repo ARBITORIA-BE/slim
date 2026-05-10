@@ -2,9 +2,19 @@
 
 ## Status
 
-**Proposed (2026-05-10)** — 운영자 GATE-M 검토 대기. GATE-M 통과 시 Accepted
-+ §Migration Plan 실행 → ADR-0017/0018 §References에 본 ADR 추가 (수정 X,
-인용만).
+**Accepted (2026-05-10)** — GATE-M 운영자 승인 완료. 추가 amendments 2건:
+
+> **Amendment A1 (T1 시점 변경)**: ARBITORIA bot 계정 생성 시점 = M24+ 협업자
+> 추가 시 → **베타 직전 (페이즈 4 진입, GATE-K 무렵)**으로 앞당김. 운영자
+> 명시 결정 — 베타 사용자 노출 시점에 사업체 명의 일관성 확보.
+>
+> **Amendment A2 (TVA 부록 신설)**: 현재 TVA 미발급 → M1 GitHub org 소유자는
+> *김원민 개인 명의*로 우선 생성. TVA 발급 후 별도 mini-task로 org ownership
+> transfer (개인 → 사업체). §Appendix A — TVA Post-Issuance Ownership Transfer
+> 참조.
+
+git tag 백업: `pre-arbitoria-migration` (Pieter 생성, 2026-05-10) — M1 시작
+직전 HEAD. 마이그레이션 실패 시 rollback 진입점.
 
 본 ADR은 **결정 + 마이그레이션 명세** 만 담는다. 코드/설정 변경 0 (마이그레이션
 산출물은 git remote URL + Vercel GitHub App 권한 + 선택적 commit author trailer
@@ -233,8 +243,10 @@ git config user.name = 운영자 본인, user.email = `kim.wonmin91@gmail.com`
 추가 시점 (M24+) 까지 무가치. co-author trailer 는 매 commit 운영자 의도
 표현 부담 高 + 자동화 hook 추가 시 PLAN 1.5.7 부채 동형 (Bash 보안 hook 후속).
 
-**미래 회귀 트리거**: M24+ 시드 모금 + 풀타임 전환 + 협업자 추가 시 옵션 B
-또는 C 재평가 → ADR Amendment.
+**~~미래 회귀 트리거~~** (Amendment A1, 2026-05-10): ~~M24+~~ → **베타 직전
+(GATE-K 무렵, 페이즈 4 진입 시점)** 으로 앞당김. 운영자 명시 결정 — 베타 사용자
+노출 시점에 사업체 명의 commit 일관성 확보. ARBITORIA bot 계정 생성 + 옵션 B
+또는 C 재평가는 페이즈 4 진입 ADR (별도 신설) 트리거.
 
 ### T2 — 마이그레이션 시점 = TVA 발급 *전* + 페이즈 2 진입 *전* (즉시 실행 채택)
 
@@ -579,3 +591,57 @@ verifier 책임 — 본 ADR 행 추가:
 - [Neon Docs — Transfer projects](https://neon.com/docs/manage/orgs-project-transfer)
   — 통합 설치된 프로젝트는 org 이전 미지원 (본 ADR 은 Neon 프로젝트 *그대로*
   유지 — GitHub repo URL 만 갱신)
+
+---
+
+## Appendix A — TVA Post-Issuance Ownership Transfer (mini-task, Amendment A2)
+
+### 컨텍스트
+
+본 ADR §M1 시점 (2026-05-10): TVA 미발급. 따라서 GitHub org `ARBITORIA`
+소유자는 *김원민 개인 명의*로 우선 생성. 사업체 명의 자산 분리는 TVA 발급
+시점에 후속 mini-task로 처리.
+
+### 발동 조건
+
+- TVA 발급 완료 (FOD 처리 기간 의존, 운영자 GATE 신호)
+- 비즈니스 은행 계좌 개설 완료 (`docs/FOUNDER.md` §사업 단계 §M1 다음 단계)
+- 운영자 명시 결정: "ARBITORIA org를 사업체 명의로 격상"
+
+### Mini-task 단계 (~15분)
+
+**MA1**. GitHub org Settings → Billing → Owners 섹션에서 *사업체 명의 user/email
+추가* (운영자가 사업자 등록 후 발급된 사업용 이메일을 GitHub 신규 계정으로
+가입 + organization Owner 권한 부여)
+
+**MA2**. 기존 owner (김원민 개인) 권한 *Member로 강등* (소유권 단일화)
+
+**MA3**. GitHub org Settings → General → "Display name" 갱신 (예: "Arbitoria
+SRL" or "ARBITORIA NV/SA" — TVA 형태에 맞춤)
+
+**MA4**. Vercel Settings → Members → ARBITORIA team owner 갱신 (사업체 명의
+계정으로)
+
+**MA5**. Neon Settings → Organization → Owner transfer (사업체 명의 계정으로)
+
+**MA6**. 회계 등록부 갱신: 본 ADR Appendix A에 *MA1~MA5 완료 시점 + 사업체
+명의 계정 ID* 명시 (Pieter가 갱신, 사업자 등록 번호 + TVA 번호는 별도 보안
+저장소 — 채팅 노출 X, ADR-0018 §결정 7 정합).
+
+### 검증
+
+- GitHub: Settings → People → owner 1명 (사업체 명의)
+- Vercel: Settings → Members → role: Owner (사업체 명의)
+- Neon: Settings → Organization → owner: 사업체 명의
+
+### 회귀 트리거
+
+- TVA 번호 채팅 노출 발견 시 → ADR-0018 §결정 7 위반 → scribe 운영 노트 +
+  보안 회전
+- 사업체 명의 계정의 비번/2FA 설정 누락 → 보안 사고 가능 (Vercel + Neon owner
+  동시 제어 권한)
+
+### Status
+
+본 Appendix A는 **Pending** (TVA 발급 시점까지) — Pieter 또는 운영자가 발급
+완료 신호 시점에 *Accepted*로 격상 + MA1~MA6 단계 실행.
