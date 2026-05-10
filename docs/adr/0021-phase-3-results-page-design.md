@@ -318,9 +318,22 @@ DB latency + compare() 동기 함수 = 보통 ms 단위 → 5초 마진 충분.
   ADR-0010 §T6 caveat #1 트리거") 표기.
 
 **다국어 (페이즈 4 베타 직전 SC-E 발동)**: 본 ADR 페이즈 3 시점은 한국어 단일.
-8 caveats 텍스트는 `ADR-0010` §T6 의 nl-BE 단일 출력을 한국어로 매핑하는 *번역
-표* 신설 (`src/engine/caveats-i18n.ts`). 페이즈 4 진입 시 nl-BE/fr-BE/en/ko
-4 locale 일괄.
+
+**Amendment 1 (2026-05-10) — caveats-i18n 모듈 미신설 결정**:
+ADR-0010 §T6 본문이 "nl-BE 단일 문자열" 명시했으나, 실제 `src/engine/caveats.ts`
+구현은 페이즈 1 시점부터 *한국어 직접 출력* (예: "약정 24개월 — 조기 해지 시
+위약금 발생"). 따라서 한국어 매핑을 위한 별도 i18n 모듈(원안 `caveats-i18n.ts`)
+은 *현 시점 의미 0* — 미신설로 결정. 사유:
+- caveats.ts 가 이미 한국어 출력 → 매핑 함수 = identity, 코드 0줄 가치
+- 단일 로케일 단계에서 분리는 *불필요한 추상화* (헌법: 가치 없는 추상화 회피)
+- ADR-0010 §T6 본문의 "nl-BE 단일" 표현은 페이즈 1 결정 시점의 의도였고, 실
+  코드는 한국어로 작성됨 (운영자 한국어 우선 정합)
+
+**향후 트리거 (페이즈 4 베타 직전 SC-E 발동)**:
+- next-intl 도입 + 4 locale (한/nl/fr/en) 일괄 시점에 caveats.ts 출력을 *caveat
+  ID + 데이터* 모양으로 리팩터 → 별도 i18n 함수 (가칭 `caveats-i18n.ts`) 가 ID →
+  로케일별 문자열 매핑. 현 한국어 직접 출력은 그때 ko 메시지 번들로 흡수.
+- 본 Amendment 의 회귀 트리거 = ADR-0016 §T10 SC-E 발동 (페이즈 4 i18n ADR).
 
 **근거**:
 - 헌법 P3 + ADR-0011 §T3 예약 발동.
@@ -594,7 +607,7 @@ builder 종료 후 사용자 노출 [x] 마킹 가능.
   - Radix Checkbox + Badge dep 추가 (옵션 SC-F/T5 채택 시) — GATE-C amend
   - Zod schema NL/LU 확장 (T10) — `src/types/comparison-input.ts`
   - `usage-estimator.ts` 신설 (T3 §5)
-  - `caveats-i18n.ts` 신설 (T5 한국어 매핑)
+  - ~~`caveats-i18n.ts` 신설 (T5 한국어 매핑)~~ — **Amendment 1 (2026-05-10) 미신설** (caveats.ts 한국어 직접 출력)
 - **페이즈 4 진입 시점 (architect 책임)**:
   - 어트리뷰션 ADR (PLAN 4.1) — "변경하기" CTA event 매핑
   - 동적 OG 이미지 ADR (가칭 ADR-OG) — SC-G 발동
@@ -721,8 +734,8 @@ src/app/r/[shortId]/_components/ExcludedProviders.tsx     # 제외 공급사 (T6
 src/app/r/[shortId]/_components/CalculationDetails.tsx    # 계산 근거 펼치기 (T7)
 src/engine/usage-estimator.ts                   # householdType → UsageProfile (T3 §5)
 src/engine/usage-estimator.test.ts              # 매핑 단위 테스트
-src/engine/caveats-i18n.ts                      # nl-BE → 한국어 매핑 (T5)
-src/engine/caveats-i18n.test.ts                 # 8 caveats 매핑 단위 테스트
+# caveats-i18n.{ts,test.ts} — Amendment 1 (2026-05-10) 미신설.
+# caveats.ts 가 이미 한국어 출력. 페이즈 4 i18n ADR 진입 시 재검토.
 e2e/result-page.spec.ts                         # 정렬/필터 URL params + 영구 링크 회귀
 ```
 

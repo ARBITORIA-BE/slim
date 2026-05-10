@@ -423,6 +423,22 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 > (`/api/compare` 풀, `/r/[shortId]` 풀, current-provider sub-step 활성, NL/LU
 > 우편번호 추가) 모두 §T1~T11 명세 그대로 따른다. SC-F (URL params 정렬/필터)
 > + SC-G (static OG) + SC-H (별도 ADR-OCR) + 옵션 D (인쇄 뷰 페이즈 6) 적용.
+>
+> **M6 builder 진척 (2026-05-10, 합계 영향 0 — 골격 단계)**:
+> - **Sub-task 1 통과** — T10 NL/LU `discriminatedUnion` 우편번호 (BE/NL/LU
+>   3국, NL PC4/PC6 자동 대문자화) — `src/types/comparison-input.ts` + 13
+>   신설 테스트 + `postal/page.tsx` 국가 Select + `preview/page.tsx` country
+>   동적 전달.
+> - **Sub-task 2 통과** — T3 §5 `usage-estimator.ts` (4 카테고리 × 3
+>   householdType 기본 프로파일, 19 신설 테스트). ADR-0021 §T5 Amendment 1 —
+>   `caveats-i18n.ts` 미신설 결정 (caveats.ts 가 이미 한국어 출력).
+> - **Sub-task 3 통과** — T7 `CalculationDetails.tsx` 골격 (`<details>` +
+>   사용 가정 + 산식 + caveats + engineVersion 표시, mock data props) +
+>   T8 `generateMetadata` (noindex + canonical + textOG, og:image 미설정).
+>   부수: `--color-accent-dark` 토큰 신설 + Form{Label,Message} AA contrast fix
+>   (axe color-contrast 0 violations 유지).
+> - 페이즈 3.1~3.7 자체 [x] 마킹은 풀 격상 (T1 + T2 비교 표 + T6 제외 공급사
+>   + T3 `/api/compare` 풀) 후속 라운드에서.
 
 - [ ] **3.1** **1층 — 결론 카드** (스크롤 없이 보임) — ADR-0021 §T2: 1위 추천
   + 연간 절약액 + "변경하기" CTA placeholder (페이즈 4 어트리뷰션 활성).
@@ -595,7 +611,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
-| 3 | 7 | 0 | 0 | M6 ~ M7 (ADR-0021 Accepted, 옵션 D + SC-F/G/H, builder 라운드 M6 트리거) | 2026-05-10 |
+| 3 | 7 | 0 | 0 | M6 ~ M7 (ADR-0021 Accepted + Amendment 1; **M6 sub-task 1-3 통과** — T10/T3§5/T7/T8 골격, 풀 격상은 후속) | 2026-05-10 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |

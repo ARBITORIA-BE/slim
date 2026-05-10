@@ -34,11 +34,6 @@ describe('postalCodeSchema (ADR-0016 §T3, SC-B BE 1차)', () => {
     expect(postalCodeSchema.safeParse({ country: 'BE', postalCode: '12 34' }).success).toBe(false);
   });
 
-  it('NL 형식 거부 (페이즈 3 진입 직전 추가 예정)', () => {
-    // NL PC6 "1234 AB" 거부 — 현재 페이즈 2 1차는 BE 만
-    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '1234 AB' }).success).toBe(false);
-  });
-
   it('한국어 에러 메시지 노출 (P3 정직성)', () => {
     const result = postalCodeSchema.safeParse({ country: 'BE', postalCode: '0001' });
     expect(result.success).toBe(false);
@@ -47,6 +42,86 @@ describe('postalCodeSchema (ADR-0016 §T3, SC-B BE 1차)', () => {
       expect(message).toContain('벨기에');
       expect(message).toContain('1000');
     }
+  });
+});
+
+describe('postalCodeSchema NL (ADR-0021 §T10, 페이즈 3 진입 직전 추가)', () => {
+  it('NL PC4 4자리 통과', () => {
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '1011' }).success).toBe(true);
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '9999' }).success).toBe(true);
+  });
+
+  it('NL PC6 4자리+공백+대문자 2자 통과 ("1011 AB")', () => {
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '1011 AB' }).success).toBe(true);
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '5500 ZZ' }).success).toBe(true);
+  });
+
+  it('NL PC6 공백 없이도 통과 ("1011AB")', () => {
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '1011AB' }).success).toBe(true);
+  });
+
+  it('NL PC6 소문자 거부 (UI에서 자동 대문자화 필수)', () => {
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '1011 ab' }).success).toBe(false);
+  });
+
+  it('NL 첫 자리 0 거부', () => {
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '0011' }).success).toBe(false);
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '0011 AB' }).success).toBe(false);
+  });
+
+  it('NL 비-4자리 거부', () => {
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '101' }).success).toBe(false);
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '10110' }).success).toBe(false);
+  });
+
+  it('NL 한국어 에러 메시지 노출', () => {
+    const result = postalCodeSchema.safeParse({ country: 'NL', postalCode: '0001' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const message = result.error.issues[0]?.message ?? '';
+      expect(message).toContain('네덜란드');
+    }
+  });
+});
+
+describe('postalCodeSchema LU (ADR-0021 §T10, 페이즈 3 진입 직전 추가)', () => {
+  it('LU 4자리 통과', () => {
+    expect(postalCodeSchema.safeParse({ country: 'LU', postalCode: '1000' }).success).toBe(true);
+    expect(postalCodeSchema.safeParse({ country: 'LU', postalCode: '4000' }).success).toBe(true);
+    expect(postalCodeSchema.safeParse({ country: 'LU', postalCode: '9999' }).success).toBe(true);
+  });
+
+  it('LU 첫 자리 0 거부', () => {
+    expect(postalCodeSchema.safeParse({ country: 'LU', postalCode: '0001' }).success).toBe(false);
+  });
+
+  it('LU PC6 형식 거부 (NL 형식 BE/LU에 적용 안 됨)', () => {
+    expect(postalCodeSchema.safeParse({ country: 'LU', postalCode: '1000 AB' }).success).toBe(false);
+  });
+
+  it('LU 한국어 에러 메시지 노출', () => {
+    const result = postalCodeSchema.safeParse({ country: 'LU', postalCode: '0001' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const message = result.error.issues[0]?.message ?? '';
+      expect(message).toContain('룩셈부르크');
+    }
+  });
+});
+
+describe('postalCodeSchema discriminatedUnion country 검증', () => {
+  it('country 누락 거부', () => {
+    expect(postalCodeSchema.safeParse({ postalCode: '1000' }).success).toBe(false);
+  });
+
+  it('알 수 없는 country 거부 (예: DE)', () => {
+    expect(postalCodeSchema.safeParse({ country: 'DE', postalCode: '10115' }).success).toBe(false);
+  });
+
+  it('BE postalCode 형식을 NL country로 검증 시 분기 정확 (regex 분리)', () => {
+    // BE 형식 "1000" 은 country: 'NL' 일 때도 PC4 형식으로 통과 (둘 다 4자리)
+    // — 이는 의도된 동작. country 분기 자체가 비교 후보 SELECT 의 p.country 필터 구분.
+    expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '1000' }).success).toBe(true);
   });
 });
 

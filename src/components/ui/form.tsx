@@ -117,7 +117,9 @@ export const FormLabel = forwardRef<
   return (
     <Label
       ref={ref}
-      className={cn(error && 'text-accent', className)}
+      // text-accent-dark = AA contrast 통과 (text-accent 단독은 #E97462 vs #FAF7F2
+      // ≈ 2.86 < 4.5). globals.css 의 --color-accent-dark 정의.
+      className={cn(error && 'text-accent-dark', className)}
       htmlFor={formItemId}
       {...props}
     />
@@ -171,7 +173,8 @@ export const FormMessage = forwardRef<
     <p
       ref={ref}
       id={formMessageId}
-      className={cn('text-sm font-medium text-accent', className)}
+      // text-accent-dark — AA contrast 통과 (text-accent 단독은 미달).
+      className={cn('text-sm font-medium text-accent-dark', className)}
       {...props}
     >
       {body}

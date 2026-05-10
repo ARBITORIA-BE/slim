@@ -45,9 +45,12 @@ export default function PreviewPage({
     setStatus('submitting');
     setErrorMessage(null);
 
+    // ADR-0021 §T10 — postalCountry sessionStorage 키 신설. 기존 v1 세션
+    // 호환을 위해 fallback 'BE' (페이즈 2 1차는 BE 단일).
+    const country = state.data.postalCountry ?? 'BE';
     const candidate = {
       category,
-      postal: { country: 'BE' as const, postalCode: state.data.postalCode ?? '' },
+      postal: { country, postalCode: state.data.postalCode ?? '' },
       householdType: state.data.householdType,
       currentProviderId: state.data.currentProviderId ?? null,
       currentTariffId: state.data.currentTariffId ?? null,
