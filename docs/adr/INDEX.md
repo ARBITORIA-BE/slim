@@ -24,6 +24,7 @@
 | [ADR-0015](0015-vercel-integration-and-d1-closure.md) | Vercel 통합 운영 결정 + PLAN D.1 마감 게이트 | Proposed (GATE-H 대기) | 2026-05-10 |
 | [ADR-0017](0017-db-mismatch-incident-postmortem.md) | DB 미스매치 사건 종결 보고 (silent-darkness + slim-prod hidden-recipe) | Accepted | 2026-05-10 |
 | [ADR-0018](0018-neon-multi-org-policy.md) | Neon 멀티 organization 정책 + 자동 자산 점검 룰 | Accepted | 2026-05-10 |
+| [ADR-0019](0019-arbitoria-three-platform-alignment.md) | ARBITORIA 3 플랫폼 (GitHub / Vercel / Neon) 정렬 | Proposed (GATE-M 대기) | 2026-05-10 |
 
 ---
 
@@ -149,3 +150,10 @@
 
 **영향**: PLAN §1.5.5 본문에 ADR-0017 + ADR-0018 인용 추가. 매월 self-check 자동화 cron 후보 → 페이즈 6 운영 인프라 진입 시 별도 ADR. ADR-0011 §검증 4 (베타 직전) + ADR-0018 §결정 4 (매월 정기) 보완 관계. ADR-0015 §Step-3-prime은 ADR-0018 §결정 6 첫 사례 (preview 환경 추가). 외부 의존성 0건 추가. **회귀 트리거**: (1) 자동 자산 발견 1건 이상 (2) 채팅 비번 노출 1건 이상 (3) 매월 self-check 누락 2회 연속 → 자동화 cron 즉시 도입 (4) Neon Free branch 한도 도달 (5) 신규 환경 추가 후 verify:db 미통과 1건.
 
+### [ADR-0019: ARBITORIA 3 플랫폼 (GitHub / Vercel / Neon) 정렬](0019-arbitoria-three-platform-alignment.md)
+
+**상태**: Proposed (GATE-M 운영자 승인 대기) — 본 ADR은 *결정 + 마이그레이션 명세* 만 담음 (코드/설정 변경 0). 단계별 명세는 [`docs/arbitoria-migration-runbook.md`](../arbitoria-migration-runbook.md).
+
+**요약**: 진단 사실 — GitHub `Arbitoria` (personal user, id 261937864) / Vercel ARBITORIA (team) / Neon ARBITORIA (org). 3 플랫폼이 같은 이름이지만 GitHub만 *personal user*. ADR-0018 §결정 1 "ARBITORIA org만" 헌장 정합 + TVA 발급 후 사업체 명의 자산 단위 정렬을 위해 GitHub org 신설 + Slim repo 이전. **5개 결정**: (1) **옵션 A 채택** — GitHub Free org `ARBITORIA` 신설 + `Arbitoria/slim` → `ARBITORIA/slim` 이전 + Vercel GitHub App ARBITORIA org 권한 부여 + 로컬 git remote URL 갱신. 거부 옵션 = B (모두 personal 강등 — Neon data 이전 위험 + 법인 분리 가치 손실) / C (다른 곳 rename — 사업 정체성 손실) / D (다른 username — 헌장 명확성 손실). (T1) git commit author = 운영자 개인 (`kim.wonmin91@gmail.com`) — 솔로 사이드 단순. M24+ 협업자 추가 시 bot 계정 또는 trailer 재평가. (T2) 마이그레이션 시점 = 즉시 (GATE-M 통과 시) — 페이즈 2 영향 0 / 페이즈 4 베타 진입 *전* 완전 정렬 필수 (GATE-K 직렬). (T3) personal user `Arbitoria` 처리 = 그대로 (또는 org 이름 충돌 시 분기 — `ARBITORIA-BE` 또는 personal rename). (T4) 비용 영향 = 0 (GitHub Free + 기존 Vercel/Neon). 미래 트리거 = Vercel Pro $20/user (협업자 추가) / Neon Launch $19/월 (M10~M14) / GitHub Team $4/user (협업자 추가). (T5) ADR-0017/0018 §References 본 ADR 인용 추가 (본문 수정 X — P5 헌법 정합). **마이그레이션 단계**: M1 운영자 GitHub org 생성 (5분) → M2 운영자 Slim repo 이전 (2분) → M3 Pieter git remote 갱신 (1분) → M4 운영자 Vercel GitHub App + repo 재연결 (5분) → M5 운영자 Neon GitHub Integration 점검 (3분) → M6 git config user.name/email 결정 (2분) → M7 Pieter 임시 PR 검증 (5분) → M8 ADR-0017/0018 References 보강 + INDEX.md 갱신 (3분). **총 ~30분** (운영자 ~17분 + Pieter ~12분).
+
+**영향**: PLAN.md 변동 0 (본 ADR 자체가 추적 단위 — 단발 마이그레이션). PLAN §1.5.5 본문 인용 1줄 추가 (사고 종결 = ADR-0017 + 정책 = ADR-0018 + 정렬 = ADR-0019). 외부 의존성 0건 추가. 새 SaaS 0건. **GATE 관계**: 본 ADR ⊥ GATE-J (페이즈 2 진입) — 병렬. 본 ADR // GATE-K (페이즈 4 베타 진입) + GATE-L (M16 평가 게이트) — 직렬 (TVA 발급 후 사업체 명의 자산 단위 정렬 필수). **회귀 트리거**: (1) GitHub org `ARBITORIA` 이름 충돌 → T3 분기 결정 + Amendment (2) Vercel 재연결 후 build 실패 → ADR-0015 §Step-3-prime 동형 보강 (3) Neon GitHub Integration 별도 설치 발견 → ADR-0018 §결정 6 절차 추가 (4) 운영자 협업자 추가 (M24+) → T1 commit author + GitHub Team 재평가 (5) Vercel Pro 격상 시점 (MONETIZATION.md §1 M12~M16) → ARBITORIA team 명의 결제 정합성 (6) TVA 발급 후 1주 내 자산 일관 점검 (7) personal user `Arbitoria` 옛 commit author 식별성 자가 점검.
