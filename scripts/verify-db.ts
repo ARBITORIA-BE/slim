@@ -50,31 +50,52 @@ async function main() {
     );
   }
 
-  // ─── 1.5.5 가드: 기대 endpoint와 실제 일치 검증 ─────────────────────────
+  // ─── 1.5.5 가드: 기대 endpoint allowlist 검증 ───────────────────────────
   // 사고: 2026-05-09 — db:push가 외부 endpoint(silent-darkness)로 적용됨.
-  // 해결: EXPECTED_DB_ENDPOINT env var를 .env.local에 두고 매 verify에서 비교.
-  // 운영자가 Neon production 브랜치 endpoint를 한 번 명시하면 불일치 시 게이트 차단.
-  const expectedEndpoint = process.env.EXPECTED_DB_ENDPOINT?.trim();
+  // 2026-05-10 — preview 환경 도입 (ep-autumn-water-all6d93e). single endpoint
+  // 가드는 multi-env Vercel 셋업에서 false negative 위험.
+  //
+  // 해결:
+  //   - EXPECTED_DB_ENDPOINT (단일, 기존) — 콤마 없으면 단일 비교
+  //   - EXPECTED_DB_ENDPOINTS (복수, 신설) — 콤마 구분 allowlist
+  //   - 둘 다 설정 시 EXPECTED_DB_ENDPOINTS 우선 (운영자 명시 의도)
+  //   - 둘 중 하나 매칭이면 통과
+  //
+  // 운영자 사전 결정 (2026-05-10 GATE-I): production + preview 두 endpoint를
+  // allowlist로 둠. CI/dev/local 어느 쪽이든 *예상된 둘 중 하나*라야 통과.
+  const singleExpected = process.env.EXPECTED_DB_ENDPOINT?.trim();
+  const multiExpected = process.env.EXPECTED_DB_ENDPOINTS?.trim();
+  const allowlist: string[] = multiExpected
+    ? multiExpected.split(',').map((s) => s.trim()).filter(Boolean)
+    : singleExpected
+    ? [singleExpected]
+    : [];
+
   console.log('\n═══════════════════════════════════════════════════════════════');
   console.log('🔒 Endpoint 가드 (PLAN 1.5.5)');
   console.log('═══════════════════════════════════════════════════════════════');
-  if (!expectedEndpoint) {
+  if (allowlist.length === 0) {
     console.log(
-      '  ⚠️  EXPECTED_DB_ENDPOINT 미설정 — 가드 skip (.env.local에 추가 권장)',
+      '  ⚠️  EXPECTED_DB_ENDPOINT(S) 미설정 — 가드 skip (.env.local에 추가 권장)',
     );
     console.log(
-      `      예: EXPECTED_DB_ENDPOINT="${actualEndpoint ?? 'ep-...'}"`,
+      `      단일: EXPECTED_DB_ENDPOINT="${actualEndpoint ?? 'ep-...'}"`,
+    );
+    console.log(
+      `      복수: EXPECTED_DB_ENDPOINTS="ep-prod-...,ep-preview-..."`,
     );
   } else if (!actualEndpoint) {
     console.log('  ❌ 실제 endpoint 추출 실패 — DATABASE_URL host 형식 확인 필요');
     process.exit(1);
-  } else if (expectedEndpoint !== actualEndpoint) {
-    console.log(`  ❌ 미스매치: 기대=${expectedEndpoint} / 실제=${actualEndpoint}`);
-    console.log('      .env.local의 DATABASE_URL을 production 브랜치로 갱신하거나');
-    console.log('      EXPECTED_DB_ENDPOINT를 의도된 endpoint로 갱신.');
+  } else if (!allowlist.includes(actualEndpoint)) {
+    console.log(
+      `  ❌ 미스매치: 실제=${actualEndpoint} not in allowlist [${allowlist.join(', ')}]`,
+    );
+    console.log('      .env.local의 DATABASE_URL을 의도된 브랜치로 갱신하거나');
+    console.log('      EXPECTED_DB_ENDPOINTS allowlist에 추가.');
     process.exit(1);
   } else {
-    console.log(`  ✅ 일치: ${actualEndpoint}`);
+    console.log(`  ✅ 일치: ${actualEndpoint} (allowlist ${allowlist.length}개 중 매칭)`);
   }
 
   console.log('\n═══════════════════════════════════════════════════════════════');
