@@ -37,7 +37,9 @@ export async function POST(request: Request) {
     );
   }
 
-  // ADR-0007 §T7 nanoid 12자 + alphabet 36 (소문자+숫자) → 36^12 ≈ 4.7e18 공간
+  // ADR-0007 §T7 (Amendment 1, 2026-05-10) — nanoid 12자 + default URL-safe
+  // alphabet 64 (`A-Za-z0-9_-`) → 64^12 ≈ 4.7e21 공간. 진입 검증 정규식은
+  // /^[A-Za-z0-9_-]{12}$/ (ADR-0021 §T1 부록).
   const shortId = nanoid(12);
 
   // TODO (페이즈 3 진입 시): comparison_request insert + compare() 호출

@@ -263,10 +263,19 @@ T1~T10 10개 결정.
 ### T7 — 영구 링크 = `shortId` (nanoid 12자) + URL `/r/[shortId]` (옵션 A 채택)
 
 **구현**:
-- `shortId text NOT NULL UNIQUE` 컬럼. nanoid alphabet `'0123456789abcdefghijklmnopqrstuvwxyz'`
-  (36 chars) × 12자리 = 36^12 ≈ 4.7 × 10^18 공간 → 추측 충돌 사실상 0.
+- `shortId text NOT NULL UNIQUE` 컬럼. **nanoid default URL-safe alphabet**
+  `'A-Za-z0-9_-'` (64 chars) × 12자리 = 64^12 ≈ 4.7 × 10^21 공간 → 추측 충돌
+  사실상 0.
+- 정규식: `/^[A-Za-z0-9_-]{12}$/` — 라우트 진입(`/r/[shortId]`) 시 형식 검증
+  사용 (ADR-0021 §T1 부록).
 - `nanoid` 라이브러리는 솔로 운영자 컨텍스트에서 추가 부담 0 (의존 zero-deps,
   ~150 bytes gzipped).
+
+**Amendment 1 (2026-05-10) — alphabet 36 → 64 정정**: 본 ADR 원안은 customAlphabet
+`0-9a-z` (36 chars) 가정이었으나, 실 구현(`/api/compare/route.ts`)은 nanoid
+default 64-char alphabet 사용 → 충돌 공간이 36^12(4.7e18)에서 64^12(4.7e21) 로
+1000배 증가, 정규식이 대문자 + `_-` 도 허용. 실 구현 정합으로 본문 정정.
+shortId 가시성 영향: URL 길이 동일 12자, 사용자 노출 무영향.
 
 **근거:**
 - UUID v4 노출은 추측 공격 차단되지만 36자 길이 → URL 친화 X.

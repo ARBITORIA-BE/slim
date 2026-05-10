@@ -136,6 +136,12 @@ OCR (T11 SC-H) 은 페이즈 3 결과 페이지 *직후* 별도 ADR-OCR 신설 �
 한국어 안내 ("이 결과는 더 이상 존재하지 않습니다. 새로 비교를 시작하세요.")
 + `/compare` CTA.
 
+**shortId 형식 검증 부록 (Sub-task 4, 2026-05-10)**: 라우트 진입 시 정규식
+`/^[A-Za-z0-9_-]{12}$/` 강제 (ADR-0007 §T7 Amendment 1 정합 — nanoid default
+URL-safe 64-char alphabet × 12자). 형식 미달 시 `notFound()` 즉시 호출. **DB
+존재 여부 검증은 별도 작업** — Sub-task 5 (`/api/compare` 풀 + comparison_result
+SELECT) 진입 시점에 추가.
+
 **근거**:
 - 페이즈 2 placeholder 와 URL 모양 동일 → 영구 링크 호환 (ADR-0007 §T7).
 - RSC + ISR `revalidate=3600` = 같은 shortId 에 대한 첫 진입 후 1시간 캐시

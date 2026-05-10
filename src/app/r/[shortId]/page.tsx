@@ -15,6 +15,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 import { ENGINE_VERSION } from '@/engine/compare';
 import { USAGE_ESTIMATOR_VERSION, deriveUsageProfile } from '@/engine/usage-estimator';
@@ -23,12 +24,23 @@ import { CalculationDetails } from './_components/CalculationDetails';
 
 const SITE_ORIGIN = 'https://slim.lu';
 
+// ADR-0007 §T7 Amendment 1 + ADR-0021 §T1 부록 — nanoid default URL-safe alphabet
+// 64 chars × 12자. DB 존재 여부 검증은 Sub-task 5 진입 시 추가.
+const SHORT_ID_PATTERN = /^[A-Za-z0-9_-]{12}$/;
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ shortId: string }>;
 }): Promise<Metadata> {
   const { shortId } = await params;
+  // 형식 미달 → 메타데이터도 not-found 신호 (Next.js 가 not-found.tsx 자동 매칭)
+  if (!SHORT_ID_PATTERN.test(shortId)) {
+    return {
+      title: '결과를 찾을 수 없음 | Slim',
+      robots: { index: false, follow: false },
+    };
+  }
   const url = `${SITE_ORIGIN}/r/${shortId}`;
   return {
     title: '비교 결과 | Slim',
@@ -53,6 +65,12 @@ export default async function ResultPlaceholderPage({
   params: Promise<{ shortId: string }>;
 }) {
   const { shortId } = await params;
+
+  // ADR-0021 §T1 — 형식 미달 shortId 는 즉시 404 (not-found.tsx 렌더).
+  // DB 존재 여부 검증은 Sub-task 5 진입 시 comparison_result SELECT 후 추가.
+  if (!SHORT_ID_PATTERN.test(shortId)) {
+    notFound();
+  }
 
   // 페이즈 3 1차 mock 데이터 — 실 결과 페이지 (T2 풀 격상) 진입 시 compare() +
   // comparison_result lookup 으로 교체.
