@@ -24,7 +24,9 @@ CardHeader.displayName = 'CardHeader';
 
 export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3
+    // h2 — 페이지의 h1 다음 레벨 (heading-order 룰 정합).
+    // 더 깊은 nest 필요 시 caller가 className 또는 별도 컴포넌트로 처리.
+    <h2
       ref={ref}
       className={cn('font-display text-xl font-semibold tracking-tight', className)}
       {...props}

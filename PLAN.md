@@ -396,9 +396,13 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   (옵션 A 채택, 2026-05-10). 검증: 7 shadcn 컴포넌트 (Card/Input/Label/RadioGroup/
   Select/Form/Progress) 신설 + e2e 통과. 다국어 responsive 수동 검증(375/768/1024)
   은 운영자 후속.
-- [ ] **2.9** 접근성: 키보드만으로 완주 가능, axe-core 0 violations
-  (**SC-C 적용** — Playwright E2E는 페이즈 4 deploy 직전 일괄 추가). ADR-0016
-  §T9 + §SCOPE CUT SC-C.
+- [x] **2.9** 접근성: 키보드만으로 완주 가능, axe-core 0 violations
+  (**SC-C 적용** — 본 페이즈는 axe-core 만, Playwright E2E 풀 인프라는 페이즈 4
+  deploy 직전 일괄 추가). 검증: `e2e/accessibility.spec.ts` 6 페이지 (`/compare`
+  + 4 단계 + `/r/[shortId]`) 모두 axe 0 violations 통과 (4.2s). 헌법 §3 P3 정합
+  fix 3건 — `--color-muted` AA 대비 어둡게 (#8A958F→#5F6864), `CardTitle` h3→h2
+  (heading-order), `/compare` + `/r/[shortId]` wrap div→`<main>` (landmark).
+  ADR-0016 §T9 + §SCOPE CUT SC-C.
 
 **Phase 2 검증:** Playwright E2E — 입력 → 결과까지 5분 이내 (CI에서 측정).
 **Phase 2 현실 일정:** M4 ~ M5 (2개월). UI 9개 + Playwright E2E + i18n
@@ -571,7 +575,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 0.5 | 3 | 1 | 0 | M0 잔여 + GATE-K 직전 | 2026-05-10 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
-| 2 | 9 | 8 | 0 | M4 ~ M5 (페이즈 2 1차 진입, e2e 5단계 6.7s 통과, 2.9 axe SC-C 대기) | 2026-05-10 |
+| 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
@@ -579,7 +583,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **81** | **35** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-10 |
+| **합계** | **81** | **36** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-10 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

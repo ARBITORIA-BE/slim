@@ -58,7 +58,7 @@ for (const c of TARIFF_CATEGORIES) {
 
 export default function ComparePage() {
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-4 py-10 md:px-6 md:py-16">
+    <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-4 py-10 md:px-6 md:py-16">
       <header className="flex flex-col gap-3">
         <span className="text-sm text-muted">5단계 · 5분</span>
         <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
@@ -101,6 +101,6 @@ export default function ComparePage() {
         </Link>{' '}
         에 동의한 것으로 간주됩니다 (GDPR Art. 6(1)(b) 계약 본질).
       </footer>
-    </div>
+    </main>
   );
 }

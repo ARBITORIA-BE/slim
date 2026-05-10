@@ -18,7 +18,7 @@ export default async function ResultPlaceholderPage({
   const { shortId } = await params;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-10 md:px-6">
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-10 md:px-6">
       <header className="flex flex-col gap-2">
         <span className="text-sm text-muted">결과 링크</span>
         <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -46,6 +46,6 @@ export default async function ResultPlaceholderPage({
       >
         홈으로 돌아가기
       </Link>
-    </div>
+    </main>
   );
 }

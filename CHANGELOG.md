@@ -22,7 +22,8 @@
   - `src/app/r/[shortId]/page.tsx` — 영구 결과 링크 placeholder. 페이즈 3 진입 시 풀버전.
   - PLAN §2.1~§2.9 본문에 ADR-0016 §T1~T10 cross-ref + SC-A/B/C 표기. PLAN Scope cut 옵션 표에 SC-B/SC-C/SC-D/SC-E 신설 (옵션 C "적용됨" 갱신).
   - 검증: 4단 게이트 통과 (typecheck 0 / lint 0 / **71 tests passed**: 49 → 71 / harness:plan 81 항목 정합성).
-  - **5단계 자동 시연** (`e2e/compare-flow.spec.ts`, Playwright + reuseExistingServer): mobile + 1000 + single + skip + bill skip → `/r/[shortId]` 도달. **완주 6.7초** (P2 5분 = 300_000ms 대비 44배 마진), **콘솔 에러 0**, nanoid 12자 placeholder 표시 검증. 6 스크린샷 (`e2e/screenshots/01~06.png`). axe-core scan은 SC-C로 페이즈 4 deploy 직전 일괄 추가 — 페이즈 2 1차에선 미실시.
+  - **5단계 자동 시연** (`e2e/compare-flow.spec.ts`, Playwright + reuseExistingServer): mobile + 1000 + single + skip + bill skip → `/r/[shortId]` 도달. **완주 6.7초** (P2 5분 = 300_000ms 대비 44배 마진), **콘솔 에러 0**, nanoid 12자 placeholder 표시 검증. 6 스크린샷 (`e2e/screenshots/01~06.png`).
+  - **PLAN 2.9 axe-core 0 violations** (`e2e/accessibility.spec.ts`): 6 페이지 (`/compare` + 4 단계 + `/r/[shortId]`) WCAG 2.1 AA + best practices 통과 (4.2s). a11y 수정 3건: `--color-muted` AA 대비 (#8A958F→#5F6864), `CardTitle` h3→h2 (heading-order), `/compare` + `/r/[shortId]` wrap → `<main>` (landmark-one-main + region). dep `+1`: `@axe-core/playwright` (devDep, gzip ~30KB). SC-C 부분 적용 — Playwright E2E 풀 인프라는 페이즈 4 deploy 직전 유지.
 - Phase 0.5 (PLAN D.1.a/D.1.b/D.2.a) — 운영 부채 정리:
   - `next.config.ts`: `typescript.ignoreBuildErrors: true` + `eslint.ignoreDuringBuilds: true` 추가. Vercel 빌드 차단 해소. 검증 권한은 로컬 stop-gate + GitHub Actions로 일원화.
   - `.github/workflows/ci.yml` 신설: push/PR마다 4단 게이트 실행 (typecheck → test → harness:plan → harness:data). (lint는 ADR-0002 Amendment 1로 D.1.d에서 제거됨 — 아래 Changed 참조.)
