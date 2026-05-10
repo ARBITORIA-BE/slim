@@ -2,9 +2,18 @@
 
 ## Status
 
-**Proposed (2026-05-09)** — GATE-H 운영자 검토 대기. GATE-H 통과 시 Status →
-`Accepted` 격상 + Step 2 (Pieter 임시 PR) → Step 3 (운영자 Vercel 가입) → Step 4
-(verifier DoD 검증) 순서로 진행.
+**Accepted (2026-05-10)** — GATE-H 운영자 승인 완료. 단 운영자 정정 사항으로
+Step 3 *재정의* (§Amendment 1 / §Step-3-prime 참조):
+
+> 원래 가정: 운영자가 Vercel을 *처음 가입*. 실제 상태: Vercel 가입 + GitHub
+> OAuth 연동 (ARBITORIA org) + Slim repo Vercel 프로젝트 연결 (slim-gamma.vercel.app)
+> + 자동 build 트리거 *모두 이미 완료*. 따라서 §Operator-Action-Step3는 *신규
+> 가입 가이드*가 아니라 §Step-3-prime — *현 셋업 점검 + 보강*으로 대체.
+>
+> 7개 결정(T1~T7)은 그대로 유효. T7만 *Step 3' (audit + reinforce)*로 의미 재해석.
+
+GATE-H 통과 후 진행 순서: §Step-3-prime (현 Vercel 점검 + 보강) → Step 2
+(Pieter 임시 PR 양성/음성 테스트) → Step 4 (verifier D.1 [x]).
 
 본 ADR은 **결정 + 운영 가이드** 만 담는다. 코드/설정 변경은 D.1.a~D.1.d
 (ADR-0002 본문 + Amendment 1) 에 이미 반영됨. 본 ADR은 D.1의 *운영 단계*
@@ -675,6 +684,96 @@ pnpm dlx vercel@latest env pull .env.vercel.local --environment=preview
 - 운영자 GATE 정의 (본 ADR 작성 컨텍스트):
   - GATE-H = 본 ADR §T1~T7 운영자 승인 → Accepted
   - Step 2 = Pieter 임시 PR (D.1 DoD #2/#3 음성 테스트)
-  - Step 3 = 운영자 Vercel 가입 (§Operator-Action-Step3)
+  - Step 3 = 운영자 Vercel 가입 (§Operator-Action-Step3 — Amendment 1로 §Step-3-prime 대체)
   - Step 4 = verifier D.1 DoD 4건 [x] 마킹
+
+---
+
+## Amendment 1 — §Step-3-prime: 현 Vercel 셋업 점검 + 보강 (2026-05-10)
+
+### 운영자 정정 사항 (GATE-H 응답)
+
+| 항목 | 원래 가정 | 실제 상태 |
+|---|---|---|
+| Vercel 가입 | 미가입 | ✅ ARBITORIA org 가입 + GitHub OAuth 연동 |
+| Slim repo 연결 | 미연결 | ✅ Vercel 프로젝트 'slim' 생성됨 |
+| 배포 URL | 미발급 | ✅ slim-gamma.vercel.app |
+| 자동 build | 미트리거 | ✅ 작동 중 (커밋 'D.1.e force vercel rebuild' 검증됨) |
+
+따라서 §Operator-Action-Step3 (가입 9단계 ~50분) → **§Step-3-prime
+(점검 4단계 ~20분)** 으로 대체. 7개 결정(T1~T7)은 그대로 유효.
+
+### Step-3-prime — 4 단계 (운영자 + Pieter 협업)
+
+#### 3'a. Pieter 로컬 자동 점검 (완료, 2026-05-10)
+
+- ✅ vercel CLI 설치됨 (글로벌 npm)
+- ❌ vercel CLI 인증 안 됨 (`vercel whoami` → no credentials)
+- ❌ `.vercel/project.json` 없음 (CLI로 프로젝트 link 안 됨)
+- ❌ `vercel.json` 없음 (Vercel auto-detect 사용)
+- 결론: **CLI 기반 자동 env 추출 불가**. 운영자 dashboard 검증 필수.
+
+#### 3'b. 운영자 Vercel dashboard 점검 (~10분)
+
+운영자가 Vercel Console (`https://vercel.com/arbitoria/slim`) 에서 확인:
+
+**환경변수** (Settings → Environment Variables):
+
+| 키 | Production | Preview | Development | 비고 |
+|---|---|---|---|---|
+| DATABASE_URL | ❓ | ❓ | ❓ | T3: production = ep-fancy-fog-alt18340 / preview = Neon 신규 dev branch |
+| EXPECTED_DB_ENDPOINT | ❓ | ❓ | ❓ | 1.5.5 가드. production = ep-fancy-fog-alt18340 |
+| INNGEST_EVENT_KEY | ❓ | ❓ | ❓ | T4: production / preview 같은 키 |
+| INNGEST_SIGNING_KEY | ❓ | ❓ | ❓ | 동일 |
+| UPSTASH_REDIS_REST_URL | (선택) | (선택) | (선택) | 페이즈 4 결과 캐시 |
+| UPSTASH_REDIS_REST_TOKEN | (선택) | (선택) | (선택) | 동일 |
+| SENTRY_DSN | (선택) | (선택) | (선택) | 페이즈 6.2 알림 |
+| NEXT_PUBLIC_POSTHOG_KEY | (선택) | (선택) | (선택) | 페이즈 4 펀널 |
+
+**자동 배포 정책** (Settings → Git):
+- ❓ Production Branch: `main` 인지 확인
+- ❓ Production Auto-Deployments: ON / OFF 토글 상태
+
+**Preview 정책:**
+- ❓ PR push 시 preview build 자동 트리거 여부 (기본 ON)
+
+#### 3'c. 운영자 → Pieter 보고 형식
+
+운영자가 다음 정보를 채팅으로 회신:
+
+```
+[Vercel 점검 결과]
+환경변수 (production):
+  - DATABASE_URL: 등록됨 / 없음
+  - EXPECTED_DB_ENDPOINT: 등록됨 / 없음
+  - INNGEST_EVENT_KEY: 등록됨 / 없음
+  - INNGEST_SIGNING_KEY: 등록됨 / 없음
+환경변수 (preview): 동일 4개 항목
+
+자동 배포:
+  - Production auto-deploy: ON / OFF
+  - Production branch: main / [다른 이름]
+  - PR preview auto: ON / OFF
+
+Neon dev branch:
+  - 생성됨: yes / no (no면 production endpoint 공유 중)
+  - dev endpoint: ep-XXX-YYY (있으면)
+```
+
+#### 3'd. Pieter 보강 작업 (운영자 회신 기반 분기)
+
+| 회신 패턴 | 보강 작업 |
+|---|---|
+| 모두 등록 + production OFF + dev branch 있음 | ✅ 점검 끝. Step 2 음성 PR 진입. |
+| env 일부 누락 | 누락 env 등록 가이드 (Settings → Environment Variables → Add New) |
+| production auto-deploy ON | 운영자 명시 결정(T2)과 충돌. OFF 전환 가이드 또는 main을 preview로 강등 + 별도 production 브랜치 신설 (architect 추가 ADR 후보) |
+| dev branch 없음 | T3 미적용 — Neon Console에서 dev branch 생성 가이드 (Branches → Create branch → parent=production → endpoint 복사 → preview env 등록) |
+
+### 갱신된 회귀 트리거
+
+- **#7 (신설)**: §Step-3-prime 점검 후 운영자 회신에 *예상 외* 패턴 발견 시 본
+  ADR §Step-3-prime 갱신 + scribe 운영 노트.
+- **#8 (신설)**: Bash 보안 경고 패턴 발견 시 (운영자 No 선택 사례 2026-05-10
+  발생) — `scripts/hooks/pre-tool-guard.sh`에 패턴 자동 차단 hook 추가 필요
+  (PLAN 1.5.7 부채로 등록).
 
