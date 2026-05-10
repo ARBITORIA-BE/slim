@@ -1,4 +1,4 @@
-name: ci
+﻿name: ci
 
 on:
   push:
@@ -25,13 +25,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck
-        run: pnpm exec vitest run
+        run: pnpm typecheck
 
       - name: Test
-        run: pnpm test --run
+        run: pnpm exec vitest run
 
-      - name: Harness — plan integrity
+      - name: Harness ??plan integrity
         run: pnpm harness:plan
 
-      - name: Harness — data fidelity
+      - name: Harness ??data fidelity
         run: pnpm harness:data
