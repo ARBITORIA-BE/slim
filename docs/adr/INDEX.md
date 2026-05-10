@@ -22,6 +22,8 @@
 | [ADR-0011](0011-data-sources-page-and-caveats-boundary.md) | `/data-sources` 투명성 페이지 + caveats 함수/UI 경계 (PLAN 1.10 + 1.13) | Accepted | 2026-05-09 |
 | [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md) | PLAN 1.5.6 실 스크래핑 진입 전 리스크 평가 + 분기 결정 (LOW/MEDIUM/HIGH) | Proposed (Appendix A 추가 — legal 에이전트, 2026-05-09) | 2026-05-09 |
 | [ADR-0015](0015-vercel-integration-and-d1-closure.md) | Vercel 통합 운영 결정 + PLAN D.1 마감 게이트 | Proposed (GATE-H 대기) | 2026-05-10 |
+| [ADR-0017](0017-db-mismatch-incident-postmortem.md) | DB 미스매치 사건 종결 보고 (silent-darkness + slim-prod hidden-recipe) | Accepted | 2026-05-10 |
+| [ADR-0018](0018-neon-multi-org-policy.md) | Neon 멀티 organization 정책 + 자동 자산 점검 룰 | Accepted | 2026-05-10 |
 
 ---
 
@@ -130,4 +132,20 @@
 **요약**: ADR-0002 §결정 1 + Amendment 1을 *운영 단계*로 끌어옴. PLAN §D.1 DoD 4건 중 #2 (Vercel preview 1회 성공) + #3 (typecheck PR 차단) 가 운영자 Vercel 가입 미완료로 닫히지 않은 상태에서 본 ADR이 마감 게이트를 명시. **7개 결정 (T1~T7)**: (T1) CI/CD 흐름 = GitHub push 시 Vercel preview build + GitHub Actions ci.yml *동시* 실행, fail-fast. (T2) 자동 배포 = **production manual promote OFF + preview 자동 ON** (운영자 명시 결정 정합 + 베타 미시작 통제). (T3) 환경변수 = production / preview 분리 — production = `ep-fancy-fog-alt18340`, preview = Neon 신규 dev branch (운영자 가입 시 생성). EXPECTED_DB_ENDPOINT 가드 (1.5.5) 환경별 등록. (T4) Inngest 키 = production / preview 같은 키 (단순성 + 무료 티어 부담 0, 환경별 분리는 회귀 트리거 발동 시). (T5) Build gate = ADR-0002 정합 그대로 (Vercel 순수 빌드 + GitHub Actions 4단 게이트). (T6) PR comment = 둘 다 (Vercel bot preview URL + GitHub Actions Checks) — 명시성. (T7) 운영자 Vercel 가입 절차 = §Operator-Action-Step3 9단계 (가입 → GitHub 연동 → Neon dev branch 생성 → 자동 배포 OFF → 환경변수 4×2 등록 → Inngest 키 발급 → 첫 build 검증 → Pieter에 신호 → CLI 옵션). Vercel CLI 권장 (필수 아님, pnpm dlx). **거부 대안**: 직렬 CI/CD (fail-late) / production 자동 ON (베타 미시작 통제 손실) / 같은 endpoint (데이터 오염) / 환경별 Inngest 키 (솔로 부담) / Vercel buildCommand에 게이트 (ADR-0002 §대안 D 동형 거부).
 
 **영향**: PLAN §D.1 마감 게이트 명시 — DoD #2/#3 검증 책임자 매핑 (Step 2 Pieter 임시 PR + Step 3 운영자 가입 + Step 4 verifier). PLAN §D.1 [x] 마킹은 GATE-H + Step 2~4 모두 통과 후. 코드/설정 변경 0건 (next.config.ts / ci.yml / scripts/verify-db.ts / package.json 모두 그대로). 외부 의존성 0건 추가. 무료 티어 사용량 추정 0.1% 미만 (Vercel Hobby + Neon Free + Inngest Free) — ADR-0004 §결정 2 €300 cap 정합. **회귀 트리거**: (1) 베타 시작 시 자동 promote 재평가 (2) preview에서 production cron 발화 1건 → T4 분리 (3) Vercel Hobby 한도 80% 도달 → ADR-0004 격상 (4) Neon dev branch 한도 도달 (5) 운영자 가입 단계에서 막힘 1건 (6) D.1.c (main 브랜치 보호) 활성화 누락. **GATE 정의**: GATE-H = 본 ADR T1~T7 운영자 승인 → Accepted + Step 2~4 진행.
+
+### [ADR-0017: DB 미스매치 사건 종결 보고](0017-db-mismatch-incident-postmortem.md)
+
+**상태**: Accepted (2026-05-10) — 사건 종결. 1주/1개월 cleanup 모니터링 잔존.
+
+**요약**: 2026-05-09~10 silent-darkness + slim-prod hidden-recipe 미스매치 사건의 종결 보고. **타임라인**: (1) 2026-05-09 초 — 운영자 첫 connection string 채팅 공유 (host = `ep-silent-darkness-alpbpetq-pooler...`). 비번 1차 노출. (2) silent-darkness host로 db:push 4회 → 마이그레이션 0000~0003 적용 (실제로는 운영자 의도 외 Neon 프로젝트). (3) 2026-05-09 후반 — 운영자가 Slim production 0 tables 발견 → 미스매치 인지 → verify-db.ts 신설 (host/endpoint 노출). (4) 2026-05-10 — production 브랜치 정확한 connection string 재공유 (host = `ep-fancy-fog-alt18340-pooler...`, 비번 2차 노출 + 회전). db:push 재실행 → Slim production 6 tables 정상. (5) 2026-05-10 GATE-I — 운영자가 Vercel Storage `slim-prod` hidden-recipe 발견 (Neon Vercel Integration 자동 생성) + Disconnect + 자동 등록 변수 14개 정리. **4개 결과**: (1) silent-darkness = `slim-prod` hidden-recipe 정체 확인, Neon `slim-prod` 프로젝트 1개월 보관 후 삭제 결정 (2026-06-10), personal org 1주일 모니터링 (2026-05-17). (2) 방어 조치 적용 완료 — `EXPECTED_DB_ENDPOINTS` allowlist (production + preview), Gate 5 통합, ADR-0011 §검증 4 + ADR-0015 §Step-3-prime. (3) 재발 방지 트리거는 ADR-0018 룰 따름. (4) 사건 영향 = 코드 변경 0 / 보안 비번 2회 노출 (회전 완료) / 일정 ~12시간 / 사용자 0 / GDPR PII 0.
+
+**영향**: PLAN §1.5.5 본문에 "ADR-0017로 사건 종결" 인용 추가 (한 줄). [x] 마킹 유지. ADR-0018 (멀티 org 정책) 신설 trigger. 외부 의존성 0건 추가. 마이그레이션 0건. **회귀 트리거**: (1) silent-darkness host로의 접근 시도 1건 이상 (2) 2026-05-17 personal org 모니터링 예상 외 자산 (3) 2026-06-10 운영자 `slim-prod` 삭제 못함 (잔여 의존성).
+
+### [ADR-0018: Neon 멀티 organization 정책 + 자동 자산 점검 룰](0018-neon-multi-org-policy.md)
+
+**상태**: Accepted (2026-05-10) — ADR-0017 사건 종결과 동시 채택.
+
+**요약**: ADR-0017 사건이 드러낸 구조적 위험 (Vercel-Neon 자동 통합 + 멀티 org)을 영구 정책으로 못박는다. **7개 결정**: (1) Slim 자산은 ARBITORIA org / Slim 프로젝트에만 — personal org에 Slim 자산 0 (TVA 발급 후 세무 분리 부담 0). (2) 자동 자산 발견 시 즉시 점검 — Vercel Storage / Neon Vercel Integration 자동 생성 프로젝트 발견 시 즉시 disconnect + ADR Amendment + 라이프사이클 적용. (3) `EXPECTED_DB_ENDPOINTS` allowlist 정책 — 모든 환경 endpoint 명시, allowlist 외는 위험 분류, `pnpm verify:db` exit 1. 현 allowlist (2026-05-10) = production `ep-fancy-fog-alt18340` + preview `ep-autumn-water-all6d93e`. (4) 점검 주기 매월 1일 — 운영자 두 org 모두 self-check 5분, 자동화 cron은 페이즈 6 운영 인프라 진입 시 별도 ADR. (5) 자산 라이프사이클 — Disconnect 즉시 / 모니터링 1주 / 보관 1개월 / 삭제 결정 (운영자 명시). (6) 신규 환경 추가 절차 4단계 — Neon brand → EXPECTED_DB_ENDPOINTS 갱신 → Vercel env 동기화 → ADR Amendment. (7) 외부 endpoint 채팅 공유 금지 — endpoint name만 공유, 비번/host 전체 공유 X (ADR-0017 사건에서 2회 발생, 모두 회전 완료). **거부 대안**: 모니터링 없이 신뢰 (사고 재발 위험) / Neon Vercel Integration 비활성화 (편의성 손실) / personal org 통합 (사업자등록 정합 손실).
+
+**영향**: PLAN §1.5.5 본문에 ADR-0017 + ADR-0018 인용 추가. 매월 self-check 자동화 cron 후보 → 페이즈 6 운영 인프라 진입 시 별도 ADR. ADR-0011 §검증 4 (베타 직전) + ADR-0018 §결정 4 (매월 정기) 보완 관계. ADR-0015 §Step-3-prime은 ADR-0018 §결정 6 첫 사례 (preview 환경 추가). 외부 의존성 0건 추가. **회귀 트리거**: (1) 자동 자산 발견 1건 이상 (2) 채팅 비번 노출 1건 이상 (3) 매월 self-check 누락 2회 연속 → 자동화 cron 즉시 도입 (4) Neon Free branch 한도 도달 (5) 신규 환경 추가 후 verify:db 미통과 1건.
 
