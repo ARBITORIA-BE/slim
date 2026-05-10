@@ -11,6 +11,13 @@
 
 ### Added
 
+- Phase 3 builder M6 sub-task 6 — `/compare/[category]/current-provider` sub-step 활성 ([ADR-0021](docs/adr/0021-phase-3-results-page-design.md) §T5 + ADR-0016 §T5):
+  - **`src/db/queries/providers.ts` 신설** — `getActiveProviders(country)` + `getActiveTariffsByProviders(providerIds, category)` Drizzle helper. country 필터 + `excluded_reason IS NULL` (비교 가능 공급사만) + `is_active = true` (활성 tariff만).
+  - **`providers-helpers.ts` + `providers-types.ts` 분리** — `groupTariffsByProvider` 순수 변환 helper와 `ActiveProvider`/`ActiveTariff` 타입을 별도 모듈로. vitest 가 `@/db` (DATABASE_URL 필수) import 회피하도록. comparison-stats.test.ts 와 동형 패턴.
+  - **`/compare/[category]/current-provider/page.tsx` RSC 변경** — `'use client'` → RSC + `revalidate=3600` ISR. RSC가 BE provider + 카테고리별 tariff prefetch → `CurrentProviderForm` props 전달. **0건 fallback** — "공급사 목록 불러오지 못했어요" 안내 + 신규 가입자 스킵 단일 CTA (P3 정합).
+  - **`CurrentProviderForm.tsx` 신설** — client 컴포넌트. Provider `<Select>` 선택 시 tariff `<Select>` sub-step conditional render. "이 공급사 요금제는 모르겠어요" 동등 버튼(`tariffUnknown` 플래그) + "모르겠어요/스킵 — 신규 가입자" 동등. sessionStorage 즉시 저장.
+  - **`e2e/compare-flow.spec.ts` 새 spec 추가** — Proximus 선택 → tariff 모르겠어요 → bill → /r/[shortId] path 통과 (2.0s). 기존 스킵 path 회귀 0 (7.4s).
+  - 검증: typecheck 0 / lint 0 / **109 tests passed** (+6 helper) / harness:plan 81 항목 / **e2e 18** (compare-flow 2/2 + accessibility 6/6 + result-page 9/9 + landing 1). DB 검증: `pnpm verify:db` provider 2개 (proximus-be + telenet-be) 시드 확인.
 - Phase 3 builder M6 sub-task 4 — `/r/[shortId]` 잘못된 shortId 404 방어 ([ADR-0021](docs/adr/0021-phase-3-results-page-design.md) §T1):
   - **`src/app/r/[shortId]/not-found.tsx` 신설** — Next.js App Router not-found 표준. 한국어 안내 ("이 결과는 더 이상 존재하지 않습니다") + "새로 비교 시작" + "홈으로" 두 CTA + 영구 링크 형식 안내.
   - **`/r/[shortId]/page.tsx` 변경** — params 진입 시 정규식 `/^[A-Za-z0-9_-]{12}$/` 검증, 형식 미달 시 `notFound()` 호출 (HTTP 404 응답). `generateMetadata`도 잘못된 shortId 시 noindex/nofollow 신호.

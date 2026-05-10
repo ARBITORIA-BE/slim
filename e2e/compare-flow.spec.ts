@@ -86,3 +86,31 @@ test('5단계 입력 → /r/[shortId] 도달 (mobile + 1000 + single + skip + bi
   expect(elapsed).toBeLessThan(300_000);
   expect(consoleErrors).toEqual([]);
 });
+
+test('5단계 + provider 선택 path (Proximus) + tariff 모르겠어요 → /r/[shortId] (Sub-task 6)', async ({
+  page,
+}) => {
+  await page.goto('/compare');
+  await page.getByRole('link', { name: '모바일 비교 시작' }).click();
+  await page.getByLabel('우편번호').fill('1000');
+  await page.getByRole('button', { name: /다음 — 가구 형태/ }).click();
+  await page.locator('label[for="household-single"]').click();
+  await page.getByRole('button', { name: /다음 — 현재 공급사/ }).click();
+
+  // current-provider — Proximus 선택 → tariff 모르겠어요 → 다음
+  await expect(page).toHaveURL(/\/compare\/mobile\/current-provider/);
+  await page.getByLabel('현재 공급사 선택').click();
+  await page.getByRole('option', { name: 'Proximus' }).click();
+  // sub-step tariff Select 노출 — "이 공급사 요금제는 모르겠어요" 클릭
+  await page.getByRole('button', { name: /이 공급사 요금제는 모르겠어요/ }).click();
+  const nextBill = page.getByRole('button', { name: /다음 — 청구서/ });
+  await expect(nextBill).toBeEnabled();
+  await nextBill.click();
+  await expect(page).toHaveURL(/\/compare\/mobile\/bill/);
+
+  await page.getByRole('button', { name: /청구서 없이 진행/ }).click();
+  await page.waitForURL(/\/r\/[A-Za-z0-9_-]{12}$/, { timeout: 10_000 });
+  await expect(
+    page.getByRole('heading', { name: '비교 결과 페이지는 곧 추가됩니다' }),
+  ).toBeVisible();
+});

@@ -1,47 +1,52 @@
-'use client';
-
 /**
- * /compare/[category]/current-provider — 단계 3 현재 공급사 (ADR-0016 §T5).
+ * /compare/[category]/current-provider — 단계 3 현재 공급사 (ADR-0016 §T5 + Sub-task 6).
  *
- * 선택적 + "모르겠어요/스킵" 동등 노출. 페이즈 2 1차에서는 sub-step 요금제 선택은
- * 미구현 (현 공급사 선택만 → currentTariffId null). 페이즈 3 진입 시 sub-step
- * 추가 (T5 본문) — 그때까지는 신규 가입자 케이스(ADR-0010 §T7 케이스 6) 동형
- * 처리.
+ * RSC — DB prefetch + client 컴포넌트로 props 전달. ISR 1h (provider 마스터 변경
+ * 빈도 낮음).
+ *
+ * 흐름:
+ *   1. category 검증 (invalid → /compare redirect)
+ *   2. getActiveProviders('BE') — 페이즈 3 1차 BE 단일 (NL/LU 페이즈 5 추가).
+ *   3. providers 0건 → 안내 + 스킵 단일 CTA (0건 fallback)
+ *   4. providers ≥ 1 → getActiveTariffsByProviders + CurrentProviderForm props 전달
+ *
+ * 페이즈 5 NL/LU 진입 시점에 country 동적 — sessionStorage `postalCountry` 또는
+ * URL search param 으로. 본 라운드는 BE 단일.
  */
 
-import { useRouter } from 'next/navigation';
-import { use } from 'react';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
-import { Button } from '@/components/ui/button';
+import {
+  getActiveProviders,
+  getActiveTariffsByProviders,
+} from '@/db/queries/providers';
 import {
   TARIFF_CATEGORIES,
   type TariffCategoryInput,
 } from '@/types/comparison-input';
 
 import { CompareLayout } from '../_components/CompareLayout';
-import { useCompareSession } from '../_components/useCompareSession';
+import { CurrentProviderForm } from './_components/CurrentProviderForm';
 
-export default function CurrentProviderPage({
+export const revalidate = 3600; // 1시간 ISR — provider 마스터 변경 빈도 낮음
+
+export default async function CurrentProviderPage({
   params,
 }: {
   params: Promise<{ category: string }>;
 }) {
-  const router = useRouter();
-  const { category: rawCategory } = use(params);
+  const { category: rawCategory } = await params;
 
   if (!(TARIFF_CATEGORIES as readonly string[]).includes(rawCategory)) {
-    router.replace('/compare');
-    return null;
+    redirect('/compare');
   }
   const category = rawCategory as TariffCategoryInput;
 
-  const { updateData, setStep } = useCompareSession(category, 'current-provider');
-
-  const proceed = (providerId: string | null) => {
-    updateData({ currentProviderId: providerId, currentTariffId: null });
-    setStep('bill');
-    router.push(`/compare/${category}/bill`);
-  };
+  // 페이즈 3 1차: BE 단일. NL/LU 는 페이즈 5 fetcher 추가 시 country 동적 분기.
+  const providers = await getActiveProviders('BE');
+  const providerIds = providers.map((p) => p.id);
+  const tariffs = await getActiveTariffsByProviders(providerIds, category);
 
   return (
     <CompareLayout step="current-provider">
@@ -55,25 +60,37 @@ export default function CurrentProviderPage({
         </p>
       </header>
 
-      <div className="rounded-2xl border border-fg/10 bg-bg-warm/40 p-4 text-sm text-fg-soft">
-        공급사 목록 + 요금제 sub-step은 페이즈 3 진입 시 추가됩니다. 페이즈 2 1차는
-        스킵 동등 동작만 검증합니다.
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <Button type="button" onClick={() => proceed(null)}>
-          모르겠어요 / 스킵 — 신규 가입자 케이스로 진행
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => proceed(null)}
-          aria-label="공급사 선택 (페이즈 3 진입 시 활성)"
-          disabled
-        >
-          공급사 선택 (페이즈 3 진입 시 활성)
-        </Button>
-      </div>
+      {providers.length === 0 ? (
+        <ZeroProvidersFallback category={category} />
+      ) : (
+        <CurrentProviderForm
+          category={category}
+          providers={providers}
+          tariffs={tariffs}
+        />
+      )}
     </CompareLayout>
+  );
+}
+
+/**
+ * provider 0건 fallback — DB 미시드 또는 비교 가능 공급사 부재 (P3 정직 안내).
+ *
+ * Sub-task 5 (`/api/compare` 풀 + 운영자 seed) 진입 후 정상 상태에선 도달 0.
+ */
+function ZeroProvidersFallback({ category }: { category: TariffCategoryInput }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-2xl border border-fg/10 bg-bg-warm/40 p-4 text-sm text-fg-soft">
+        공급사 목록을 불러오지 못했어요. 신규 가입자로 진행하시겠어요? 비교 결과는 시장
+        전체 후보로 계산됩니다.
+      </div>
+      <Link
+        href={`/compare/${category}/bill`}
+        className="inline-flex items-center justify-center self-start rounded-full bg-fg px-6 py-3 text-sm font-medium text-bg transition hover:bg-primary"
+      >
+        신규 가입자로 진행 (스킵)
+      </Link>
+    </div>
   );
 }

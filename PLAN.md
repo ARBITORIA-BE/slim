@@ -442,6 +442,17 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 >   한국어 안내 + 새로 비교/홈 CTA. e2e/result-page.spec.ts 신설 (9 테스트:
 >   정상 4 + 404 4 + axe 1). DB 존재 검증은 sub-task 5 영역. 부수: ADR-0007
 >   §T7 Amendment 1 — nanoid alphabet 명세 36 → 64 정정 (실 구현 정합).
+> - **Sub-task 6 통과** — T5 `/compare/[category]/current-provider` sub-step
+>   활성. 페이즈 2 1차 disabled 버튼 → RSC + DB prefetch (`getActiveProviders` +
+>   `getActiveTariffsByProviders`, ISR 1h) + client `CurrentProviderForm` (Provider
+>   `<Select>` + sub-step Tariff `<Select>` + "이 공급사 요금제 모르겠어요"
+>   동등 + "모르겠어요/스킵" 동등). 0건 fallback 안내 + 스킵 단일 CTA. vitest
+>   DATABASE_URL 회피 위해 순수 helper/types 별도 모듈 분리 (`providers-helpers.ts`
+>   + `providers-types.ts`, +6 unit tests). e2e/compare-flow.spec.ts 새 spec
+>   추가 — Proximus 선택 + tariff 모르겠어요 path 통과.
+> - **Sub-task 5 (/api/compare 풀 구현)는 후속 라운드** — T3 DB insert +
+>   tariff_snapshot DISTINCT ON 후보 SELECT + compare() 호출 + comparison_result
+>   item insert. /r/[shortId] DB 존재 검증도 sub-task 5에서 함께 처리.
 > - 페이즈 3.1~3.7 자체 [x] 마킹은 풀 격상 (T2 비교 표 + T6 제외 공급사 +
 >   T3 `/api/compare` 풀) 후속 라운드에서.
 
@@ -616,7 +627,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
-| 3 | 7 | 0 | 0 | M6 ~ M7 (ADR-0021 Accepted + Amendment 1; **M6 sub-task 1-4 통과** — T10/T3§5/T7/T8/T1 404, 풀 격상은 후속) | 2026-05-10 |
+| 3 | 7 | 0 | 0 | M6 ~ M7 (ADR-0021 Accepted + Amendment 1; **M6 sub-task 1-4, 6 통과** — T10/T3§5/T7/T8/T1/T5, sub-task 5 `/api/compare` 풀 후속) | 2026-05-10 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
