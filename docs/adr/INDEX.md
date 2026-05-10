@@ -22,7 +22,7 @@
 | [ADR-0011](0011-data-sources-page-and-caveats-boundary.md) | `/data-sources` 투명성 페이지 + caveats 함수/UI 경계 (PLAN 1.10 + 1.13) | Accepted | 2026-05-09 |
 | [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md) | PLAN 1.5.6 실 스크래핑 진입 전 리스크 평가 + 분기 결정 (LOW/MEDIUM/HIGH) | Proposed (Appendix A 추가 — legal 에이전트, 2026-05-09) | 2026-05-09 |
 | [ADR-0015](0015-vercel-integration-and-d1-closure.md) | Vercel 통합 운영 결정 + PLAN D.1 마감 게이트 | Proposed (GATE-H 대기) | 2026-05-10 |
-| [ADR-0016](0016-phase-2-input-flow-design.md) | 페이즈 2 입력 플로우 설계 — 5단계 5분 / shadcn / 모바일 우선 | Proposed (GATE-J 대기) | 2026-05-10 |
+| [ADR-0016](0016-phase-2-input-flow-design.md) | 페이즈 2 입력 플로우 설계 — 5단계 5분 / shadcn / 모바일 우선 | Accepted (T9 옵션 A + T10 SC-E, 2026-05-10) | 2026-05-10 |
 | [ADR-0017](0017-db-mismatch-incident-postmortem.md) | DB 미스매치 사건 종결 보고 (silent-darkness + slim-prod hidden-recipe) | Accepted | 2026-05-10 |
 | [ADR-0018](0018-neon-multi-org-policy.md) | Neon 멀티 organization 정책 + 자동 자산 점검 룰 | Accepted | 2026-05-10 |
 | [ADR-0019](0019-arbitoria-three-platform-alignment.md) | ARBITORIA 3 플랫폼 (GitHub / Vercel / Neon) 정렬 | Accepted (+ Amendment A1/A2, Appendix A pending TVA) | 2026-05-10 |
@@ -138,7 +138,7 @@
 
 ### [ADR-0016: 페이즈 2 입력 플로우 설계 — 5단계 5분 / shadcn / 모바일 우선](0016-phase-2-input-flow-design.md)
 
-**상태**: Proposed (GATE-J 운영자 승인 통과 시 Accepted로 격상 예정). 본 ADR은 *결정 + builder 인계 명세* 만 담음 — 코드 변경 0.
+**상태**: Accepted (T9 옵션 A RHF + T10 SC-E 한국어 단일, 2026-05-10) — 운영자 GATE-J 통과. 본 ADR은 *결정 + builder 인계 명세* — 옵션 A 채택의 직접 후속 = `react-hook-form` + `@hookform/resolvers` 2 dep 추가 (GATE-C amend, 운영자 명시 승인).
 
 **요약**: PLAN 페이즈 2 (2.1~2.9) 진입 직전 결정 묶음. ADR-0007 입력 컬럼 + ADR-0010 비교 엔진 호출 + ADR-0011 GATE-C/i18n 정책을 받아 입력 화면 9 항목을 *기술적 명세*로 풀어둠. **10개 결정 (T1~T10)**: (T1) 라우팅 = `/compare/[category]/[step]` REST + deep-link (옵션 A). (T2) 카테고리 선택 = `/compare` 별도 페이지 + 4 카드 (mobile/internet_fixed/bundle_internet_tv/landline). (T3) 단계 1 우편번호 = BE 1차 (SC-B 채택), Zod `^[1-9][0-9]{3}$` + 즉시 피드백, NL/LU 페이즈 3 진입 직전 추가. (T4) 단계 2 가구 형태 = ADR-0007 `householdType` enum 3값 라디오 카드, 사용량 추정 매핑은 페이즈 2 후반 또는 페이즈 3 진입 시 결정. (T5) 단계 3 현재 공급사 = 선택적 (스킵 동등 노출) + sub-step 요금제 선택 (URL 변경 X). (T6) 단계 4 청구서 = SC-A 채택 ("청구서 없이 진행" 단일 버튼), OCR 페이즈 3 결과 페이지 직후 추가. (T7) 단계 5 결과 미리보기 = 결과 카드 1개 + `/r/[shortId]` 이동, 페이즈 3 풀버전과 분리. (T8) sessionStorage `slim:compare:[category]:state` v1 + 진행 표시 + 백 가능 + 매 입력 즉시 저장 (localStorage 0). (T9) 모바일 우선 (375/768/1024) + shadcn/ui Form 패턴 + RHF 추가 권장 (옵션 A — GATE-J 분기). (T10) i18n = 페이즈 2 한국어 단일 (SC-E 신설) + 페이즈 4 베타 직전 일괄 도입 (next-intl). **SCOPE CUT 5개**: SC-A (OCR 이연) / SC-B (BE 1차) / SC-C (Playwright 페이즈 4) / SC-D (PostHog 페이즈 4) / **SC-E 신설 (i18n 페이즈 4 직전)**. **거부 대안**: 단일 페이지 + step state (deep-link 불가) / 페이즈 2 1차 nl-BE/fr-BE 추가 (시간 sink) / 4 locale 동시 (페이즈 2 일정 1.5배 위협) / RHF 미추가 (보일러플레이트 ↑↑).
 

@@ -12,3 +12,8 @@ public/reports/bias/*.json
 
 # TypeScript incremental build cache (regenerated per build)
 tsconfig.tsbuildinfo
+
+# Playwright 임시 결과 + e2e 스크린샷 (매 실행마다 갱신 — git churn 회피)
+test-results/
+playwright-report/
+e2e/screenshots/

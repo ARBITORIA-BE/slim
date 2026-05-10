@@ -2,14 +2,21 @@
 
 ## Status
 
-**Proposed (2026-05-10)** — GATE-J 운영자 검토 대상. T1~T10 10 결정 + SCOPE CUT
-SC-A/B/C/D + 신규 SC-E. 본 ADR 통과 시 페이즈 2 builder 인계 명세 (10~12 신설
-파일) 확정. 운영자 사전 명시 5 결정 (입력 순서 / 5단계 5분 / shadcn / 모바일 /
-sessionStorage) 을 *기술적 명세*로 풀어둔 형태. 통과 후 verifier 가 PLAN 2.1~2.9
-본문에 ADR-0016 §T1~T10 cross-ref 추가 + SC 표기 갱신 + 합계 표 갱신.
+**Accepted — T1~T8 + T9 옵션 A (RHF) + T10 SC-E (한국어 단일) 채택 (2026-05-10)**.
+운영자 GATE-J 검토 결과 ADR §결정 그대로 + 두 분기 모두 권장(옵션 A / SC-E)
+채택. 후속:
+- verifier 가 PLAN 2.1~2.9 본문에 §T1~T10 cross-ref + SC 표기 갱신
+- builder 가 §다음 단계 명세대로 10~12 신설 파일 진입
+- RHF + `@hookform/resolvers` 2 dep 추가 (운영자 명시 승인 — GATE-C amend)
 
-본 ADR 은 **결정 + 인계 명세** 만 담는다. 코드 변경 0. 외부 의존성 0 (next-intl /
-shadcn/ui 모두 페이즈 0 에서 dep, ADR-0011 §T4 GATE-C 정합).
+**격상 이력**:
+- Proposed (2026-05-10) — T1~T10 10 결정 + SC-A/B/C/D + 신규 SC-E
+- Accepted (2026-05-10) — 운영자 GATE-J 통과, T9 옵션 A + T10 SC-E
+
+본 ADR 은 **결정 + 인계 명세** 만 담는다. 옵션 A 채택의 직접 후속 = RHF +
+resolvers 2 dep 추가 (next-intl / shadcn/ui 등 페이즈 0 dep는 변동 0). shadcn
+컴포넌트 7종 (Card/Input/Label/RadioGroup/Select/Form/Progress) install 방식
+(CLI vs 직접 작성)은 builder 자유도 — 본 ADR §결정 외.
 
 ## Context
 

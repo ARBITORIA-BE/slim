@@ -314,24 +314,42 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   *참고 (ADR-0020 §결정 4)*: Vercel runtime의 `EXPECTED_DB_ENDPOINTS`는 미등록
   상태 — 페이즈 4 베타 진입 (GATE-K) 직전 D.3에서 등록 예정. 현 stop-gate는
   로컬에서만 동작.
-- [ ] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
+- [!] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
   교체). PLAN 1.8 스텁 fetcher의 후속 부채.
-  - `src/fetchers/proximus.ts`: 실 HTML fetch + 셀렉터 추출 로직. AbortController
-    25s timeout 활성화. 파싱 경고 시 confidence='medium'.
-  - `src/fetchers/telenet.ts`: 동일 패턴.
-  - 셀렉터 안정성 검증 + sanity check 강화 → confidence='low' → 'medium'/'high'
-    격상 목표.
-  - `docs/runbook.md`(1.5.3)와 연동 — 셀렉터 깨짐 시 대응 절차.
-  - DoD: 실 Neon DB에 `tariff_snapshot` 행 2 fetcher × N tariff 누적 확인.
-    confidence='low' 비율 < 20% (스텁 100%에서 격상).
-- [ ] **1.5.7** Bash 보안 패턴 자동 차단 hook (운영 안전 부채). 사고 근거:
-  2026-05-10 — Pieter가 `echo \`...\` >> file.md` 패턴 사용 시 보안 경고
-  ("Newline followed by # inside a quoted argument") 발생. 운영자 No 선택 후
-  CLAUDE.md §8 #6 신설 + 본 부채 등록. 작업 범위: (a) `scripts/hooks/pre-tool-guard.sh`
-  에 Bash 인자 패턴 검사 추가 — quote+newline+# / 백틱 / `$(...)` / escape 안 된
-  큰따옴표 패턴 발견 시 차단 + 명확한 안내 메시지 (b) 안전 대안 (Edit/Write/heredoc
-  with `'EOF'`) 명시 (c) 음성 테스트: 위험 패턴 명령 시도 시 차단 동작 확인.
-  CLAUDE.md §8 #6 헌법 룰 강제 위치 = 본 hook.
+  - **차단 사유 (2026-05-10)**: [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)
+    분기 결과 = **MEDIUM (2.75/5.0) → 옵션 C 채택**. 1.5.6을 페이즈 5/6
+    재평가 시점까지 보류. 그동안 method='stub' 유지 + 베타(페이즈 4)는
+    ADR-0013 §평가 6 옵션 X (스텁 + "추정값")로 진행. 솔로 시간 비용(3.5)이
+    가장 큰 점수였고, Proximus/Telenet General Terms PDF 텍스트 추출 실패로
+    잔여 법적 불확실성 존재. 페이즈 5 진입 시 1.5.6 + Orange BE(5.0) +
+    1.5.1(N=3 fetcher 공통화)을 통합 평가하는 게 시간 효율 ↑.
+  - **재진입 트리거 (ADR-0013 §검증 3)**: M16 평가 게이트 통과 시 별도 ADR
+    신설 + GTC PDF 수동 열람 (운영자 권고 후속, ~30분 — Appendix A §외부 변호사 권장)
+    + Daisycon/Awin 어필리에이트 피드 vs 자체 스크래핑 재비교.
+  - **차단 동안 유지 산출물**: 본 항목 본문에 정의된 fetcher 파일들의 `// 실
+    fetch 준비 코드` 주석 블록은 그대로 보존 — 페이즈 5 진입 시 주석 해제 +
+    Cheerio 추가만으로 진입 가능 (인터페이스 동결).
+  - 원래 DoD (재진입 시 적용): 실 Neon DB에 `tariff_snapshot` 행 2 fetcher
+    × N tariff 누적 확인. confidence='low' 비율 < 20% (스텁 100%에서 격상).
+- [x] **1.5.7** Bash 보안 패턴 자동 차단 hook (운영 안전 부채). 사고 근거:
+  2026-05-10 — Pieter가 echo + 백틱 substitution + `>>` 리다이렉트로 마크다운
+  파일을 갱신하려다 보안 경고("Newline followed by # inside a quoted argument")
+  발생. 운영자 No 선택 후 CLAUDE.md §8 #6 신설 + 본 부채 등록. 완료 산출물:
+  (a) `scripts/hooks/pre-tool-guard.sh` 에 패턴 검사 추가 — 따옴표+개행+#
+  (path validation 우회) 차단, 더블쿼트 안 backtick/`$(...)` (command
+  substitution) 차단. 닫는 따옴표 강제 매칭으로 heredoc body false positive
+  회피. 싱글쿼트 안 `$()`/backtick은 bash literal 처리이므로 통과.
+  (b) 차단 시 안전 대안 메시지 자동 첨부 (Edit/Write 우선, 임시 파일+mv,
+  `command --file=- <<'EOF' ... EOF` stdin 패턴, git commit 멀티라인은
+  `git commit --file=- <<'EOF' ... EOF`).
+  (c) JSON fallback 경로 강화 — 기존 `\\` / `\"` 외에 `\n`, `\t` 까지
+  센티넬 기반 sed 파이프라인으로 정확 디코딩 (Windows + Git Bash = jq 미설치
+  hot path 검증).
+  (d) 음성 테스트 8 케이스 통과 — 안전 4 (pnpm typecheck / git status /
+  heredoc-stdin / git commit --file=-) + 위험 4 (`$()` in 더블쿼트 / 싱글쿼트
+  multiline+# / single-quoted `$()` 안전 통과 / rm -rf /).
+  세 번째 헌법 항목 ("escape 안 된 큰따옴표 끼어듦")은 false positive 비율
+  과다로 자동 탐지 보류, hook 내 주석에 후속 휴리스틱 진입점 명시.
 
 **Phase 1.5 검증:** verifier — typecheck/lint/test 0 에러 + 신설 runbook 존재.
 
@@ -341,19 +359,46 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 
 **목표:** 5단계 5분 입력. 이탈률 < 30% (PostHog 측정).
 
-- [ ] **2.1** 카테고리 선택 화면 (랜딩에서 진입)
-- [ ] **2.2** 단계 1: 우편번호 (BE/NL/LU 자동 인식)
-- [ ] **2.3** 단계 2: 가구 형태 (혼자/커플/3+) → 사용량 추정 fallback
-- [ ] **2.4** 단계 3: 현재 공급사/요금제 (선택적, 모르면 스킵)
-- [ ] **2.5** 단계 4: 청구서 업로드 (선택적) — OCR로 사용량 추출
-  - DoD: tesseract.js로 BE 통신 청구서 5종 읽기 성공률 > 80%
-  - **scope cut 옵션 C** (추천): **OCR을 페이즈 5로 미룸**. M4-M5에는 수동
-    입력만. OCR은 솔로에게 가장 큰 시간 싱크홀 — 청구서 5종 수집 + tesseract
-    튜닝이 1-2개월 흡수. 베타에는 영향 없음.
-- [ ] **2.6** 단계 5: 결과 미리보기 → "더 보기" 클릭으로 풀 결과
-- [ ] **2.7** 진행 표시 + 백 가능 + 데이터 자동 저장 (sessionStorage)
-- [ ] **2.8** 모바일 우선 디자인 (375px 기준 시작)
+> **페이즈 2 진입 결정 묶음**: [ADR-0016](docs/adr/0016-phase-2-input-flow-design.md)
+> Accepted (T9 옵션 A RHF + T10 SC-E 한국어 단일, 2026-05-10). 본 페이즈
+> 9 항목은 §T1~T10 명세를 그대로 따른다. SC-A (OCR 이연), SC-B (BE 1차),
+> SC-C (Playwright 페이즈 4), SC-D (PostHog 페이즈 4), SC-E (한국어 단일)
+> 모두 적용.
+
+- [x] **2.1** 카테고리 선택 화면 (랜딩에서 진입) — ADR-0016 §T2: `/compare`
+  별도 페이지 + 4 카드 (mobile/internet_fixed/bundle_internet_tv/landline) +
+  카드별 클릭 시 `/compare/[category]/postal` 이동. 검증: e2e 시연 통과
+  (`e2e/compare-flow.spec.ts`, 4 카드 동등 무게 + 다크 패턴 0).
+- [x] **2.2** 단계 1: 우편번호 (**SC-B 적용** — 페이즈 2 1차 BE 만, NL/LU
+  페이즈 3 진입 직전 추가) — ADR-0016 §T3: Zod regex `^[1-9][0-9]{3}$` +
+  즉시 피드백 + BE 외 형식 시 정직 안내 ("페이즈 3 진입 전 추가 예정"). 검증:
+  22 unit tests + e2e 1000 입력 통과.
+- [x] **2.3** 단계 2: 가구 형태 (혼자/커플/3+) → 사용량 추정 fallback —
+  ADR-0016 §T4: `householdType` enum 3값 라디오 카드. 사용량 매핑은 페이즈 2
+  후반 또는 페이즈 3 진입 시 결정. 검증: e2e single 라디오 선택 통과.
+- [x] **2.4** 단계 3: 현재 공급사/요금제 (선택적, 모르면 스킵) — ADR-0016 §T5:
+  스킵 동등 노출 + sub-step 요금제 선택 (URL 변경 X). 신규 가입자 = 비교
+  엔진 케이스 6 (ADR-0010 §T7) 자연 처리. 검증: e2e 스킵 경로 통과 — sub-step
+  요금제 UI는 페이즈 3 진입 시 활성 (페이즈 2 1차 비활성 disabled 노출).
+- [x] **2.5** 단계 4: 청구서 업로드 (**SC-A 적용** — 페이즈 2 1차 OCR 미구현,
+  "청구서 없이 진행" 단일 버튼) — ADR-0016 §T6: tesseract.js dep 0 (GATE-C
+  정합). OCR은 페이즈 3 결과 페이지 직후 별도 ADR로 도입. 검증: e2e 단일 버튼 통과.
+- [x] **2.6** 단계 5: 결과 미리보기 → "더 보기" 클릭으로 풀 결과 — ADR-0016
+  §T7: 결과 카드 1개 미리보기 + `/r/[shortId]` 이동. 페이즈 3 풀버전과 분리.
+  비교 엔진 호출 = ADR-0010 §T10 동기 5초 timeout. 검증: `/api/compare` stub
+  + nanoid 12자 도달 (e2e). 풀 compare() 호출 + DB insert는 페이즈 3 진입 시.
+- [x] **2.7** 진행 표시 + 백 가능 + 데이터 자동 저장 (sessionStorage) —
+  ADR-0016 §T8: `slim:compare:[category]:state` v1 + 매 입력 즉시 저장 +
+  localStorage 0 (헌법 §8 #5). 검증: `useCompareSession` 훅 + `CompareLayout`
+  Progress bar 5단계 시각화 (e2e 스크린샷 03 확인).
+- [x] **2.8** 모바일 우선 디자인 (375px 기준 시작) — ADR-0016 §T9: Tailwind
+  breakpoints 375 / `md:` 768 / `lg:` 1024 + shadcn/ui Form 패턴 + RHF 추가
+  (옵션 A 채택, 2026-05-10). 검증: 7 shadcn 컴포넌트 (Card/Input/Label/RadioGroup/
+  Select/Form/Progress) 신설 + e2e 통과. 다국어 responsive 수동 검증(375/768/1024)
+  은 운영자 후속.
 - [ ] **2.9** 접근성: 키보드만으로 완주 가능, axe-core 0 violations
+  (**SC-C 적용** — Playwright E2E는 페이즈 4 deploy 직전 일괄 추가). ADR-0016
+  §T9 + §SCOPE CUT SC-C.
 
 **Phase 2 검증:** Playwright E2E — 입력 → 결과까지 5분 이내 (CI에서 측정).
 **Phase 2 현실 일정:** M4 ~ M5 (2개월). UI 9개 + Playwright E2E + i18n
@@ -525,8 +570,8 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 3 | 1 | 0 | M0 잔여 + GATE-K 직전 | 2026-05-10 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 7 | 5 | 0 | M3 말 | 2026-05-10 |
-| 2 | 9 | 0 | 0 | M4 ~ M5 | 2026-05-09 |
+| 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
+| 2 | 9 | 8 | 0 | M4 ~ M5 (페이즈 2 1차 진입, e2e 5단계 6.7s 통과, 2.9 axe SC-C 대기) | 2026-05-10 |
 | 3 | 7 | 0 | 0 | M6 ~ M7 | 2026-05-09 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
@@ -534,7 +579,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **81** | **26** | **0** | M0 ~ M24 (≈ 18-24개월) | 2026-05-10 |
+| **합계** | **81** | **35** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-10 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
@@ -547,6 +592,15 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 
 - 옵션 A: 1.8 fetcher 3개 → 2개 (Proximus + Telenet) — **적용됨 (ADR-0009, 2026-05-09)**
 - 옵션 B: 1.12 알려진 케이스 12개 → 6개 — **적용됨 (ADR-0010, 2026-05-09)**
-- 옵션 C: 2.5 OCR을 페이즈 2 → 페이즈 5로 미룸 (1-2개월 단축, 권장)
+- 옵션 C: 2.5 OCR을 페이즈 2 → 페이즈 3 결과 페이지 직후로 미룸 — **적용됨
+  (ADR-0016 §T6 SC-A, 2026-05-10)**. 별도 ADR (가칭 ADR-OCR) 신설 트리거.
 - 옵션 D: 3.7 인쇄 뷰를 페이즈 3 → 페이즈 6으로 미룸
 - 옵션 E: 4.6 베타 100명 → 50명
+- **옵션 SC-B**: 2.2 우편번호 BE/NL/LU 3국 → 페이즈 2 1차 BE 만, NL/LU 페이즈 3
+  진입 직전 추가 — **적용됨 (ADR-0016 §T3 SC-B, 2026-05-10)**.
+- **옵션 SC-C**: 2.9 Playwright E2E → 페이즈 2 1차 axe-core 만, Playwright
+  페이즈 4 deploy 직전 — **적용됨 (ADR-0016 §SCOPE CUT SC-C, 2026-05-10)**.
+- **옵션 SC-D**: PostHog 측정 (이탈률 30%) → 페이즈 4 이후. 페이즈 2 1차 = "측정
+  가능한 구조" 만 (ADR-0016 §T1 URL 자체가 단계 식별자) — **적용됨 (2026-05-10)**.
+- **옵션 SC-E**: i18n 한국어 단일 → 페이즈 4 베타 직전 일괄 도입 (next-intl
+  + 4 locale 한/nl/fr/en) — **적용됨 (ADR-0016 §T10 SC-E, 2026-05-10)**.

@@ -34,7 +34,9 @@ async function parsePlan(path: string): Promise<PlanItem[]> {
   const lines = text.split('\n');
 
   const itemRe = /^- \[([ x~!])\] \*\*([A-Z]\.\d+(?:\.[A-Za-z0-9]+)*|\d+(?:\.[A-Za-z0-9]+)*)\*\* (.+)$/;
-  const fileRe = /`([^`]+\.(?:ts|tsx|js|jsx|sql|md))`/g;
+  // 백틱 안 첫 글자는 비공백·비백틱이어야 — nested-backtick 본문 (예: ` >> file.md`)
+  // 같은 placeholder 토큰이 실제 파일 경로로 잘못 추출되는 위양성 차단.
+  const fileRe = /`([^`\s][^`]*\.(?:ts|tsx|js|jsx|sql|md))`/g;
 
   for (let i = 0; i < lines.length; i++) {
     // noUncheckedIndexedAccess: lines[i]는 string | undefined.

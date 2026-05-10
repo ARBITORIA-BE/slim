@@ -2,12 +2,18 @@
 
 ## Status
 
-**Proposed (2026-05-09)** — GATE-F (운영자 분기 검토) 직후 다음 중 하나로 격상:
-- **Accepted** (분기 LOW/MEDIUM 둘 중 하나의 권장 채택)
-- **Deferred** (HIGH 또는 운영자 추가 평가 요청 — 1.5.6 보류)
+**Accepted — 옵션 C (MEDIUM) 채택 (2026-05-10)**. 운영자 GATE-F 검토 결과
+ADR §분기 권장 그대로 옵션 C 채택. 1.5.6은 페이즈 5/6 재평가 시점까지 차단
+([!]) 마킹. 그동안 method='stub' 유지 + 베타는 §평가 6 옵션 X (스텁 +
+"추정값")로 진행 가능.
+
+**격상 이력**:
+- Proposed (2026-05-09) — 7 평가 + Appendix A legal 1차 검토
+- Accepted 옵션 C (2026-05-10) — 운영자 결정, GATE-F 통과
 
 본 ADR은 **결정 + 권장만** 한다. 실 fetcher 코드 변경 X, fetcher 메타 변경 X,
-새 의존성 X. 분기 실행은 GATE-F 후 builder 또는 architect 후속 라운드.
+새 의존성 X. 옵션 C 채택의 직접 후속 = PLAN 1.5.6 status 갱신 + 본문 인용
+추가 (코드 0줄). 페이즈 5 진입 시점에 본 ADR 재평가 트리거 (§검증 3).
 
 ## Context
 
