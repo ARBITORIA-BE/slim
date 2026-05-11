@@ -199,8 +199,14 @@ export default async function ResultPage({
           </section>
         </>
       ) : (
-        <article className="flex flex-col gap-3 rounded-2xl border border-fg/10 bg-bg-warm/60 p-6">
-          <h2 className="font-display text-xl font-semibold tracking-tight text-fg">
+        <article
+          aria-labelledby="no-candidates-heading"
+          className="flex flex-col gap-3 rounded-2xl border border-fg/10 bg-bg-warm/60 p-6"
+        >
+          <h2
+            id="no-candidates-heading"
+            className="font-display text-xl font-semibold tracking-tight text-fg"
+          >
             비교 후보가 없습니다
           </h2>
           <p className="text-sm leading-relaxed text-fg-soft">
