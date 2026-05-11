@@ -29,6 +29,13 @@
       "when": 1778341929988,
       "tag": "0003_silent_texas_twister",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778449805361,
+      "tag": "0004_sudden_sprite",
+      "breakpoints": true
     }
   ]
 }

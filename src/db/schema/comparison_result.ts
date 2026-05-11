@@ -189,6 +189,36 @@ export const comparisonResultItem = pgTable(
     }).notNull(),
 
     /**
+     * 비교 엔진 breakdown (ADR-0010 §T3). PLAN 3.5 계산 근거 펼치기 의 입력.
+     *
+     * 왜 이 3 컬럼을 *추가* 저장하는가 (compare() 재실행 회피)?
+     *   - engineVersion 가 시간에 따라 변경 → 재실행 시 결과 비결정성
+     *   - tariff_snapshot 도 새로 append 됨 → DISTINCT ON 최신값이 *원래* 계산
+     *     시점과 다를 수 있음
+     *   - 영구 링크 SLA = "본 결과를 *이 버전의 엔진이* 계산했음" (P1 정합)
+     *
+     * 왜 activation/modem/promo 는 별도 컬럼이 아닌가?
+     *   - tariff_snapshot 행이 RESTRICT FK 로 동결됨 (T6) — JOIN 으로 원본 값 보존
+     *   - 중복 저장 = 일관성 위험 + Neon row 비용 (페이즈 4.5 비용 모니터링 정합)
+     *
+     * default(0) 사유: 본 마이그레이션(0004) 적용 시 기존 행 (있다면) 안전.
+     * Sub-task 5 이전 행은 0 으로 표기 (breakdown 미저장 의도된 fallback).
+     */
+    monthlyAvg12Cents: bigint('monthly_avg_12_cents', { mode: 'number' })
+      .notNull()
+      .default(0),
+    monthlyAvg24Cents: bigint('monthly_avg_24_cents', { mode: 'number' })
+      .notNull()
+      .default(0),
+    /**
+     * 24개월 시나리오 월 절약액 (cents, signed). monthlySavingCents 는 12개월
+     * 시나리오 (ADR-0010 §T3 "1차 표시 단위 = 12개월").
+     */
+    monthlySaving24Cents: bigint('monthly_saving_24_cents', { mode: 'number' })
+      .notNull()
+      .default(0),
+
+    /**
      * 주의사항 배열 (PLAN 1.13 caveats 메커니즘). 예:
      *   ["24개월 약정", "활성화 비용 €50 별도", "EU 로밍 미포함"]
      *

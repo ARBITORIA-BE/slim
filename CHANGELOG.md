@@ -11,6 +11,14 @@
 
 ### Added
 
+- Phase 3 builder M6 sub-task 5 후속 — `comparison_result_item.breakdown` 평탄 컬럼 3종 + getTopResultItem 신설 ([ADR-0010](docs/adr/0010-comparison-engine.md) §T3/§T4):
+  - **마이그레이션 `drizzle/0004_sudden_sprite.sql`** — `comparison_result_item` 에 `monthly_avg_12_cents` / `monthly_avg_24_cents` / `monthly_saving_24_cents` 3 컬럼 추가 (모두 `bigint NOT NULL DEFAULT 0`). 결정: 평탄 컬럼 (ADR-0005 §T2 / ADR-0006 §T2 정합 — hot path 는 평탄 + 아카이브는 JSONB). compare() 재실행은 거부 — engineVersion drift + tariff_snapshot append 로 결과 비결정성. activation/modem/promo 는 별도 컬럼 X (tariff_snapshot RESTRICT FK 로 동결, JOIN 으로 충분).
+  - **`src/db/schema/comparison_result.ts` 변경** — 3 신규 컬럼 + 의도 주석 (왜 별도 저장 / 왜 activation/modem 은 별도 X).
+  - **`src/db/queries/comparison.ts` 확장** — `insertComparisonResultItems` 에 3 신규 필드 + `getTopResultItem(resultId)` 신설 (rank=1 결과 + tariff_snapshot.activationFeeCents INNER JOIN, 후보 0건 시 null 반환).
+  - **`src/app/api/compare/route.ts` 변경** — `result.ranked` map 시 `item.breakdown.monthlyAvg12/24Cents` + `monthlySaving24Cents` 도 insert 페이로드 포함.
+  - **`src/app/r/[shortId]/page.tsx` 변경** — `getTopResultItem(row.resultId)` 호출 → `CalculationDetails.breakdown` 에 실 값 전달. `activationAmortizedPerMonthCents = Math.round(activationFeeCents / 12)` (ADR-0010 §T4 12개월 amortize 1차 단위). 후보 0건 (topItem null) 시 모두 0 fallback.
+  - **운영자 액션 필요** — `pnpm verify:db && pnpm db:push` (production 적용 전 endpoint allowlist 확인, ADR-0017 사고 방지 1.5.5 정합). dev/local 환경 동기화 후 e2e 재검증 (`pnpm tsx --env-file=.env.local scripts/seed-stub-tariffs.mts` + `pnpm test:e2e`).
+  - 검증: typecheck 0 / lint 0 / **117 tests passed** (회귀 0) / harness:plan 81 항목 정합 / harness:data 출처/신선도 통과.
 - Phase 3 builder M6 sub-task 5 — `/api/compare` 풀 흐름 + `/r/[shortId]` DB 존재 검증 ([ADR-0021](docs/adr/0021-phase-3-results-page-design.md) §T3 + ADR-0007 §T9/§T10):
   - **`src/db/queries/comparison.ts` 신설** — 5종 helper. `insertComparisonRequest` (RETURNING id) / `getCandidateSnapshots(category, country)` 후보 SELECT (`selectDistinctOn([tariffSnapshot.tariffId])` + 3단 JOIN + `is_active`/`country`/`NOT is_anomaly`/`confidence != low` 필터, ADR-0006 §T7 hot path) / `getCurrentTariffSnapshot(tariffId)` baseline SELECT (필터 0 — 비교 baseline 신뢰도 보존) / `insertComparisonResult` + `insertComparisonResultItems` bulk (neon-http no-tx, persist.ts 동형 순차) / `getResultByShortId(shortId)` LEFT JOIN request (T8 SET NULL 정합).
   - **`src/db/queries/comparison-helpers.ts` 신설** — db-free 순수. `snapshotRowToTariffLike(row)` Drizzle row → 비교 엔진 입력 1:1 매핑 + `buildLockedInputs(args)` ADR-0007 §T9 권장 키 직렬화 (postal_country / postal_code / household_type / current_provider_id / current_tariff_id / input_attributes / assumptions { usage_profile, estimator_version }). `+8 unit tests` (필드 매핑 + null 보존 + 변형 X + 순수성).
