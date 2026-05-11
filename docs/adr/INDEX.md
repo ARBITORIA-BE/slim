@@ -27,7 +27,7 @@
 | [ADR-0018](0018-neon-multi-org-policy.md) | Neon 멀티 organization 정책 + 자동 자산 점검 룰 | Accepted | 2026-05-10 |
 | [ADR-0019](0019-arbitoria-three-platform-alignment.md) | ARBITORIA 3 플랫폼 (GitHub / Vercel / Neon) 정렬 | Accepted (+ Amendment A1/A2, Appendix A pending TVA) | 2026-05-10 |
 | [ADR-0020](0020-arbitoria-inventory-and-alignment-corrections.md) | ARBITORIA 인벤토리 명시 + ADR-0019 진단 사실 정정 | Accepted | 2026-05-10 |
-| [ADR-0021](0021-phase-3-results-page-design.md) | 페이즈 3 결과 페이지 설계 — 3층 구조 / caveats UI / `/api/compare` 풀 구현 | Accepted (T9 옵션 D + T11 SC-H + SC-F + SC-G, 2026-05-10) | 2026-05-10 |
+| [ADR-0021](0021-phase-3-results-page-design.md) | 페이즈 3 결과 페이지 설계 — 3층 구조 / caveats UI / `/api/compare` 풀 구현 | Accepted (T9 옵션 D + T11 SC-H + SC-F + SC-G, 2026-05-10) + Amendment 1 (2026-05-11, T9 인쇄 뷰 페이즈 3 환원) | 2026-05-11 |
 | [ADR-0022](0022-database-environment-separation.md) | DB 환경 분리 정책 — production / preview / development 3 브랜치 + prod URL Console-only SoT | Accepted (2026-05-11 — D.4 완료, verify:db all-green, 커밋 4b7faab) | 2026-05-11 |
 | [ADR-0023](0023-lighthouse-axe-perf-harness.md) | Lighthouse / axe-core 자동화 — `pnpm harness:perf` 신설 + 로컬 advisory 게이트 (CI 머지 차단 X) | Accepted (2026-05-11 — GATE-P 승인: lighthouse devDep + CI 머지 차단 X) | 2026-05-11 |
 
@@ -173,7 +173,7 @@
 
 ### [ADR-0021: 페이즈 3 결과 페이지 설계 — 3층 구조 / caveats UI / `/api/compare` 풀 구현](0021-phase-3-results-page-design.md)
 
-**상태**: Accepted (T9 옵션 D 인쇄 뷰 페이즈 6 이연 + T11 SC-H 별도 ADR-OCR + SC-F URL params 정렬/필터 + SC-G static OG, 2026-05-10) — 운영자 GATE-N 통과. 본 ADR은 *결정 + builder 인계 명세* — 코드 변경 0. 외부 의존성 추가 0 (T4 native checkbox). 페이즈 3 진입 시점 (M6 시작) builder 라운드 트리거.
+**상태**: Accepted (T9 옵션 D 인쇄 뷰 페이즈 6 이연 + T11 SC-H 별도 ADR-OCR + SC-F URL params 정렬/필터 + SC-G static OG, 2026-05-10) — 운영자 GATE-N 통과. 본 ADR은 *결정 + builder 인계 명세* — 코드 변경 0. 외부 의존성 추가 0 (T4 native checkbox). 페이즈 3 진입 시점 (M6 시작) builder 라운드 트리거. **Amendment 1 (2026-05-11)** — §T9 옵션 D 철회: 인쇄 친화 뷰(`@media print`) 를 페이즈 6 → 페이즈 3 환원 (별도 ADR-PRINT 미신설, Amendment 가 대체). 단일 print stylesheet(`src/app/globals.css`) + Tailwind `print:` — 새 dep·새 라우트 0. PLAN 3.7 = 3 sub-task(a print CSS 골격 / b 컴포넌트 `print:` 클래스 / c `e2e/result-page-print.spec.ts`).
 
 **요약**: PLAN 페이즈 3 (3.1~3.7) + PLAN 1.13 caveats UI 배치 (ADR-0011 §T3 예약 발동) + 페이즈 2 1차 부채 종결(`/api/compare` stub → 풀, `/r/[shortId]` placeholder → 풀, `current-provider` sub-step 활성, NL/LU 우편번호) 묶음. **11개 결정 (T1~T11)**: (T1) `/r/[shortId]` 풀 격상 (URL 모양 동일, 영구 링크 호환). (T2) 단일 페이지 3층 구조 — 1층 결론 카드 + 2층 비교 표 + 3층 원본 링크. (T3) `/api/compare` 풀 — Zod 재검증 + comparison_request insert + tariff_snapshot DISTINCT ON 후보 SELECT + compare() 동기 5초 + comparison_result + item insert. (T4) URL params 정렬/필터 (RSC 재렌더, dep 0 — **SC-F**). (T5) caveats UI 8×3 매트릭스 (ADR-0011 §T3 발동) + caveats-i18n.ts 한국어 매핑. (T6) excluded_reason 직접 표시 + /data-sources 동형. (T7) `<details>` 펼치기 + caveats 트리거 표기 + engineVersion. (T8) noindex + canonical + static OG (**SC-G** 동적 OG 페이즈 4). (T9) **옵션 D 적용** — 인쇄 뷰 페이즈 6 이연. (T10) NL/LU discriminatedUnion 우편번호 (ADR-0016 §T3 SC-B 발동, 페이즈 3 진입 직전). (T11) **SC-H 신설** — OCR 별도 ADR-OCR (페이즈 3 결과 페이지 직후). **SCOPE CUT 4개**: 옵션 D + SC-F (URL params) + SC-G (static OG) + SC-H (별도 ADR-OCR). **거부 대안**: `/results/[id]` 신설(영구 링크 깨짐) / Inngest 비동기(UX 폴링 부담) / Zustand client state(공유 깨짐) / caveats 모달(P2 위반) / IP 기반 자동 국가 감지(헌법 §8 #5).
 

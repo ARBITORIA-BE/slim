@@ -13,6 +13,11 @@ native HTML `<input type="checkbox">` 사용. 후속:
 **격상 이력**:
 - Proposed (2026-05-10) — T1~T11 11 결정 + SC-F/G/H 신설 + 옵션 D 채택
 - Accepted (2026-05-10) — 운영자 GATE-N 통과, 4 분기 모두 권장 채택
+- **Amendment 1 (2026-05-11)** — §T9 옵션 D **철회**: 인쇄 친화 뷰(`@media print`)
+  를 페이즈 6 → **페이즈 3 환원** (별도 ADR-PRINT 미신설, Amendment 가 대체).
+  단일 print stylesheet + Tailwind `print:` — 새 dep·새 라우트 0. 상세는 본문
+  §T9 직후 `#### T9 Amendment 1` 섹션. (§T5/§T7 후속 Amendment 도 같은 날짜대 —
+  결과 페이지 라운드 c/d 의 calculation-details/caveat-triggers 보강.)
 
 본 ADR 은 **결정 + 인계 명세** 만 담는다. 코드 변경 0. 외부 의존성 추가 0
 (SC-F URL params, T4 native checkbox). DB schema 무변동 (ADR-0006/0007 그대로).
@@ -437,6 +442,90 @@ cut 옵션 D 명시 적용.
 - ADR-0003 §결정 6 옵션 D 정합.
 - 베타 영향 0 (옵션 D 본문 인용).
 - 솔로 시간 보존.
+
+---
+
+#### T9 Amendment 1 (2026-05-11) — 인쇄 친화 뷰 페이즈 3 환원 (옵션 D 거부)
+
+> **상태**: 채택 (2026-05-11). 본 §T9 원문(옵션 D = 페이즈 6 이연)은 기록으로
+> 보존하되, 이 Amendment 가 그 결정을 *대체* 한다. P5 — ADR 은 append-only.
+
+**트리거**: 본 ADR §회귀 트리거 #2 — "GATE-N 에서 운영자 T9 옵션 D 거부 →
+본 ADR §T9 Amendment + builder 인계 갱신". 운영자(Kim Wonmin) 가 2026-05-11
+GATE-N 사후 검토에서 옵션 D 를 거부, 인쇄 뷰를 페이즈 3 으로 당기기로 결정.
+
+**비대칭 진단 (왜 옵션 D 였고 왜 지금 뒤집나)**:
+- *원안(옵션 D) 의 전제* — 인쇄 뷰는 "시니어/B2B 사용 사례" 트리거, 베타 영향
+  0, 솔로 시간 sink → 페이즈 6 까지 미뤄도 손해 없음.
+- *전제가 무너진 지점* — 페이즈 3 builder 라운드 a~d 가 결과 페이지를 *이미
+  풀 구현* 했다 (`ResultConclusionCard` / `ComparisonTable` / `CalculationDetails`
+  / `ExcludedProvidersSection` / `ComparisonControls` 전부 존재). 인쇄 뷰는
+  "새 UI" 가 아니라 *기존 컴포넌트 트리에 print stylesheet 한 겹* 이다 —
+  Tailwind 4 의 `print:` variant 가 이미 내장이라 새 dep·새 라우트 0. 즉
+  "큰 작업" 이라는 옵션 D 의 비용 추정이 페이즈 3 풀 구현 *이후* 시점에선
+  과대평가다. 지금 하면 = 컨텍스트가 살아있는 상태에서 1 라운드. 페이즈 6
+  까지 미루면 = 컴포넌트 구조 재학습 비용 + 그 사이 누적된 변경과 충돌 위험.
+- *추가 동인* — "결론 → 근거 → 원본" (P1) 의 종이 사본은 베타 사용자 PDF 보관
+  사용 사례에 자연스럽다. 인쇄물에 source/fetched_at·어필리에이트 디스클로저가
+  안 보이면 P1/P3 위반인데, 기본 브라우저 인쇄(§T9 원문) 는 nav/footer/disabled
+  CTA 까지 다 찍혀 그 품질을 보장 못 한다 → 옵션 D 유지 = P1/P3 리스크를
+  페이즈 6 까지 안고 감.
+
+**결정 — 인쇄 뷰 범위·접근**:
+- **PLAN 3.7 을 페이즈 3 으로 환원** (체크박스 [ ] 유지, "페이즈 6 이연" 표기
+  제거, 페이즈 3 builder 후속 라운드로 전환). 별도 ADR-PRINT 신설 *안 함* —
+  본 Amendment 가 그 자리를 차지.
+- **접근 = 단일 `@media print` 블록 (`src/app/globals.css`) + 컴포넌트 단위
+  Tailwind `print:hidden` / `print:block`**. 새 라우트·새 컴포넌트·새 dep 0.
+  - chrome 숨김: nav, footer 장식, sticky 헤더 장식, "새로 비교/홈" CTA 두 개,
+    `ComparisonControls`(정렬/필터 `<a>`), disabled "변경하기" CTA.
+  - `CalculationDetails` 의 `<details>` 는 인쇄 시 *펼친 상태* — `details[open]`
+    강제 또는 print-only 펼친 사본. (builder 가 a11y·중복 최소인 쪽 선택.)
+  - 외부 링크: 종이엔 클릭 불가 → `a[href^="http"]::after { content: " (" attr(href) ")" }`
+    (단 인쇄 chrome 으로 숨긴 `<a>` 는 제외 — 정렬/필터 링크 URL 노이즈 회피).
+  - page-break: 비교 표 행·결론 카드·`<details>` 블록에 `break-inside: avoid`.
+  - 색상: 배경색 인쇄 안 됨 가정 → 신뢰도 배지·강조 영역은 *테두리/굵기/텍스트*
+    로도 구분 가능해야 함 (배경색에만 의존 금지). `print-color-adjust` 강제 안 함.
+  - **P1 강제 — source_url + "마지막 확인: X시간 전" (fetched_at) + engineVersion
+    은 인쇄에서도 항상 보임.** 절대 `print:hidden` 대상 아님.
+  - **P3 강제 — `/legal/affiliate-disclosure` 링크(인쇄 시 그 URL 텍스트) +
+    제외 공급사 섹션은 인쇄에서도 항상 보임.** 푸터를 통째로 숨기지 말고
+    푸터 안의 *디스클로저 줄만* 남긴다.
+  - **P2 — print stylesheet 는 화면 렌더 경로(LCP)에 0 영향** (`@media print`
+    안에만 규칙, 화면 CSS 무변동). harness:perf 회귀 없음 확인.
+
+**거부 대안**:
+- *대안 A — 별도 ADR-PRINT 신설*: 단점 = §회귀 트리거 #2 가 이미 "§T9
+  Amendment" 경로 명시 → ADR 인플레이션. ADR-0002 "Amendment 1" 선례. **거부.**
+- *대안 B — 별도 `/r/[shortId]/print` 라우트 + 전용 RSC*: 단점 = 영구 링크
+  단일성(§T1/§T2) 위반 + 컴포넌트 2벌 유지 부채 + ISR 캐시 키 분기. **거부 —
+  `@media print` 로 충분, 단일 URL 유지.**
+- *대안 C — print-CSS 라이브러리(paged.js 등) 도입*: 단점 = 새 dep(GATE-C) +
+  번들 부담 + 1장짜리 결과 페이지에 과잉. **거부.**
+- *대안 D (= §T9 원문, 옵션 D) — 페이즈 6 이연 유지*: 위 비대칭 진단으로 거부됨.
+
+**결과**:
+- ✅ 인쇄/PDF 사본이 "결론 → 근거 → 원본 + source/fetched_at + 디스클로저" 를
+  종이에서도 보장 → P1/P3 의 종이 표면 확보.
+- ✅ 페이즈 3 컨텍스트 살아있는 동안 처리 → 페이즈 6 재학습 비용 회피. 새 dep·새 라우트·DB 변동 0.
+- ✅ 페이즈 6 의 별도 ADR-PRINT 항목 소멸 → 페이즈 6 scope 1 항목 감소.
+- ⚠️ 페이즈 3 builder 후속 라운드 1회 추가 (소규모: print CSS + `print:` 클래스 + e2e print 스냅샷).
+- ⚠️ print 회귀 테스트 표면 신설 (`page.emulateMedia({ media: 'print' })`) — 유지 부채 소폭 증가.
+
+**회귀 트리거 (이 Amendment 의)**:
+- A. 베타 사용자 인쇄 사본에서 source/fetched_at 또는 어필리에이트 디스클로저
+  누락 발견 → 즉시 hotfix + 본 Amendment §결정 P1/P3 강제 항목 재점검.
+- B. print stylesheet 추가 후 harness:perf(LCP) 회귀 → P2 위반 → `@media print`
+  격리 누수 점검.
+- C. paged 인쇄 레이아웃 사용자 요구 강함 → 대안 C(라이브러리 도입) 재평가 + 별도 ADR.
+- D. 페이즈 4 i18n(SC-E) 도입 시 `a[href]::after` URL 노출 + 다국어 라벨 충돌
+  점검 → 본 Amendment + ADR-0016 §T10 정합.
+
+**PLAN 매핑**:
+- **3.7** — "옵션 D / 페이즈 6 이연" 표기 제거 → "Amendment 1 (2026-05-11) — 페이즈 3 환원" + DoD + sub-task `3.7.a`~`3.7.c`.
+- 페이즈 3 prologue 주석(옵션 D 언급) → "3.7 도 페이즈 3 (Amendment 1)".
+- 작업 추적 메타 표 페이즈 3 행 — 합계 7 유지, 주석 "3.7 페이즈 6 이연 옵션 D" → "3.7 Amendment 1 페이즈 3 환원".
+- Scope cut 옵션 표 — "옵션 D: 적용됨" → "옵션 D: **철회됨 (ADR-0021 §T9 Amendment 1, 2026-05-11)** — 3.7 페이즈 3 환원".
 
 ### T10 — NL/LU 우편번호 추가 (ADR-0016 §T3 SC-B 발동)
 

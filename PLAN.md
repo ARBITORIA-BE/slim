@@ -457,7 +457,8 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 > + 1.13 caveats UI 배치 (ADR-0011 §T3 발동) + 페이즈 2 1차 부채 종결
 > (`/api/compare` 풀, `/r/[shortId]` 풀, current-provider sub-step 활성, NL/LU
 > 우편번호 추가) 모두 §T1~T11 명세 그대로 따른다. SC-F (URL params 정렬/필터)
-> + SC-G (static OG) + SC-H (별도 ADR-OCR) + 옵션 D (인쇄 뷰 페이즈 6) 적용.
+> + SC-G (static OG) + SC-H (별도 ADR-OCR) 적용. 옵션 D (인쇄 뷰 페이즈 6 이연)
+> 는 **§T9 Amendment 1 (2026-05-11) 로 철회** → 3.7 페이즈 3 환원 (builder 후속 라운드 3.7.a~c).
 >
 > **M6 builder 진척 (2026-05-10, 합계 영향 0 — 골격 단계)**:
 > - **Sub-task 1 통과** — T10 NL/LU `discriminatedUnion` 우편번호 (BE/NL/LU
@@ -509,7 +510,8 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 > - 페이즈 3.1~3.6 [x] 격상 완료 — 라운드 a (결론 카드 3.1 + 영구 링크 3.6) /
 >   라운드 b (비교 표 3.2) / 라운드 c (원본 링크 3.3 + 제외 공급사 3.4) /
 >   라운드 d (계산 근거 펼치기 3.5 — caveats 트리거 표 + 90일 입력 부재 정직 표기).
->   3.7 (인쇄 뷰) 만 [ ] 유지 — 옵션 D 로 페이즈 6 이연 (ADR-0021 §T9).
+>   3.7 (인쇄 뷰) 만 [ ] 유지 — **페이즈 3 환원** (ADR-0021 §T9 Amendment 1,
+>   2026-05-11; 옵션 D 철회). 페이즈 3 builder 후속 라운드 (3.7.a~c).
 
 - [x] **3.1** **1층 — 결론 카드** (스크롤 없이 보임) — ADR-0021 §T2: 1위 추천
   + 연간 절약액 + "변경하기" CTA placeholder (페이즈 4 어트리뷰션 활성).
@@ -552,10 +554,34 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - `src/app/r/[shortId]/page.tsx` — placeholder 헤더 제거 + `export const revalidate = 3600` ISR + ResultConclusionCard 통합 + 영구 ID + 90일 익명화 배너 (T9) + 새로 비교/홈 CTA 두 개.
   - `src/app/r/[shortId]/not-found.tsx` — 한국어 안내(sub-task 4, 형식 미달/DB 미존재 공통).
   - 메타: noindex + canonical + textOG (sub-task 3 진행, og:image 미설정 — 페이즈 4 ADR-OG).
-- [ ] **3.7** **인쇄 친화 뷰** (`@media print`) — **옵션 D 적용 (ADR-0021 §T9,
-  2026-05-10)**: 페이즈 6 이연 결정. 페이즈 3 1차 = 기본 브라우저 인쇄 가독성만
-  (CSS reset + contrast). 시니어 사용자 인쇄 + B2B 사용 사례는 페이즈 6 진입 시
-  별도 ADR-PRINT 트리거. **본 항목 [ ] 유지** (페이즈 6 진입 시 [x]).
+- [ ] **3.7** **인쇄 친화 뷰** (`@media print`) — **ADR-0021 §T9 Amendment 1
+  (2026-05-11) — 페이즈 3 환원** (옵션 D 철회). `/r/[shortId]` 인쇄/PDF 사본이
+  "결론 → 근거 → 원본 + source/fetched_at + 어필리에이트 디스클로저" 를 종이에서도
+  보장 (P1/P3). 단일 `@media print` 블록(`src/app/globals.css`) + 컴포넌트 단위
+  Tailwind `print:` — 새 라우트·새 dep 0. **DoD**: (1) `page.emulateMedia({media:'print'})`
+  렌더 시 nav/footer 장식/정렬·필터 컨트롤/disabled "변경하기" CTA 비노출,
+  (2) `source_url`·"마지막 확인: X시간 전"·engineVersion·`/legal/affiliate-disclosure`
+  링크(URL 텍스트)·제외 공급사 섹션 노출 유지, (3) `<details>` 계산 근거 펼친
+  상태로 인쇄, (4) 외부 링크 href 가 텍스트로 노출 (`a[href^="http"]::after`),
+  (5) 표 행·결론 카드 `break-inside: avoid`, (6) `harness:perf`(LCP) 회귀 0
+  (`@media print` 격리), (7) print 모드 axe 0 violations.
+  검증: `e2e/result-page-print.spec.ts` (신설) + harness:perf diff + `pnpm typecheck`/`lint`/`test` 0.
+  - **3.7.a** print stylesheet 골격 — `src/app/globals.css` 에 `@media print { ... }`
+    블록 (chrome 숨김 + `break-inside` + `a[href]::after` URL 노출 + 색상 폴백 규칙).
+    화면 CSS 무변동.
+    DoD: 브라우저 인쇄 미리보기에서 nav/footer 장식/정렬·필터 사라지고 본문 가독성 OK.
+    검증: 수동 인쇄 미리보기 + harness:perf 화면 LCP 회귀 0.
+  - **3.7.b** 컴포넌트 `print:` 클래스 부여 — `ResultConclusionCard` /
+    `ComparisonTable` / `ComparisonControls` / `CalculationDetails` /
+    `ExcludedProvidersSection` / 페이지 푸터에 `print:hidden`(컨트롤·disabled
+    CTA·푸터 장식) / `print:block`(디스클로저 줄·`<details>` 펼침). 새 컴포넌트 0.
+    DoD: P1 항목(source/fetched_at/engineVersion) + P3 항목(affiliate-disclosure
+    링크 + 제외 공급사)이 print 모드에서 보임. 검증: e2e print 스냅샷 + axe(print) 0.
+  - **3.7.c** print 회귀 테스트 — `e2e/result-page-print.spec.ts` 신설:
+    `page.emulateMedia({media:'print'})` 후 (1) 숨김 요소 부재 assertion, (2)
+    P1/P3 노출 요소 존재 assertion, (3) `@axe-core/playwright` 0 violations,
+    (4) (선택) 스크린샷 비교.
+    DoD: spec 통과 + CI 그린. 검증: `pnpm test:e2e` + 게이트 통과.
 
 **Phase 3 검증:** Lighthouse 모바일 ≥ 90 (Perf/Acc/BP/SEO).
 **Phase 3 현실 일정:** M6 ~ M7 (2개월).
@@ -740,7 +766,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
-| 3 | 7 | 6 | 0 | M6 ~ M7 (ADR-0021 Accepted + Amendment 1; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1/3.2/3.3/3.4/3.5/3.6 풀; 3.7 페이즈 6 이연 옵션 D) | 2026-05-11 |
+| 3 | 7 | 6 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 = 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원, builder 후속 라운드 대기) | 2026-05-11 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
@@ -762,8 +788,9 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 - 옵션 B: 1.12 알려진 케이스 12개 → 6개 — **적용됨 (ADR-0010, 2026-05-09)**
 - 옵션 C: 2.5 OCR을 페이즈 2 → 페이즈 3 결과 페이지 직후로 미룸 — **적용됨
   (ADR-0016 §T6 SC-A, 2026-05-10)**. 별도 ADR (가칭 ADR-OCR) 신설 트리거.
-- 옵션 D: 3.7 인쇄 뷰를 페이즈 3 → 페이즈 6으로 미룸 — **적용됨 (ADR-0021 §T9,
-  2026-05-10)**. 페이즈 6 진입 시 별도 ADR-PRINT 트리거.
+- 옵션 D: 3.7 인쇄 뷰를 페이즈 3 → 페이즈 6으로 미룸 — **철회됨 (ADR-0021 §T9
+  Amendment 1, 2026-05-11)**. 3.7 페이즈 3 환원, builder 후속 라운드 (3.7.a~c).
+  별도 ADR-PRINT 미신설 (Amendment 가 대체).
 - 옵션 E: 4.6 베타 100명 → 50명
 - **옵션 SC-B**: 2.2 우편번호 BE/NL/LU 3국 → 페이즈 2 1차 BE 만, NL/LU 페이즈 3
   진입 직전 추가 — **적용됨 (ADR-0016 §T3 SC-B, 2026-05-10)**.

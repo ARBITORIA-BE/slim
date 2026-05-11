@@ -11,6 +11,11 @@
 
 ### Added
 
+- Phase 3 — **ADR-0021 §T9 Amendment 1: 인쇄 친화 뷰(`@media print`) 페이즈 6 → 페이즈 3 환원** (옵션 D 철회):
+  - 근거: 페이즈 3 결과 페이지가 이미 풀 구현(`ResultConclusionCard`/`ComparisonTable`/`CalculationDetails`/`ExcludedProvidersSection`/`ComparisonControls`)됐고 Tailwind 4 `print:` variant 내장이라 "큰 작업" 추정이 과대평가 — 지금 하면 1라운드, 페이즈 6까지 미루면 컴포넌트 재학습 비용 + 충돌 위험. 추가로, 인쇄/PDF 사본에 `source_url`/`fetched_at`/어필리에이트 디스클로저가 안 보이면 P1/P3 위반인데 기본 브라우저 인쇄로는 그 품질 보장 불가 → 옵션 D 유지 = P1/P3 리스크를 페이즈 6까지 안고 감.
+  - 접근: 단일 `@media print` 블록(`src/app/globals.css`) + 컴포넌트 단위 Tailwind `print:hidden`/`print:block` — 새 라우트·새 dep·DB 변동 0. 별도 `/r/[shortId]/print` 라우트(영구 링크 단일성 위반)·paged.js류 라이브러리(새 dep)·별도 ADR-PRINT(ADR 인플레이션) 모두 거부 — Amendment 가 ADR-PRINT 자리를 대체.
+  - PLAN 3.7: "옵션 D / 페이즈 6 이연" → "Amendment 1 페이즈 3 환원" + DoD(print 모드 chrome/컨트롤/disabled CTA 비노출 + P1/P3 요소 노출 유지 + `<details>` 펼침 + 외부 링크 href 텍스트화 + `break-inside: avoid` + harness:perf 회귀 0 + print axe 0) + sub-task a(print CSS 골격)/b(컴포넌트 `print:` 클래스, 6파일 신설 0)/c(`e2e/result-page-print.spec.ts` 신설). 구현은 builder 후속 라운드 — 본 변경은 설계(ADR Amendment + PLAN 분해)만.
+  - ADR-0021 §Status 격상 이력 + `docs/adr/INDEX.md` 표·본문 반영. (페이즈 3 작업추적 표 합계 7 유지 — 3.7은 [ ] 그대로, 환원만.)
 - Phase 3.5 — **3.5.1 설계 완료 + ADR-0023 발행** (Lighthouse / axe-core 자동화):
   - **`docs/adr/0023-lighthouse-axe-perf-harness.md` 신설 — Accepted (2026-05-11, GATE-P 승인)**. 6 결정(T1~T6): (T1) 러너 = `lighthouse` 프로그래매틱 Node API + Playwright Chromium CDP 연결(devDep 1건, 새 브라우저 0; `@lhci/cli`/`unlighthouse`/`playwright-lighthouse` 거부) (T2) **`pnpm harness:perf` 신설**(`harness:e2e`는 P2 walltime 스모크라 관심사 다름 — PLAN 원문 "harness:e2e 통합"을 본 ADR이 정정; `harness:all` 무변동) (T3) 측정 4페이지(`/`, `/compare`, `/compare/[category]/postal`, `/r/[shortId]`) (T4) hard = LCP ≤ 2.5s + TBT ≤ 200ms(헌법 P2, exit 1) / soft = Perf ≥ 90 + a11y ≥ 95(warn) / first-load JS advisory (T5) **CI 머지 차단 X** — 로컬 + `/ship` + 페이즈 종료 advisory(ADR-0002 Amendment 1의 flaky→noise 교훈) (T6) PLAN 3.5.1 = 4 sub-task. 외부 의존성 1건(`lighthouse`, GATE-C amend), 새 SaaS 0, 마이그레이션 0, ci.yml 변경 0.
   - **PLAN 3.5.1 분해** — 1줄 stub → DoD + sub-task a(러너+`scripts/harness/perf-budget.ts`+`package.json` 스크립트)/b(임계값 게이트+단위 테스트)/c(`e2e/accessibility.spec.ts` 페이지 6→~11 커버리지 보강)/d(`/ship` 통합). 구현은 페이즈 3.5 진입(M7 말) builder 트리거 — 본 커밋은 설계 잠금만.
