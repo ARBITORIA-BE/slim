@@ -31,7 +31,10 @@ const violations: Violation[] = [];
 async function parsePlan(path: string): Promise<PlanItem[]> {
   const text = await readFile(path, 'utf-8');
   const items: PlanItem[] = [];
-  const lines = text.split('\n');
+  // CRLF 안전: Windows 체크아웃(core.autocrlf=true)에서 PLAN.md 가 CRLF 라
+  // `split('\n')` 만 쓰면 각 줄 끝에 `\r` 가 남아 `(.+)$` 정규식이 안 맞음
+  // → "0개 항목 파싱" 으로 게이트가 깨진다. `/\r?\n/` 로 양쪽 모두 처리.
+  const lines = text.split(/\r?\n/);
 
   const itemRe = /^- \[([ x~!])\] \*\*([A-Z]\.\d+(?:\.[A-Za-z0-9]+)*|\d+(?:\.[A-Za-z0-9]+)*)\*\* (.+)$/;
   // 백틱 안 첫 글자는 비공백·비백틱이어야 — nested-backtick 본문 (예: ` >> file.md`)

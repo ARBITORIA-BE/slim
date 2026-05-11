@@ -92,7 +92,8 @@
     §Appendix C 6단계, 운영자 ~10분)
   - **D.3.e** Neon-side Vercel Integration 도입 검토 (PR마다 DB branch 자동
     생성 — 페이즈 4 베타에서 사용자 데이터 격리 가치 큼, 별도 ADR(가칭
-    ADR-0023) 트리거 — ADR-0022가 0022를 소비했으므로 재지정)
+    **ADR-0024**) 트리거 — ADR-0022가 0022를, ADR-0023이 Lighthouse 하네스로
+    0023을 소비했으므로 0024로 재지정)
   - 결정 근거: [ADR-0020](docs/adr/0020-arbitoria-inventory-and-alignment-corrections.md)
 - [x] **D.4** DB 환경 분리 정책 적용 (ADR-0022) — production / preview /
   development 3 Neon 브랜치 + prod URL Console-only SoT + 인라인 명령 강제
@@ -565,7 +566,41 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 
 **목표:** 페이즈 1~3 누적 부채 + 베타 직전 외부 시각 점검.
 
-- [ ] **3.5.1** Lighthouse / axe-core 자동화 — `pnpm harness:e2e`에 통합
+- [ ] **3.5.1** Lighthouse / axe-core 자동화 — **ADR-0023** (페이즈 3.5 진입 시
+  builder 트리거, GATE-P). 원문 "harness:e2e 에 통합"은 정정됨 — `harness:e2e`
+  (P2 walltime 스모크)와 관심사가 달라 **별도 `pnpm harness:perf` 신설**
+  (ADR-0023 §Context #3 + T2). axe 는 이미 `e2e/accessibility.spec.ts` 에서
+  6페이지 0 violations 달성됨 — 페이즈 3 신규 라우트 커버리지 보강 + 같은 게이트
+  편입이 본 항목 범위. CI 머지 차단 X — 로컬 + `/ship` advisory (ADR-0002
+  Amendment 1 의 flaky→noise 교훈, ADR-0023 §T5).
+  DoD: `pnpm harness:perf` 가 (1) `next build && next start` (또는 `E2E_BASE_URL`)
+  대상으로 대표 4 페이지(`/`, `/compare`, `/compare/[category]/postal`,
+  `/r/[shortId]`)를 Lighthouse mobile 프리셋으로 측정 (2) LCP ≤ 2.5s + TBT ≤ 200ms
+  를 hard 게이트로 강제 (위반 시 exit 1 — 헌법 P2) (3) Perf score ≥ 90 + a11y
+  score ≥ 95 를 soft 경고로 출력 (exit 0) (4) 같은 4 페이지에 `@axe-core/playwright`
+  0-violations 재확인 + first-load JS advisory (5) `/ship` 슬래시 커맨드가
+  `harness:perf` 를 호출. 새 의존성 = `lighthouse` 1건 (GATE-C amend), 새 SaaS 0건.
+  검증: 페이즈 3 결과 페이지 LCP ≤ 2.5s 실측 + axe 0 violations 페이즈 3 라우트
+  포함 유지 + ADR-0023 §Verification.
+  - **3.5.1.a** `lighthouse` devDependency 추가 + `scripts/harness/perf-budget.ts`
+    신설 (Playwright Chromium 에 CDP 연결, mobile 프리셋, 4 페이지 측정) +
+    `package.json` scripts `"harness:perf"` 추가.
+    DoD: `pnpm harness:perf` 가 4 페이지 측정 표를 출력 (seed shortId 부재 시
+    4번 페이지 skip+warn — 게이트 실패 아님). 검증: 로컬 실행 1회 + typecheck 0.
+  - **3.5.1.b** 임계값 게이트 — LCP ≤ 2.5s / TBT ≤ 200ms hard (exit 1), Perf ≥ 90 /
+    a11y ≥ 95 soft (warn), first-load JS ≤ ~130KB gz/페이지 advisory (첫 측정 후 확정).
+    DoD: hard 메트릭 의도적 회귀 시 exit 1, soft 회귀 시 exit 0 + 경고 라인.
+    검증: ADR-0023 §T4 표 일치 + 단위 테스트 (임계값 비교 순수 함수).
+  - **3.5.1.c** axe 커버리지 보강 — `e2e/accessibility.spec.ts` 페이지 목록에
+    페이즈 3 신규 라우트(`/r/[shortId]`, `/compare/[category]/{postal,household,
+    current-provider,bill,preview}`) 추가, 0 violations 재확인. `perf-budget.ts` 가
+    같은 4 페이지에 axe advisory 도 출력.
+    DoD: `pnpm test:e2e` 에서 axe 페이지 수 6 → ~11, 모두 0 violations.
+    검증: `pnpm test:e2e` 통과 + 신규 라우트가 목록에 있음.
+  - **3.5.1.d** `/ship` 슬래시 커맨드 + 페이즈 3 종료 체크리스트에 `pnpm harness:perf`
+    호출 추가. **CI ci.yml 변경 X** (ADR-0023 §T5 — flaky→noise 회피). PLAN
+    3.5.1 본문에 ADR-0023 cross-ref + "harness:e2e→harness:perf 정정" 주석 (= 본 줄들).
+    DoD: `/ship` 실행 시 `harness:perf` 가 호출됨. 검증: 슬래시 커맨드 정의 파일 확인.
 - [ ] **3.5.2** SEO 메타 / sitemap.xml / robots.txt — 베타 시드를 위해 필수
 - [ ] **3.5.3** 첫 부하 테스트 — Vercel Hobby 100GB bandwidth 한도 도달
   시뮬레이션 (k6 또는 단순 Playwright 100 동시)

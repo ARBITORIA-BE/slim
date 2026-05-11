@@ -11,6 +11,12 @@
 
 ### Added
 
+- Phase 3.5 — **3.5.1 설계 완료 + ADR-0023 발행** (Lighthouse / axe-core 자동화):
+  - **`docs/adr/0023-lighthouse-axe-perf-harness.md` 신설 — Accepted (2026-05-11, GATE-P 승인)**. 6 결정(T1~T6): (T1) 러너 = `lighthouse` 프로그래매틱 Node API + Playwright Chromium CDP 연결(devDep 1건, 새 브라우저 0; `@lhci/cli`/`unlighthouse`/`playwright-lighthouse` 거부) (T2) **`pnpm harness:perf` 신설**(`harness:e2e`는 P2 walltime 스모크라 관심사 다름 — PLAN 원문 "harness:e2e 통합"을 본 ADR이 정정; `harness:all` 무변동) (T3) 측정 4페이지(`/`, `/compare`, `/compare/[category]/postal`, `/r/[shortId]`) (T4) hard = LCP ≤ 2.5s + TBT ≤ 200ms(헌법 P2, exit 1) / soft = Perf ≥ 90 + a11y ≥ 95(warn) / first-load JS advisory (T5) **CI 머지 차단 X** — 로컬 + `/ship` + 페이즈 종료 advisory(ADR-0002 Amendment 1의 flaky→noise 교훈) (T6) PLAN 3.5.1 = 4 sub-task. 외부 의존성 1건(`lighthouse`, GATE-C amend), 새 SaaS 0, 마이그레이션 0, ci.yml 변경 0.
+  - **PLAN 3.5.1 분해** — 1줄 stub → DoD + sub-task a(러너+`scripts/harness/perf-budget.ts`+`package.json` 스크립트)/b(임계값 게이트+단위 테스트)/c(`e2e/accessibility.spec.ts` 페이지 6→~11 커버리지 보강)/d(`/ship` 통합). 구현은 페이즈 3.5 진입(M7 말) builder 트리거 — 본 커밋은 설계 잠금만.
+  - **ADR 번호 재지정** — "가칭 ADR-0023 = Neon-side Vercel Integration"(ADR-0020 §결정 6 / PLAN §D.3.e / ADR-0022 §작성 메모)이 ADR-0022 소비(0022)에 이어 ADR-0023(Lighthouse 하네스)도 소비 → **Neon Vercel Integration = 가칭 ADR-0024**. PLAN §D.3.e + `docs/adr/INDEX.md` 반영. (ADR-0020.md / ADR-0022.md 본문의 누적 forward-ref 드리프트는 별도 scribe 정리 패스 — 비차단.)
+  - **`scripts/harness/verify-plan.ts` CRLF 안전화** — `text.split('\n')` → `text.split(/\r?\n/)`. Windows 체크아웃(`core.autocrlf=true`)에서 PLAN.md가 CRLF면 줄 끝 `\r` 때문에 `(.+)$` 정규식이 안 맞아 "0개 항목 파싱"으로 `pnpm harness:plan` 게이트가 깨지던 버그(fresh clone에서 재현 가능). 발견 경위: architect 서브에이전트가 `Edit` 도구 부재로 PLAN.md를 `Write`로 클로버 → `git checkout -- PLAN.md` 복구 시 CRLF로 복원되며 노출. PLAN.md는 LF로 재정규화(레포 컨벤션).
+  - 검증: typecheck 0 / lint 0 / **168 tests passed** (회귀 0) / harness:plan 82 항목 통과 / harness:data 통과.
 - Phase 0.5 — **D.4 완료** (DB 환경 분리 정책, ADR-0022) — D.4.b/d/e 운영자 작업 후속 반영:
   - **`development` Neon 브랜치 = `ep-noisy-meadow-aliaxayq`** (parent=production, Frankfurt eu-central-1). Neon Console 확인 시 production[Default]/development/preview 3 브랜치 이미 존재 → D.4.b 신규 생성 불필요.
   - **`.env.local.example` — `ep-dev-XXXX` 자리표시자 → 실 endpoint ID `ep-noisy-meadow-aliaxayq` 반영** + `DATABASE_URL` 예시 host 를 실제 형식(`...-pooler.c-3.eu-central-1.aws.neon.tech`)으로 + "값은 endpoint ID 만 — verify-db.ts 가 `^(ep-[a-z0-9-]+?)(-pooler)?\.` 로 `-pooler`/region 꼬리 떼고 첫 토큰 비교, pooled/direct 동일 ID" 주석 추가.
