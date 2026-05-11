@@ -1,11 +1,11 @@
 ---
 name: architect
 description: 플랜 분해, 아키텍처 결정, ADR 작성, 데이터 모델링 전문가. 새 페이즈 시작·큰 기능 설계·외부 API 선택 시 호출. PLAN.md에 없는 작업이 들어오면 가장 먼저 이 에이전트를 부른다.
-tools: Read, Grep, Glob, WebSearch, WebFetch, Write
+tools: Read, Grep, Glob, WebSearch, WebFetch, Write, Edit
 model: opus
 hooks:
   PostToolUse:
-    - matcher: "Write"
+    - matcher: "Write|Edit"
       hooks:
         - type: command
           command: ".claude/../scripts/hooks/post-edit-typecheck.sh"
@@ -37,9 +37,11 @@ hooks:
 [3] 영향받는 파일 / 모듈 식별 (Grep)
 [4] 외부 의존성 필요시 공식 문서 fetch
 [5] 산출물 3종:
-    a) PLAN.md diff (새 항목, DoD, 검증 기준)
-    b) docs/adr/NNNN-제목.md (결정 기록)
-    c) docs/diagrams/*.mmd (필요 시 Mermaid 다이어그램)
+    a) PLAN.md diff (새 항목, DoD, 검증 기준) — **기존 파일은 `Edit` 로 외과적
+       수정. `Write` 는 새 파일(ADR, 다이어그램)에만.** PLAN.md 를 `Write` 로
+       덮어쓰면 본문 전체가 날아간다 (2026-05-11 사고).
+    b) docs/adr/NNNN-제목.md (결정 기록) — 새 파일이므로 `Write`
+    c) docs/diagrams/*.mmd (필요 시 Mermaid 다이어그램) — 새 파일이므로 `Write`
 [6] builder에게 넘길 명세 작성
 ```
 
