@@ -158,10 +158,10 @@ pnpm harness:price            # cron 직접 실행 (dry run 효과)
 - 사고 발생 시점 직전으로 시점 복구.
 
 ### 5.3 .env.local 복구
-- `.env.example`에 키 목록만 있음 (값 X).
-- 실 값:
-  - `DATABASE_URL`: Neon Console → Slim/production/connection details
-  - `EXPECTED_DB_ENDPOINT`: `ep-fancy-fog-alt18340` (현재 production)
+- 템플릿: **`.env.local.example`** 를 `.env.local` 로 복사 (주석에 정책·자리표시자 포함). `.env.example` 는 키 목록만(레거시).
+- 실 값 (ADR-0022 — DB 환경 분리):
+  - `DATABASE_URL`: 기본값은 **`development` 브랜치** — Neon Console → Slim → Branches → `development` → Connection details. ⚠️ production string 은 `.env.local` 에 적지 않는다 (ADR-0022 D2 — Console-only SoT). production 작업은 인라인 `$env:DATABASE_URL=...` 명령으로만 (ADR-0022 D4, `.env.local.example` 하단 메모).
+  - `EXPECTED_DB_ENDPOINTS` (복수, 콤마 구분): `ep-fancy-fog-alt18340,ep-autumn-water-all6d93e,ep-dev-XXXX` (production / preview / development — `ep-dev-XXXX` 는 D.4.b 후 실 name 으로 교체). 레거시 단일 `EXPECTED_DB_ENDPOINT` 도 `verify-db.ts` 가 여전히 인식.
   - `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY`: app.inngest.com → Settings → Keys
   - 기타 (`UPSTASH_*`, `SENTRY_DSN`, `NEXT_PUBLIC_POSTHOG_KEY`): 페이즈 진입 시점에 발급
 

@@ -49,14 +49,19 @@
 > 제거 → D.1.d 신설.
 
 - [ ] **D.1** Vercel build gate 책임 분리 (ADR-0002 Decision 1 + Amendment 1)
-  - **D.1.a** `next.config.ts`에 `typescript.ignoreBuildErrors: true` +
-    `eslint.ignoreDuringBuilds: true` 추가
-  - **D.1.b** `.github/workflows/ci.yml` 신설 — push/PR마다 5단 게이트
+  — 코드 3건(a/b/d) 완료 + DoD #1 통과. 남은 건 운영자 수동 작업(D.1.c)
+  + Vercel preview / 음성테스트 PR 결과 확인(DoD #2·#3). 2026-05-11 상태.
+  - [x] **D.1.a** `next.config.ts`에 `typescript.ignoreBuildErrors: true` +
+    `eslint.ignoreDuringBuilds: true` 추가 — `next.config.ts:12-13`. `pnpm build`
+    로그에 "Skipping validation of types" / "Skipping linting" 확인.
+  - [x] **D.1.b** `.github/workflows/ci.yml` 신설 — push/PR마다 5단 게이트
     (typecheck → lint → test → harness:plan → harness:data) 직렬 실행
     > Amendment 1으로 D.1.d에서 lint 단계 제거 → 실제 운영은 4단 게이트.
-  - **D.1.c** `main` 브랜치 보호 규칙 (GitHub repo settings) — CI 통과 필수
+    > 2026-05-11: ci.yml 인코딩 정리 — UTF-8 BOM 제거 + 깨진 em-dash 스텝명
+    > (`Harness ??plan integrity`) → `Harness - plan integrity`로 교정.
+  - [ ] **D.1.c** `main` 브랜치 보호 규칙 (GitHub repo settings) — CI 통과 필수
     체크박스 활성화 (수동 작업, scribe가 운영 노트로 기록)
-  - **D.1.d** `.github/workflows/ci.yml`에서 `Lint` 단계 제거 (Amendment 1)
+  - [x] **D.1.d** `.github/workflows/ci.yml`에서 `Lint` 단계 제거 (Amendment 1)
     — GitHub Actions ubuntu-latest에서 `pnpm lint`가 ESLint 9 +
     `@next/eslint-plugin-next` 호환성 이슈로 매번 실패. lint는 로컬
     stop-gate 단독 책임으로 환원. `continue-on-error: true` 등 거짓 안전
@@ -95,11 +100,13 @@
     (D1) + prod connection string은 Neon Console만 SoT, 어디에도 영속 저장 X
     (D2) + `EXPECTED_DB_ENDPOINTS` allowlist 3 endpoint 확장 (D3) + production
     접근은 인라인 `DATABASE_URL=...` 명령으로만 (D4)
-  - **D.4.b** 운영자: Neon Console에서 `production`→branch→`development` 생성,
+  - [ ] **D.4.b** 운영자: Neon Console에서 `production`→branch→`development` 생성,
     endpoint name만 Pieter에 공유 (비번/전체 connection string 공유 X). ~5분
-  - **D.4.c** Pieter: `.env.local.example` 신설 (DATABASE_URL=development 기본값
-    + EXPECTED_DB_ENDPOINTS 3개 주석) + `scripts/verify-db.ts` allowlist 검토
-    (이미 콤마 구분 지원 — 코드 변경 없을 가능성 큼)
+    → 공유받으면 `.env.local.example`의 `ep-dev-XXXX` 자리표시자를 실 name으로 교체.
+  - [x] **D.4.c** Pieter: `.env.local.example` 신설 (DATABASE_URL=development 기본값
+    + EXPECTED_DB_ENDPOINTS 3개 주석 + D4 인라인 명령 메모) — 2026-05-11. `dev`
+    endpoint name은 `ep-dev-XXXX` 자리표시자(D.4.b 후 교체). `scripts/verify-db.ts`
+    는 이미 콤마 구분 allowlist 지원(L66-72) — 코드 변경 불필요 확인.
   - **D.4.d** 운영자: 로컬 `.env.local`의 `DATABASE_URL`을 development 브랜치로
     전환 + `EXPECTED_DB_ENDPOINTS` 3개 등록
   - **D.4.e** 운영자: Vercel production env / preview env의

@@ -1,4 +1,8 @@
-﻿name: ci
+name: ci
+
+# ADR-0002 (+ Amendment 1): 검증 권한은 로컬 stop-gate + 이 워크플로가 소유.
+# Vercel은 next.config.ts의 ignoreBuildErrors/ignoreDuringBuilds로 순수 빌드 머신.
+# 4단 게이트 — lint는 Amendment 1로 CI에서 제거(로컬 stop-gate 단독 책임).
 
 on:
   push:
@@ -30,8 +34,8 @@ jobs:
       - name: Test
         run: pnpm exec vitest run
 
-      - name: Harness ??plan integrity
+      - name: Harness - plan integrity
         run: pnpm harness:plan
 
-      - name: Harness ??data fidelity
+      - name: Harness - data fidelity
         run: pnpm harness:data
