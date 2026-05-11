@@ -11,6 +11,12 @@
 
 ### Added
 
+- Phase 0.5 — **D.4 완료** (DB 환경 분리 정책, ADR-0022) — D.4.b/d/e 운영자 작업 후속 반영:
+  - **`development` Neon 브랜치 = `ep-noisy-meadow-aliaxayq`** (parent=production, Frankfurt eu-central-1). Neon Console 확인 시 production[Default]/development/preview 3 브랜치 이미 존재 → D.4.b 신규 생성 불필요.
+  - **`.env.local.example` — `ep-dev-XXXX` 자리표시자 → 실 endpoint ID `ep-noisy-meadow-aliaxayq` 반영** + `DATABASE_URL` 예시 host 를 실제 형식(`...-pooler.c-3.eu-central-1.aws.neon.tech`)으로 + "값은 endpoint ID 만 — verify-db.ts 가 `^(ep-[a-z0-9-]+?)(-pooler)?\.` 로 `-pooler`/region 꼬리 떼고 첫 토큰 비교, pooled/direct 동일 ID" 주석 추가.
+  - **운영자 D.4.d** — 로컬 `.env.local`: `DATABASE_URL`=development pooled string, `EXPECTED_DB_ENDPOINTS=ep-fancy-fog-alt18340,ep-autumn-water-all6d93e,ep-noisy-meadow-aliaxayq`. `pnpm verify:db` all-green (allowlist 매칭 / 6 tables / seed 2 rows).
+  - **운영자 D.4.e** — Vercel production env `EXPECTED_DB_ENDPOINTS=ep-fancy-fog-alt18340`, preview env `=ep-autumn-water-all6d93e` (각 단일, non-sensitive). D.3.c의 나머지 2 키(`INNGEST_EVENT_KEY`/`INNGEST_SIGNING_KEY`)는 GATE-K(페이즈 4 베타) 직전 Inngest 셋업과 함께 처리.
+  - PLAN: D.4 + D.4.b/c/d/e → `[x]`, D.4.a 기 완료. 페이즈 0.5 합계 1→2, 전체 42→43. DoD 4항 충족(ADR / dev 브랜치+verify:db / .env.local prod host 0건 / `pnpm dev`는 dev만).
 - Phase 0.5 — D.1 마무리 (코드 잔여) + D.4.c (ADR-0022 코드 인계):
   - **`.github/workflows/ci.yml` 인코딩 정리** — 파일 선두 UTF-8 BOM 제거(EF BB BF), 깨진 em-dash 스텝명 `Harness ??plan integrity` / `Harness ??data fidelity` → `Harness - plan integrity` / `Harness - data fidelity` 로 교정, ADR-0002(+Amendment 1) 주석 추가. 4단 게이트(typecheck → test → harness:plan → harness:data) 구성 자체는 불변.
   - **D.1 DoD #1 검증** — `pnpm build` 로컬 통과, 빌드 로그에 `Skipping validation of types` / `Skipping linting` 확인 → `next.config.ts:12-13` 의 `ignoreBuildErrors`/`ignoreDuringBuilds` 활성 (검증 권한 = 로컬 stop-gate + GitHub Actions, ADR-0002). PLAN D.1.a/b/d → `[x]`. 잔여(D.1.c GitHub 브랜치 보호, DoD #2 Vercel preview, DoD #3 음성테스트 PR `test/build-gate-negative`)는 운영자 작업.

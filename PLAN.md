@@ -94,23 +94,30 @@
     생성 — 페이즈 4 베타에서 사용자 데이터 격리 가치 큼, 별도 ADR(가칭
     ADR-0023) 트리거 — ADR-0022가 0022를 소비했으므로 재지정)
   - 결정 근거: [ADR-0020](docs/adr/0020-arbitoria-inventory-and-alignment-corrections.md)
-- [ ] **D.4** DB 환경 분리 정책 적용 (ADR-0022) — production / preview /
+- [x] **D.4** DB 환경 분리 정책 적용 (ADR-0022) — production / preview /
   development 3 Neon 브랜치 + prod URL Console-only SoT + 인라인 명령 강제
+  — 2026-05-11 완료 (a~e 전부). DoD 4항 충족: ADR ✅ / development 브랜치 존재 +
+  `pnpm verify:db` all-green ✅ / `.env.local` = development pooled string (운영자 보고) /
+  `pnpm dev`는 development만 접근.
   - [x] **D.4.a** ADR-0022 작성 — production/preview/development 3 브랜치 분리
     (D1) + prod connection string은 Neon Console만 SoT, 어디에도 영속 저장 X
     (D2) + `EXPECTED_DB_ENDPOINTS` allowlist 3 endpoint 확장 (D3) + production
     접근은 인라인 `DATABASE_URL=...` 명령으로만 (D4)
-  - [ ] **D.4.b** 운영자: Neon Console에서 `production`→branch→`development` 생성,
-    endpoint name만 Pieter에 공유 (비번/전체 connection string 공유 X). ~5분
-    → 공유받으면 `.env.local.example`의 `ep-dev-XXXX` 자리표시자를 실 name으로 교체.
+  - [x] **D.4.b** 운영자: Neon Console에서 `development` 브랜치 (parent=production)
+    — 2026-05-11 확인 시 이미 존재 (production[Default]/development/preview 3 브랜치).
+    development endpoint: `ep-noisy-meadow-aliaxayq` (host `...−pooler.c-3.eu-central-1.aws.neon.tech`,
+    Frankfurt). 신규 생성 작업 불필요 — 사실상 완료.
   - [x] **D.4.c** Pieter: `.env.local.example` 신설 (DATABASE_URL=development 기본값
-    + EXPECTED_DB_ENDPOINTS 3개 주석 + D4 인라인 명령 메모) — 2026-05-11. `dev`
-    endpoint name은 `ep-dev-XXXX` 자리표시자(D.4.b 후 교체). `scripts/verify-db.ts`
-    는 이미 콤마 구분 allowlist 지원(L66-72) — 코드 변경 불필요 확인.
-  - **D.4.d** 운영자: 로컬 `.env.local`의 `DATABASE_URL`을 development 브랜치로
-    전환 + `EXPECTED_DB_ENDPOINTS` 3개 등록
-  - **D.4.e** 운영자: Vercel production env / preview env의
-    `EXPECTED_DB_ENDPOINTS`를 각 환경 단일 endpoint로 설정 (GATE-K D.3.c와 함께)
+    + EXPECTED_DB_ENDPOINTS 3개 = production/preview/development endpoint ID + D4
+    인라인 명령 메모) — 2026-05-11. dev endpoint 실 ID(`ep-noisy-meadow-aliaxayq`)
+    반영 완료. `scripts/verify-db.ts`는 이미 콤마 allowlist 지원(`L44`+`L66-72` —
+    host에서 `-pooler`/region 꼬리 떼고 endpoint ID만 비교) — 코드 변경 불필요 확인.
+  - [x] **D.4.d** 운영자: 로컬 `.env.local`의 `DATABASE_URL`을 development(pooled)로
+    전환 + `EXPECTED_DB_ENDPOINTS=ep-fancy-fog-alt18340,ep-autumn-water-all6d93e,ep-noisy-meadow-aliaxayq`
+    등록 — 2026-05-11. `pnpm verify:db` all-green (allowlist 매칭 / 6 tables / seed 2 rows).
+  - [x] **D.4.e** 운영자: Vercel production env `EXPECTED_DB_ENDPOINTS=ep-fancy-fog-alt18340`
+    + preview env `=ep-autumn-water-all6d93e` (단일) — 2026-05-11, non-sensitive 등록.
+    (D.3.c의 나머지 2 키 `INNGEST_EVENT_KEY`/`INNGEST_SIGNING_KEY`는 GATE-K에서 처리 — Inngest 프로젝트 셋업 후.)
   - DoD (D.4 전체): (1) ADR 작성 ✅ (2) `development` 브랜치 존재 + 로컬
     `pnpm verify:db`가 development endpoint로 통과 (3) `.env.local` grep에
     production host 0건 (4) `pnpm dev`가 development 브랜치만 만짐
@@ -694,7 +701,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 4 | 1 | 0 | M0 잔여 + GATE-K 직전 (D.4 ADR-0022 작성 — GATE-O 대기) | 2026-05-11 |
+| 0.5 | 4 | 2 | 0 | D.2·D.4 완료. D.1 코드 완료(잔여=운영자 브랜치 보호), D.3 GATE-K 직전 일괄 | 2026-05-11 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
@@ -705,7 +712,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **82** | **42** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-11 |
+| **합계** | **82** | **43** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-11 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
