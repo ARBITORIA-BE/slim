@@ -237,20 +237,39 @@ export default async function ResultPage({
         estimatorVersion={view.estimatorVersion}
       />
 
+      {/* PLAN 3.7.b — "새로 비교 / 홈" CTA 는 인쇄 노이즈 → print:hidden.
+           어필리에이트 디스클로저 링크는 P3 강제 — 인쇄에서 반드시 보임 (숨기지 않음).
+           nav 전체를 print:hidden 하면 P3 위반이므로, CTA 버튼만 개별 숨김.
+           globals.css 의 `a[href^="http"]::after` 규칙으로 인쇄 시 URL 텍스트 노출. */}
       <nav className="flex flex-wrap gap-3">
         <Link
           href="/compare"
-          className="inline-flex items-center justify-center rounded-full bg-fg px-6 py-3 text-sm font-medium text-bg transition hover:bg-primary"
+          className="print:hidden inline-flex items-center justify-center rounded-full bg-fg px-6 py-3 text-sm font-medium text-bg transition hover:bg-primary"
         >
           새로 비교 시작
         </Link>
         <Link
           href="/"
-          className="inline-flex items-center justify-center rounded-full border border-fg/15 bg-bg px-6 py-3 text-sm font-medium text-fg transition hover:border-fg/30"
+          className="print:hidden inline-flex items-center justify-center rounded-full border border-fg/15 bg-bg px-6 py-3 text-sm font-medium text-fg transition hover:border-fg/30"
         >
           홈으로 돌아가기
         </Link>
       </nav>
+
+      {/* P3 — 어필리에이트 디스클로저 (헌법 §3 P3 + ADR-0021 §T9 Amendment 1).
+           인쇄물에 반드시 표시되어야 함. print:hidden 절대 금지.
+           인쇄 시 globals.css `a[href^="http"]::after` 규칙으로 URL 텍스트 자동 노출.
+           단 이 링크는 상대 경로(/legal/...)이므로 ::after 는 미적용 — 텍스트 링크로 명시. */}
+      <footer className="border-t border-fg/10 pt-4 text-xs text-fg-soft">
+        어필리에이트 수수료 관련:{' '}
+        <Link
+          href="/legal/affiliate-disclosure"
+          className="underline-offset-4 hover:underline"
+        >
+          /legal/affiliate-disclosure
+        </Link>
+        {' '}(페이즈 6.9 공개 예정). 비교 결과 순위는 알고리즘 기반이며 수수료에 영향받지 않습니다.
+      </footer>
     </main>
   );
 }

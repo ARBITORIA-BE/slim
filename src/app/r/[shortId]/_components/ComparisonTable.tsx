@@ -133,9 +133,11 @@ const CONFIDENCE_LABEL: Record<Confidence, string> = {
 
 function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
   return (
+    // PLAN 3.7.b — 인쇄 시 bg 안 보임 → print:border-current 로 배지 경계선 유지
+    // (neutral 테두리, 빨강/노랑 경고색 없음 — 헌법 §8 #3).
     <span
       aria-label={`신뢰도 ${CONFIDENCE_LABEL[confidence]}`}
-      className="inline-flex items-center gap-1 rounded-full border border-fg/15 bg-bg px-2 py-0.5 text-xs text-fg-soft"
+      className="inline-flex items-center gap-1 rounded-full border border-fg/15 bg-bg px-2 py-0.5 text-xs text-fg-soft print:border-current"
     >
       <span aria-hidden="true">●</span>
       {CONFIDENCE_LABEL[confidence]}
@@ -157,8 +159,10 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
 
   return (
     <>
-      {/* Desktop: native table */}
-      <div className="hidden overflow-x-auto rounded-2xl border border-fg/10 md:block">
+      {/* Desktop: native table.
+          PLAN 3.7.b — 인쇄 시 md: breakpoint 무관하게 테이블 표시 (`print:block`).
+          mobile 카드 스택은 `print:hidden` — 표가 더 정보 밀도 높음. */}
+      <div className="hidden overflow-x-auto rounded-2xl border border-fg/10 md:block print:block">
         <table
           aria-label="요금제 비교 표"
           className="w-full border-collapse text-sm"
@@ -241,8 +245,8 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
         </table>
       </div>
 
-      {/* Mobile: card stack */}
-      <ul aria-label="요금제 비교 (모바일)" className="flex flex-col gap-3 md:hidden">
+      {/* Mobile: card stack — PLAN 3.7.b: 인쇄 시 숨김 (desktop table 사용). */}
+      <ul aria-label="요금제 비교 (모바일)" className="flex flex-col gap-3 md:hidden print:hidden">
         {rows.map((r) => {
           const subtitle = formatSubtitle(r.category, r.attributes);
           const promoNote = formatPromoNote(r.promoPriceCents, r.promoMonths);

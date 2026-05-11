@@ -140,7 +140,9 @@ export function ResultConclusionCard(props: ResultConclusionCardProps) {
       </dl>
 
       {confidence !== 'high' && (
-        <p className="inline-flex w-fit items-center gap-2 rounded-full border border-fg/15 bg-bg px-3 py-1 text-xs text-fg-soft">
+        // PLAN 3.7.b — 인쇄 시 배경색 안 보임 → border 로 배지 구분 유지.
+        // ADR-0021 §T9 Amendment 1 색상 폴백: neutral 테두리·텍스트 (빨강/노랑 X).
+        <p className="inline-flex w-fit items-center gap-2 rounded-full border border-fg/15 bg-bg px-3 py-1 text-xs text-fg-soft print:border-current">
           <span className="sr-only">신뢰도:</span>
           <span aria-hidden="true">●</span>
           {CONFIDENCE_LABELS[confidence]}
@@ -163,12 +165,14 @@ export function ResultConclusionCard(props: ResultConclusionCardProps) {
         </section>
       )}
 
+      {/* PLAN 3.7.b — disabled "변경하기" CTA: 인쇄에서 숨김 (클릭 불가 + 노이즈).
+           P1/P3 항목(결론 텍스트·절약액·신뢰도·caveats)은 위에서 그대로 노출. */}
       <button
         type="button"
         disabled
         aria-disabled="true"
         title="페이즈 4 어트리뷰션 활성 예정"
-        className="inline-flex w-fit cursor-not-allowed items-center justify-center rounded-full border border-fg/15 bg-bg px-5 py-2.5 text-sm font-medium text-fg-soft opacity-70"
+        className="print:hidden inline-flex w-fit cursor-not-allowed items-center justify-center rounded-full border border-fg/15 bg-bg px-5 py-2.5 text-sm font-medium text-fg-soft opacity-70"
       >
         변경하기 (페이즈 4 활성 예정)
       </button>

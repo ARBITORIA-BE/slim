@@ -35,7 +35,9 @@ export function ComparisonControls({ basePath, view }: ComparisonControlsProps) 
     <div
       role="group"
       aria-label="비교 표 정렬 및 필터"
-      className="flex flex-col gap-3 rounded-xl border border-fg/10 bg-bg p-3 md:flex-row md:items-center md:justify-between"
+      // PLAN 3.7.b — 정렬/필터 컨트롤은 인쇄에서 숨김 (클릭 불가 + URL 노이즈).
+      // globals.css 의 .print-hide 와 Tailwind print:hidden 이중 보호.
+      className="print:hidden flex flex-col gap-3 rounded-xl border border-fg/10 bg-bg p-3 md:flex-row md:items-center md:justify-between"
     >
       <div role="group" aria-label="정렬" className="flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium uppercase tracking-wider text-muted">

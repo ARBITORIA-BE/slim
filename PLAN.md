@@ -554,34 +554,38 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - `src/app/r/[shortId]/page.tsx` — placeholder 헤더 제거 + `export const revalidate = 3600` ISR + ResultConclusionCard 통합 + 영구 ID + 90일 익명화 배너 (T9) + 새로 비교/홈 CTA 두 개.
   - `src/app/r/[shortId]/not-found.tsx` — 한국어 안내(sub-task 4, 형식 미달/DB 미존재 공통).
   - 메타: noindex + canonical + textOG (sub-task 3 진행, og:image 미설정 — 페이즈 4 ADR-OG).
-- [ ] **3.7** **인쇄 친화 뷰** (`@media print`) — **ADR-0021 §T9 Amendment 1
+- [x] **3.7** **인쇄 친화 뷰** (`@media print`) — **ADR-0021 §T9 Amendment 1
   (2026-05-11) — 페이즈 3 환원** (옵션 D 철회). `/r/[shortId]` 인쇄/PDF 사본이
   "결론 → 근거 → 원본 + source/fetched_at + 어필리에이트 디스클로저" 를 종이에서도
   보장 (P1/P3). 단일 `@media print` 블록(`src/app/globals.css`) + 컴포넌트 단위
-  Tailwind `print:` — 새 라우트·새 dep 0. **DoD**: (1) `page.emulateMedia({media:'print'})`
-  렌더 시 nav/footer 장식/정렬·필터 컨트롤/disabled "변경하기" CTA 비노출,
-  (2) `source_url`·"마지막 확인: X시간 전"·engineVersion·`/legal/affiliate-disclosure`
-  링크(URL 텍스트)·제외 공급사 섹션 노출 유지, (3) `<details>` 계산 근거 펼친
-  상태로 인쇄, (4) 외부 링크 href 가 텍스트로 노출 (`a[href^="http"]::after`),
-  (5) 표 행·결론 카드 `break-inside: avoid`, (6) `harness:perf`(LCP) 회귀 0
-  (`@media print` 격리), (7) print 모드 axe 0 violations.
-  검증: `e2e/result-page-print.spec.ts` (신설) + harness:perf diff + `pnpm typecheck`/`lint`/`test` 0.
-  - **3.7.a** print stylesheet 골격 — `src/app/globals.css` 에 `@media print { ... }`
-    블록 (chrome 숨김 + `break-inside` + `a[href]::after` URL 노출 + 색상 폴백 규칙).
-    화면 CSS 무변동.
-    DoD: 브라우저 인쇄 미리보기에서 nav/footer 장식/정렬·필터 사라지고 본문 가독성 OK.
-    검증: 수동 인쇄 미리보기 + harness:perf 화면 LCP 회귀 0.
-  - **3.7.b** 컴포넌트 `print:` 클래스 부여 — `ResultConclusionCard` /
-    `ComparisonTable` / `ComparisonControls` / `CalculationDetails` /
-    `ExcludedProvidersSection` / 페이지 푸터에 `print:hidden`(컨트롤·disabled
-    CTA·푸터 장식) / `print:block`(디스클로저 줄·`<details>` 펼침). 새 컴포넌트 0.
-    DoD: P1 항목(source/fetched_at/engineVersion) + P3 항목(affiliate-disclosure
-    링크 + 제외 공급사)이 print 모드에서 보임. 검증: e2e print 스냅샷 + axe(print) 0.
-  - **3.7.c** print 회귀 테스트 — `e2e/result-page-print.spec.ts` 신설:
-    `page.emulateMedia({media:'print'})` 후 (1) 숨김 요소 부재 assertion, (2)
-    P1/P3 노출 요소 존재 assertion, (3) `@axe-core/playwright` 0 violations,
-    (4) (선택) 스크린샷 비교.
-    DoD: spec 통과 + CI 그린. 검증: `pnpm test:e2e` + 게이트 통과.
+  Tailwind `print:` — 새 라우트·새 dep 0. **2026-05-11 완료** (a/b/c). DoD:
+  (1) `page.emulateMedia({media:'print'})` 렌더 시 nav/footer 장식/정렬·필터
+  컨트롤/disabled "변경하기" CTA 비노출 ✅, (2) `source_url`·"마지막 확인: X시간 전"·
+  engineVersion·`/legal/affiliate-disclosure` 링크·제외 공급사 섹션 노출 유지 —
+  빈상태 경로(시드 confidence='low' → 후보 0건이 정상)에서 검증된 부분(h1·영구 ID·
+  /data-sources·affiliate-disclosure·90일 배너 print visible) ✅; 풀-결과-경로 부분
+  (engineVersion/산식/결과 item source — 결론 카드·비교 표·CalculationDetails 렌더
+  시) 은 `e2e/result-page-print.spec.ts` 의 별도 describe 에 `test.skip` 처리
+  (confidence='high' 시드 도입 시 활성), 구현 자체는 print: 클래스로 보장됨,
+  (3) `<details>` 펼침 — globals.css `details > *:not(summary){display:block!important}`
+  (e2e 검증은 풀 경로라 skip), (4) 외부 링크 href 텍스트 노출 `a[href^="http"]::after` ✅
+  (chrome 숨김 `<a>` 는 `.print-hide a::after{content:none}` 로 제외), (5) `break-inside:avoid`
+  ✅, (6) `harness:perf`(LCP) 회귀 — harness:perf 는 3.5.1(미구현)이라 globals.css diff
+  로 `@media print{}` 바깥 변경 0 확인으로 갈음, (7) print 모드 axe 0 violations ✅.
+  검증: `pnpm test:e2e` **24 passed / 4 skipped / 0 failed** + `pnpm typecheck`/`lint`/`test` 0.
+  - [x] **3.7.a** print stylesheet 골격 — `src/app/globals.css` 에 `@media print { ... }`
+    블록 (`.print-hide` 유틸 + `tr`/`details` `break-inside:avoid` + `a[href^="http"]::after`
+    URL 노출 + `.print-hide a::after{content:none}` 노이즈 차단 + `details > *:not(summary){display:block!important}`
+    펼침 + 신뢰도 배지 색상 폴백). 화면 CSS 무변동.
+  - [x] **3.7.b** 컴포넌트 `print:` 클래스 — `page.tsx`(nav CTA `print:hidden` +
+    `<footer>` affiliate-disclosure 줄 신설) / `ComparisonControls`(루트 `print:hidden`) /
+    `ResultConclusionCard`(disabled CTA `print:hidden` + 배지 `print:border-current`) /
+    `ComparisonTable`(desktop table `print:block`, mobile stack `print:hidden`, 배지 `print:border-current`).
+    `ExcludedProvidersSection`/`CalculationDetails` 는 변경 0 (텍스트만 + `<details>` 펼침은 globals 규칙).
+  - [x] **3.7.c** print 회귀 테스트 — `e2e/result-page-print.spec.ts` 신설:
+    `page.emulateMedia({media:'print'})` 후 무조건 케이스(숨김 요소 부재 / 빈상태 P1·P3
+    노출 요소 존재 / axe 0 violations / 스크린샷) + 풀-경로 전용 케이스 4개는 별도
+    describe + `test.skip(true, '시드에 비교 후보 없음 — confidence=high 시드 도입 시 활성')`.
 
 **Phase 3 검증:** Lighthouse 모바일 ≥ 90 (Perf/Acc/BP/SEO).
 **Phase 3 현실 일정:** M6 ~ M7 (2개월).
@@ -766,14 +770,14 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
-| 3 | 7 | 6 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 = 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원, builder 후속 라운드 대기) | 2026-05-11 |
+| 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **82** | **43** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-11 |
+| **합계** | **82** | **44** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-11 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

@@ -18,3 +18,64 @@ body {
   color: var(--color-fg);
   font-family: var(--font-body);
 }
+
+/* ─── 인쇄 전용 (@media print) ──────────────────────────────────────────────
+ *
+ * PLAN 3.7 / ADR-0021 §T9 Amendment 1 (2026-05-11).
+ *
+ * 규칙 요약:
+ *   1. .print-hide — 인쇄 시 숨김 (nav 장식 / ComparisonControls / disabled CTA).
+ *      컴포넌트에서는 Tailwind `print:hidden` 을 병용한다.
+ *   2. break-inside: avoid — 비교 표 행 / 결론 카드 / <details> 블록.
+ *   3. 외부 링크 URL 텍스트 노출 — 종이에서 클릭 불가이므로 href 표기.
+ *      단 .print-hide 안의 <a> 는 제외 (정렬/필터 링크 URL 노이즈 방지).
+ *   4. <details> 펼침 강제 — JS 0, CSS 만으로 열린 상태처럼 보이게.
+ *   5. 색상 폴백 — background 인쇄 안 됨 가정. 신뢰도 배지는 컴포넌트에서
+ *      print:border 보강. `print-color-adjust: exact` 강제 안 함.
+ *
+ * P2 보호: 이 블록 밖은 화면 CSS 에 영향 0. LCP 경로 무변동.
+ * P1/P3 보호: source/fetched_at/engineVersion·어필리에이트 디스클로저·
+ *             제외 공급사 섹션 — print-hide 대상 아님.
+ */
+@media print {
+  /* 1. 인쇄 크롬 숨김 유틸리티 클래스 */
+  .print-hide {
+    display: none !important;
+  }
+
+  /* 2. break-inside: avoid — 표 행, 결론 카드, details 블록 */
+  tr {
+    break-inside: avoid;
+  }
+
+  details {
+    break-inside: avoid;
+  }
+
+  /* 3. 외부 링크 URL 노출 (종이에서 클릭 불가) —
+   *    .print-hide 안의 <a> 는 제외 (정렬/필터 링크 URL 노이즈 방지). */
+  a[href^="http"]::after,
+  a[href^="https"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    word-break: break-all;
+    color: inherit;
+  }
+
+  .print-hide a[href^="http"]::after,
+  .print-hide a[href^="https"]::after {
+    content: none;
+  }
+
+  /* 4. <details> 펼침 강제 —
+   *    open 속성은 CSS 로 켤 수 없으므로, 닫힌 <details> 의 summary 이후
+   *    요소를 강제 표시한다. open 인 경우에도 자연스럽게 표시됨. */
+  details > *:not(summary) {
+    display: block !important;
+  }
+
+  /* summary 커서/포커스 스타일 인쇄 불필요 */
+  details > summary {
+    cursor: default;
+  }
+}
