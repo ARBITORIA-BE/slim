@@ -7,11 +7,16 @@
  *   - 비교 후보 0건 시 정직 안내 (ADR-0011 §T2 항목 5 동형) — page.tsx 인라인.
  *   - 신규 가입자 케이스 (lockedInputs.current_tariff_id null) 결론 카드 메시지 분기.
  *
+ * 라운드 (d) — 계산 근거 펼치기 풀 (PLAN 3.5, 2026-05-11):
+ *   - rank=1 item 의 tariff/snapshot 컬럼 + lockedInputs usageProfile 로
+ *     `deriveCaveatTriggers` → CalculationDetails 의 "주의사항 트리거 조건" 표.
+ *   - `piiAnonymizedAt` 있을 시 CalculationDetails 에 `inputsAbsent` 전달 —
+ *     "사용한 가정" 이 재구성값임을 정직 표기 (ADR-0007 §T9 / ADR-0021 §T7).
+ *
  * 누적 (sub-task 3~5 + 라운드 a):
  *   - regex 통과 후 `getResultByShortId` 호출 — 미존재 시 `notFound()` (§T1).
  *   - rank=1 결과 + tariff_snapshot/tariff/provider JOIN 으로 1위 카드 표면화.
  *   - 90일 후 lockedInputs NULL 시 익명화 안내 배너 (§T9).
- *   - CalculationDetails 펼치기 (§T7) 는 라운드 d 풀 격상.
  */
 
 import type { Metadata } from 'next';
@@ -42,6 +47,10 @@ import { ComparisonControls } from './_components/ComparisonControls';
 import { ComparisonTable } from './_components/ComparisonTable';
 import { ExcludedProvidersSection } from './_components/ExcludedProvidersSection';
 import { ResultConclusionCard } from './_components/ResultConclusionCard';
+import {
+  deriveCaveatTriggers,
+  type CaveatTriggerRow,
+} from './_lib/caveat-triggers';
 import { applyView, parseSearchParams } from './_lib/compare-view';
 
 const SITE_ORIGIN = 'https://slim.lu';
@@ -125,6 +134,23 @@ export default async function ResultPage({
   const isAnonymized = row.piiAnonymizedAt !== null;
   const basePath = `/r/${shortId}`;
 
+  // 6. 라운드 d (PLAN 3.5) — caveat 트리거 조건 표. rank=1 item 의 tariff/snapshot
+  //    컬럼 + usageProfile 로 deriveCaveats 규칙 1~7 거울 평가.
+  const rank1 = allItems.find((i) => i.rank === 1) ?? null;
+  const triggerRows: readonly CaveatTriggerRow[] | undefined = rank1
+    ? deriveCaveatTriggers({
+        category: rank1.category,
+        commitmentMonths: rank1.commitmentMonths,
+        activationFeeCents: rank1.activationFeeCents,
+        promoMonths: rank1.promoMonths,
+        promoPriceCents: rank1.promoPriceCents,
+        monthlyPriceCents: rank1.monthlyPriceCents,
+        attributes: rank1.attributes,
+        usageProfile: view.usageProfile,
+        candidateConfidence: rank1.confidence,
+      })
+    : undefined;
+
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-10 md:px-6">
       <header className="flex flex-col gap-2">
@@ -199,6 +225,8 @@ export default async function ResultPage({
         usageProfile={view.usageProfile}
         breakdown={view.breakdown}
         caveats={view.caveats}
+        triggerRows={triggerRows}
+        inputsAbsent={isAnonymized}
         engineVersion={row.engineVersion}
         estimatorVersion={view.estimatorVersion}
       />

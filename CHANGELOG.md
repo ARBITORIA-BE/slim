@@ -11,6 +11,11 @@
 
 ### Added
 
+- Phase 3 라운드 (d) — 계산 근거 펼치기 풀 (PLAN 3.5, [ADR-0021](docs/adr/0021-phase-3-results-page-design.md) §T7 + §T5 계산 근거 컬럼):
+  - **`src/app/r/[shortId]/_lib/caveat-triggers.ts` 신설** — 순수 `deriveCaveatTriggers`. `deriveCaveats()` (src/engine/caveats.ts) 가 한국어 caveat 텍스트만 출력해 "왜 떴는지" 를 노출 못 하므로, 저장된 스냅샷 데이터(commitmentMonths / activationFeeCents / promoMonths·promoPriceCents / attributes.data_gb / eu_roaming_included / download_mbps / confidence) + lockedInputs 의 usageProfile 로 deriveCaveats 규칙 1~7 을 거울 평가 → 트리거/미트리거 근거 행 (`CaveatTriggerRow` = condition + triggered + note). 규칙 8(현재 요금제 신뢰도)은 baseline confidence 가 별도 컬럼 미저장(caveats 배열로만 보존)이라 생략 — flat caveats 리스트가 이미 노출. `+26 unit tests` (`caveat-triggers.test.ts` — 각 규칙 경계 + 카테고리별 행 포함/제외 + 입력 변형 X + 결정성).
+  - **`src/app/r/[shortId]/_components/CalculationDetails.tsx` 확장** — "주의사항 트리거 조건" 섹션 추가 (`triggerRows` prop — 트리거 dot + condition + note 리스트, undefined 시 비노출) + `inputsAbsent` prop (90일 보관 정책으로 `lockedInputs` 부재/일반화 시 상단 정직 안내 + "사용한 가정" 의 사용량 출처를 "재구성값" 으로 표기 — ADR-0007 §T9). `<details>`/`<summary>` native·breakdown·engineVersion 골격은 sub-task 1-3 그대로. mock-data 헤더 주석 정정 (실 데이터 출처 명시).
+  - **`src/app/r/[shortId]/page.tsx` 변경** — `allItems.find(rank === 1)` 으로 rank=1 item 의 tariff/snapshot 컬럼 + `view.usageProfile` 로 `deriveCaveatTriggers` 호출 → `<CalculationDetails>` 에 `triggerRows` + `inputsAbsent`(= `piiAnonymizedAt !== null`) 전달.
+  - 검증: typecheck 0 / lint 0 / **168 tests passed** (142 → 168, +26 caveat-triggers) / harness:plan 81 항목 (3.5 [x] 격상, 합계 41 → 42) / harness:data 출처/신선도 통과. 부수: PLAN 3.5 본문의 ``usage-estimator.ts`` 인라인 코드를 ``src/engine/usage-estimator.ts`` 풀 경로로 정정 (verify-plan fileRe completed-but-missing 위양성 방지).
 - Phase 3 라운드 (c) — 원본 링크 (PLAN 3.3) + 제외 공급사 섹션 (PLAN 3.4) ([ADR-0021](docs/adr/0021-phase-3-results-page-design.md) §T2 3층 + §T6):
   - **`src/app/r/[shortId]/_lib/stale.ts` 신설** — `formatRelativeTime(target, now?)` 순수. 5 경계 ("방금 전" / "X분 전" / "X시간 전" / "X일 전" / "30일 이상 전") + 음수 diff 보수 처리. `+7 unit tests` (`stale.test.ts`).
   - **`src/app/r/[shortId]/_components/ComparisonTable.tsx` 확장** — 7번째 컬럼 "원본" (desktop) + 모바일 카드 footer line. `SourceLink` 내부 컴포넌트 — `target="_blank" rel="nofollow noopener"` + sr-only "(새 창에서 열림)" + 마지막 확인 상대 시간. `now` prop 주입 가능(SSR/테스트 결정성).

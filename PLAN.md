@@ -471,9 +471,10 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 >   config 버그 1-char 정정). breakdown 컬럼 미저장 → CalculationDetails.
 >   breakdown 은 0 cents fallback (페이즈 3 후속 라운드에서 컬럼 추가 vs compare
 >   재실행 결정).
-> - 페이즈 3.1~3.7 자체 [x] 마킹은 풀 격상 (T2 비교 표 + T6 제외 공급사 +
->   T3 풀은 sub-task 5 통과로 완료, 결과 카드/비교 표 풀 렌더는 후속 라운드)
->   에서.
+> - 페이즈 3.1~3.6 [x] 격상 완료 — 라운드 a (결론 카드 3.1 + 영구 링크 3.6) /
+>   라운드 b (비교 표 3.2) / 라운드 c (원본 링크 3.3 + 제외 공급사 3.4) /
+>   라운드 d (계산 근거 펼치기 3.5 — caveats 트리거 표 + 90일 입력 부재 정직 표기).
+>   3.7 (인쇄 뷰) 만 [ ] 유지 — 옵션 D 로 페이즈 6 이연 (ADR-0021 §T9).
 
 - [x] **3.1** **1층 — 결론 카드** (스크롤 없이 보임) — ADR-0021 §T2: 1위 추천
   + 연간 절약액 + "변경하기" CTA placeholder (페이즈 4 어트리뷰션 활성).
@@ -501,9 +502,14 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - 신설: `src/app/r/[shortId]/_components/ExcludedProvidersSection.tsx` — 헌법 P3 동형 표면화. 0건 시 섹션 자체 비노출.
   - `src/db/queries/providers.ts` 확장 — `getExcludedProviders(country)` helper. `/data-sources` 와 공유 가능 형태.
   - Orange BE 는 마스터 데이터(`provider.excluded_reason = '페이즈 5 평가 후 추가 예정'`) 로 자연 포함 — 특수 분기 0.
-- [ ] **3.5** **계산 근거 펼치기** — ADR-0021 §T7: HTML `<details>` 펼치기 +
-  `usage-estimator.ts` 기본 프로파일 + breakdown.monthlyAvg12/24Cents +
+- [x] **3.5** **계산 근거 펼치기** — ADR-0021 §T7: HTML `<details>` 펼치기 +
+  `src/engine/usage-estimator.ts` 기본 프로파일 + breakdown.monthlyAvg12/24Cents +
   engineVersion + caveats 트리거 표기. JS 0 native a11y.
+  - 신설: `src/app/r/[shortId]/_lib/caveat-triggers.ts` — 순수 deriveCaveatTriggers. deriveCaveats 규칙 1~7 을 저장된 스냅샷 데이터(commitment/activation/promo/data_gb/eu_roaming/download_mbps/confidence) + usageProfile 로 거울 평가 → 트리거/미트리거 근거 행. 규칙 8(현재 요금제 신뢰도)은 별도 컬럼 미저장 — flat caveats 리스트로 위임.
+  - 신설: `src/app/r/[shortId]/_lib/caveat-triggers.test.ts` — 26 단위 테스트 (각 규칙 경계 triggered/미triggered + 카테고리별 행 포함/제외 + 입력 변형 X + 결정성).
+  - `src/app/r/[shortId]/_components/CalculationDetails.tsx` 확장 — "주의사항 트리거 조건" 섹션(triggerRows prop, 트리거 dot 표기) + inputsAbsent prop (90일 보관 정책 입력 부재 시 "사용한 가정"이 재구성값임 정직 표기 — ADR-0007 §T9).
+  - `src/app/r/[shortId]/page.tsx` — rank=1 item(getResultItems 결과) + view.usageProfile 로 deriveCaveatTriggers 호출 → CalculationDetails 에 triggerRows + inputsAbsent(=piiAnonymizedAt 존재) 전달.
+  - <details>/<summary> native·breakdown·engineVersion 골격은 sub-task 1-3 그대로 (라운드 d 는 caveats 트리거 + 90일 케이스만).
 - [x] **3.6** **공유 가능한 영구 링크** (`/r/[id]`) — ADR-0021 §T1 + §T8:
   `/r/[shortId]` 풀 페이지 격상 (페이즈 2 placeholder 호환) + RSC + ISR 1h +
   `notFound()` 잘못된 shortId 404 + noindex + canonical (**SC-G 적용**: 동적 OG는
@@ -665,14 +671,14 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
-| 3 | 7 | 5 | 0 | M6 ~ M7 (ADR-0021 Accepted + Amendment 1; sub-task 1-6 + 라운드 a/b/c 통과 — 3.1/3.2/3.3/3.4/3.6 풀; 3.5 라운드 d; 3.7 페이즈 6 이연 옵션 D) | 2026-05-11 |
+| 3 | 7 | 6 | 0 | M6 ~ M7 (ADR-0021 Accepted + Amendment 1; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1/3.2/3.3/3.4/3.5/3.6 풀; 3.7 페이즈 6 이연 옵션 D) | 2026-05-11 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **81** | **41** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-11 |
+| **합계** | **81** | **42** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-11 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

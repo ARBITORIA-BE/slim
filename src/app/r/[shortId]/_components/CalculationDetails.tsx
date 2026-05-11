@@ -5,15 +5,18 @@
  * 자동 처리). 학습자 모드 친화 (브라우저 기본 동작).
  *
  * 노출 구성:
- *   1. 사용한 가정 (가구 형태 + usage-estimator 기본 프로파일 인용)
+ *   1. 사용한 가정 (가구 형태 + usage-estimator 기본 프로파일 인용. 90일 후
+ *      원본 입력 부재 시 정직 표기 — ADR-0007 §T9 / ADR-0021 §T7)
  *   2. 사용량 수치 (UsageProfile 필드별 표시)
  *   3. 적용 산식 (12개월/24개월 평균 + 활성화비 amortize)
  *   4. 주의사항 (caveats — deriveCaveats 결과)
- *   5. 엔진 버전 (compare@... + usage-estimator@... — 결과 재현성)
+ *   5. 주의사항 트리거 조건 (라운드 d, ADR-0021 §T5 계산 근거 컬럼) — *왜* 떴는지
+ *      저장된 스냅샷 데이터로 재평가한 행 (deriveCaveatTriggers)
+ *   6. 엔진 버전 (compare@... + usage-estimator@... — 결과 재현성)
  *
- * 페이즈 3 1차 (현재): 페이지 = placeholder. 본 컴포넌트는 mock data 입력으로
- * 동작 — 페이즈 3 후속 라운드에서 실 비교 결과 (compare()) 전달 시 props 모양만
- * 유지 + 데이터 출처만 변경.
+ * 데이터 출처: `/r/[shortId]` 페이지가 `comparison_result` + JOIN 한 실 값 전달
+ * (라운드 a/b/c). triggerRows 는 rank=1 item 의 tariff/snapshot 컬럼 + lockedInputs
+ * 의 usageProfile 로 page 가 derive (라운드 d).
  */
 
 import type { ReactNode } from 'react';
@@ -23,6 +26,8 @@ import type {
   HouseholdTypeInput,
   TariffCategoryInput,
 } from '@/types/comparison-input';
+
+import type { CaveatTriggerRow } from '../_lib/caveat-triggers';
 
 // ─── Props ────────────────────────────────────────────────────────────────
 
@@ -44,6 +49,16 @@ export interface CalculationDetailsProps {
   readonly usageProfile: UsageProfile;
   readonly breakdown: CalculationBreakdown;
   readonly caveats: readonly string[];
+  /**
+   * 라운드 d (PLAN 3.5) — caveat 트리거 근거 행 (deriveCaveatTriggers 결과).
+   * undefined = 후보 0건 (rank=1 item 부재) — 트리거 표 섹션 비노출.
+   */
+  readonly triggerRows?: readonly CaveatTriggerRow[] | undefined;
+  /**
+   * 90일 보관 정책으로 원본 입력(`lockedInputs`)이 부재/일반화됨 (ADR-0007 §T9).
+   * true 시 "사용한 가정" 섹션이 *재구성값임* 을 정직 표기 (ADR-0021 §T7).
+   */
+  readonly inputsAbsent?: boolean;
   /** ADR-0010 §T7 영구 링크 결과 재현성 — engineVersion + estimatorVersion 결합. */
   readonly engineVersion: string;
   readonly estimatorVersion: string;
@@ -147,19 +162,33 @@ export function CalculationDetails(props: CalculationDetailsProps) {
     usageProfile,
     breakdown,
     caveats,
+    triggerRows,
+    inputsAbsent = false,
     engineVersion,
     estimatorVersion,
   } = props;
 
   const hasInputAttrs = Object.keys(inputAttributes).length > 0;
+  const usageSource = inputsAbsent
+    ? `원본 입력 부재 (90일 보관 정책) — 가구 형태 기반 추정 재구성 (${estimatorVersion})`
+    : hasInputAttrs
+      ? '사용자 직접 입력'
+      : `가구 형태 기반 추정 (${estimatorVersion})`;
 
   return (
     <details className="rounded-2xl border border-fg/10 bg-bg-warm/30 p-4">
       <summary className="cursor-pointer select-none text-sm font-medium text-fg outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg">
-        계산 근거 보기 — 사용한 가정 + 산식 + 엔진 버전
+        계산 근거 보기 — 사용한 가정 + 산식 + 주의사항 트리거 + 엔진 버전
       </summary>
 
       <div className="mt-4 flex flex-col gap-5">
+        {inputsAbsent && (
+          <p className="rounded-lg border border-fg/10 bg-bg/60 px-3 py-2 text-xs leading-relaxed text-fg-soft">
+            이 결과는 저장 후 90일이 지나 원본 입력(우편번호·사용량 등)이 보관
+            정책으로 부재합니다. 비교 결과 자체는 그대로 보존되며, 아래 가정은
+            가구 형태 기반으로 재구성한 값입니다 (ADR-0007 §T9).
+          </p>
+        )}
         <Section title="사용한 가정">
           <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
             <dt className="text-fg-soft">카테고리</dt>
@@ -169,9 +198,7 @@ export function CalculationDetails(props: CalculationDetailsProps) {
               {householdType ? HOUSEHOLD_LABELS[householdType] : '미입력 (single 추정)'}
             </dd>
             <dt className="text-fg-soft">사용량 출처</dt>
-            <dd className="text-fg">
-              {hasInputAttrs ? '사용자 직접 입력' : `가구 형태 기반 추정 (${estimatorVersion})`}
-            </dd>
+            <dd className="text-fg">{usageSource}</dd>
           </dl>
         </Section>
 
@@ -195,6 +222,31 @@ export function CalculationDetails(props: CalculationDetailsProps) {
             <ul className="flex list-inside list-disc flex-col gap-1 text-sm text-fg">
               {caveats.map((c, i) => (
                 <li key={i}>{c}</li>
+              ))}
+            </ul>
+          </Section>
+        )}
+
+        {triggerRows && triggerRows.length > 0 && (
+          <Section title="주의사항 트리거 조건">
+            <p className="text-xs text-muted">
+              저장된 요금제 데이터와 사용량 가정으로 각 규칙을 재평가했습니다
+              (ADR-0010 §T6).
+            </p>
+            <ul className="mt-1 flex flex-col gap-1.5 text-sm">
+              {triggerRows.map((r, i) => (
+                <li key={i} className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+                  <span
+                    aria-hidden="true"
+                    className={
+                      r.triggered
+                        ? 'mt-0.5 inline-block size-1.5 shrink-0 rounded-full bg-fg/60 sm:mt-0'
+                        : 'mt-0.5 inline-block size-1.5 shrink-0 rounded-full border border-fg/30 sm:mt-0'
+                    }
+                  />
+                  <span className="text-fg">{r.condition}</span>
+                  <span className="text-fg-soft">— {r.note}</span>
+                </li>
               ))}
             </ul>
           </Section>
