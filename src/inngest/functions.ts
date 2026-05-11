@@ -6,21 +6,18 @@
  * 본 모듈이 정의하는 것:
  *   - dailyFetchAll: 매일 06:00 UTC + 수동 이벤트 트리거. registry의 모든
  *     fetcher를 순회 호출 (1.9 격리 — for-loop continue).
- *   - persistFetchResult: fetcher 출력을 DB에 반영 (마스터 upsert + snapshot
- *     insert + lastSeenAt 갱신). ADR-0008 §T7 — 네트워크 step과 분리됨.
+ *
+ * persistFetchResult 는 src/inngest/persist.ts 로 분리 (Sub-task 5 Phase A).
+ * cron + seed 스크립트 둘 다 같은 모듈 import.
  *
  * 1.7(현재) 시점에는 `registry`가 빈 배열 — cron은 안전하게 no-op로 끝남.
  * 1.8 진입 시 fetcher 3개가 registry에 추가되면 자동 가동.
  */
 
-import { eq, and } from 'drizzle-orm';
-
-import { db } from '@/db';
-import { provider } from '@/db/schema/provider';
-import { tariff } from '@/db/schema/tariff';
-import { tariffSnapshot } from '@/db/schema/tariff_snapshot';
-import { registry, type Fetcher, type FetchResult } from '@/fetchers';
+import { registry, type Fetcher } from '@/fetchers';
 import { inngest } from '@/lib/inngest';
+
+import { persistFetchResult } from './persist';
 
 // ─── Cron 함수 (T6 일 1회 + 수동 이벤트) ─────────────────────────────────
 
@@ -70,9 +67,6 @@ export const dailyFetchAll = inngest.createFunction(
       const slug = fetcher.metadata.providerSlug;
 
       // ─── Step A: 네트워크 + 파싱 (재시도 가능) ─────────────────────────
-      // step.run 내부에서 throw 시 Inngest가 자동 재시도 (default 3회).
-      // 단 fetcher는 throw 대신 FetchOutcome.ok=false 반환 권장 (T4) —
-      // 부분 raw payload 보존을 위해.
       const outcome = await step.run(`fetch-${slug}`, async () => {
         return fetcher.fetch();
       });
@@ -122,144 +116,8 @@ function readEventData(event: unknown): FetchersRunRequestedData | undefined {
   return maybeData as FetchersRunRequestedData;
 }
 
-// ─── DB write 로직 (T7 Step B 본체) ──────────────────────────────────────
-
-/**
- * 한 fetcher의 FetchResult를 DB에 반영한다. ADR-0006 §후속 작업의 트랜잭션
- * 순서를 따른다:
- *   1. provider 마스터 lookup (slug → id) — fetcher가 잘못된 slug면 실패
- *   2. 각 tariff에 대해:
- *      a. tariff 마스터 upsert (providerId + slug 키)
- *      b. tariff_snapshot insert (append-only — ADR-0006 §T1)
- *      c. tariff.lastSeenAt 갱신 (ADR-0005 §T5)
- *
- * 본 함수는 step.run 내에서만 호출됨 — Inngest가 자동 retry.
- *
- * Note (페이즈 1.8 작업 후 격상): Drizzle 0.36의 `db.transaction()`을
- * 사용하면 (a)+(b)+(c)가 원자적. Neon HTTP 드라이버는 single-statement만
- * 트랜잭션 지원이라 페이즈 5에서 Neon serverless WebSocket 드라이버로 격상 시
- * 재검토. 페이즈 1에서는 *순차 실행 + 부분 실패 허용* — 다음 cron이 자가 복구.
- */
-async function persistFetchResult(result: FetchResult): Promise<void> {
-  if (result.data.length === 0) {
-    // 빈 배열 = 페이지에서 요금제 사라짐. 1.8에서 isActive=false 마킹 로직
-    // 추가 예정 (ADR-0005 §T5). 페이즈 1.7 시점에는 no-op.
-    return;
-  }
-
-  // 1. provider 마스터 lookup
-  const firstSnapshot = result.data[0];
-  if (!firstSnapshot) return; // noUncheckedIndexedAccess 가드
-
-  const providerSlug = firstSnapshot.providerSlug;
-  const providers = await db
-    .select({ id: provider.id })
-    .from(provider)
-    .where(eq(provider.slug, providerSlug))
-    .limit(1);
-  const providerRow = providers[0];
-
-  if (!providerRow) {
-    // fetcher가 등록되지 않은 provider를 가리킴 — 운영자가 provider 시드 누락.
-    // throw로 step 재시도 → 사람이 provider 추가 후 자동 복구.
-    throw new Error(
-      `provider not found: slug='${providerSlug}'. Seed provider row first.`,
-    );
-  }
-  const providerId = providerRow.id;
-  const fetchedAt = new Date(result.fetchedAt);
-
-  for (const input of result.data) {
-    // 2a. tariff 마스터 upsert (providerId + slug UNIQUE)
-    const existing = await db
-      .select({ id: tariff.id })
-      .from(tariff)
-      .where(and(eq(tariff.providerId, providerId), eq(tariff.slug, input.tariffSlug)))
-      .limit(1);
-    const existingTariff = existing[0];
-
-    let tariffId: string;
-    if (existingTariff) {
-      // 기존 마스터 — 가격/속성 갱신 + lastSeenAt 동기화 (ADR-0005 §T5)
-      await db
-        .update(tariff)
-        .set({
-          name: input.tariffName,
-          monthlyPriceCents: input.monthlyPriceCents,
-          activationFeeCents: input.activationFeeCents,
-          modemRentalCents: input.modemRentalCents,
-          commitmentMonths: input.commitmentMonths,
-          earlyTerminationFeeCents: input.earlyTerminationFeeCents,
-          promoPriceCents: input.promoPriceCents,
-          promoMonths: input.promoMonths,
-          promoDescription: input.promoDescription,
-          attributes: input.attributes,
-          isActive: true,
-          lastSeenAt: fetchedAt,
-          sourceUrl: input.sourceUrl,
-        })
-        .where(eq(tariff.id, existingTariff.id));
-      tariffId = existingTariff.id;
-    } else {
-      // 새 마스터 — fetcher가 처음 발견한 요금제
-      const inserted = await db
-        .insert(tariff)
-        .values({
-          providerId,
-          category: input.category,
-          name: input.tariffName,
-          slug: input.tariffSlug,
-          monthlyPriceCents: input.monthlyPriceCents,
-          activationFeeCents: input.activationFeeCents,
-          modemRentalCents: input.modemRentalCents,
-          commitmentMonths: input.commitmentMonths,
-          earlyTerminationFeeCents: input.earlyTerminationFeeCents,
-          promoPriceCents: input.promoPriceCents,
-          promoMonths: input.promoMonths,
-          promoDescription: input.promoDescription,
-          attributes: input.attributes,
-          isActive: true,
-          lastSeenAt: fetchedAt,
-          sourceUrl: input.sourceUrl,
-        })
-        .returning({ id: tariff.id });
-      const insertedRow = inserted[0];
-      if (!insertedRow) {
-        throw new Error(`tariff insert returning empty for slug='${input.tariffSlug}'`);
-      }
-      tariffId = insertedRow.id;
-    }
-
-    // 2b. tariff_snapshot insert (ADR-0006 §T1 append-only)
-    await db.insert(tariffSnapshot).values({
-      tariffId,
-      fetchedAt,
-      sourceUrl: input.sourceUrl,
-      monthlyPriceCents: input.monthlyPriceCents,
-      activationFeeCents: input.activationFeeCents,
-      modemRentalCents: input.modemRentalCents,
-      promoPriceCents: input.promoPriceCents,
-      promoMonths: input.promoMonths,
-      // ADR-0006 §T2 — 평탄화 5컬럼 + JSONB 미러
-      pricePayload: {
-        monthly_price_cents: input.monthlyPriceCents,
-        activation_fee_cents: input.activationFeeCents,
-        modem_rental_cents: input.modemRentalCents,
-        commitment_months: input.commitmentMonths,
-        early_termination_fee_cents: input.earlyTerminationFeeCents,
-        promo_price_cents: input.promoPriceCents,
-        promo_months: input.promoMonths,
-        promo_description: input.promoDescription,
-        attributes: input.attributes,
-      },
-      rawPayload: input.rawPayload,
-      confidence: input.confidence,
-      confidenceReason: input.confidenceReason,
-      // isAnomaly는 1.5.2 harness:price 워커가 사후 마킹 (ADR-0006 §T5)
-      isAnomaly: false,
-    });
-  }
-}
+// ─── persist re-export (외부 호환) ────────────────────────────────────────
+export { persistFetchResult } from './persist';
 
 // ─── 외부 노출 (api/inngest/route.ts에서 사용) ─────────────────────────────
 

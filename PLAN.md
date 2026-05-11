@@ -450,11 +450,30 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 >   DATABASE_URL 회피 위해 순수 helper/types 별도 모듈 분리 (`providers-helpers.ts`
 >   + `providers-types.ts`, +6 unit tests). e2e/compare-flow.spec.ts 새 spec
 >   추가 — Proximus 선택 + tariff 모르겠어요 path 통과.
-> - **Sub-task 5 (/api/compare 풀 구현)는 후속 라운드** — T3 DB insert +
->   tariff_snapshot DISTINCT ON 후보 SELECT + compare() 호출 + comparison_result
->   item insert. /r/[shortId] DB 존재 검증도 sub-task 5에서 함께 처리.
+> - **Sub-task 5 통과** — T3 풀 흐름. `src/db/queries/comparison.ts` 신설
+>   (insertComparisonRequest / getCandidateSnapshots DISTINCT ON / getCurrent
+>   TariffSnapshot / insertComparisonResult / insertComparisonResultItems /
+>   getResultByShortId) + 순수 변환 `src/db/queries/comparison-helpers.ts` +
+>   `src/lib/with-timeout.ts` (5초 race, ADR-0007 §T10). `/api/compare` route
+>   는 stub → 풀 흐름 7단계 (Zod → insert request → 후보+현재 병렬 SELECT →
+>   deriveUsageProfile → compare() → insert result+items → shortId). `postal.
+>   country` 는 `input_attributes.postalCountry` 봉인 (스키마 컬럼 신설 0,
+>   ADR-0021 §T10 호환). `/r/[shortId]` 는 regex 통과 후 `getResultByShortId`
+>   호출 — 미존재 시 `notFound()` (sub-task 4 형식 검증과 정합). 페이지는
+>   placeholder 헤더 유지(3.1~3.7 본 항목은 후속 라운드) + 실 engineVersion +
+>   lockedInputs.assumptions.usage_profile 추출 + 90일 후 익명화 안내 배너.
+>   `comparison-helpers.test.ts` 8 신설 테스트 (snapshotRowToTariffLike 1:1
+>   매핑 + buildLockedInputs ADR-0007 §T9 권장 키 직렬화). e2e/result-page
+>   .spec.ts 리팩터 — 정상 진입 4 케이스가 fake nanoid 대신 `request.post(/api/
+>   compare)` 로 실 shortId 받아 사용 + "DB 미존재 404" 케이스 1건 신설.
+>   부수: `eslint.config.mjs` scripts/* 오버라이드에 `.mts`/`.cts` 추가
+>   (`seed-stub-tariffs.mts` 의 console.log 가 게이트 통과하도록 — pre-existing
+>   config 버그 1-char 정정). breakdown 컬럼 미저장 → CalculationDetails.
+>   breakdown 은 0 cents fallback (페이즈 3 후속 라운드에서 컬럼 추가 vs compare
+>   재실행 결정).
 > - 페이즈 3.1~3.7 자체 [x] 마킹은 풀 격상 (T2 비교 표 + T6 제외 공급사 +
->   T3 `/api/compare` 풀) 후속 라운드에서.
+>   T3 풀은 sub-task 5 통과로 완료, 결과 카드/비교 표 풀 렌더는 후속 라운드)
+>   에서.
 
 - [ ] **3.1** **1층 — 결론 카드** (스크롤 없이 보임) — ADR-0021 §T2: 1위 추천
   + 연간 절약액 + "변경하기" CTA placeholder (페이즈 4 어트리뷰션 활성).

@@ -51,7 +51,7 @@ export default [
     },
   },
   {
-    files: ['scripts/**/*.{ts,tsx,js,mjs,cjs}'],
+    files: ['scripts/**/*.{ts,tsx,mts,cts,js,mjs,cjs}'],
     rules: {
       'no-console': 'off',
     },

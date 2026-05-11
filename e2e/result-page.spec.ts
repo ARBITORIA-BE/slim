@@ -1,16 +1,20 @@
 /**
- * /r/[shortId] 결과 페이지 e2e (Sub-task 4 — ADR-0021 §T1 + §T7 + §T8).
+ * /r/[shortId] 결과 페이지 e2e — Sub-task 4 + Sub-task 5.
  *
  * 검증:
- *   1. 정상 shortId (12자 nanoid) → placeholder 페이지 + CalculationDetails 펼치기
- *   2. 형식 미달 shortId → 404 (not-found.tsx 렌더)
- *   3. axe 0 violations (정상 페이지 + not-found 페이지)
+ *   1. 실 POST /api/compare → 실 shortId → /r/{shortId} 도달 (Sub-task 5 happy path)
+ *   2. placeholder 헤더 + 영구 ID + CalculationDetails 펼치기 (Sub-task 4)
+ *   3. SC-G 메타: noindex robots + canonical (T8)
+ *   4. axe 0 violations (정상 페이지 + not-found 페이지)
+ *   5. 형식 미달 shortId → 404 (ADR-0021 §T1)
+ *   6. DB 미존재 shortId → 404 (Sub-task 5 새 검증)
  *
- * SC-G 정합 (T8): 정상 페이지 metadata 가 noindex 인지 confirm.
+ * Sub-task 5 전제: dev 서버가 DATABASE_URL 가진 채 가동 — POST 가 200 으로 응답.
+ * 후보 0건도 OK (shortId 는 반환, /r/{shortId} 진입 가능).
  */
 
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
 const SHOT_DIR = 'e2e/screenshots';
@@ -19,29 +23,58 @@ test.beforeAll(async () => {
   await mkdir(SHOT_DIR, { recursive: true });
 });
 
-test.describe('/r/[shortId] 정상 진입 (12자 nanoid)', () => {
-  // 12 chars in URL-safe alphabet [A-Za-z0-9_-]
-  const VALID_SHORT_ID = 'aB3dE_fG-hIj';
-  const URL = `/r/${VALID_SHORT_ID}`;
+test.describe('/r/[shortId] 정상 진입 (실 POST 로 받은 shortId — Sub-task 5)', () => {
+  let validShortId: string;
+  let pageUrl: string;
 
-  test('placeholder 헤더 + 영구 ID 노출', async ({ page }) => {
-    await page.goto(URL);
+  test.beforeAll(async () => {
+    const ctx = await playwrightRequest.newContext({
+      baseURL: 'http://localhost:3000',
+    });
+    const res = await ctx.post('/api/compare', {
+      data: {
+        category: 'mobile',
+        postal: { country: 'BE', postalCode: '1000' },
+        householdType: 'single',
+        currentProviderId: null,
+        currentTariffId: null,
+        inputAttributes: {},
+      },
+    });
+    expect(res.status(), 'POST /api/compare 200').toBe(200);
+    const body = (await res.json()) as { ok: boolean; shortId: string };
+    expect(body.ok).toBe(true);
+    expect(body.shortId).toMatch(/^[A-Za-z0-9_-]{12}$/);
+    validShortId = body.shortId;
+    pageUrl = `/r/${validShortId}`;
+    await ctx.dispose();
+  });
+
+  test('비교 결과 헤더 + 영구 ID + 결론 카드 노출 (라운드 a)', async ({ page }) => {
+    await page.goto(pageUrl);
     await expect(
-      page.getByRole('heading', { name: '비교 결과 페이지는 곧 추가됩니다' }),
+      page.getByRole('heading', { level: 1, name: '비교 결과' }),
     ).toBeVisible();
-    await expect(page.locator('code').first()).toHaveText(VALID_SHORT_ID);
+    // 영구 ID 는 첫 <code> 안에 노출 (header 영역 우선)
+    await expect(page.locator('code').first()).toHaveText(validShortId);
+    // 결론 카드 = 1위 추천 라벨 + "{provider} — {tariff}" h2.
+    // 후보 0건 시 "비교 후보가 없습니다" h2 가 대신 노출.
+    const hasConclusion = await page
+      .getByRole('article', { name: /\S+/ })
+      .first()
+      .isVisible();
+    expect(hasConclusion).toBe(true);
   });
 
   test('CalculationDetails 펼치기 (HTML <details> native)', async ({ page }) => {
-    await page.goto(URL);
+    await page.goto(pageUrl);
     const summary = page.getByRole('group').getByText(/계산 근거 보기/);
     await expect(summary).toBeVisible();
-    // <details> 기본 접힘 → 펼치기 클릭 후 가정/산식 노출
     await summary.click();
     await expect(page.getByRole('heading', { name: '사용한 가정' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '적용 산식' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '엔진 버전' })).toBeVisible();
-    // engineVersion + estimatorVersion 둘 다 한 <code> 안에 노출
+    // engineVersion + estimatorVersion 둘 다 한 <code> 안에 노출 (실 DB 값)
     const versionCode = page.locator('code').last();
     await expect(versionCode).toBeVisible();
     const text = await versionCode.textContent();
@@ -50,16 +83,16 @@ test.describe('/r/[shortId] 정상 진입 (12자 nanoid)', () => {
   });
 
   test('SC-G 메타: noindex robots + canonical (T8)', async ({ page }) => {
-    const response = await page.goto(URL);
+    const response = await page.goto(pageUrl);
     expect(response?.status()).toBe(200);
     const robots = await page.locator('meta[name="robots"]').getAttribute('content');
     expect(robots).toContain('noindex');
     const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
-    expect(canonical).toBe(`https://slim.lu${URL}`);
+    expect(canonical).toBe(`https://slim.lu${pageUrl}`);
   });
 
   test('axe 0 violations (정상 페이지)', async ({ page }) => {
-    await page.goto(URL);
+    await page.goto(pageUrl);
     await expect(page.locator('h1')).toBeVisible();
     const results = await new AxeBuilder({ page }).analyze();
     if (results.violations.length > 0) {
@@ -85,7 +118,6 @@ test.describe('/r/[shortId] 잘못된 shortId 404 (ADR-0021 §T1)', () => {
       await expect(
         page.getByRole('heading', { name: '이 결과는 더 이상 존재하지 않습니다' }),
       ).toBeVisible();
-      // CTA 두 개 (새로 비교 + 홈)
       await expect(page.getByRole('link', { name: '새로 비교 시작' })).toBeVisible();
       await expect(page.getByRole('link', { name: '홈으로' })).toBeVisible();
     });
@@ -100,5 +132,17 @@ test.describe('/r/[shortId] 잘못된 shortId 404 (ADR-0021 §T1)', () => {
       for (const v of results.violations) console.warn(`  - ${v.id} (${v.impact}): ${v.help}`);
     }
     expect(results.violations).toEqual([]);
+  });
+});
+
+test.describe('/r/[shortId] DB 미존재 shortId 404 (Sub-task 5)', () => {
+  test('형식 통과 + DB 행 없음 → 404', async ({ page }) => {
+    // 형식은 통과 (12자 URL-safe), 그러나 nanoid 가 64^12 공간이라 사실상 충돌 0
+    const fakeButValid = 'zzzzzzzzzzzz';
+    const response = await page.goto(`/r/${fakeButValid}`);
+    expect(response?.status()).toBe(404);
+    await expect(
+      page.getByRole('heading', { name: '이 결과는 더 이상 존재하지 않습니다' }),
+    ).toBeVisible();
   });
 });

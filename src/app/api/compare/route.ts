@@ -1,22 +1,50 @@
 /**
- * POST /api/compare — 페이즈 2 입력 플로우의 종착점 (ADR-0016 §T7).
+ * POST /api/compare — 풀 흐름 (Sub-task 5, ADR-0021 §T3).
  *
- * 페이즈 2 1차 (현재): Zod 재검증 + shortId(nanoid 12자) 생성만. DB insert +
- * compare() 호출 + comparison_result item insert 풀 구현은 페이즈 3 진입 시
- * 별도 ADR로 추가 (ADR-0011 §T2 항목 5 "런칭 초기" 동형 정직 노출 — preview
- * 페이지가 placeholder shortId 안내).
+ * 흐름 (전체를 5초 race 안에서):
+ *   1. JSON parse + Zod safeParse (클라이언트 우회 방어 — ADR-0016 §T7)
+ *   2. comparison_request INSERT — postalCountry 는 inputAttributes 안에 봉인
+ *   3. tariff_snapshot 후보 SELECT (DISTINCT ON, p.country = postal.country)
+ *   4. currentTariffId 명시 시 baseline SELECT (병렬)
+ *   5. deriveUsageProfile + compare() 호출
+ *   6. shortId = nanoid(12) + comparison_result + items INSERT
+ *   7. { ok: true, shortId } 반환 (클라이언트는 redirect 만)
  *
- * 클라이언트 우회 방어: 본 라우트가 sessionStorage 입력을 *재검증* (T7).
- * Zod safeParse 실패 → 400, 통과 → 200 + shortId.
+ * 5초 timeout 초과 → 504 (orphan request row 가능성, ADR-0021 §T3 "부분 실패 시
+ * 분석 가치" 정합).
  *
- * 동기 5초 timeout: ADR-0007 §T10. 페이즈 2 1차 stub 응답은 ms 단위라 timeout
- * 위험 0. 페이즈 3 풀 구현 시 setTimeout(5000) 또는 AbortController 추가.
+ * 결정 근거:
+ *   - docs/adr/0021-phase-3-results-page-design.md §T3 (풀 흐름 7단계)
+ *   - docs/adr/0007-comparison-request-result-schema.md §T9/§T10 (lockedInputs / timeout)
+ *   - docs/adr/0010-comparison-engine.md (compare() 시그니처)
  */
 
 import { nanoid } from 'nanoid';
 import { NextResponse } from 'next/server';
 
-import { comparisonInputSchema } from '@/types/comparison-input';
+import {
+  getCandidateSnapshots,
+  getCurrentTariffSnapshot,
+  insertComparisonRequest,
+  insertComparisonResult,
+  insertComparisonResultItems,
+} from '@/db/queries/comparison';
+import {
+  buildLockedInputs,
+  snapshotRowToTariffLike,
+} from '@/db/queries/comparison-helpers';
+import { compare, ENGINE_VERSION } from '@/engine/compare';
+import {
+  USAGE_ESTIMATOR_VERSION,
+  deriveUsageProfile,
+} from '@/engine/usage-estimator';
+import { TimeoutError, withTimeout } from '@/lib/with-timeout';
+import {
+  comparisonInputSchema,
+  type ComparisonInput,
+} from '@/types/comparison-input';
+
+const TIMEOUT_MS = 5000;
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -37,13 +65,115 @@ export async function POST(request: Request) {
     );
   }
 
-  // ADR-0007 §T7 (Amendment 1, 2026-05-10) — nanoid 12자 + default URL-safe
-  // alphabet 64 (`A-Za-z0-9_-`) → 64^12 ≈ 4.7e21 공간. 진입 검증 정규식은
-  // /^[A-Za-z0-9_-]{12}$/ (ADR-0021 §T1 부록).
+  try {
+    const shortId = await withTimeout(
+      runCompareFlow(parsed.data),
+      TIMEOUT_MS,
+      'POST /api/compare',
+    );
+    return NextResponse.json({ ok: true, shortId });
+  } catch (e) {
+    if (e instanceof TimeoutError) {
+      return NextResponse.json(
+        { ok: false, error: e.message },
+        { status: 504 },
+      );
+    }
+    const message = e instanceof Error ? e.message : 'unknown error';
+    // 운영자 자가 진단 — Sentry 알림 통합은 페이즈 4.5.2 진입 시.
+    console.error('[/api/compare] internal error:', message);
+    return NextResponse.json(
+      { ok: false, error: 'Internal error' },
+      { status: 500 },
+    );
+  }
+}
+
+async function runCompareFlow(input: ComparisonInput): Promise<string> {
+  const {
+    category,
+    postal,
+    householdType,
+    currentProviderId,
+    currentTariffId,
+    inputAttributes,
+  } = input;
+
+  // 2. comparison_request INSERT — postalCountry 는 input_attributes 안에 봉인
+  //    (스키마 컬럼 신설 회피, ADR-0021 §T10 호환).
+  const storedInputAttributes: Record<string, unknown> = {
+    ...inputAttributes,
+    postalCountry: postal.country,
+  };
+  const { id: requestId } = await insertComparisonRequest({
+    category,
+    postalCode: postal.postalCode,
+    householdType,
+    currentProviderId,
+    inputAttributes: storedInputAttributes,
+  });
+
+  // 3 + 4. 후보 + 현재 요금제 병렬 SELECT
+  const [candidateRows, currentRow] = await Promise.all([
+    getCandidateSnapshots(category, postal.country),
+    currentTariffId
+      ? getCurrentTariffSnapshot(currentTariffId)
+      : Promise.resolve(null),
+  ]);
+
+  const candidates = candidateRows.map(snapshotRowToTariffLike);
+  const currentTariff = currentRow ? snapshotRowToTariffLike(currentRow) : null;
+
+  // 5. usage profile + compare()
+  const usageProfile = deriveUsageProfile(
+    category,
+    householdType,
+    inputAttributes,
+  );
+  const result = compare({
+    category,
+    currentTariff,
+    usageProfile,
+    candidates,
+  });
+
+  // 6. shortId + result + items INSERT
   const shortId = nanoid(12);
+  const lockedInputs = buildLockedInputs({
+    postalCountry: postal.country,
+    postalCode: postal.postalCode,
+    householdType,
+    currentProviderId,
+    currentTariffId,
+    inputAttributes,
+    usageProfile,
+    estimatorVersion: USAGE_ESTIMATOR_VERSION,
+  });
+  const topTariffSnapshotId = result.ranked[0]?.tariffSnapshotId ?? null;
 
-  // TODO (페이즈 3 진입 시): comparison_request insert + compare() 호출
-  // + comparison_result + comparison_result_item insert (ADR-0016 §T7)
+  const { id: resultId } = await insertComparisonResult({
+    requestId,
+    shortId,
+    topMonthlySavingCents: result.topMonthlySavingCents,
+    topYearlySavingCents: result.topYearlySavingCents,
+    topTariffSnapshotId,
+    lockedInputs,
+    engineVersion: ENGINE_VERSION,
+  });
 
-  return NextResponse.json({ ok: true, shortId });
+  await insertComparisonResultItems(
+    result.ranked.map((item) => ({
+      resultId,
+      rank: item.rank,
+      tariffSnapshotId: item.tariffSnapshotId,
+      monthlySavingCents: item.monthlySavingCents,
+      yearlySavingCents: item.yearlySavingCents,
+      monthlyAvg12Cents: item.breakdown.monthlyAvg12Cents,
+      monthlyAvg24Cents: item.breakdown.monthlyAvg24Cents,
+      monthlySaving24Cents: item.breakdown.monthlySaving24Cents,
+      caveats: item.caveats,
+    })),
+  );
+
+  return shortId;
 }
