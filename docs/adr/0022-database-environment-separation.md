@@ -2,7 +2,9 @@
 
 ## Status
 
-**Proposed** (운영자 승인 대기 — GATE-O). 본 ADR은 *정책 결정 + builder/운영자 인계 명세* 를 담는다. 코드 변경은 D.4.c (`scripts/verify-db.ts` allowlist 3개 확장 + `.env.local.example` 갱신) 한 건, 나머지는 운영자 Neon/Vercel 콘솔 작업.
+**Accepted** (2026-05-11 — D.4 완료 시점 격상). 근거: 운영자가 D.4.b/d/e (Neon `development` 브랜치 = `ep-noisy-meadow-aliaxayq` 확인 / 로컬 `.env.local` 전환 + `EXPECTED_DB_ENDPOINTS` 3개 등록 / Vercel prod·preview env 단일 등록) 완료 → `pnpm verify:db` **all-green** (allowlist 매칭 / 6 tables / seed 2 rows). 코드 인계분(D.4.c — `.env.local.example` 신설, `scripts/verify-db.ts` 는 기존 콤마 allowlist 로 충분해 변경 없음)은 커밋 **`4b7faab`** (+ `7dff4e3` 의 초안). D.3.c 의 `INNGEST_*` 2 키 Vercel 등록은 GATE-K(페이즈 4 베타)로 이연.
+
+> 원래 상태: *Proposed (운영자 승인 대기 — GATE-O)*. 본 ADR은 *정책 결정 + builder/운영자 인계 명세* 를 담았고, 코드 변경은 D.4.c 한 건, 나머지는 운영자 Neon/Vercel 콘솔 작업이었다.
 
 > 작성 메모: PLAN §D.3.e + ADR-0020 §결정 6 가 "별도 ADR (가칭 ADR-0022)" 로 *Neon-side Vercel Integration* 을 느슨하게 예약해 뒀으나, 그 항목은 페이즈 4 베타 진입(GATE-K) 시점의 미작성 트리거다. 본 ADR(=실제로 지금 작성됨)이 0022를 소비하고, Neon Vercel Integration ADR 은 다음 번호(ADR-0023+)로 이연한다. PLAN §D.3.e 와 ADR-0020 §결정 6 의 "가칭 ADR-0022" 참조는 "가칭 ADR-0023" 으로 재지정 필요 (scribe 후속 정리).
 

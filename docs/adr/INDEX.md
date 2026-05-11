@@ -28,7 +28,7 @@
 | [ADR-0019](0019-arbitoria-three-platform-alignment.md) | ARBITORIA 3 플랫폼 (GitHub / Vercel / Neon) 정렬 | Accepted (+ Amendment A1/A2, Appendix A pending TVA) | 2026-05-10 |
 | [ADR-0020](0020-arbitoria-inventory-and-alignment-corrections.md) | ARBITORIA 인벤토리 명시 + ADR-0019 진단 사실 정정 | Accepted | 2026-05-10 |
 | [ADR-0021](0021-phase-3-results-page-design.md) | 페이즈 3 결과 페이지 설계 — 3층 구조 / caveats UI / `/api/compare` 풀 구현 | Accepted (T9 옵션 D + T11 SC-H + SC-F + SC-G, 2026-05-10) | 2026-05-10 |
-| [ADR-0022](0022-database-environment-separation.md) | DB 환경 분리 정책 — production / preview / development 3 브랜치 + prod URL Console-only SoT | Proposed (GATE-O 대기) | 2026-05-11 |
+| [ADR-0022](0022-database-environment-separation.md) | DB 환경 분리 정책 — production / preview / development 3 브랜치 + prod URL Console-only SoT | Accepted (2026-05-11 — D.4 완료, verify:db all-green, 커밋 4b7faab) | 2026-05-11 |
 
 ---
 
@@ -188,7 +188,7 @@
 
 ### [ADR-0022: DB 환경 분리 정책 — production / preview / development 3 브랜치 + prod URL Console-only SoT](0022-database-environment-separation.md)
 
-**상태**: Proposed (GATE-O 운영자 승인 대기). 코드 변경 = D.4.c (`.env.local.example` 신설 + `verify-db.ts` allowlist 검토) 한 건, 나머지는 운영자 Neon/Vercel 콘솔 작업.
+**상태**: **Accepted** (2026-05-11 — D.4 완료 시 격상). 운영자 D.4.b/d/e 완료 (`development` = `ep-noisy-meadow-aliaxayq` 확인 / `.env.local` 전환 + `EXPECTED_DB_ENDPOINTS` 3개 / Vercel prod·preview env 단일) → `pnpm verify:db` all-green. 코드 인계 D.4.c (`.env.local.example` 신설; `verify-db.ts` 는 기존 콤마 allowlist 로 충분 — 변경 0) = 커밋 `4b7faab` (+ `7dff4e3`). D.3.c 의 `INNGEST_*` 2 키 Vercel 등록은 GATE-K(페이즈 4)로 이연.
 
 **요약**: ADR-0017 (DB 미스매치 사건) + ADR-0018 (멀티 org 정책) 의 직접 후속 — DB 환경 경계를 production + preview 2개에서 **production / preview / development 3 브랜치** 로 확장하고 production 접속 정보의 영속 저장 위치를 못박는다. **4개 결정**: (D1) 3 Neon 브랜치 분리 — production(`ep-fancy-fog-alt18340`, 인라인 명령으로만 접근) / preview(`ep-autumn-water-all6d93e`, Vercel 자동 주입) / development(신규, 로컬 `.env.local` 기본값 — `pnpm dev`/`pnpm test`/마이그레이션 dry-run). 로컬이 production을 만질 가능성을 구조적으로 0으로. (D2) production connection string은 **Neon Console 만 SoT** — `.env.local`/repo/ADR/채팅/스크린샷 어디에도 영속 저장 X. endpoint name 만 식별자로 문서화 OK (allowlist 필요), 전체 string(비번)은 절대 영속화 X (ADR-0018 §결정 7 강화). (D3) `EXPECTED_DB_ENDPOINTS` allowlist를 3 endpoint로 확장 — 로컬 = 3개, Vercel production/preview env = 각 환경 단일. (D4) production 접근은 인라인 DATABASE_URL=... 한 줄 명령으로만 (PowerShell: `$env:DATABASE_URL` 설정 → db:push → `Remove-Item Env:` 정리) — prod URL이 디스크에 안 남고, 명령 후 사라지며, 항상 명시적·의도적. dotenv `override:false` 로 인라인 우선 보장. **거부 대안**: production 단일 브랜치+로컬 겸용 (ADR-0017 재발 벡터) / preview를 로컬 겸용 (Vercel CI 충돌) / `.env.production.local` 저장 (디스크 영속=노출 표면) / Neon Vercel Integration 자동 branch (페이즈 4 GATE-K 별도 ADR로 이연).
 
