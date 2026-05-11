@@ -11,6 +11,27 @@
 
 ### Added
 
+- Phase 3 라운드 (c) — 원본 링크 (PLAN 3.3) + 제외 공급사 섹션 (PLAN 3.4) ([ADR-0021](docs/adr/0021-phase-3-results-page-design.md) §T2 3층 + §T6):
+  - **`src/app/r/[shortId]/_lib/stale.ts` 신설** — `formatRelativeTime(target, now?)` 순수. 5 경계 ("방금 전" / "X분 전" / "X시간 전" / "X일 전" / "30일 이상 전") + 음수 diff 보수 처리. `+7 unit tests` (`stale.test.ts`).
+  - **`src/app/r/[shortId]/_components/ComparisonTable.tsx` 확장** — 7번째 컬럼 "원본" (desktop) + 모바일 카드 footer line. `SourceLink` 내부 컴포넌트 — `target="_blank" rel="nofollow noopener"` + sr-only "(새 창에서 열림)" + 마지막 확인 상대 시간. `now` prop 주입 가능(SSR/테스트 결정성).
+  - **`src/app/r/[shortId]/_components/ExcludedProvidersSection.tsx` 신설** — 비교 제외 공급사 section. provider.name + provider.excludedReason 직접 표시 (헌법 §3 P3). 0건 시 섹션 자체 비노출. Orange BE 등 모든 제외 공급사를 마스터 데이터 그대로 노출 — 특수 분기 0.
+  - **`src/db/queries/providers.ts` 확장** — `getExcludedProviders(country)` helper. `provider.excluded_reason IS NOT NULL` + country 필터. ExcludedProvider 타입 + name asc 정렬. /data-sources 페이지(ADR-0011 §T2 항목 3) 와 공유 가능 형태.
+  - **`src/app/r/[shortId]/page.tsx` 변경** — `extractCountry(lockedInputs.postal_country)` 신설 (NULL/잘못된 값 시 'BE' fallback, SC-B 1차 정합). 3 쿼리 병렬화 (topItem + allItems + excludedProviders). `<ExcludedProvidersSection>` 비교 표/empty 안내 아래, CalculationDetails 위에 배치.
+  - 검증: typecheck 0 / lint 0 / **142 tests passed** (135 → 142, +7 stale) / harness:plan 81 항목 (3.3 + 3.4 [x] 격상, 합계 39 → 41) / harness:data 출처/신선도 통과.
+- Phase 3 라운드 (b) — 비교 표 (PLAN 3.2, [ADR-0021](docs/adr/0021-phase-3-results-page-design.md) §T2 2층 + §T4 SC-F):
+  - **`src/app/r/[shortId]/_components/ComparisonTable.tsx` 신설** — 6 컬럼 비교 표 (순위 / 공급사·요금제 + 카테고리별 보조 텍스트 / 월 비용 + 프로모·활성화비 보조 / 약정 / 절약(월·연) / 신뢰도 배지). Desktop md+ native `<table>` + Mobile `<md` 카드 stack(각 카드 = `<article>`). 음수 절약 정직 표기, 다크 패턴 회피 — 강조 색상 X.
+  - **`src/app/r/[shortId]/_components/ComparisonControls.tsx` 신설** — 정렬 3옵션(절약액 큰 순 / 월 비용 적은 순 / 약정 없음 우선) + 필터 2 토글(약정 없음만 / 데이터 무제한). `<Link>` 만 사용 — dep 0, client state 0, URL params 가 단일 출처. aria-current/aria-pressed 표면화.
+  - **`src/app/r/[shortId]/_lib/compare-view.ts` 신설** — 순수 모듈. `parseSearchParams` (sort/filter 검증 + fallback) / `applyView` (필터 → 정렬 → top N, tariffSlug ASC tie-break) / `buildSortHref` + `buildFilterToggleHref` (URL 직렬화, 기본 sort 는 query 생략). `+18 unit tests` (`compare-view.test.ts`).
+  - **`src/db/queries/comparison.ts` 확장** — `getResultItems(resultId)` 신규. comparison_result_item × tariff_snapshot × tariff × provider 4단 INNER JOIN, ORDER BY rank ASC. 22 필드 (`ResultRowData`) — 비교 표 + 후속 라운드 c (3.3 원본 링크) 입력.
+  - **`src/app/r/[shortId]/page.tsx` 변경** — `searchParams` Promise prop 추가. `getTopResultItem` + `getResultItems` 병렬 fetch. `parseSearchParams` → `applyView(allItems, view)` → `<ComparisonControls>` + `<ComparisonTable>` 결론 카드 아래 노출. 후보 0건 시 비교 표 섹션 전체 skip (기존 fallback 안내 유지).
+  - 검증: typecheck 0 / lint 0 / **135 tests passed** (117 → 135, +18 compare-view) / harness:plan 81 항목 (3.2 [x] 격상, 합계 38 → 39) / harness:data 출처/신선도 통과.
+- Phase 3 라운드 (a) — 결론 카드 (PLAN 3.1) + 영구 링크 풀 격상 (PLAN 3.6) ([ADR-0021](docs/adr/0021-phase-3-results-page-design.md) §T2 1층 + §T1/§T8):
+  - **`src/app/r/[shortId]/_components/ResultConclusionCard.tsx` 신설** — 1위 추천 카드. 4 상태 분기: (a) 신규 가입자 = "신규 가입자에게 가장 저렴한 요금제" (b) positive saving = "월 €X 절약" + 월/연 보조 (c) zero = "현재 요금제와 동일" (d) negative = "더 저렴한 후보 없음 — 유지 권장" (정직 표기, 헌법 P3). 신뢰도 배지(confidence != 'high' 시 노출, T5 매트릭스), caveats list, CTA disabled placeholder("변경하기 (페이즈 4 활성 예정)"). 다크 패턴 회피 — neutral 색상, 부풀린 강조 X.
+  - **`src/app/r/[shortId]/page.tsx` 풀 격상** — placeholder 헤더("비교 결과 페이지는 곧 추가됩니다") 제거 → "비교 결과" h1 + 영구 ID code 라인. `export const revalidate = 3600` ISR 1h 명시 (PLAN 3.6). topItem 존재 시 ResultConclusionCard, 후보 0건 시 인라인 정직 안내(ADR-0011 §T2 항목 5 동형) + /data-sources 링크. 90일 익명화 배너(§T9) 헤더 영역으로 이동. 새로 비교/홈 두 CTA 푸터.
+  - **lockedInputs 좁힘 확장** — `current_tariff_id` 추출 (null = 신규 가입자, ADR-0010 §T7 케이스 6). `derivePageView.isNewSubscriber` 신호 신설, 결론 카드 메시지 분기.
+  - **`src/db/queries/comparison.ts` 확장** — `getTopResultItem` JOIN 에 tariff + provider 추가 → `providerName` / `tariffName` / `confidence` (tariff_snapshot.confidence) 표면화. comparison_result_item → tariff_snapshot → tariff → provider 3단 INNER JOIN.
+  - **`e2e/result-page.spec.ts` + `e2e/compare-flow.spec.ts` 회귀 수정** — placeholder 헤더 기대("비교 결과 페이지는 곧 추가됩니다") 제거, "비교 결과" h1 + role=article (결론 카드) 확인. 시각 회귀 0 가정 (axe 0 유지 기대).
+  - 검증: typecheck 0 / lint 0 / **117 tests passed** (회귀 0, 라운드 a 는 컴포넌트만 — 단위 테스트는 b~d 라운드에서 통합) / harness:plan 81 항목 (3.1 + 3.6 [x] 격상, 합계 36 → 38) / harness:data 출처/신선도 통과.
 - Phase 3 builder M6 sub-task 5 후속 — `comparison_result_item.breakdown` 평탄 컬럼 3종 + getTopResultItem 신설 ([ADR-0010](docs/adr/0010-comparison-engine.md) §T3/§T4):
   - **마이그레이션 `drizzle/0004_sudden_sprite.sql`** — `comparison_result_item` 에 `monthly_avg_12_cents` / `monthly_avg_24_cents` / `monthly_saving_24_cents` 3 컬럼 추가 (모두 `bigint NOT NULL DEFAULT 0`). 결정: 평탄 컬럼 (ADR-0005 §T2 / ADR-0006 §T2 정합 — hot path 는 평탄 + 아카이브는 JSONB). compare() 재실행은 거부 — engineVersion drift + tariff_snapshot append 로 결과 비결정성. activation/modem/promo 는 별도 컬럼 X (tariff_snapshot RESTRICT FK 로 동결, JOIN 으로 충분).
   - **`src/db/schema/comparison_result.ts` 변경** — 3 신규 컬럼 + 의도 주석 (왜 별도 저장 / 왜 activation/modem 은 별도 X).

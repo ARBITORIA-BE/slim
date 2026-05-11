@@ -475,23 +475,42 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 >   T3 풀은 sub-task 5 통과로 완료, 결과 카드/비교 표 풀 렌더는 후속 라운드)
 >   에서.
 
-- [ ] **3.1** **1층 — 결론 카드** (스크롤 없이 보임) — ADR-0021 §T2: 1위 추천
+- [x] **3.1** **1층 — 결론 카드** (스크롤 없이 보임) — ADR-0021 §T2: 1위 추천
   + 연간 절약액 + "변경하기" CTA placeholder (페이즈 4 어트리뷰션 활성).
-- [ ] **3.2** **2층 — 비교 표** (다나와 스타일 정보 밀도) — ADR-0021 §T2 + §T4:
+  - 신설: `src/app/r/[shortId]/_components/ResultConclusionCard.tsx` (1위 공급사 + 요금제명 + 절약액 4 상태 분기 + 신뢰도 배지 + caveats list + CTA disabled placeholder + 다크 패턴 회피).
+  - 후보 0건 시 fallback 인라인 안내 (ADR-0011 §T2 항목 5 동형) — `src/app/r/[shortId]/page.tsx` 안.
+  - 신뢰도 배지: confidence != 'high' 시만 노출 (T5 매트릭스 결론 카드 컬럼).
+  - 후속: caveats i18n 매트릭스(T5) 위치별 차등은 페이즈 4 SC-E i18n ADR.
+- [x] **3.2** **2층 — 비교 표** (다나와 스타일 정보 밀도) — ADR-0021 §T2 + §T4:
   상위 5개 6 컬럼 + URL params 정렬/필터 (**SC-F 적용**, RSC 재렌더, dep 0).
   모바일은 카드 stack.
-- [ ] **3.3** **3층 — 원본 링크** — ADR-0021 §T2: 각 행 우측 외부 링크
+  - 신설: `src/app/r/[shortId]/_components/ComparisonTable.tsx` (desktop native table + mobile card stack, 6 컬럼 = 순위/공급사·요금제/월비용/약정/절약/신뢰도, 카테고리별 보조 텍스트, 프로모·활성화비 inline).
+  - 신설: `src/app/r/[shortId]/_components/ComparisonControls.tsx` (3 sort `<a>` 라디오 + 2 filter 토글 `<a>` — dep 0 + RSC 재렌더).
+  - 신설: `src/app/r/[shortId]/_lib/compare-view.ts` (순수 parseSearchParams + applyView + buildSortHref/buildFilterToggleHref).
+  - 신설: `src/app/r/[shortId]/_lib/compare-view.test.ts` (18 단위 테스트 — 파싱 + URL 직렬화 + 정렬/필터/limit/tie-break/순수성).
+  - `getResultItems(resultId)` Drizzle 쿼리 추가 (4단 JOIN).
+  - 필터: commitment_none + data_unlimited (라운드 b 범위). promo_exclude (display-only) 는 후속 라운드 또는 SC-E i18n 동반.
+- [x] **3.3** **3층 — 원본 링크** — ADR-0021 §T2: 각 행 우측 외부 링크
   (rel="nofollow noopener") + "마지막 확인: X시간 전" (`tariff_snapshot.fetched_at`).
-- [ ] **3.4** **제외된 공급사 섹션** — ADR-0021 §T6: `provider.excluded_reason`
+  - `src/app/r/[shortId]/_components/ComparisonTable.tsx` — 7번째 컬럼 "원본" (desktop) + 모바일 카드 footer. `SourceLink` 내부 컴포넌트.
+  - `src/app/r/[shortId]/_lib/stale.ts` — `formatRelativeTime` 순수 함수 + `src/app/r/[shortId]/_lib/stale.test.ts` 7 단위 테스트.
+  - `rel="nofollow noopener"` + `target="_blank"` + sr-only "새 창에서 열림" 안내.
+- [x] **3.4** **제외된 공급사 섹션** — ADR-0021 §T6: `provider.excluded_reason`
   직접 표시 + /data-sources 동형 + Orange BE "페이즈 5 평가 후 추가 예정" 안내
   (ADR-0009 §결정 1).
+  - 신설: `src/app/r/[shortId]/_components/ExcludedProvidersSection.tsx` — 헌법 P3 동형 표면화. 0건 시 섹션 자체 비노출.
+  - `src/db/queries/providers.ts` 확장 — `getExcludedProviders(country)` helper. `/data-sources` 와 공유 가능 형태.
+  - Orange BE 는 마스터 데이터(`provider.excluded_reason = '페이즈 5 평가 후 추가 예정'`) 로 자연 포함 — 특수 분기 0.
 - [ ] **3.5** **계산 근거 펼치기** — ADR-0021 §T7: HTML `<details>` 펼치기 +
   `usage-estimator.ts` 기본 프로파일 + breakdown.monthlyAvg12/24Cents +
   engineVersion + caveats 트리거 표기. JS 0 native a11y.
-- [ ] **3.6** **공유 가능한 영구 링크** (`/r/[id]`) — ADR-0021 §T1 + §T8:
+- [x] **3.6** **공유 가능한 영구 링크** (`/r/[id]`) — ADR-0021 §T1 + §T8:
   `/r/[shortId]` 풀 페이지 격상 (페이즈 2 placeholder 호환) + RSC + ISR 1h +
   `notFound()` 잘못된 shortId 404 + noindex + canonical (**SC-G 적용**: 동적 OG는
   페이즈 4 별도 ADR-OG, 페이즈 3 1차 = static OG).
+  - `src/app/r/[shortId]/page.tsx` — placeholder 헤더 제거 + `export const revalidate = 3600` ISR + ResultConclusionCard 통합 + 영구 ID + 90일 익명화 배너 (T9) + 새로 비교/홈 CTA 두 개.
+  - `src/app/r/[shortId]/not-found.tsx` — 한국어 안내(sub-task 4, 형식 미달/DB 미존재 공통).
+  - 메타: noindex + canonical + textOG (sub-task 3 진행, og:image 미설정 — 페이즈 4 ADR-OG).
 - [ ] **3.7** **인쇄 친화 뷰** (`@media print`) — **옵션 D 적용 (ADR-0021 §T9,
   2026-05-10)**: 페이즈 6 이연 결정. 페이즈 3 1차 = 기본 브라우저 인쇄 가독성만
   (CSS reset + contrast). 시니어 사용자 인쇄 + B2B 사용 사례는 페이즈 6 진입 시
@@ -646,14 +665,14 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
-| 3 | 7 | 0 | 0 | M6 ~ M7 (ADR-0021 Accepted + Amendment 1; **M6 sub-task 1-4, 6 통과** — T10/T3§5/T7/T8/T1/T5, sub-task 5 `/api/compare` 풀 후속) | 2026-05-10 |
+| 3 | 7 | 5 | 0 | M6 ~ M7 (ADR-0021 Accepted + Amendment 1; sub-task 1-6 + 라운드 a/b/c 통과 — 3.1/3.2/3.3/3.4/3.6 풀; 3.5 라운드 d; 3.7 페이즈 6 이연 옵션 D) | 2026-05-11 |
 | 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **81** | **36** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-10 |
+| **합계** | **81** | **41** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-11 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

@@ -11,7 +11,7 @@
  *   - 순수 변환 로직 (`groupTariffsByProvider`) 만 단위 테스트
  */
 
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { provider } from '@/db/schema/provider';
@@ -44,6 +44,39 @@ export async function getActiveProviders(
     .from(provider)
     .where(and(eq(provider.country, country), isNull(provider.excludedReason)))
     .orderBy(provider.name);
+}
+
+/**
+ * 비교 *제외* 공급사 목록 (`excluded_reason IS NOT NULL`) — 국가별 필터.
+ *
+ * PLAN 3.4 (ADR-0021 §T6) + /data-sources (ADR-0011 §T2 항목 3) 공유 helper.
+ * 헌법 §3 P3 정합 — "비교에서 제외된 공급사도 이름 공개". 정렬: name asc.
+ */
+export interface ExcludedProvider {
+  readonly id: string;
+  readonly name: string;
+  readonly slug: string;
+  readonly excludedReason: string;
+}
+
+export async function getExcludedProviders(
+  country: 'BE' | 'NL' | 'LU',
+): Promise<ExcludedProvider[]> {
+  const rows = await db
+    .select({
+      id: provider.id,
+      name: provider.name,
+      slug: provider.slug,
+      excludedReason: provider.excludedReason,
+    })
+    .from(provider)
+    .where(
+      and(eq(provider.country, country), isNotNull(provider.excludedReason)),
+    )
+    .orderBy(provider.name);
+  // excludedReason NOT NULL 보장 (WHERE 조건) — 좁힘.
+  return rows
+    .filter((r): r is ExcludedProvider => r.excludedReason !== null);
 }
 
 /**

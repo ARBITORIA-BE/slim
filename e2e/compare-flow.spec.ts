@@ -69,9 +69,9 @@ test('5단계 입력 → /r/[shortId] 도달 (mobile + 1000 + single + skip + bi
   const elapsed = Date.now() - start;
   await page.screenshot({ path: `${SHOT_DIR}/06-result.png`, fullPage: true });
 
-  // 결과 페이지 placeholder 확인
+  // 결과 페이지 풀 격상 (라운드 a) — '비교 결과' h1 + shortId code element.
   await expect(
-    page.getByRole('heading', { name: '비교 결과 페이지는 곧 추가됩니다' }),
+    page.getByRole('heading', { level: 1, name: '비교 결과' }),
   ).toBeVisible();
   await expect(page.locator('code').first()).toHaveText(/^[A-Za-z0-9_-]{12}$/);
 
@@ -111,6 +111,6 @@ test('5단계 + provider 선택 path (Proximus) + tariff 모르겠어요 → /r/
   await page.getByRole('button', { name: /청구서 없이 진행/ }).click();
   await page.waitForURL(/\/r\/[A-Za-z0-9_-]{12}$/, { timeout: 10_000 });
   await expect(
-    page.getByRole('heading', { name: '비교 결과 페이지는 곧 추가됩니다' }),
+    page.getByRole('heading', { level: 1, name: '비교 결과' }),
   ).toBeVisible();
 });
