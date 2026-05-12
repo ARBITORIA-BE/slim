@@ -176,7 +176,7 @@ PLAN 3.5.1 본문이 "harness:e2e 에 통합" 이라 했으나 본 ADR §Context
 - ADR-0002 (flaky→noise 교훈 — soft/hard 분리 선례).
 - ADR-0021 §T9 (`noindex` 정책 — `/r/[shortId]` SEO 게이트 제외 근거).
 - PLAN §3.5.1.b (보강 대상), §3.5.1.x (next build 페이지 실측 보강 백로그).
-- CHANGELOG `[Unreleased]` — "3.5.1.b' first-load JS budget 확정". (커밋 SHA 는 커밋 후 본 §References 에 후행 추가 — scribe 후속.)
+- CHANGELOG `[Unreleased]` — "3.5.1.b' first-load JS budget 확정". 본 Amendment 1 (결정 + 코드) 커밋 = `c6e8093` (`docs(adr): ADR-0023 Amendment 1 — first-load JS budget`).
 
 ## References
 
