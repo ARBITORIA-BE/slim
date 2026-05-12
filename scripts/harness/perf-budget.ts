@@ -30,6 +30,10 @@ import type { RunnerResult } from 'lighthouse';
 
 // @playwright/test re-exports chromium — 별도 playwright 패키지 X (devDependency)
 import { chromium } from '@playwright/test';
+// @axe-core/playwright 는 이미 devDependency — 새 패키지 추가 없음 (ADR-0023 §T2).
+// perf 하네스의 axe 가 비-게이트인 이유: 진짜 게이트는 e2e/accessibility.spec.ts.
+// 여기선 perf 측정하는 김에 같이 본다 — advisory only, computeExitCode 에 영향 X.
+import AxeBuilder from '@axe-core/playwright';
 
 // ─── 환경 ─────────────────────────────────────────────────────────────────────
 
@@ -43,14 +47,16 @@ const NEXT_DIR = path.resolve(process.cwd(), '.next');
 
 interface PageMetrics {
   route: string;
-  lcpMs: number | null;       // Largest Contentful Paint (핵심 — 헌법 P2)
-  tbtMs: number | null;       // Total Blocking Time (INP/FID lab proxy — ADR-0023 T4)
-  fcpMs: number | null;       // First Contentful Paint (참고)
-  perfScore: number | null;   // Lighthouse Performance 0~100
-  a11yScore: number | null;   // Accessibility — soft 게이트 (T4)
-  bpScore: number | null;     // Best Practices — 참고 (3.5.2 범위)
-  seoScore: number | null;    // SEO — 참고 (3.5.2 범위)
-  firstLoadKb: number | null; // First Load JS KB (raw, advisory — 3.5.1.b)
+  lcpMs: number | null;         // Largest Contentful Paint (핵심 — 헌법 P2)
+  tbtMs: number | null;         // Total Blocking Time (INP/FID lab proxy — ADR-0023 T4)
+  fcpMs: number | null;         // First Contentful Paint (참고)
+  perfScore: number | null;     // Lighthouse Performance 0~100
+  a11yScore: number | null;     // Accessibility — soft 게이트 (T4)
+  bpScore: number | null;       // Best Practices — 참고 (3.5.2 범위)
+  seoScore: number | null;      // SEO — 참고 (3.5.2 범위)
+  firstLoadKb: number | null;   // First Load JS KB (raw, advisory — 3.5.1.b)
+  // 3.5.1.c: axe advisory (ADR-0023 §T2) — 비-게이트, 표 컬럼 추가만
+  axeViolations: number | null; // null = 실행 실패/스킵
 }
 
 // ─── 3.5.1.b + Amendment 1: 임계값 판정 순수 함수 ───────────────────────────
@@ -442,15 +448,17 @@ async function measurePage(
 
   return {
     route,
-    lcpMs:       lcpMs  !== null ? Math.round(lcpMs)  : null,
-    tbtMs:       tbtMs  !== null ? Math.round(tbtMs)  : null,
-    fcpMs:       fcpMs  !== null ? Math.round(fcpMs)  : null,
-    perfScore:   toScore(lhr.categories['performance']?.score),
-    a11yScore:   toScore(lhr.categories['accessibility']?.score),
-    bpScore:     toScore(lhr.categories['best-practices']?.score),
-    seoScore:    toScore(lhr.categories['seo']?.score),
+    lcpMs:          lcpMs  !== null ? Math.round(lcpMs)  : null,
+    tbtMs:          tbtMs  !== null ? Math.round(tbtMs)  : null,
+    fcpMs:          fcpMs  !== null ? Math.round(fcpMs)  : null,
+    perfScore:      toScore(lhr.categories['performance']?.score),
+    a11yScore:      toScore(lhr.categories['accessibility']?.score),
+    bpScore:        toScore(lhr.categories['best-practices']?.score),
+    seoScore:       toScore(lhr.categories['seo']?.score),
     // first-load JS 는 Lighthouse 결과가 아닌 .next/ 매니페스트에서 계산 (3.5.1.b advisory)
-    firstLoadKb: computeFirstLoadJs(route),
+    firstLoadKb:    computeFirstLoadJs(route),
+    // 3.5.1.c: axeViolations 는 main 루프에서 axe 실행 후 주입 — measurePage 에서는 null 초기화
+    axeViolations:  null,
   };
 }
 
@@ -600,6 +608,23 @@ function fmtA11y(v: number | null, route: string): string {
 }
 
 /**
+ * axe advisory 컬럼 포맷 — 3.5.1.c (ADR-0023 §T2).
+ * violations: 0 → "0 ✅", N > 0 → "N ⚠️", null(실행 실패) → "—".
+ *
+ * 이 함수는 side-effect 없는 순수 함수 → 단위 테스트 가능.
+ * export 해서 perf-budget.test.ts 에서 직접 import.
+ *
+ * "비-게이트인 이유": 진짜 axe 게이트는 e2e/accessibility.spec.ts.
+ * perf 하네스에서는 4페이지 측정하는 김에 같이 보는 advisory 수준.
+ * computeExitCode 에 영향 없음.
+ */
+export function formatAxeCell(violations: number | null): string {
+  if (violations === null) return '—';
+  if (violations === 0) return '0 ✅';
+  return `${violations} ⚠️`;
+}
+
+/**
  * first-load JS 컬럼 포맷 (Amendment 1 — 2-tier 판정 아이콘 포함).
  * 형식: "XXX.X KB (light, ≤120/140) ✅" 또는 "— (build 필요)"
  */
@@ -615,16 +640,18 @@ function fmtJs(v: number | null, route: string): string {
   return `${v.toFixed(1).padStart(6)} KB (${tier}, ≤${budget.advisory}/${budget.hard}) ${icon}`;
 }
 
-// TableRow 타입: measureFailed 플래그 포함
+// TableRow 타입: measureFailed 플래그 + axe advisory details 포함
 interface TableRow {
   label: string;
   metrics: PageMetrics | null;
   skipped?: true;
   measureFailed?: true;
+  // axe violations rule 목록 — violations > 0 일 때 1줄 출력용 (advisory)
+  axeViolationDetails?: Array<{ id: string; impact: string | null; help: string }>;
 }
 
 function printTable(rows: TableRow[]): void {
-  console.log('\n📊 Perf Budget 측정 결과 (Lighthouse mobile 프리셋, ADR-0023 T3/T4 + Amendment 1):\n');
+  console.log('\n📊 Perf Budget 측정 결과 (Lighthouse mobile 프리셋, ADR-0023 T3/T4 + Amendment 1 + §T2 axe advisory):\n');
   console.log(
     '  페이지'.padEnd(38) +
     'LCP'.padEnd(22) +
@@ -633,10 +660,11 @@ function printTable(rows: TableRow[]): void {
     'Perf'.padEnd(10) +
     'A11y'.padEnd(10) +
     'BP'.padEnd(6) +
-    'SEO'.padEnd(10) +
-    'JS gz (tier, ≤adv/hard)',
+    'SEO'.padEnd(22) +
+    'JS gz (tier, ≤adv/hard)'.padEnd(34) +
+    'axe (advisory)',
   );
-  console.log('  ' + '─'.repeat(168));
+  console.log('  ' + '─'.repeat(202));
 
   for (const row of rows) {
     if (row.skipped) {
@@ -652,6 +680,8 @@ function printTable(rows: TableRow[]): void {
     const seoCol = isSeoExempt(m.route)
       ? `${fmtScore(m.seoScore)} (noindex 의도)`
       : fmtScore(m.seoScore);
+    // axe advisory 컬럼 (3.5.1.c) — 비-게이트, exit code 영향 X
+    const axeCol = formatAxeCell(m.axeViolations);
     console.log(
       `  ${row.label.padEnd(36)}` +
       `${fmtLcp(m.lcpMs, m.route).padEnd(22)}` +
@@ -661,8 +691,15 @@ function printTable(rows: TableRow[]): void {
       `${fmtA11y(m.a11yScore, m.route).padEnd(10)}` +
       `${fmtScore(m.bpScore).padEnd(6)}` +
       `${seoCol.padEnd(22)}` +
-      `${fmtJs(m.firstLoadKb, m.route)}`,
+      `${fmtJs(m.firstLoadKb, m.route).padEnd(34)}` +
+      `${axeCol}`,
     );
+    // axe advisory: violations > 0 이면 rule ID 1줄 출력 (3.5.1.c 명세)
+    if (m.axeViolations !== null && m.axeViolations > 0 && row.axeViolationDetails) {
+      for (const v of row.axeViolationDetails) {
+        console.warn(`      [axe] ${v.id} (${v.impact ?? 'unknown'}): ${v.help}`);
+      }
+    }
   }
 
   // .next/ 없는 경우 안내 (모든 행이 null 인 경우)
@@ -777,7 +814,46 @@ async function main(): Promise<void> {
       console.log(`  측정 중: ${page.label} …`);
       try {
         const metrics = await measurePage(page.url, cdpPort);
-        tableRows.push({ label: page.label, metrics });
+
+        // 3.5.1.c: axe advisory — Lighthouse 측정 후 동일 페이지에 axe 실행 (ADR-0023 §T2).
+        // "perf 하네스의 axe 가 비-게이트인 이유": 진짜 axe 게이트는 accessibility.spec.ts.
+        // 여기선 4페이지 perf 측정하는 김에 axe 를 같이 돌려 표 컬럼으로 보여준다 — advisory only.
+        // computeExitCode 에 영향 없음 (axeViolations 는 판정 로직에서 무시됨).
+        let axeViolations: number | null = null;
+        let axeViolationDetails: Array<{ id: string; impact: string | null; help: string }> | undefined;
+        try {
+          // 새 browser context + page 를 열어 axe 실행.
+          // CDP 포트를 이미 가진 browser 에 context 추가 — 새 바이너리 X.
+          const axeCtx = await browser.newContext({ locale: 'ko-KR' });
+          const axePage = await axeCtx.newPage();
+          await axePage.goto(page.url, { waitUntil: 'domcontentloaded' });
+          // h1 노출까지 대기 — hydration 신호 (accessibility.spec.ts 와 동일 패턴).
+          await axePage.locator('h1').waitFor({ state: 'visible', timeout: 10000 });
+          const axeResult = await new AxeBuilder({ page: axePage }).analyze();
+          axeViolations = axeResult.violations.length;
+          if (axeViolations > 0) {
+            axeViolationDetails = axeResult.violations.map((v) => ({
+              id: v.id,
+              // @builder-justification: axe-core ImpactValue 는 string literal union — null 허용
+              impact: (v.impact as string | null | undefined) ?? null,
+              help: v.help,
+            }));
+          }
+          await axeCtx.close();
+        } catch (axeErr) {
+          // axe 실패는 advisory 이므로 측정 실패 취급 X — null 표시만
+          console.warn(
+            `  ⚠️  [axe advisory] ${page.label} axe 실행 실패 — 무시 (비-게이트): ` +
+            `${axeErr instanceof Error ? axeErr.message : String(axeErr)}`,
+          );
+        }
+        metrics.axeViolations = axeViolations;
+
+        // exactOptionalPropertyTypes 대응: axeViolationDetails 가 undefined 이면 키 제외
+        const rowExtra = axeViolationDetails !== undefined
+          ? { axeViolationDetails }
+          : {};
+        tableRows.push({ label: page.label, metrics, ...rowExtra });
       } catch (err) {
         // 개별 페이지 측정 실패 — "❌ MEASURE-FAIL" 접두로 측정 실패임을 명시
         // hard 위반(❌ HARD)과 구분: 측정 자체가 불가능한 경우
@@ -802,9 +878,14 @@ async function main(): Promise<void> {
 
   const { hardCount, softCount, measuredCount, jsHardCount } = printGateLines(tableRows);
 
-  // 7. 요약 라인 (first-load JS 위반 건수 포함)
+  // 7. 요약 라인 (first-load JS 위반 건수 + axe advisory 포함)
+  const totalAxeViolations = tableRows.reduce((sum, r) => {
+    return sum + (r.metrics?.axeViolations ?? 0);
+  }, 0);
   console.log(`\n  하드 게이트: ${measuredCount} 페이지 측정 / ${hardCount} 위반 (JS hard: ${jsHardCount}건)`);
-  console.log(`  소프트 경고: ${softCount}건\n`);
+  console.log(`  소프트 경고: ${softCount}건`);
+  // axe advisory — 비-게이트임을 명시 (exit code 영향 X)
+  console.log(`  axe advisory (비-게이트): 총 ${totalAxeViolations}건 위반 — 진짜 게이트는 pnpm test:e2e (accessibility.spec.ts)\n`);
 
   // 8. exit code 우선순위:
   //    측정 실패(MEASURE-FAIL) = exit 1 → hard 위반과 동일 코드지만 메시지로 구분

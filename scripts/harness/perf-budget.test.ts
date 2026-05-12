@@ -1,5 +1,6 @@
 /**
  * perf-budget.ts 단위 테스트 — PLAN 3.5.1.a + 3.5.1.b + Amendment 1 (per-route 2-tier)
+ *                               + 3.5.1.c (formatAxeCell)
  *
  * 3.5.1.a: 측정 로직은 Playwright + Lighthouse 런타임 의존이라 단위 테스트 범위 밖.
  *          임계값 참고 상수와 메트릭 추출 규칙을 순수 함수로 분리해 검증한다.
@@ -8,6 +9,8 @@
  *          복사본 X — 단일 진실 원천(single source of truth). 상수 변경 시 테스트도 자동 반영.
  *
  * Amendment 1: ceilToTen / routeTier / evaluateJsBudget / JS_BUDGET / isSeoExempt 추가 테스트.
+ *
+ * 3.5.1.c: formatAxeCell 순수 함수 — axe advisory 컬럼 포맷 (0→"0 ✅", N→"N ⚠️", null→"—").
  */
 
 import { describe, expect, it } from 'vitest';
@@ -21,6 +24,7 @@ import {
   computeExitCode,
   evaluateJsBudget,
   evaluateMetric,
+  formatAxeCell,
   isSeoExempt,
   routeTier,
   type MetricEvaluation,
@@ -213,7 +217,7 @@ describe('evaluateMetric — 경계값 정밀 테스트 (ADR-0023 T4)', () => {
 });
 
 describe('computeExitCode — 여러 페이지 결과 → exit code 계산', () => {
-  // helper: 최소 PageMetrics 생성
+  // helper: 최소 PageMetrics 생성 (axeViolations: null — computeExitCode 판정 무관)
   const okMetrics = (route: string) => ({
     route,
     lcpMs: 1200,
@@ -224,6 +228,7 @@ describe('computeExitCode — 여러 페이지 결과 → exit code 계산', () 
     bpScore: 100,
     seoScore: 100,
     firstLoadKb: 80,
+    axeViolations: null as null,
   });
 
   it('모두 통과 → 0', () => {
@@ -496,6 +501,7 @@ describe('isSeoExempt — SEO 게이트 제외 라우트 (ADR-0021 §T9 noindex)
 
 describe('computeExitCode — first-load JS hard-fail 포함 (Amendment 1)', () => {
   // helper: 최소 PageMetrics 생성 (okMetrics 와 동형이나 독립 선언)
+  // axeViolations: null — computeExitCode 는 axe 값을 판정에 사용하지 않음 (비-게이트)
   const baseMetrics = (route: string) => ({
     route,
     lcpMs: 1200,
@@ -506,6 +512,7 @@ describe('computeExitCode — first-load JS hard-fail 포함 (Amendment 1)', () 
     bpScore: 100,
     seoScore: 100,
     firstLoadKb: 80, // light tier 80KB — pass
+    axeViolations: null as null,
   });
 
   it('first-load JS hard-fail 1건 → exit 1', () => {
@@ -569,5 +576,28 @@ describe('computeExitCode — first-load JS hard-fail 포함 (Amendment 1)', () 
       },
     ];
     expect(computeExitCode(rows)).toBe(0);
+  });
+});
+
+// ─── 3.5.1.c: formatAxeCell — axe advisory 컬럼 포맷 ─────────────────────────
+
+describe('formatAxeCell — axe advisory 컬럼 포맷 (3.5.1.c, ADR-0023 §T2)', () => {
+  // "비-게이트인 이유": 진짜 axe 게이트는 e2e/accessibility.spec.ts.
+  // perf 하네스는 advisory 표시만 — exit code 영향 X.
+
+  it('0 violations → "0 ✅"', () => {
+    expect(formatAxeCell(0)).toBe('0 ✅');
+  });
+
+  it('3 violations → "3 ⚠️"', () => {
+    expect(formatAxeCell(3)).toBe('3 ⚠️');
+  });
+
+  it('null (실행 실패/스킵) → "—"', () => {
+    expect(formatAxeCell(null)).toBe('—');
+  });
+
+  it('1 violation → "1 ⚠️"', () => {
+    expect(formatAxeCell(1)).toBe('1 ⚠️');
   });
 });

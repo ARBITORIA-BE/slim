@@ -623,12 +623,11 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     DoD: hard 메트릭 의도적 회귀 시 exit 1, soft 회귀 시 exit 0 + 경고 라인.
     검증: ADR-0023 §T4 + §Amendment 1 표 일치 + 단위 테스트 (임계값 비교 순수 함수).
     ✅ 검증 (2026-05-12): evaluateMetric (LCP/TBT ≤경계, Perf/A11y ≥경계) + computeExitCode 순수 함수 38 테스트 통과. hard 위반 시 exit 1, soft 만 존재 시 exit 0 확인. first-load JS 2-tier 판정 (tier=light|form, advisory/hard 경계 별도) — `ceilToTen` 라운딩 + `routeTier` 매핑 + `evaluateJsBudget` 판정. 실측(`harness:perf`, 커밋 29baf6e): postal 161.5KB, /·/compare·/r/[shortId] ~100KB → light 120/140 KB, form 170/200 KB (계산 근거 ADR-0023 §Amendment 1 §5 참조). ADR-0023 Amendment 1 (2026-05-12) 로 확정 — 측정 환경/근거는 ADR §Amendment 1 명시.
-  - **3.5.1.c** axe 커버리지 보강 — `e2e/accessibility.spec.ts` 페이지 목록에
-    페이즈 3 신규 라우트(`/r/[shortId]`, `/compare/[category]/{postal,household,
-    current-provider,bill,preview}`) 추가, 0 violations 재확인. `perf-budget.ts` 가
-    같은 4 페이지에 axe advisory 도 출력.
-    DoD: `pnpm test:e2e` 에서 axe 페이지 수 6 → ~11, 모두 0 violations.
-    검증: `pnpm test:e2e` 통과 + 신규 라우트가 목록에 있음.
+  - [x] **3.5.1.c** axe 커버리지 보강 (ADR-0023 §T2):
+    - `e2e/accessibility.spec.ts`: 페이즈 3 신규 axe 케이스 — `/r/[shortId]` 실 shortId(`/api/compare` POST 로 획득)에 0 violations 추가. `/compare/mobile/preview` 는 마운트 즉시 sessionStorage→`/api/compare`→`/r/[shortId]` redirect 라 axe 실행 불가 → `test.skip(true, ...)` (접근성은 `/r/[shortId]` 가 커버). axe 검증 페이지 6→8 케이스(7 active + 1 skip). `/compare/[category]/{postal,household,current-provider,bill}` 4단계는 페이즈 2 부터 이미 포함돼 있었음(직접 URL 진입 가능 — `'use client'` + 빈 sessionStorage emptyState 렌더).
+    - `scripts/harness/perf-budget.ts`: 측정 4페이지에 `@axe-core/playwright` violations 를 advisory 컬럼으로 동반 출력(`AxeBuilder`, `formatAxeCell`, `PageMetrics.axeViolations`). **비-게이트** — violations>0 여도 exit code 영향 X(진짜 게이트는 `accessibility.spec.ts`). `computeExitCode` 무변동. 새 dep 0(`@axe-core/playwright` 기존 devDep).
+    - 검증: typecheck 0 / lint 0 / **253 unit tests** (perf-budget 85, `formatAxeCell` 4 케이스 신규) / **`pnpm test:e2e` 25 passed / 5 skipped / 0 failed** (axe 전부 0 violations).
+    - 커밋: `<커밋 후 채움>` (운영자 Step 3 커밋).
   - **3.5.1.d** `/ship` 슬래시 커맨드 + 페이즈 3 종료 체크리스트에 `pnpm harness:perf`
     호출 추가. **CI ci.yml 변경 X** (ADR-0023 §T5 — flaky→noise 회피). PLAN
     3.5.1 본문에 ADR-0023 cross-ref + "harness:e2e→harness:perf 정정" 주석 (= 본 줄들).
@@ -774,7 +773,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
-| 3.5 | 3 | 0 | 0 | M7 말 (3.5.1.b 검증 완료; 3.5.1.a/c/d 남음 — builder) | 2026-05-12 |
+| 3.5 | 3 | 1 | 0 | M7 말 (3.5.1.a/b/c 검증 완료; 3.5.1.d `/ship` 남음 — builder) | 2026-05-12 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
