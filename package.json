@@ -30,6 +30,7 @@
     "harness:bias": "tsx scripts/harness/bias-audit.ts",
     "harness:e2e": "tsx scripts/harness/e2e-smoke.ts",
     "harness:perf": "tsx scripts/harness/perf-budget.ts",
+    "harness:load": "tsx scripts/harness/load-smoke.ts",
     "harness:transparency": "tsx scripts/harness/transparency-audit.ts",
     "harness:all": "pnpm harness:plan && pnpm harness:data && pnpm harness:bias",
     "prepare": "husky"

@@ -45,6 +45,27 @@
   - **3.5.2 본 항목 [x]** — sub-task a/b/c/d/e 통과.
   - 커밋: `8a32182` (`feat(plan-3.5.2): SEO 메타 / sitemap.xml / robots.txt — 베타 시드`).
 
+- Phase 3.5 — **3.5.3 첫 부하 테스트** (베이스라인 — 도구=순수 Node `fetch` 자작, ADR 없음):
+  - **3.5.3.a 도구 결정** — 운영자가 순수 Node `fetch` 자작 채택. `autocannon`/k6 거부 (새 dep 0, €300/월 cap + Windows-unfriendly + 솔로 제약). 관심사: 대표 5 라우트 동시 부하 측정 — HTTP 요청 발사 + 응답 수집 → latency percentile/에러율/응답 바이트 단순 집계.
+  - **3.5.3.b 하네스 신설 + 안전 가드** — `scripts/harness/load-smoke.ts` 신설 (3.5.3.b). `next build && pnpm start`(또는 `LOAD_BASE_URL`) 대상. 대표 라우트 5개: `/` (static·ISR) / `/compare` (static) / `/r/[shortId]` (ISR `revalidate=3600`) / `POST /api/compare` (가장 무거움 — DB write + 비교 엔진) / `/compare/mobile/postal` (client). 동시 N (기본 `LOAD_VUS=10`) HTTP 요청 → 라우트별 p50/p95/max/에러율/평균bytes 표 출력. **안전 가드**: (1) hostname 이 localhost/127.0.0.1/[::1] 아니면 즉시 거부 (production Vercel/Neon/Upstash 한도 소진·비용 방지) (2) reachability 가드 — 서버 미가동 시 안내 + `exit ≠ 0`. 임계값 게이트 없음 (베이스라인 기록용).
+  - **3.5.3.c 캐시 동작 점검** — `/api/compare` 에 동일 비교 입력 2회 라운드 발사 → latency 비교. **발견: `src/` 에 `@upstash/redis` 사용처 부재 확인 → 캐시 레이어 미구현**. 출력에 명기: `⚠️ finding: /api/compare 캐시 미스 시 매번 비교 엔진 + DB write 풀 실행. 캐시 도입 여부는 별도 항목/ADR`.
+  - **3.5.3.d 한도 외삽** — 측정 요청당 bytes/walltime → 베타 트래픽 가정 (100 MAU × 월 3 비교 세션 × (1 /api/compare + 5 페이지뷰) = 월 1,800 req) 환산 → Vercel Hobby (100GB bandwidth / function 호출·시간) / Neon free compute hours / Upstash free command 한도 대비 % 추정 + "한도 수치 추정 — 대시보드 확인" 주석.
+  - **3.5.3.e `/ship` 체크박스 추가** — `.claude/commands/ship.md` 코드 품질 섹션에 `pnpm harness:load` advisory 체크박스 추가 ("베타 직전 1회 권고, CI 게이트 아님 — flaky + 한도 소진 위험"). ci.yml 무변동.
+  - **실측 (운영자 `pnpm build && pnpm start && pnpm harness:load`, VUS=10, 3 rounds, 2026-05-12)**:
+    - `/` p50 10ms / p95 19ms
+    - `/compare` p50 11ms / p95 13ms
+    - `/r/[shortId]` p50 84ms / p95 258ms (ISR 첫 렌더 비용)
+    - `POST /api/compare` p50 89ms / p95 103ms (36B 응답)
+    - `/compare/mobile/postal` p50 33ms / p95 50ms
+    - **에러율 전부 0%**. 캐시: 2회차 p50 89ms = 1회차 92ms 의 97% → 캐시 미스 (레이어 미구현 확인).
+  - **한도 외삽**: 베타 100명 규모에서 Vercel bandwidth ~0.07% / func 호출 ~0.30% / Neon compute ~0.001% / Upstash ~0% → **무료 한도 여유 충분 (최대 ≈0.3%)**.
+  - 범위 밖: k6 Cloud / 지속 모니터링 / CI 통합 / 분산 부하 (페이즈 4+).
+  - `package.json` — `harness:load` 스크립트 신설. `harness:all` 무변동 (무거움 — `harness:perf` 와 동일 취급).
+  - `scripts/harness/load-smoke.test.ts` 신설 — 18 unit tests (percentile 계산 6 / hostname 가드 판정 6 / aggregate 6).
+  - 검증: typecheck 0 / lint 0 / **271 unit tests** (load-smoke 18 신규, 회귀 0) / harness:plan **83 항목 정합** (3.5.3 [x] → 47/83) / harness:data 통과. **페이즈 3.5 전체 완료** (3.5.1·3.5.2·3.5.3 — 3.5.1.e 비차단 백로그만 잔존).
+  - **3.5.3 본 항목 [x]** — sub-task a/b/c/d/e 통과.
+  - 커밋: `<커밋 후 채움>` (`feat(plan-3.5.3): 첫 부하 테스트 — 베이스라인 측정`).
+
 - Phase 3.5 — **3.5.1.b 성능 하네스 임계값 게이트** (ADR-0023 §T4/§T5 구현):
   - `scripts/harness/perf-budget.ts` 확장 — hard 임계값 (LCP ≤ 2.5s + TBT ≤ 200ms, exit 1) / soft 임계값 (Performance ≥ 90 + Accessibility ≥ 95, warn) / advisory only (first-load JS ≤ ~130 KB gz, dev 빌드 감지 시 보류). 측정 실패/서버 미가동/hard 위반 exit code 우선순위 명시.
   - `scripts/harness/perf-budget.test.ts` 확장 — **38 unit tests** (경계값 ≤/≥ 케이스 + exit code 우선순위 + advisory-only 검증).

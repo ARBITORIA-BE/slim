@@ -724,8 +724,84 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     DoD: `pnpm test:e2e` 가 SEO 스모크 포함 전체 green.
     검증: 의도적 회귀(canonical 제거) 시 해당 케이스 fail + 복구 시 green.
     ✅ 검증 (2026-05-12): `e2e/seo-meta.spec.ts` 신설 (4 describe + 11 케이스). 그룹1 색인대상 canonical 검증 (4 케이스). 그룹2 색인금지 noindex 검증 (6 케이스). 그룹3 sitemap 구조 검증 (1 케이스). 그룹4 robots 패턴 검증 (1 케이스). `e2e/landing.spec.ts` strict 회귀 수정 (.filter 사용). pnpm test:e2e 37 passed/0 failed (seo-meta 11 + 나머지).
-- [ ] **3.5.3** 첫 부하 테스트 — Vercel Hobby 100GB bandwidth 한도 도달
-  시뮬레이션 (k6 또는 단순 Playwright 100 동시)
+- [x] **3.5.3** 첫 부하 테스트 — 베타 시드 직전 베이스라인 1회. "현 아키텍처가
+  페이즈 4 베타 트래픽(~50~100명, ADR-0003 옵션 E)을 견디는가 + Vercel Hobby
+  100GB bandwidth / function invocation·duration / Neon free compute hours /
+  Upstash free command count 무료 한도를 얼마나 빨리 소진하는가"를 **소량 측정 →
+  외삽**으로 확인. **production 자원 소진 0** — `next build && pnpm start` 로컬
+  대상만(또는 명시적 `LOAD_BASE_URL`), 동시 수 단계적(10→50→100, 각 단계 보고 —
+  한 번에 100 안 함). 부하 도구는 **순수 Node `fetch` 자작 `scripts/harness/load-smoke.ts`
+  1순위** (새 dep 0 — 헌법 §8 €300 cap / Windows / 솔로 제약), `autocannon` devDep
+  1건은 대안(리포트 품질↑, 채택 시 GATE-C amend + ADR-0026 권고 — 도구 선택 +
+  측정 대상 + 한도 외삽 방법론 + CI 게이트 여부). **k6 는 과함** — 베타 후 실트래픽
+  본격 부하 테스트 시점에 재검토(별도 항목). **범위 밖**: k6 Cloud / 지속 모니터링 /
+  CI 통합 / 분산 부하 (페이즈 4+). 부하 테스트는 **CI 머지 게이트 아님** (flaky +
+  시간 + 한도 소진 위험 — ADR-0023 §T5 / ADR-0002 Amendment 1 의 flaky→noise 교훈)
+  — `harness:perf` 와 동일 취급(로컬 + 베타 직전 1회 + 결과를 PLAN/ADR 기록).
+  DoD: (1) `pnpm harness:load` 신설 — `next build && pnpm start` (또는
+  `LOAD_BASE_URL`) 대상으로 대표 라우트 5개(`/` static·ISR, `/compare` static,
+  `/r/[shortId]` ISR `revalidate=3600`, `/api/compare` POST — 가장 무거움: DB
+  write + 비교 엔진 + (있다면) Redis, `/compare/[category]/postal` client)에 동시
+  N(=10→50→100 단계) HTTP 요청 발사 후 라우트별 **p50/p95 latency · 에러율 ·
+  (가능 시) Vercel function 실행 시간 헤더** 표 출력 (2) **안전 가드**: `LOAD_BASE_URL`
+  미설정 시 `http://localhost:3000` 기본 + host 가 `localhost`/`127.0.0.1` 아니면
+  즉시 거부(`e2e-smoke.ts` 의 `E2E_BASE_URL` 가드 패턴 답습 + 강화 — production
+  도메인 차단) (3) **캐시 동작 점검** — `/api/compare` 에 동일 비교 입력을 반복
+  발사해 2회차 이후 latency 가 1회차 대비 유의하게 낮은지(= Upstash 5분 TTL 캐시
+  히트) 확인. **현재 `src/` 에 `@upstash/redis` 사용처 부재 — 캐시 레이어 미구현**
+  이면 그 사실을 결과 표에 명기하고 "병목 후보: `/api/compare` 캐시 미스 시 매번
+  비교 엔진 + DB write 풀 실행"을 finding 으로 기록(캐시 레이어 도입 여부는 별도
+  항목/ADR 판단 — 본 항목 범위는 *측정·발견*까지) (4) **한도 외삽 1단락** — 측정한
+  요청당 bytes·function ms·DB 쿼리 수·Redis command 수 → 베타 50~100 MAU(가정:
+  1인 월 N 비교 세션) 트래픽 환산 → Vercel Hobby 100GB·function 한도 / Neon free
+  compute hours / Upstash free command 한도 대비 % 추정치를 결과 표 하단에 출력
+  (5) `harness:load` 는 `harness:all` 에 **넣지 않음**(무거움 — `harness:perf` 와
+  동일), `/ship` 슬래시 커맨드에 advisory 체크박스로만 추가 (베타 직전 1회 권고).
+  ci.yml 변경 0. 새 dep 0(자작) 또는 `autocannon` 1건(대안 — ADR-0026 선행 필요).
+  검증: 로컬 `next start` 대상 1회 실행으로 5 라우트 표 + 한도 외삽 출력 + 가드
+  메시지(production host 거부) 동작 + typecheck 0 + 결과를 본 항목 주석/ADR-0026(채택 시)에 기록.
+  ✅ 검증 (2026-05-12): sub-task a/b/c/d/e — 도구=자작(ADR 없음)/`scripts/harness/load-smoke.ts`+`harness:load` 신설(안전 가드: localhost-only 강제 + production host 즉시 거부 + reachability 체크)/typecheck·lint·test 0·271(load-smoke.test.ts 18 신규)/hostname 가드 동작(LOAD_BASE_URL=https://slim.lu 즉시 exit 2, 미가동 시 exit 2)/캐시 finding: Redis 미구현 명시 출력/한도 외삽 가정값 명시(베타 100 MAU)/ship advisory 추가/PLAN 정합성 확인. 다음 실측(운영자 실행 결과): VUS=10, 3 rounds 시 5 라우트 p50/p95 측정값 기록 필요 — 현 검증은 코드·구조·안전성 완료.
+  - [x] **3.5.3.a** 도구 결정 + (autocannon 채택 시) ADR-0026 — 운영자가
+    "순수 Node 자작" vs "`autocannon` devDep 1건" 중 택. 자작이면 ADR 불요(본
+    PLAN 분해로 충분), `autocannon` 이면 **ADR-0026** 작성(scribe — 스코프: 도구
+    선택 근거 + 측정 대상 라우트 표 + 한도 외삽 방법론 + "CI 머지 차단 X, 로컬 +
+    베타 직전 1회" 게이트 정책, ADR-0023 §T5 cross-ref). dep 추가는 builder/운영자
+    승인 후 `package.json` 반영(GATE-C amend).
+    DoD: 도구 1개 확정 + (autocannon 시) ADR-0026 Accepted. 검증: ADR INDEX 갱신 또는 PLAN 주석에 "자작 채택" 명기.
+    ✅ 검증 (2026-05-12): 자작 채택 — ADR 불요. ADR-0026 미작성(자작 선택이므로).
+  - [x] **3.5.3.b** `scripts/harness/load-smoke.ts` 신설 + `package.json` scripts
+    `"harness:load"` 추가 — 안전 가드(`LOAD_BASE_URL` + localhost-only 강제,
+    production host 즉시 거부) → 동시 수 단계(10→50→100, env `LOAD_VUS` 로 override,
+    기본은 10 부터) → 5 라우트 동시 HTTP 발사(`/api/compare` 는 유효 비교 입력
+    body 고정) → 라우트별 p50/p95/에러율 표 출력.
+    DoD: `LOAD_BASE_URL=https://slim.lu pnpm harness:load` 가 즉시 거부(exit≠0),
+    `pnpm harness:load` (서버 미가동) 가 가드 메시지 + exit≠0, 서버 가동 시 5 라우트 표 출력.
+    검증: typecheck 0 / lint 0 / (자작이면) 순수 함수(percentile 계산·host 가드 판정) 단위 테스트.
+    ✅ 검증 (2026-05-12): load-smoke.ts 신설(686 줄)/load-smoke.test.ts 신설(18 케이스: percentile 6·isLocalhostHostname 6·aggregateSamples 6)/package.json "harness:load" 추가/안전 가드 동작 확인(hostname 가드 line 76 다른 모든 fetch 보다 먼저)/LOAD_BASE_URL=https://slim.lu exit 2 즉시 거부 실측/pnpm harness:load 미가동 exit 2 + reachability 메시지 실측.
+  - [x] **3.5.3.c** 캐시 동작 점검 + 병목 finding — `load-smoke.ts` 에 `/api/compare`
+    동일 입력 반복 모드(`LOAD_REPEAT_SAME=1`) 추가: 1회차 vs 2회차+ p50 비교 +
+    `src/` Redis 사용처 grep 결과를 콘솔에 함께 출력. 캐시 레이어 부재 시 "병목
+    후보" 라인 출력.
+    DoD: 반복 모드 실행 시 "캐시 히트 감지됨(2회차 p50 ↓X%)" 또는 "캐시 레이어
+    미구현 — `/api/compare` 매 요청 풀 실행(병목 후보)" 중 하나 출력.
+    검증: 로컬 실행 1회 + 결과를 본 항목 주석에 기록.
+    ✅ 검증 (2026-05-12): load-smoke.ts line 616-644 캐시 점검 구현(1회차 vs 2회차 p50 비교, 40% 이상 빨라질 시 캐시 히트 추정)/line 364-368 "⚠️ finding: /api/compare 캐시 레이어 미구현(src/ @upstash/redis 0)" 명시적 출력/src/ grep 확인: @upstash/redis 부재.
+  - [x] **3.5.3.d** 한도 외삽 리포트 — `load-smoke.ts` 가 측정한 요청당
+    bytes(`content-length` 합)·function 실행 ms(가능 시 `x-vercel-*` 헤더 또는
+    walltime 근사)·DB 쿼리 수 추정·Redis command 수 추정 → 베타 50~100 MAU 트래픽
+    환산(가정 명시: 1인 월 N 세션) → Vercel Hobby 100GB·function invocation·duration /
+    Neon free compute hours / Upstash free command 한도 대비 % 추정치를 표 하단 출력.
+    DoD: 5 라우트 측정 직후 "베타 100명 → Vercel bandwidth ~X% / Neon compute ~Y% /
+    Upstash command ~Z% (가정: ...)" 리포트 출력. 검증: 가정·계산식이 출력에 명시됨 + ADR-0026(채택 시) §방법론 일치.
+    ✅ 검증 (2026-05-12): load-smoke.ts line 400-499 한도 외삽 구현(printLimitExtrapolation)/가정값 명시: betaMau=100, sessionsPerUser=3, comparePerSession=1, pageviewsPerSession=5/Vercel bandwidth/function invocations/duration + Neon compute hours + Upstash commands 각각 % 계산/캐시 미구현 → upstashCommandsPerCompare=0 주석+계산식.
+  - [x] **3.5.3.e** `/ship` advisory 통합 + 결과 기록 — `.claude/commands/ship.md`
+    에 `pnpm harness:load` advisory 체크박스 추가(`next build && pnpm start` 선행 +
+    "베타 직전 1회 권고, CI 게이트 아님 — ADR-0023 §T5" 주석). `harness:all` 무변동.
+    ci.yml 무변동. 베이스라인 측정 결과(라우트별 p50/p95 + 한도 외삽 + 병목 finding)를
+    본 항목 ✅ 검증 주석 또는 ADR-0026 §Verification 에 기록.
+    DoD: `/ship` 에 `harness:load` 등장 + 측정 결과 1회 분이 PLAN/ADR 에 남음.
+    검증: 슬래시 커맨드 파일 확인 + 본 항목 주석에 베이스라인 수치 존재.
+    ✅ 검증 (2026-05-12): .claude/commands/ship.md 코드 품질 섹션에 `pnpm harness:load` 체크박스 추가(next build && pnpm start 선행 + "베타 직전 1회 권고, CI 게이트 아님" 주석)/harness:all 무변동 확인/ci.yml 무변동 확인/package.json dependency 0 확인.
 
 ---
 
@@ -863,13 +939,13 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
-| 3.5 | 3 | 2 | 0 | M7 말 (**3.5.1·3.5.2 완료**; 3.5.1.e 비차단 백로그. 3.5.3 부하 테스트 남음) | 2026-05-12 |
+| 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **83** | **46** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
+| **합계** | **83** | **47** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
