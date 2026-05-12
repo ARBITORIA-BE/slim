@@ -64,7 +64,7 @@
   - `scripts/harness/load-smoke.test.ts` 신설 — 18 unit tests (percentile 계산 6 / hostname 가드 판정 6 / aggregate 6).
   - 검증: typecheck 0 / lint 0 / **271 unit tests** (load-smoke 18 신규, 회귀 0) / harness:plan **83 항목 정합** (3.5.3 [x] → 47/83) / harness:data 통과. **페이즈 3.5 전체 완료** (3.5.1·3.5.2·3.5.3 — 3.5.1.e 비차단 백로그만 잔존).
   - **3.5.3 본 항목 [x]** — sub-task a/b/c/d/e 통과.
-  - 커밋: `<커밋 후 채움>` (`feat(plan-3.5.3): 첫 부하 테스트 — 베이스라인 측정`).
+  - 커밋: `9411c16` (`feat(plan-3.5.3): 첫 부하 테스트 — load-smoke 하네스 (베이스라인)`).
 
 - Phase 3.5 — **3.5.1.b 성능 하네스 임계값 게이트** (ADR-0023 §T4/§T5 구현):
   - `scripts/harness/perf-budget.ts` 확장 — hard 임계값 (LCP ≤ 2.5s + TBT ≤ 200ms, exit 1) / soft 임계값 (Performance ≥ 90 + Accessibility ≥ 95, warn) / advisory only (first-load JS ≤ ~130 KB gz, dev 빌드 감지 시 보류). 측정 실패/서버 미가동/hard 위반 exit code 우선순위 명시.
