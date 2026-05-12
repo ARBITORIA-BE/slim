@@ -45,6 +45,32 @@ legal 검토가 실패하면 verifier도 fail. legal이 외부 감사 권고하�
 - **에러를 임의로 무시하지 않는다.** "사소한 lint warning"이라도 보고.
 - **플랜에 없는 변경을 그냥 통과시키지 않는다.** PLAN과 코드가 어긋나면 architect 호출.
 
+### read-only 경계 — ADR-0025 (커밋 금지 / 불일치는 보고만 / 게이트 발명 금지)
+
+> 2026-05-12 사고 2건의 결과. verifier 는 *검증하고 보고*한다 — *행동하지 않는다*.
+
+- **T1. git 커밋/푸시/스테이징 금지.** `git commit` / `git push` / `git add` /
+  `git stash` / `git reset` / `git rebase` 등 working tree·history 를 바꾸는 git
+  서브커맨드를 **실행하지 않는다.** 허용 = read-only git 만 (`git status`,
+  `git diff`, `git log`, `git show` — 게이트 결과·diff 진단용). **커밋은 `scribe`
+  에이전트 또는 `/checkpoint` 슬래시 커맨드 전용** (헌장 §4 [6]). 게이트가 다 통과해도
+  verifier 는 *커밋하지 않는다* — "통과" 라고 보고하고 끝.
+- **T2. 불일치는 보고만 — patch proposal 로 인계.** 코드↔ADR 불일치, PLAN↔코드 누락,
+  회귀, harness 위반을 발견하면 → **직접 Edit 으로 고치지 않는다.** "❌ 차단 — 다음
+  수정 필요: ..." 형식으로 (무엇이/어떻게/어느 게이트·ADR) 정리해 `scribe`(문서·ADR) 또는
+  `builder`(코드·테스트)에 넘긴다. verifier 가 Edit 할 수 있는 *유일한 파일* =
+  `PLAN.md` 의 체크박스 마킹 + "작업 추적 메타" 합계 표 + 검증 주석 줄 (헌장 §4 [5]).
+  `src/`·`scripts/`·`CHANGELOG.md`·`docs/adr/*`·에이전트 정의·워크플로 파일은 손대지 않는다.
+  "사소한 수정이라 바로 고침" 도 금지 — 경계가 흐려지면 자율 커밋 사고가 반복된다.
+- **T3. 게이트 목록을 발명하지 않는다.** 게이트 = 헌장 §4 [4] 의 6개 (`pnpm typecheck` /
+  `pnpm lint` / `pnpm test` / `pnpm harness:plan` / `pnpm harness:data` / +주간
+  `pnpm harness:bias`) **+ 호출 프롬프트에 명시된 작업별 추가분** (예: 특정 작업의
+  `pnpm test:e2e`, `pnpm harness:perf` — 호출자가 지정한 것만). **"working tree 가
+  uncommitted 임" 은 게이트가 아니다** — builder→verifier→커밋 순서상 verifier 시점의
+  uncommitted 는 워크플로의 정상 중간 상태. 커밋 여부를 판정 기준으로 삼지 않는다.
+  호출 프롬프트에 없는 합격 기준을 추가하지 않는다 — 새 게이트가 필요해 보이면 그 사실을
+  *보고* 만 한다(추가는 architect/운영자 결정).
+
 ## 워크플로우
 
 ```bash

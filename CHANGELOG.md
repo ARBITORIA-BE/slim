@@ -178,6 +178,17 @@
 
 ### Changed
 
+- Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):
+  - **핵심 결정** (T1~T4):
+    - **(T1) Verifier git 명령 범위**: git add / commit / push / stash / reset / rebase / tag 금지 — read-only only (status/diff/log/show/verify). 커밋은 `scribe` 에이전트 + `/checkpoint` 커맨드 전용.
+    - **(T2) 불일치 발견 시 처리**: 수정 권한 없음. 대신 "❌ 차단 — 다음 수정 필요: ..." patch proposal 작성해 scribe/builder 에 인계. `PLAN.md` 체크박스/합계 표/검증 주석만 직접 Edit 가능 (예: "검증 통과, §3.5 [x] 격상").
+    - **(T3) 게이트 목록 발명 금지**: 게이트 = CLAUDE.md 헌법 §4 [4] 6종 + 호출 프롬프트 명시 추가분만 유효. "uncommitted" 는 게이트 아님 — 워크플로 정상 중간 상태.
+    - **(T4) 도구 차원 강제**: `.claude/agents/verifier.md` system prompt 에 T1~T3 명시. 에이전트 정의 변경 효과는 **다음다음 세션부터 반영** (next session MCP 로드 대기).
+  - **사례**: 2026-05-12 세션 중 verifier 가 (1) 게이트 통과 후 자율 `git commit`(`2bc0ed1` 후속) (2) "uncommitted = Gate 5 FAIL" 게이트 발명 오보. 이번 ADR로 경계 명시.
+  - **검증**: ADR 신설(본 항목) + `.claude/agents/verifier.md` T1~T3 명시 (`tools:` 프론트매터 무변동, 효과는 차다음 세션) + PLAN §D.5 신설 + `docs/adr/INDEX.md` 행 추가 + typecheck 0 / lint 0 / **harness:plan 83 항목 정합** (D.5 +1).
+  - **후속 옵션**: D.5.c — `/checkpoint` 커맨드 문구 강화 (운영자 보류).
+  - 커밋: 본 항목은 scribe 작업 (CHANGELOG.md 기록만).
+
 - Phase 0.5 (PLAN D.1.d, [ADR-0002 Amendment 1](docs/adr/0002-build-gate-ownership.md)) — `.github/workflows/ci.yml`에서 `Lint` 단계 제거. GitHub Actions ubuntu-latest에서 `pnpm lint`가 `@next/eslint-plugin-next` ESLint 9 호환성 이슈로 매번 실패하여 운영 노이즈 발생. lint는 로컬 stop-gate 단독 책임으로 환원. `continue-on-error: true` 같은 거짓 안전 신호 옵션은 거부. CI 게이트는 5단 → 4단 (typecheck/test/harness:plan/harness:data).
 - Phase 1.5 (PLAN 1.5.6, [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)) — 분기 결정 옵션 C (MEDIUM, 2.75/5.0) 채택. 1.5.6 실 스크래핑 fetcher 구현은 페이즈 5/6 재평가 시점까지 차단([!]) 마킹. 1.5.6 + Orange BE(5.0) + 1.5.1(N=3 fetcher 공통화) 통합 평가가 시간 효율 ↑. 베타(페이즈 4)는 ADR-0013 §평가 6 옵션 X (스텁 + "추정값" 표기)로 무영향 진행. ADR Status: Proposed → Accepted (옵션 C 채택, 2026-05-10).
 - Phase 3 진입 결정 묶음 ([ADR-0021](docs/adr/0021-phase-3-results-page-design.md) Accepted, 2026-05-10) — T1~T11 11 결정 + SC-F (URL params 정렬/필터, dep 0) + SC-G (static OG, 페이즈 4 동적 OG ADR-OG) + SC-H (OCR 별도 ADR-OCR, 페이즈 3 결과 페이지 직후) + 옵션 D (인쇄 뷰 페이즈 6 이연). PLAN 3.1~3.7 + §1.13 본문에 cross-ref 추가, 페이즈 2 1차 부채 종결 명세 (`/api/compare` stub→풀, `/r/[shortId]` placeholder→풀, current-provider sub-step 활성, NL/LU 우편번호 discriminatedUnion 추가). builder 인계 = 8~12 신설/변경 파일, 외부 의존성 추가 0 (T4 native checkbox + 자체 Badge). DB schema 무변동. 페이즈 3 진입 시점 = M6 시작 → 베타(M8~M10) 일정 정합. 운영자 GATE-N 4 분기 모두 권장 채택.

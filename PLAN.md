@@ -123,6 +123,29 @@
     `pnpm verify:db`가 development endpoint로 통과 (3) `.env.local` grep에
     production host 0건 (4) `pnpm dev`가 development 브랜치만 만짐
   - 검증: [ADR-0022](docs/adr/0022-database-environment-separation.md) §Validation
+- [ ] **D.5** verifier 에이전트 read-only 경계 — **ADR-0025** (커밋 금지 + 게이트
+  발명 금지). 2026-05-12 세션에서 verifier 가 (a) 자율로 `git commit` 실행
+  (`2bc0ed1`, /checkpoint 흐름 아님) (b) "uncommitted=Gate 5 FAIL" 이라는 존재하지
+  않는 게이트를 발명해 오보 — 두 사례로 게이트 신뢰성 훼손. 결정: verifier 는
+  검증/보고만, 커밋은 scribe/`/checkpoint` 전용, 불일치는 patch proposal 로 인계,
+  게이트 목록(헌장 §4 [4] 6종 + 호출 프롬프트 추가분)을 발명하지 않음. **D.5.a
+  완료 (본 작업)**; D.5.b 는 에이전트 정의 변경이라 다음다음 세션부터 효과
+  (메모 `reference_subagent_tool_reload.md`).
+  - [x] **D.5.a** ADR-0025 작성 — T1(커밋 금지, read-only git 만) / T2(불일치는
+    보고만, PLAN 마킹 외 Edit 금지) / T3(게이트 발명 금지) / T4(도구 차원 강제 —
+    `.claude/agents/verifier.md` 갱신). 사례 2건 + 대안 A~D 명시.
+  - [x] **D.5.b** `.claude/agents/verifier.md` system prompt 에 T1~T3 명시 —
+    `tools:` 의 `Bash`/`Edit` 는 유지(게이트 실행·PLAN 마킹 필요)하되 프롬프트로
+    `git commit`/`push`/`add` 금지 + PLAN 마킹 외 파일 Edit 금지 + 게이트 발명 금지를
+    못 박음. **주의**: 이 변경은 현 세션 spawn 되는 verifier 에 미반영 — 효과 검증은
+    다음다음 세션. 본 작업 검증 위해 verifier 호출하지 않음.
+  - [ ] **D.5.c** (선택) `/checkpoint` 슬래시 커맨드에 "커밋은 여기(또는 scribe)
+    에서만 — verifier 는 커밋하지 않음" 명시 강화 검토 — 운영자 판단. ADR-0025 §T1.
+  - DoD (D.5 전체): (1) ADR-0025 Accepted (2) `.claude/agents/verifier.md` 에
+    T1~T3 명시됨 (3) `pnpm harness:plan` 통과 (D.5 항목 추가 후 합계 표 정합).
+  - 검증: [ADR-0025](docs/adr/0025-verifier-read-only-commit-boundary.md) §Verification
+    — 다음 verifier 호출 시 (a) 커밋 안 함 (b) 불일치는 "❌ 차단 — 수정 필요" 로 인계
+    (c) 게이트 발명 안 함.
 
 **Phase 0.5 검증:** `pnpm harness:plan && pnpm typecheck && pnpm lint &&
 pnpm test` + 위 DoD 모두 충족.
@@ -835,7 +858,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 4 | 2 | 0 | D.2·D.4 완료. D.1 코드 완료(잔여=운영자 브랜치 보호), D.3 GATE-K 직전 일괄 | 2026-05-11 |
+| 0.5 | 5 | 2 | 0 | D.2·D.4 완료. D.1 코드 완료(잔여=운영자 브랜치 보호), D.3 GATE-K 직전 일괄, D.5 ADR-0025+verifier.md 완료(a/b — D.5는 c 잔존으로 [ ], 효과 검증 다음다음 세션) | 2026-05-12 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
@@ -846,7 +869,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **82** | **46** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
+| **합계** | **83** | **46** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
