@@ -627,7 +627,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - `e2e/accessibility.spec.ts`: 페이즈 3 신규 axe 케이스 — `/r/[shortId]` 실 shortId(`/api/compare` POST 로 획득)에 0 violations 추가. `/compare/mobile/preview` 는 마운트 즉시 sessionStorage→`/api/compare`→`/r/[shortId]` redirect 라 axe 실행 불가 → `test.skip(true, ...)` (접근성은 `/r/[shortId]` 가 커버). axe 검증 페이지 6→8 케이스(7 active + 1 skip). `/compare/[category]/{postal,household,current-provider,bill}` 4단계는 페이즈 2 부터 이미 포함돼 있었음(직접 URL 진입 가능 — `'use client'` + 빈 sessionStorage emptyState 렌더).
     - `scripts/harness/perf-budget.ts`: 측정 4페이지에 `@axe-core/playwright` violations 를 advisory 컬럼으로 동반 출력(`AxeBuilder`, `formatAxeCell`, `PageMetrics.axeViolations`). **비-게이트** — violations>0 여도 exit code 영향 X(진짜 게이트는 `accessibility.spec.ts`). `computeExitCode` 무변동. 새 dep 0(`@axe-core/playwright` 기존 devDep).
     - 검증: typecheck 0 / lint 0 / **253 unit tests** (perf-budget 85, `formatAxeCell` 4 케이스 신규) / **`pnpm test:e2e` 25 passed / 5 skipped / 0 failed** (axe 전부 0 violations).
-    - 커밋: `<커밋 후 채움>` (운영자 Step 3 커밋).
+    - 커밋: `98db938` (`feat(plan-3.5.1.c): axe 커버리지 보강 — 페이즈 3 라우트 + perf-budget axe advisory`).
   - **3.5.1.d** `/ship` 슬래시 커맨드 + 페이즈 3 종료 체크리스트에 `pnpm harness:perf`
     호출 추가. **CI ci.yml 변경 X** (ADR-0023 §T5 — flaky→noise 회피). PLAN
     3.5.1 본문에 ADR-0023 cross-ref + "harness:e2e→harness:perf 정정" 주석 (= 본 줄들).
