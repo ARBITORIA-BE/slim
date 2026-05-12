@@ -9,6 +9,7 @@ description: 배포 전 종합 점검 — 페이즈 완료 시점에만 실행
 - [ ] `pnpm lint` (0 warnings)
 - [ ] `pnpm test` (모두 통과, 커버리지 ≥ 70%)
 - [ ] `pnpm test:e2e` (메인 플로우 5분 이내)
+- [ ] `pnpm harness:perf` (perf budget — `next build && pnpm start` 선행 필수. LCP ≤ 2.5s / TBT ≤ 200ms = hard / first-load JS per-route 2-tier = hard / Lighthouse Perf·Acc 점수 ≥ 90/95 = advisory. ADR-0023 §T5: CI 머지 차단 X — `/ship` advisory 게이트가 누적 회귀 잡는 자리)
 
 ## 데이터 / 정보 우선 (P1)
 - [ ] `pnpm harness:data` 통과 — 모든 가격에 출처

@@ -26,6 +26,13 @@
   - 검증: typecheck 0 / lint 0 / **253 unit tests** (perf-budget 85, `formatAxeCell` 4 케이스 신규) / **`pnpm test:e2e` 25 passed / 5 skipped / 0 failed** (axe 전부 0 violations).
   - 커밋: `98db938` (`feat(plan-3.5.1.c): axe 커버리지 보강 — 페이즈 3 라우트 + perf-budget axe advisory`).
 
+- Phase 3.5 — **3.5.1.d `/ship` 통합 + 3.5.1 완료** (ADR-0023 §T6):
+  - `.claude/commands/ship.md` 코드 품질 섹션에 `pnpm harness:perf` 체크박스 추가 — `next build && pnpm start` 선행 필수, LCP/TBT/first-load JS hard + Lighthouse Perf/Acc 점수 advisory, ADR-0023 §T5(CI 머지 차단 X — `/ship` advisory) 명시.
+  - `PLAN.md` "Phase 3 검증" 라인 → `harness:perf` 실행 근거로 갱신 (Lighthouse Perf/Acc soft + LCP/TBT hard + first-load JS per-route 2-tier; BP/SEO 는 표시만, SEO 는 `/r/[shortId]` noindex 제외). harness:e2e→harness:perf 정정 + ADR-0023 cross-ref 는 3.5.1 본문·sub-task 들에 이미 반영. ci.yml 무변동(§T5).
+  - **3.5.1 본 항목 [x]** — sub-task a/b/c/d 통과. 3.5.1.e(next-build-출력 4페이지 실측 편입)는 비차단 백로그로 잔존. 합계 44→45.
+  - 검증: typecheck 0 / lint 0 / harness:plan 82 항목 정합 / harness:data 통과. (코드 무변동 — 253 unit tests 유지.)
+  - 커밋: `<커밋 후 채움>`.
+
 - Phase 3.5 — **3.5.1.b 성능 하네스 임계값 게이트** (ADR-0023 §T4/§T5 구현):
   - `scripts/harness/perf-budget.ts` 확장 — hard 임계값 (LCP ≤ 2.5s + TBT ≤ 200ms, exit 1) / soft 임계값 (Performance ≥ 90 + Accessibility ≥ 95, warn) / advisory only (first-load JS ≤ ~130 KB gz, dev 빌드 감지 시 보류). 측정 실패/서버 미가동/hard 위반 exit code 우선순위 명시.
   - `scripts/harness/perf-budget.test.ts` 확장 — **38 unit tests** (경계값 ≤/≥ 케이스 + exit code 우선순위 + advisory-only 검증).

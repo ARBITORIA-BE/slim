@@ -587,7 +587,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     노출 요소 존재 / axe 0 violations / 스크린샷) + 풀-경로 전용 케이스 4개는 별도
     describe + `test.skip(true, '시드에 비교 후보 없음 — confidence=high 시드 도입 시 활성')`.
 
-**Phase 3 검증:** Lighthouse 모바일 ≥ 90 (Perf/Acc/BP/SEO).
+**Phase 3 검증:** `pnpm harness:perf` — Lighthouse 모바일 Perf/Acc ≥ 90/95 (soft) + LCP ≤ 2.5s / TBT ≤ 200ms (hard) + first-load JS per-route 2-tier (light 120/140, form 170/200 — ADR-0023 §T4 + Amendment 1). BP/SEO 는 표시만(SEO 는 `/r/[shortId]` noindex 제외). `harness:perf` 는 CI 머지 게이트 아님(ADR-0023 §T5) — `/ship` + 페이즈 종료 advisory.
 **Phase 3 현실 일정:** M6 ~ M7 (2개월).
 
 ---
@@ -596,8 +596,8 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 
 **목표:** 페이즈 1~3 누적 부채 + 베타 직전 외부 시각 점검.
 
-- [ ] **3.5.1** Lighthouse / axe-core 자동화 — **ADR-0023** (페이즈 3.5 진입 시
-  builder 트리거, GATE-P). 원문 "harness:e2e 에 통합"은 정정됨 — `harness:e2e`
+- [x] **3.5.1** Lighthouse / axe-core 자동화 — **ADR-0023** (+ §Amendment 1) (페이즈 3.5 진입 시
+  builder 트리거, GATE-P). **2026-05-12 완료** — sub-task a/b/c/d 통과 (`pnpm harness:perf` 신설·임계값 게이트·first-load JS per-route 2-tier·axe 페이즈 3 라우트 보강·`/ship` 통합). 3.5.1.e (next-build-출력 4페이지 실측 편입)는 **비차단 백로그**로 잔존. 원문 "harness:e2e 에 통합"은 정정됨 — `harness:e2e`
   (P2 walltime 스모크)와 관심사가 달라 **별도 `pnpm harness:perf` 신설**
   (ADR-0023 §Context #3 + T2). axe 는 이미 `e2e/accessibility.spec.ts` 에서
   6페이지 0 violations 달성됨 — 페이즈 3 신규 라우트 커버리지 보강 + 같은 게이트
@@ -628,10 +628,11 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - `scripts/harness/perf-budget.ts`: 측정 4페이지에 `@axe-core/playwright` violations 를 advisory 컬럼으로 동반 출력(`AxeBuilder`, `formatAxeCell`, `PageMetrics.axeViolations`). **비-게이트** — violations>0 여도 exit code 영향 X(진짜 게이트는 `accessibility.spec.ts`). `computeExitCode` 무변동. 새 dep 0(`@axe-core/playwright` 기존 devDep).
     - 검증: typecheck 0 / lint 0 / **253 unit tests** (perf-budget 85, `formatAxeCell` 4 케이스 신규) / **`pnpm test:e2e` 25 passed / 5 skipped / 0 failed** (axe 전부 0 violations).
     - 커밋: `98db938` (`feat(plan-3.5.1.c): axe 커버리지 보강 — 페이즈 3 라우트 + perf-budget axe advisory`).
-  - **3.5.1.d** `/ship` 슬래시 커맨드 + 페이즈 3 종료 체크리스트에 `pnpm harness:perf`
+  - [x] **3.5.1.d** `/ship` 슬래시 커맨드 + 페이즈 3 종료 체크리스트에 `pnpm harness:perf`
     호출 추가. **CI ci.yml 변경 X** (ADR-0023 §T5 — flaky→noise 회피). PLAN
     3.5.1 본문에 ADR-0023 cross-ref + "harness:e2e→harness:perf 정정" 주석 (= 본 줄들).
     DoD: `/ship` 실행 시 `harness:perf` 가 호출됨. 검증: 슬래시 커맨드 정의 파일 확인.
+    ✅ 검증 (2026-05-12): `.claude/commands/ship.md` 코드 품질 섹션에 `pnpm harness:perf` 체크박스 추가 (`next build && pnpm start` 선행 + ADR-0023 §T5 advisory 주석). PLAN "Phase 3 검증" 라인 → `harness:perf` 실행 근거로 갱신 (Lighthouse Perf/Acc soft + LCP/TBT hard + first-load JS 2-tier). harness:e2e→harness:perf 정정 + ADR-0023 cross-ref 는 3.5.1 본문·sub-task 들에 이미 반영. ci.yml 무변동.
   - [ ] **3.5.1.e** (백로그) household/current-provider/bill/preview 4페이지를 harness:perf 측정 셋에 편입 — 현재 `next build` 출력 기준 추정치만 있음 (ADR-0023 §Amendment 1 §4 주). 게이트 차단 아님.
 - [ ] **3.5.2** SEO 메타 / sitemap.xml / robots.txt — 베타 시드를 위해 필수
 - [ ] **3.5.3** 첫 부하 테스트 — Vercel Hobby 100GB bandwidth 한도 도달
@@ -773,13 +774,13 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
-| 3.5 | 3 | 1 | 0 | M7 말 (3.5.1.a/b/c 검증 완료; 3.5.1.d `/ship` 남음 — builder) | 2026-05-12 |
+| 3.5 | 3 | 1 | 0 | M7 말 (**3.5.1 완료** — sub-task a/b/c/d; 3.5.1.e 비차단 백로그. 3.5.2 SEO·sitemap / 3.5.3 부하 테스트 남음) | 2026-05-12 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **82** | **44** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
+| **합계** | **82** | **45** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
