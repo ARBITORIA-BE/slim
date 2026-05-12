@@ -828,9 +828,10 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   ADR-0001 enum 6값 중 `active_b2b_*` 로 정정 — 회귀 아님, 데이터 정합).
   검증: 어트리뷰션 정확성 — `pnpm harness:price` + 수동 5건 + 순위-격리 단위 테스트 green + ADR-0026 §Verification.
   legal 에이전트 검토 트리거 (아래 4.1.f).
-  - [ ] **4.1.a** ADR-0026 작성 — `affiliate_click` 스키마 (데이터 모델) + 어트리뷰션 흐름 +
+  - [x] **4.1.a** ADR-0026 작성 — `affiliate_click` 스키마 (데이터 모델) + 어트리뷰션 흐름 +
     수수료 공개 정합 + 거부 대안(Stripe Connect vs 자체 어트리뷰션 = 헌법 §5 재확인 / 3rd-party SaaS 거부 /
     쿠키 추적 거부) + CI 게이트(순위-격리 단위 테스트) + legal 트리거. **운영자 승인 후 architect/scribe 작성.**
+    ✅ 완료 (2026-05-13): `docs/adr/0026-affiliate-click-and-attribution.md` 신설 (Accepted, 결정 T1~T8 + §스키마 표 18컬럼 + Alternatives a~e). `docs/adr/INDEX.md` 정식 항목 + `docs/adr/0007-...md` §"Legal review pending" cross-ref. legal 1차(4.1.f) 조건부 통과 — Status 에 잔존 조건 2건(BE 회계 보존 10년 보수 / 4.1.d 인터스티셜 필수항목) 명시. 외부 변호사 감사 7항목은 베타 직전/M16.
   - [ ] **4.1.b** `src/db/schema/affiliate_click.ts` 신설 + Drizzle 마이그레이션 (drizzle/0005_*) —
     ADR-0026 §데이터 모델 컬럼. `src/db/schema/index.ts` export 1줄. `pnpm db:push` 검증.
   - [ ] **4.1.c** 클릭 기록 경로 — `src/app/r/[shortId]` "변경하기" CTA → 동의 확인 인터스티셜
@@ -841,9 +842,10 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - [ ] **4.1.e** 순위-격리 단위 테스트 — `src/engine/compare.test.ts` 또는 신규 테스트:
     `affiliate_status` 가 무엇이든 동일 입력 → 동일 순위. compare() 가 `provider.affiliate_status` /
     `affiliate_click` 를 import 하지 않음을 정적 검증 (의존성 그래프 단언 또는 코드 grep 테스트).
-  - [ ] **4.1.f** legal 에이전트 검토 — GDPR 등록부 (`docs/legal/gdpr-register.md` — 미존재 시 신설)
+  - [x] **4.1.f** legal 에이전트 검토 — GDPR 등록부 (`docs/legal/gdpr-register.md` — 미존재 시 신설)
     에 새 처리 활동(어트리뷰션 클릭 기록) 등재 + 동의 UI 다크패턴 검토 + 보존 기간(정산 목적 vs
     `comparison_result` 90일 익명화 정합) 의견. 외부 변호사 감사는 베타 직전/M16 (ADR-0004 §결정 3).
+    - 조건부 통과 (2026-05-13): 6개 항목 검토 완료 — PII 최소화 통과 / 동의 흐름 조건부(4.1.d 인터스티셜 필수 표시 항목 준수) / BE 보존 기간 조건부(invoices 10년 보수 적용, 외부 감사 확정) / 합법근거 분리 통과 / 수수료 공개 조건부(정렬 기준 UI 명시) / 다크패턴 조건부(4.1.d 구현 검증). builder 인계 가능. `docs/legal/gdpr-register.md` 신설 (PA-01~04). ADR-0026 §Legal Review 섹션 + §Status 갱신. 외부 감사 필수 항목 7건 문서화.
 - [ ] **4.2** 제휴 가능 공급사 우선 — **그러나 절대 검색 결과 순위에 영향 X**
   - 알고리즘: 절약액 순. 제휴 여부는 "변경하기" 버튼 색만 다름 (헌법 §8 #4 광고-비교 분리).
   - **4.1 ADR-0026 §어트리뷰션 흐름에서 함께 다룸** — 4.1 의 순위-격리 단위 테스트(4.1.e)가

@@ -196,6 +196,22 @@
   - 결정 근거: [ADR-0002](docs/adr/0002-build-gate-ownership.md).
   - 후속: D.1.c (GitHub 브랜치 보호 규칙)는 GitHub UI 수동 작업으로 사용자 처리 예정.
 - Phase 1 (PLAN 1.1) — `provider` 테이블 (공급사 마스터): 베네룩스(BE/NL/LU) 공급사 정보 저장. 필드는 `id`, `country` enum, `name`, `legal_name`, `slug`, `vat_id`, `vat_id_verified_at` (VIES 검증), `website`, `affiliate_status` enum (6값: `none`/`pending`/`active_b2b_intra_eu`/`active_b2b_domestic_be`/`paused`/`terminated`), `excluded_reason` (비교 제외 사유, null이면 비교 가능). 결정 근거: [ADR-0001](docs/adr/0001-provider-schema.md).
+- **Phase 4 진입 — ADR-0026: `affiliate_click` 테이블 + 어트리뷰션** (페이즈 4 데이터 모델 — 코드 0, 설계 잠금):
+  - **결정 T1~T8 (Accepted 2026-05-12, legal 1차 검토 2026-05-13 조건부 통과)**:
+    - **(T1) `affiliate_click` 테이블**: FK 4개 (provider/tariff_snapshot RESTRICT 정산 추적, result/result_item SET NULL 영구 링크 비충돌 + GDPR), `click_token` nanoid 익명 식별자 (IP/UA/fingerprint/세션 컬럼 0 — 헌법 §8 #1 스키마 강제), `consent_given_at NOT NULL` (동의 없으면 행 미생성), 정직 기록 `ref_param` (캠페인 ID만, 사용자 정보 0), 정산 필드 (`commission_amount_cents` BIGINT cents / `commission_currency` / `commission_source` + `commission_fetched_at` P1 출처 / `conversion_status` enum 4값 / `payout_batch_id` / `pii_anonymized_at`). **코드 0 — 설계 명세만** (마이그레이션 `drizzle/0005_*` + `src/db/schema/affiliate_click.ts` 는 builder 4.1.b).
+    - **(T2) 어트리뷰션 흐름**: "변경하기" CTA → 동의 인터스티셜(받는 회사명 + "전송 데이터: 없음" + "거부해도 결과 그대로" 명시) → 서버사이드 insert `consent_given_at=now()` → 302 redirect `?ref=<ref_param>`. 거부 시 외부 링크만 (기록 0). **쿠키 추적 0 / 3rd-party SaaS 0** (헌법 §8 #1 + €300 cap).
+    - **(T3) 순위-격리**: `compare()` 는 절약액 DESC 만, `affiliate_status`/`affiliate_click` 미import. PLAN 4.1.e 단위 테스트(동일 입력 → 동일 순위 + 정적 미import 검증)가 `/ship` §윤리 줄의 **단일 출처**.
+    - **(T4) 수수료 공개**: `/legal/affiliate-disclosure` 에 공급사별 단가 테이블, `affiliate_click.commission_amount_cents` 와 정합. 표시 대상 = `affiliate_status IN ('active_b2b_intra_eu', 'active_b2b_domestic_be')` (ADR-0001 후속).
+    - **(T5) `bias-audit.ts` 정정** (회귀 아님 — builder): enum 값 `'active'` → `IN ('active_b2b_intra_eu','active_b2b_domestic_be')`, `comparison_result.results` JSONB → `comparison_result_item` join (ADR-0007 §T6 정합).
+    - **(T6) GDPR 보존**: `affiliate_click` 자체 익명, 90일 후 cron 이 `result_id`/`result_item_id` SET NULL, 정산 필드는 BE 회계 의무(Art. 6(1)(c)) 장기 보존(invoices 7년 가능성, legal 권고 10년 보수 적용). 익명화는 기존 `comparison_request` Inngest job 확장(새 job 0).
+    - **(T7) 합법근거**: 클릭=Art. 6(1)(a) 동의, 정산 보존=6(1)(c) 법적 의무, 제휴사 "전송 없음"(302 = 사용자 자가 이동, Slim 은 제휴사 controller 아님).
+    - **(T8) CI/게이트**: 마이그레이션 ADR-0022 DB 환경 분리 준수, 순위-격리 테스트 `pnpm test`, `bias-audit` 주간, `harness:data` 확장(commission_* 출처).
+  - **Legal 1차 검토 (4.1.f)**: PII 최소화 통과 / 동의 흐름 조건부(4.1.d 인터스티셜 5개 필수 항목) / 보존 조건부(10년 보수 권장) / 합법근거 통과 / 수수료 공개 조건부(BE Code économique Art. VI.99 랭킹 공개 의무 — 사용자 가독 표현 필요, PLAN 4.3) / 다크패턴 조건부(4.1.d 후 재점검). **Builder 인계 가능**.
+  - **GDPR 처리 등록부**: `docs/legal/gdpr-register.md` 신설 — Art. 30 records of processing activities. PA-03(어트리뷰션 클릭 — 본 ADR 주 대상) + PA-01/PA-02/PA-04.
+  - **ADR-0026 발행 (2026-05-12)** + ADR-0007 §Legal review pending 에 cross-ref 추가 + `docs/adr/INDEX.md` 정식 항목화.
+  - **외부 변호사 감사**: 7항목, 베타 직전/M16 (ADR-0004 §결정 3).
+  - **코드 변동**: 0건 (설계 잠금, builder 4.1.b~e 잔여).
+  - 검증: harness:plan **83 항목 정합** / harness:data 통과. (코드 무변동 — unit 271).
 
 ### Changed
 

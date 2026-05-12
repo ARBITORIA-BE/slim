@@ -444,6 +444,12 @@ DELETE SET NULL`.
    "reasonably likely"한지 판정. 미통과 시 result 자체에도 90일 TTL 적용
    (T4 변경).
 
+3. **+ ADR-0026 §어트리뷰션 흐름 / 보존** — `affiliate_click.result_id` FK 의
+   90일 후 SET NULL + 정산 필드(회계 Art. 6(1)(c)) 7년 가능성 분리 보존, 동의
+   인터스티셜(Art. 6(1)(a)) 흐름. legal 1차 검토 = PLAN 4.1.f, 외부 감사 =
+   베타 직전 (본 항목 1·2와 동일 트랙). 상세는 [ADR-0026](0026-affiliate-click-and-attribution.md)
+   §T6/§T7.
+
 ## Alternatives considered (요약)
 
 | Trade-off | 채택 | 거부된 주요 대안 |
