@@ -17,3 +17,6 @@ tsconfig.tsbuildinfo
 test-results/
 playwright-report/
 e2e/screenshots/
+
+# Claude Code 런타임 아티팩트 (ScheduleWakeup 락 등 — 세션마다 생성)
+.claude/scheduled_tasks.lock
