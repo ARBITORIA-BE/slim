@@ -618,10 +618,11 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     DoD: `pnpm harness:perf` 가 4 페이지 측정 표를 출력 (seed shortId 부재 시
     4번 페이지 skip+warn — 게이트 실패 아님). 검증: 로컬 실행 1회 + typecheck 0.
     검증: typecheck/lint/test 0 + harness:perf 가드 메시지 정상 (exit 2, 서버 미가동) + 4 페이지 ADR-0023 T3 일치.
-  - **3.5.1.b** 임계값 게이트 — LCP ≤ 2.5s / TBT ≤ 200ms hard (exit 1), Perf ≥ 90 /
+  - [x] **3.5.1.b** 임계값 게이트 — LCP ≤ 2.5s / TBT ≤ 200ms hard (exit 1), Perf ≥ 90 /
     a11y ≥ 95 soft (warn), first-load JS ≤ ~130KB gz/페이지 advisory (첫 측정 후 확정).
     DoD: hard 메트릭 의도적 회귀 시 exit 1, soft 회귀 시 exit 0 + 경고 라인.
     검증: ADR-0023 §T4 표 일치 + 단위 테스트 (임계값 비교 순수 함수).
+    ✅ 검증 (2026-05-12): evaluateMetric (LCP/TBT ≤경계, Perf/A11y ≥경계) + computeExitCode 순수 함수 38 테스트 통과. hard 위반 시 exit 1, soft 만 존재 시 exit 0 확인. first-load JS advisory (dev 빌드 시 "—", pnpm build 후 재측정 시 gzip KB 산출). `.next/` 가 현재 dev 빌드라 실측 보류 — `pnpm build` 후 `pnpm harness:perf` 재실행 시 advisory 값 산출, 임계값 ~130KB gz advisory 유지.
   - **3.5.1.c** axe 커버리지 보강 — `e2e/accessibility.spec.ts` 페이지 목록에
     페이즈 3 신규 라우트(`/r/[shortId]`, `/compare/[category]/{postal,household,
     current-provider,bill,preview}`) 추가, 0 violations 재확인. `perf-budget.ts` 가
@@ -772,13 +773,13 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
-| 3.5 | 3 | 0 | 0 | M7 말 | 2026-05-09 |
+| 3.5 | 3 | 0 | 0 | M7 말 (3.5.1.b 검증 완료; 3.5.1.a/c/d 남음 — builder) | 2026-05-12 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **82** | **44** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-11 |
+| **합계** | **82** | **44** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
