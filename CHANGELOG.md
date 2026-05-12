@@ -11,6 +11,15 @@
 
 ### Added
 
+- Phase 3.5 — **3.5.1.a 성능 하네스 설정** (ADR-0023 측정 기반 구축):
+  - `scripts/harness/perf-budget.ts` 신설 — Playwright 헤드리스 Chromium 에 Lighthouse CDP 연결, mobile 프리셋으로 대표 4 페이지(`/`, `/compare`, `/compare/[category]/postal`, `/r/[shortId]`) 측정. LCP/TBT + Performance/Accessibility/BestPractices/SEO 점수 표 출력.
+  - `package.json` `harness:perf` 스크립트 신설 + `lighthouse` ^12.8.2 devDependency 추가 (1건).
+  - `scripts/harness/perf-budget.test.ts` 신설 (16 unit tests — 임계값 판정 + 메트릭 추출 순수 함수).
+  - `vitest.config.ts` — `scripts/**` 를 node 환경으로 포함.
+  - 가드: `next build && next start` (또는 `E2E_BASE_URL`) 대상. shortId 시드 부재 시 `/r/[shortId]` skip+warn (게이트 실패 아님). 서버 미가동 시 가드 메시지 + exit 2.
+  - 근거: ADR-0023 (Lighthouse/axe-core 자동화 하네스, Accepted 2026-05-11). 후속 sub-task (3.5.1.b 임계값 게이트/3.5.1.c axe 커버리지/3.5.1.d `/ship` 통합)는 별도.
+  - 검증: typecheck 0 / lint 0 / **168 unit tests** (회귀 0) / `pnpm harness:perf` 가드 메시지 정상 (exit 2, 서버 미가동) / 4 페이지 측정 일치.
+
 - Phase 3 — **ADR-0021 §T9 Amendment 1: 인쇄 친화 뷰(`@media print`) 페이즈 6 → 페이즈 3 환원** (옵션 D 철회):
   - 근거: 페이즈 3 결과 페이지가 이미 풀 구현(`ResultConclusionCard`/`ComparisonTable`/`CalculationDetails`/`ExcludedProvidersSection`/`ComparisonControls`)됐고 Tailwind 4 `print:` variant 내장이라 "큰 작업" 추정이 과대평가 — 지금 하면 1라운드, 페이즈 6까지 미루면 컴포넌트 재학습 비용 + 충돌 위험. 추가로, 인쇄/PDF 사본에 `source_url`/`fetched_at`/어필리에이트 디스클로저가 안 보이면 P1/P3 위반인데 기본 브라우저 인쇄로는 그 품질 보장 불가 → 옵션 D 유지 = P1/P3 리스크를 페이즈 6까지 안고 감.
   - 접근: 단일 `@media print` 블록(`src/app/globals.css`) + 컴포넌트 단위 Tailwind `print:hidden`/`print:block` — 새 라우트·새 dep·DB 변동 0. 별도 `/r/[shortId]/print` 라우트(영구 링크 단일성 위반)·paged.js류 라이브러리(새 dep)·별도 ADR-PRINT(ADR 인플레이션) 모두 거부 — Amendment 가 ADR-PRINT 자리를 대체.

@@ -612,11 +612,12 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   `harness:perf` 를 호출. 새 의존성 = `lighthouse` 1건 (GATE-C amend), 새 SaaS 0건.
   검증: 페이즈 3 결과 페이지 LCP ≤ 2.5s 실측 + axe 0 violations 페이즈 3 라우트
   포함 유지 + ADR-0023 §Verification.
-  - **3.5.1.a** `lighthouse` devDependency 추가 + `scripts/harness/perf-budget.ts`
+  - [x] **3.5.1.a** `lighthouse` devDependency 추가 + `scripts/harness/perf-budget.ts`
     신설 (Playwright Chromium 에 CDP 연결, mobile 프리셋, 4 페이지 측정) +
     `package.json` scripts `"harness:perf"` 추가.
     DoD: `pnpm harness:perf` 가 4 페이지 측정 표를 출력 (seed shortId 부재 시
     4번 페이지 skip+warn — 게이트 실패 아님). 검증: 로컬 실행 1회 + typecheck 0.
+    검증: typecheck/lint/test 0 + harness:perf 가드 메시지 정상 (exit 2, 서버 미가동) + 4 페이지 ADR-0023 T3 일치.
   - **3.5.1.b** 임계값 게이트 — LCP ≤ 2.5s / TBT ≤ 200ms hard (exit 1), Perf ≥ 90 /
     a11y ≥ 95 soft (warn), first-load JS ≤ ~130KB gz/페이지 advisory (첫 측정 후 확정).
     DoD: hard 메트릭 의도적 회귀 시 exit 1, soft 회귀 시 exit 0 + 경고 라인.
