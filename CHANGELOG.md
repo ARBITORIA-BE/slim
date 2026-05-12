@@ -43,7 +43,7 @@
   - 범위 밖: 동적 og:image(페이즈 4 ADR-OG) / JSON-LD / hreflang.
   - 검증: typecheck 0 / lint 0 / **253 unit tests** (회귀 0) / **`pnpm test:e2e` 37 passed / 5 skipped / 0 failed** (seo-meta 11 신규) / harness:plan 82 항목 정합 / harness:data 통과. PLAN 45→46.
   - **3.5.2 본 항목 [x]** — sub-task a/b/c/d/e 통과.
-  - 커밋: `<배포 후 채움>`.
+  - 커밋: `8a32182` (`feat(plan-3.5.2): SEO 메타 / sitemap.xml / robots.txt — 베타 시드`).
 
 - Phase 3.5 — **3.5.1.b 성능 하네스 임계값 게이트** (ADR-0023 §T4/§T5 구현):
   - `scripts/harness/perf-budget.ts` 확장 — hard 임계값 (LCP ≤ 2.5s + TBT ≤ 200ms, exit 1) / soft 임계값 (Performance ≥ 90 + Accessibility ≥ 95, warn) / advisory only (first-load JS ≤ ~130 KB gz, dev 빌드 감지 시 보류). 측정 실패/서버 미가동/hard 위반 exit code 우선순위 명시.

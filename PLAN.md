@@ -657,7 +657,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   검증: `pnpm typecheck`/`lint`/`test` 0 + e2e SEO 스모크 통과 + `next build`
   출력에 `/sitemap.xml`·`/robots.txt` 라우트 등장 + `harness:perf` SEO 점수
   표시(게이트 아님 — ADR-0023 §T5, `/r/[shortId]` noindex 제외).
-  ✅ 검증 (2026-05-12): DoD 1~5 전체 완료 — typecheck 0 / lint 0 / test 253 passed / harness:plan 정합 / sitemap.xml 6 URL (og:image 미설정 의도적) / robots.txt Disallow 7 경로 + Sitemap 라인 / e2e seo-meta.spec.ts 11 케이스 pass (색인대상4 + 색인금지6 canonical noindex 존재검증 + sitemap XML 구조 + robots Disallow패턴). landing.spec.ts strict 회귀 수정. 커밋: `<미리 채움>`.
+  ✅ 검증 (2026-05-12): DoD 1~5 전체 완료 — typecheck 0 / lint 0 / test 253 passed / harness:plan 정합 / sitemap.xml 6 URL (og:image 미설정 의도적) / robots.txt Disallow 7 경로 + Sitemap 라인 / e2e seo-meta.spec.ts 11 케이스 pass (색인대상4 + 색인금지6 canonical noindex 존재검증 + sitemap XML 구조 + robots Disallow패턴). landing.spec.ts strict 회귀 수정. 커밋: `8a32182` (`feat(plan-3.5.2): SEO 메타 / sitemap.xml / robots.txt — 베타 시드`).
   - [x] **3.5.2.a** 루트 메타 기반 — `src/app/layout.tsx` 의 `metadata` 에
     `metadataBase: new URL('https://slim.lu')` + `openGraph` 기본값(`type:'website'`,
     `locale:'ko_KR'`, `siteName:'Slim'`) + `twitter` card 기본값 추가. 도메인은
