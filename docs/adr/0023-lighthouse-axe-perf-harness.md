@@ -4,6 +4,8 @@
 
 **Accepted** (2026-05-11 — GATE-P 운영자 승인 완료: T1~T6, 특히 (a) `lighthouse` devDependency 추가 = GATE-C 의존성 정책 amend, (b) "CI 머지 차단 X" 동의). 본 ADR은 *결정 + builder 인계 명세*. 코드 변경 0건 — 실제 신설(`scripts/harness/perf-budget.ts` 등)은 PLAN 페이즈 3.5 진입 시점(M7 말) builder 라운드. 페이즈 3 자체가 아직 진행 중이므로 본 ADR 승인으로 설계는 잠금, 구현은 트리거 대기.
 
+**Amended: 2026-05-12 — Amendment 1 (first-load JS budget per-route 2-tier) — §T4 의 "첫 측정 후 확정" 예약 슬롯을 충족.**
+
 > 원래 상태: *Proposed (운영자 승인 대기 — GATE-P)*.
 
 > 번호 충돌 해소 메모: PLAN §D.3.e + ADR-0020 §결정 6 + ADR-0022 §작성 메모가 *Neon-side Vercel Integration* ADR 을 "가칭 ADR-0023" 으로 느슨하게 예약("가칭" = tentative)해 뒀다. 그 항목은 페이즈 4 베타 진입(GATE-K) 시점의 *미작성* 트리거이고, 본 ADR(Lighthouse/axe 하네스)은 페이즈 3.5에서 *지금 실제로 작성*된다. **본 ADR이 0023을 소비**하고, Neon Vercel Integration ADR 은 다음 번호 **(가칭 ADR-0024)** 로 재지정한다. PLAN §D.3.e 의 "가칭 ADR-0023" 참조를 "가칭 ADR-0024" 로 갱신한다 (본 follow-up 에서 함께 처리).
@@ -61,6 +63,8 @@ PLAN 매핑: 페이즈 3.5 — **3.5.1** (분해). 페이즈 3 검증 라인("Li
 | Lighthouse Accessibility score (mobile) | ≥ 95 | 페이즈 2 "0 axe violations" 달성 → 95+ 자연 도달 예상. **soft** (warn) — axe 0-violations 가 진짜 게이트 (T2) |
 | First-load JS (페이지당, `next build` 출력 파싱) | ≤ 130 KB gzip / 페이지 | advisory only — 회귀 추적용. 임계값은 builder 가 첫 측정 후 PLAN sub-task 에 확정 |
 
+→ **Amendment 1 (2026-05-12) 로 해소** — per-route 2-tier (light 120/140 KB, form 170/200 KB advisory/hard). 본 ADR §Amendment 1 참조.
+
 - Best Practices / SEO 점수는 페이즈 3.5.2 (SEO 메타/sitemap/robots) 가 책임 — 본 ADR 범위 밖. 단 `harness:perf` 출력에 *표시*는 한다 (게이트 X).
 - a11y 점수, perf 점수가 soft 인 이유: 둘 다 환경 변동 + Lighthouse heuristic 변동에 민감. **hard 게이트는 P2 헌법이 명시한 LCP/TBT 2개로만 한정** — 그래야 실패가 신뢰 가능하고 noise 화 안 됨 (ADR-0002 교훈).
 
@@ -104,6 +108,75 @@ PLAN 3.5.1 본문이 "harness:e2e 에 통합" 이라 했으나 본 ADR §Context
 - **이 결정이 옳았는지**: (1) `pnpm harness:perf` 가 로컬에서 4 페이지 측정 완료 + LCP/TBT 표 출력 + hard 위반 시 exit 1 (2) 페이즈 3 결과 페이지 LCP ≤ 2.5s (mobile lab) 실측 (3) axe 0 violations 가 페이즈 3 신규 라우트 포함해서도 유지 (4) `/ship` 실행 시 `harness:perf` 가 호출됨.
 - **harness**: `pnpm harness:perf` 자체. + 페이즈 3 종료 시 1회 수동 실행 결과를 PLAN 3.5.1 sub-task 에 기록.
 - **회귀 트리거**: (1) 배포 후 실측 LCP > 2.5s → CI advisory(`lhci` 코멘트) 격상 = Amendment 1 (2) `harness:perf` 가 로컬에서 3회 연속 flaky (같은 빌드인데 LCP 판정 흔들림) → 임계값에 마진 추가 또는 N회 측정 median (3) `lighthouse` 가 Chrome 버전과 충돌 → `@lhci/cli` 또는 핀 버전 (4) 페이지 셋 변경 (라우트 추가/삭제) → T3 표 갱신 (5) 페이즈 6 진입 시 field 데이터 도구(Vercel Speed Insights / PostHog web vitals) 도입 → lab/field 매핑 재검토.
+
+## Amendment 1 — First-load JS budget 확정 (per-route 2-tier)
+
+**1. Status**: Accepted (2026-05-12). Amends: ADR-0023 §T4 (예약 슬롯 충족). 운영자(Kim Wonmin) 결정 — Step 2.0~2.1 협의.
+
+**2. Context**:
+- ADR-0023 §T4 가 first-load JS 임계값을 "첫 측정 후 확정" 으로 *예약*해 둠 (advisory only).
+- PLAN 3.5.1.a (`scripts/harness/perf-budget.ts` 신설) + 3.5.1.b (임계값 게이트) 완료 후 `pnpm build && pnpm start` 대상 `pnpm harness:perf` 첫 실측 완료.
+- 단일 임계값(~130KB 추정)은 무의미: postal 161.5KB vs 그 외 ~100KB — 단일로 묶으면 (a) postal 에 맞추면(≥162) light 페이지는 사실상 무게이트 (b) 평균에 맞추면(~130) postal 즉시 위반. 둘 다 신호 가치 0.
+
+**3. Decision — per-route 2-tier (`light` / `form`)**
+- 산식: `light advisory = light 평균 × 1.10` / `light hard = light 평균 × 1.30` / `form advisory = form 최대 × 1.05` / `form hard = form 최대 × 1.20`.
+- 라운딩: 배수 곱한 뒤 **10KB 단위 올림(ceil). 반올림 금지.** 측정 노이즈 ±10KB 흡수 목적. 코드: `ceilToTen()` 헬퍼 (`scripts/harness/perf-budget.ts`).
+
+**4. Measurements** (표):
+| route | first-load JS (KB) | source | tier |
+|---|---|---|---|
+| `/` 랜딩 | 99.9 | `harness:perf` 실측 (gzip) | light |
+| `/compare` | 103.2 | `harness:perf` 실측 | light |
+| `/r/[shortId]` 결과 | 103.2 | `harness:perf` 실측 | light |
+| `/compare/[category]/postal` | 161.5 | `harness:perf` 실측 | form |
+| `/compare/[category]/household` | 146 | `next build` 출력 | form |
+| `/compare/[category]/current-provider` | 151 | `next build` 출력 | form |
+| `/compare/[category]/bill` | 124 | `next build` 출력 | form |
+| `/compare/[category]/preview` | 124 | `next build` 출력 | form |
+
+주: `next build 출력` 행 4개는 `harness:perf` 측정 4페이지 셋(ADR-0023 §T3)에 없어 실측 미수행 — 다음 `harness:perf` 사이클에서 보강 (PLAN 백로그 항목으로 추가, 아래 §3.5.1.x 참조). `next build` 의 "First Load JS" 컬럼은 `harness:perf` 의 gzip 계산과 ~3KB 차이.
+
+**5. Budgets** (표 + 계산 근거):
+| tier | advisory | hard |
+|---|---|---|
+| `light` | 120 KB | 140 KB |
+| `form` | 170 KB | 200 KB |
+계산: light 평균 = (99.9+103.2+103.2)/3 ≈ 102.1 → adv 102.1×1.10=112.3 → ceil10=**120**, hard 102.1×1.30=132.7 → ceil10=**140**. form 최대 = 161.5(postal) → adv 161.5×1.05=169.6 → ceil10=**170**, hard 161.5×1.20=193.8 → ceil10=**200**.
+
+**6. Route → tier mapping**:
+- `form`: `/compare/[category]/postal`, `/compare/[category]/household`, `/compare/[category]/current-provider`, `/compare/[category]/bill`, `/compare/[category]/preview`
+- `light`: 그 외 — `/`, `/compare`, `/r/[shortId]`, ...
+- **정정**: PLAN §7 route→tier 표 초안에 `/r/[shortId]` 가 form 으로 매핑돼 있었으나 잘못. 분류 기준은 의미론(input vs result)이 아니라 **first-load JS 무게**. `/r/[shortId]` 는 RSC + 비교 표 + `<details>` 뿐 — 폼 요소 없음, 실측 103.2KB → **light**. 이 정정을 PLAN §7 에 반영(아래 2번).
+- 코드: `routeTier()` 순수 함수 (`scripts/harness/perf-budget.ts`).
+
+**7. Lighthouse 카테고리 게이트 정책**:
+- Performance: **hard** 게이트 — LCP ≤ 2500ms / TBT ≤ 200ms (ADR-0023 §T4 기존 정책 유지, 변경 없음). Lighthouse Performance *점수*(≥90)는 soft 유지.
+- Accessibility: **hard** — axe 0 violations 기준(3.5.1.c 의 e2e/accessibility.spec.ts 가 진짜 게이트). Lighthouse Accessibility *점수*(≥95)는 soft 유지.
+- Best Practices: **advisory only** (현재 96 관측).
+- SEO: **advisory only** — 단 `/r/[shortId]` 는 ADR-0021 §T9 의 `noindex` 정책의 *의도된* 부수효과(Lighthouse SEO 63 관측)이므로 SEO 카테고리 게이트/경고에서 **제외**(per-route override). 코드: `isSeoExempt()` / `SEO_GATE_EXEMPT_ROUTES` (`scripts/harness/perf-budget.ts`).
+
+**8. Measurement environment**:
+- OS: Windows 11 Home 26200. Node: v24.13.1 (`engines.node` >=22). pnpm: 11.0.8 (`engines.pnpm` >=9).
+- 측정 대상: `next build` (production, turbopack 아님) → `next start` → `pnpm harness:perf` (Lighthouse mobile 프리셋).
+- 측정 시점 커밋 SHA: `29baf6e`.
+- 노이즈 가정: first-load JS ±10KB / Lighthouse 점수 ±10.
+
+**9. Consequences**:
+- 신규 페이지 추가 시 PR 에서 tier 명시 의무(`light`/`form`) — `routeTier()` 매핑 테이블에 등록.
+- 임계값 재조정: 분기 1회 또는 회귀 빈발 시 (Amendment 2+).
+- `next build` 출력 기준 4페이지(household/current-provider/bill/preview)는 다음 `harness:perf` 사이클에서 실측 보강.
+- form-advisory 170KB → 현 측정 최대 postal 161.5KB 가 그 아래 — 즉시 위반 0건. light-advisory 120KB → light 3페이지 모두 ≤104KB, 여유.
+
+**10. Verification**:
+- `scripts/harness/perf-budget.test.ts`: `ceilToTen` 경계(112.3→120, 120→120, 120.1→130, 132.7→140) / `routeTier` (postal→form, `/`→light, `/r/...`→light, 미지→light) / `evaluateJsBudget` tier 경계(light 120 pass / 121 soft / 140 soft / 141 hard; form 170 pass / 171 soft / 200 soft / 201 hard) / SEO override(`/r/[shortId]` SEO 63→exempt) / `computeExitCode` (JS hard-fail→1, soft만→0) / 예산 상수 = 120/140/170/200 회귀 잠금. (builder: 전체 249 passed.)
+- `pnpm build && pnpm harness:perf` 1회 실행으로 advisory 위반 0건 확인 (운영자 Step 2.3).
+
+**11. Links**:
+- 부모: 본 ADR (ADR-0023 — Lighthouse / axe-core 자동화).
+- ADR-0002 (flaky→noise 교훈 — soft/hard 분리 선례).
+- ADR-0021 §T9 (`noindex` 정책 — `/r/[shortId]` SEO 게이트 제외 근거).
+- PLAN §3.5.1.b (보강 대상), §3.5.1.x (next build 페이지 실측 보강 백로그).
+- CHANGELOG `[Unreleased]` — "3.5.1.b' first-load JS budget 확정". (커밋 SHA 는 커밋 후 본 §References 에 후행 추가 — scribe 후속.)
 
 ## References
 

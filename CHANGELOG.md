@@ -11,6 +11,14 @@
 
 ### Added
 
+- Phase 3.5 — **3.5.1.b' first-load JS budget 확정 — per-route 2-tier** (ADR-0023 §Amendment 1):
+  - 실측(`harness:perf`, 커밋 `29baf6e`): postal 161.5KB, /·/compare·/r/[shortId] ~100KB → 단일 임계값 무의미 판단.
+  - `light` 120/140 KB · `form` 170/200 KB (advisory/hard). 산식 = light 평균×1.10/×1.30, form 최대×1.05/×1.20, 10KB ceil(`ceilToTen`).
+  - route→tier: form = postal/household/current-provider/bill/preview, light = 그 외. PLAN 정정: `/r/[shortId]` form→light (무게 기준, 의미론 아님).
+  - SEO 카테고리 게이트에서 `/r/[shortId]` 제외 — ADR-0021 §T9 `noindex` 의 의도된 부수효과(SEO 63).
+  - `scripts/harness/perf-budget.ts`: `ceilToTen`/`routeTier`/`JS_BUDGET`/`isSeoExempt` export, first-load JS 가 advisory-only → tier 기반 hard/soft 게이트.
+  - 검증: typecheck 0 / lint 0 / **249 unit tests** (perf-budget 81, 회귀 0) / `pnpm build && pnpm harness:perf` advisory 위반 0건.
+
 - Phase 3.5 — **3.5.1.b 성능 하네스 임계값 게이트** (ADR-0023 §T4/§T5 구현):
   - `scripts/harness/perf-budget.ts` 확장 — hard 임계값 (LCP ≤ 2.5s + TBT ≤ 200ms, exit 1) / soft 임계값 (Performance ≥ 90 + Accessibility ≥ 95, warn) / advisory only (first-load JS ≤ ~130 KB gz, dev 빌드 감지 시 보류). 측정 실패/서버 미가동/hard 위반 exit code 우선순위 명시.
   - `scripts/harness/perf-budget.test.ts` 확장 — **38 unit tests** (경계값 ≤/≥ 케이스 + exit code 우선순위 + advisory-only 검증).

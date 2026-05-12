@@ -619,10 +619,10 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     4번 페이지 skip+warn — 게이트 실패 아님). 검증: 로컬 실행 1회 + typecheck 0.
     검증: typecheck/lint/test 0 + harness:perf 가드 메시지 정상 (exit 2, 서버 미가동) + 4 페이지 ADR-0023 T3 일치.
   - [x] **3.5.1.b** 임계값 게이트 — LCP ≤ 2.5s / TBT ≤ 200ms hard (exit 1), Perf ≥ 90 /
-    a11y ≥ 95 soft (warn), first-load JS ≤ ~130KB gz/페이지 advisory (첫 측정 후 확정).
+    a11y ≥ 95 soft (warn), **first-load JS per-route 2-tier** (light 120/140 KB · form 170/200 KB advisory/hard).
     DoD: hard 메트릭 의도적 회귀 시 exit 1, soft 회귀 시 exit 0 + 경고 라인.
-    검증: ADR-0023 §T4 표 일치 + 단위 테스트 (임계값 비교 순수 함수).
-    ✅ 검증 (2026-05-12): evaluateMetric (LCP/TBT ≤경계, Perf/A11y ≥경계) + computeExitCode 순수 함수 38 테스트 통과. hard 위반 시 exit 1, soft 만 존재 시 exit 0 확인. first-load JS advisory (dev 빌드 시 "—", pnpm build 후 재측정 시 gzip KB 산출). `.next/` 가 현재 dev 빌드라 실측 보류 — `pnpm build` 후 `pnpm harness:perf` 재실행 시 advisory 값 산출, 임계값 ~130KB gz advisory 유지.
+    검증: ADR-0023 §T4 + §Amendment 1 표 일치 + 단위 테스트 (임계값 비교 순수 함수).
+    ✅ 검증 (2026-05-12): evaluateMetric (LCP/TBT ≤경계, Perf/A11y ≥경계) + computeExitCode 순수 함수 38 테스트 통과. hard 위반 시 exit 1, soft 만 존재 시 exit 0 확인. first-load JS 2-tier 판정 (tier=light|form, advisory/hard 경계 별도) — `ceilToTen` 라운딩 + `routeTier` 매핑 + `evaluateJsBudget` 판정. 실측(`harness:perf`, 커밋 29baf6e): postal 161.5KB, /·/compare·/r/[shortId] ~100KB → light 120/140 KB, form 170/200 KB (계산 근거 ADR-0023 §Amendment 1 §5 참조). ADR-0023 Amendment 1 (2026-05-12) 로 확정 — 측정 환경/근거는 ADR §Amendment 1 명시.
   - **3.5.1.c** axe 커버리지 보강 — `e2e/accessibility.spec.ts` 페이지 목록에
     페이즈 3 신규 라우트(`/r/[shortId]`, `/compare/[category]/{postal,household,
     current-provider,bill,preview}`) 추가, 0 violations 재확인. `perf-budget.ts` 가
@@ -633,6 +633,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     호출 추가. **CI ci.yml 변경 X** (ADR-0023 §T5 — flaky→noise 회피). PLAN
     3.5.1 본문에 ADR-0023 cross-ref + "harness:e2e→harness:perf 정정" 주석 (= 본 줄들).
     DoD: `/ship` 실행 시 `harness:perf` 가 호출됨. 검증: 슬래시 커맨드 정의 파일 확인.
+  - [ ] **3.5.1.e** (백로그) household/current-provider/bill/preview 4페이지를 harness:perf 측정 셋에 편입 — 현재 `next build` 출력 기준 추정치만 있음 (ADR-0023 §Amendment 1 §4 주). 게이트 차단 아님.
 - [ ] **3.5.2** SEO 메타 / sitemap.xml / robots.txt — 베타 시드를 위해 필수
 - [ ] **3.5.3** 첫 부하 테스트 — Vercel Hobby 100GB bandwidth 한도 도달
   시뮬레이션 (k6 또는 단순 Playwright 100 동시)

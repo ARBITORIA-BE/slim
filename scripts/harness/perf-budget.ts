@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 /**
- * Harness: perf-budget (PLAN 3.5.1.a+b — ADR-0023 T1/T2/T3/T4)
+ * Harness: perf-budget (PLAN 3.5.1.a+b — ADR-0023 T1/T2/T3/T4
+ *                       + Amendment 1 (first-load JS budget per-route 2-tier, 2026-05-12))
  *
  * 헌법 P2 (LCP ≤ 2.5s, FID ≤ 100ms) 의 *자동 측정 + 게이트* — 처음으로 숫자를 잡는다.
  *
@@ -13,7 +14,7 @@
  *
  * exit code:
  *   0 — 정상 측정 완료, hard 위반 없음 (soft 경고는 exit 0 — ADR-0002 flaky→noise 교훈)
- *   1 — Lighthouse 던짐/페이지 로드 실패(측정 불가) 또는 hard 게이트(LCP/TBT) 위반
+ *   1 — Lighthouse 던짐/페이지 로드 실패(측정 불가) 또는 hard 게이트(LCP/TBT/first-load JS) 위반
  *   2 — 서버 미가동 (BASE_URL 에 도달 불가)
  *
  * exit 1 의 두 원인을 구분:
@@ -52,12 +53,12 @@ interface PageMetrics {
   firstLoadKb: number | null; // First Load JS KB (raw, advisory — 3.5.1.b)
 }
 
-// ─── 3.5.1.b: 임계값 판정 순수 함수 ─────────────────────────────────────────
+// ─── 3.5.1.b + Amendment 1: 임계값 판정 순수 함수 ───────────────────────────
 // 이 함수들은 side-effect 없는 순수 함수 → 단위 테스트 가능 (perf-budget.test.ts)
 // export 해야 test 파일에서 import 가능
 
 /** 메트릭별 판정 결과 */
-export type Verdict = 'pass' | 'soft-fail' | 'hard-fail' | 'info';
+export type Verdict = 'pass' | 'soft-fail' | 'hard-fail' | 'info' | 'exempt';
 
 export interface MetricEvaluation {
   verdict: Verdict;
@@ -69,13 +70,146 @@ export const HARD_LCP_MS = 2500;  // 헌법 P2 "LCP ≤ 2.5s" — ≤ 이므로 
 export const HARD_TBT_MS = 200;   // 헌법 P2 FID lab proxy — ≤ 경계 포함
 export const SOFT_PERF   = 90;    // PLAN 페이즈 3 검증 — ≥ 경계 포함
 export const SOFT_A11Y   = 95;    // 페이즈 2 목표 — ≥ 경계 포함
-// first-load JS 130KB advisory — 판정 없음, 측정값만 표시 (ADR-0023 T4)
+// ADVISORY_JS_KB: Amendment 1 이전에 사용하던 단일 advisory 상수 — 하위 호환 유지
 export const ADVISORY_JS_KB = 130;
+
+// ─── Amendment 1: per-route 2-tier first-load JS 예산 ────────────────────────
+//
+// 라운딩 규칙: 배수 곱한 뒤 10KB 단위 올림(ceil). 반올림 금지.
+// 이유: 측정 노이즈 ±10KB 를 흡수하기 위해 넉넉한 방향(올림)으로 라운딩한다.
+// "ceil 이고 round 가 아닌 이유" — 실측치 102.1KB 에 1.10 곱하면 112.3KB 인데
+// round 하면 110KB (너무 빡빡), ceil 하면 120KB (노이즈 흡수 여유 있음).
+//
+// light tier 계산 근거 (실측 2026-05-12):
+//   측정값: 99.9KB (/), 103.2KB (/compare), 103.2KB (/r/[shortId])
+//   평균 = (99.9 + 103.2 + 103.2) / 3 ≈ 102.1KB
+//   advisory = ceilToTen(102.1 × 1.10) = ceilToTen(112.3) = 120KB
+//   hard     = ceilToTen(102.1 × 1.30) = ceilToTen(132.7) = 140KB
+//
+// form tier 계산 근거 (실측 2026-05-12):
+//   최대값: 161.5KB (/compare/mobile/postal)
+//   advisory = ceilToTen(161.5 × 1.05) = ceilToTen(169.6) = 170KB
+//   hard     = ceilToTen(161.5 × 1.20) = ceilToTen(193.8) = 200KB
+//
+// "tier 가 기능 의미론(landing/form)이 아니라 무게 기준인 이유":
+//   form 라우트는 postal-code 입력 UI + validation 라이브러리를 추가로 포함하므로
+//   구조적으로 번들이 더 크다. 단일 임계값은 form 라우트가 항상 경고를 발생시키거나,
+//   light 라우트의 과대 번들을 감지 못하는 두 문제를 동시에 낳는다.
+
+/** 10KB 단위 올림 (ceil). 라운딩 규칙: 노이즈 ±10KB 흡수 목적 — 반올림 금지. */
+export function ceilToTen(n: number): number {
+  if (n === 0) return 0;
+  return Math.ceil(n / 10) * 10;
+}
+
+/** first-load JS 예산 tier 타입 */
+export type JsTier = 'light' | 'form';
+
+/** tier별 예산 */
+export interface JsBudget {
+  advisory: number; // KB — 이 값 초과 시 soft 경고
+  hard: number;     // KB — 이 값 초과 시 hard-fail (exit 1)
+}
+
+// 회귀 잠금 상수 — 테스트에서 직접 import 해 Amendment 표와 일치 확인
+export const JS_BUDGET: Record<JsTier, JsBudget> = {
+  // light: adv=120, hard=140 (계산 근거: light 평균 102.1KB × 배수 → ceilToTen)
+  light: { advisory: 120, hard: 140 },
+  // form: adv=170, hard=200 (계산 근거: form 최대 161.5KB × 배수 → ceilToTen)
+  form:  { advisory: 170, hard: 200 },
+};
+
+// form 라우트 패턴 — 명시적 리스트 + 기본값 light.
+// /compare/[category]/* 형태의 5-step 입력 폼 라우트.
+// 동적 세그먼트 [category] 를 와일드카드로 처리한다.
+const FORM_ROUTE_PATTERNS: readonly RegExp[] = [
+  /^\/compare\/[^/]+\/postal$/,
+  /^\/compare\/[^/]+\/household$/,
+  /^\/compare\/[^/]+\/current-provider$/,
+  /^\/compare\/[^/]+\/bill$/,
+  /^\/compare\/[^/]+\/preview$/,
+];
+
+/**
+ * 라우트 키 또는 경로 → JS tier 매핑.
+ * "form" 패턴 리스트에 매칭되면 'form', 그 외 전부 'light' (기본값).
+ *
+ * 왜 기본값이 light 인가: 미래에 추가될 라우트가 form 번들을 포함한다면
+ * FORM_ROUTE_PATTERNS 에 추가하면 되고, 누락 시 light 기준이 더 엄격하므로
+ * 번들 과대를 조기에 감지할 수 있다 (fail-safe 방향).
+ */
+export function routeTier(routeKeyOrPath: string): JsTier {
+  for (const pattern of FORM_ROUTE_PATTERNS) {
+    if (pattern.test(routeKeyOrPath)) return 'form';
+  }
+  return 'light';
+}
+
+// SEO 게이트 제외 라우트 — ADR-0021 §T9 noindex 정책의 의도된 부수효과.
+// /r/[shortId] 는 noindex 이므로 Lighthouse SEO 점수가 낮게 나오는 것이 정상.
+// 이 라우트의 SEO 판정을 게이트/경고 대상에서 제외하여 오탐을 방지한다.
+// 출력 표에서는 점수는 표시하되 "(noindex 의도)" 주석 + 판정 제외.
+export const SEO_GATE_EXEMPT_ROUTES: ReadonlySet<string> = new Set([
+  '/r/[shortId]', // normalizeRouteToManifestKey 결과 형태 (실 shortId 도 매칭 — isSeoExempt 참조)
+]);
+
+/**
+ * 라우트가 SEO 게이트 제외 대상인지 확인한다.
+ * 실제 shortId (/r/abc123) 도 포함하기 위해 정규화 포함.
+ */
+export function isSeoExempt(route: string): boolean {
+  if (SEO_GATE_EXEMPT_ROUTES.has(route)) return true;
+  // 실 shortId 형태 /r/xxx 도 제외 대상
+  if (/^\/r\/[^/]+$/.test(route)) return true;
+  return false;
+}
+
+/**
+ * first-load JS tier 기반 판정 함수.
+ * - null (dev 빌드 / .next 부재): 'info' (스킵)
+ * - value ≤ advisory: 'pass'
+ * - advisory < value ≤ hard: 'soft-fail'
+ * - value > hard: 'hard-fail'
+ */
+export function evaluateJsBudget(
+  route: string,
+  kb: number | null,
+): MetricEvaluation {
+  if (kb === null) {
+    return {
+      verdict: 'info',
+      message: `${route} — first-load JS 판정 스킵 (build 필요)`,
+    };
+  }
+  const tier = routeTier(route);
+  const budget = JS_BUDGET[tier];
+
+  if (kb <= budget.advisory) {
+    return {
+      verdict: 'pass',
+      message: `${route} — first-load JS ${kb}KB ≤ ${budget.advisory}KB advisory (${tier})`,
+    };
+  }
+  if (kb <= budget.hard) {
+    return {
+      verdict: 'soft-fail',
+      message: `${route} — first-load JS ${kb}KB > ${budget.advisory}KB advisory (${tier})`,
+    };
+  }
+  return {
+    verdict: 'hard-fail',
+    message: `${route} — first-load JS ${kb}KB > ${budget.hard}KB hard (${tier})`,
+  };
+}
 
 /**
  * 단일 메트릭 판정 함수.
  * soft 가 exit 0 인 이유: ADR-0002 flaky→noise 교훈 — 환경 변동 민감 메트릭을
  * hard 게이트로 두면 CI noise 화 → 보호 대상이 오히려 무방비.
+ *
+ * 'js' 케이스는 Amendment 1 이후 evaluateJsBudget 으로 위임 (tier 기반 판정).
+ * evaluateMetric('route', 'js', value) 는 하위 호환을 위해 유지되나,
+ * 내부적으로 evaluateJsBudget 을 호출한다.
  */
 export function evaluateMetric(
   route: string,
@@ -125,18 +259,22 @@ export function evaluateMetric(
       };
     }
     case 'js': {
-      // advisory only — 판정 없음. 측정값만 리포트 (임계값 확정은 첫 측정 후 PLAN에서)
-      return { verdict: 'info', message: `${route} — First Load JS ${value}KB (raw, advisory)` };
+      // Amendment 1: tier 기반 판정으로 위임
+      // null 은 위에서 이미 처리했으므로 여기선 number 확정
+      return evaluateJsBudget(route, value);
     }
   }
 }
 
 /**
  * 여러 페이지 결과 배열 → 전체 exit code 계산 함수.
- * - hard-fail 1건이라도 있으면 1 반환
+ * - hard-fail 1건이라도 있으면 1 반환 (LCP·TBT·first-load JS 모두 포함)
  * - skip 된 페이지(metrics=null, skipped=true)는 무시
  * - soft-fail 만 있으면 0 (경고만, exit 0)
  * - 측정 실패(metrics=null, skipped=undefined)가 있으면 1
+ * - first-load JS null (dev 빌드) 는 판정 스킵 — 게이트 실패 아님
+ *
+ * exit code 우선순위: 측정 실패=1 / 서버 미가동=2 / hard 위반(LCP·TBT·JS 중 하나)=1 / 정상=0
  */
 export function computeExitCode(
   rows: Array<{ metrics: PageMetrics | null; skipped?: true; measureFailed?: true }>,
@@ -153,6 +291,9 @@ export function computeExitCode(
     const m = row.metrics;
     if (m.lcpMs !== null && evaluateMetric(m.route, 'lcp', m.lcpMs).verdict === 'hard-fail') return 1;
     if (m.tbtMs !== null && evaluateMetric(m.route, 'tbt', m.tbtMs).verdict === 'hard-fail') return 1;
+    // Amendment 1: first-load JS hard-fail 도 exit 1 대상
+    // null (dev 빌드 / .next 부재) 은 스킵 — 게이트 실패 아님
+    if (m.firstLoadKb !== null && evaluateJsBudget(m.route, m.firstLoadKb).verdict === 'hard-fail') return 1;
   }
   return 0;
 }
@@ -458,10 +599,20 @@ function fmtA11y(v: number | null, route: string): string {
   return ev.verdict === 'soft-fail' ? `${s} ⚠️` : `${s} ✅`;
 }
 
-function fmtJs(v: number | null): string {
-  // advisory 전용 — 판정 없음. gzip KB 표시 (dev 빌드 = "—")
-  if (v === null) return '   —  ';
-  return `${v.toString().padStart(6)}KB`;
+/**
+ * first-load JS 컬럼 포맷 (Amendment 1 — 2-tier 판정 아이콘 포함).
+ * 형식: "XXX.X KB (light, ≤120/140) ✅" 또는 "— (build 필요)"
+ */
+function fmtJs(v: number | null, route: string): string {
+  if (v === null) return '— (build 필요)';
+  const tier = routeTier(route);
+  const budget = JS_BUDGET[tier];
+  const ev = evaluateJsBudget(route, v);
+  const icon =
+    ev.verdict === 'hard-fail' ? '❌' :
+    ev.verdict === 'soft-fail' ? '⚠️' :
+    '✅';
+  return `${v.toFixed(1).padStart(6)} KB (${tier}, ≤${budget.advisory}/${budget.hard}) ${icon}`;
 }
 
 // TableRow 타입: measureFailed 플래그 포함
@@ -473,7 +624,7 @@ interface TableRow {
 }
 
 function printTable(rows: TableRow[]): void {
-  console.log('\n📊 Perf Budget 측정 결과 (Lighthouse mobile 프리셋, ADR-0023 T3/T4):\n');
+  console.log('\n📊 Perf Budget 측정 결과 (Lighthouse mobile 프리셋, ADR-0023 T3/T4 + Amendment 1):\n');
   console.log(
     '  페이지'.padEnd(38) +
     'LCP'.padEnd(22) +
@@ -482,10 +633,10 @@ function printTable(rows: TableRow[]): void {
     'Perf'.padEnd(10) +
     'A11y'.padEnd(10) +
     'BP'.padEnd(6) +
-    'SEO'.padEnd(6) +
-    'JS gz (advisory)',
+    'SEO'.padEnd(10) +
+    'JS gz (tier, ≤adv/hard)',
   );
-  console.log('  ' + '─'.repeat(148));
+  console.log('  ' + '─'.repeat(168));
 
   for (const row of rows) {
     if (row.skipped) {
@@ -497,6 +648,10 @@ function printTable(rows: TableRow[]): void {
       console.log(`  ${row.label.padEnd(36)} ❌ MEASURE-FAIL — 측정 실패`);
       continue;
     }
+    // SEO: /r/[shortId] 는 noindex 의도 → 점수 표시하되 "(noindex 의도)" 주석
+    const seoCol = isSeoExempt(m.route)
+      ? `${fmtScore(m.seoScore)} (noindex 의도)`
+      : fmtScore(m.seoScore);
     console.log(
       `  ${row.label.padEnd(36)}` +
       `${fmtLcp(m.lcpMs, m.route).padEnd(22)}` +
@@ -505,9 +660,15 @@ function printTable(rows: TableRow[]): void {
       `${fmtPerf(m.perfScore, m.route).padEnd(10)}` +
       `${fmtA11y(m.a11yScore, m.route).padEnd(10)}` +
       `${fmtScore(m.bpScore).padEnd(6)}` +
-      `${fmtScore(m.seoScore).padEnd(6)}` +
-      `${fmtJs(m.firstLoadKb)}`,
+      `${seoCol.padEnd(22)}` +
+      `${fmtJs(m.firstLoadKb, m.route)}`,
     );
+  }
+
+  // .next/ 없는 경우 안내 (모든 행이 null 인 경우)
+  const allJsNull = rows.every((r) => r.skipped || r.metrics === null || r.metrics.firstLoadKb === null);
+  if (allJsNull) {
+    console.log('  ⚠️  first-load JS 판정 스킵 — `pnpm build` 후 `pnpm harness:perf` 재실행 시 활성');
   }
 
   console.log('');
@@ -517,12 +678,18 @@ function printTable(rows: TableRow[]): void {
  * 게이트 위반 라인을 출력하고 요약을 반환한다.
  * 출력 형식:
  *   ❌ HARD /route — LCP 3120ms > 2500ms
+ *   ❌ HARD /route — first-load JS 145KB > 140KB hard (light)
  *   ⚠️ SOFT /route — Perf 85 < 90
+ *   ⚠️ SOFT /route — first-load JS 125KB > 120KB advisory (light)
+ *
+ * SEO 는 /r/[shortId] 에 대해 판정 제외 (noindex 의도 — ADR-0021 §T9).
+ * first-load JS null (dev 빌드) 는 판정 스킵.
  */
-function printGateLines(rows: TableRow[]): { hardCount: number; softCount: number; measuredCount: number } {
+function printGateLines(rows: TableRow[]): { hardCount: number; softCount: number; measuredCount: number; jsHardCount: number } {
   let hardCount = 0;
   let softCount = 0;
   let measuredCount = 0;
+  let jsHardCount = 0;
 
   for (const row of rows) {
     if (row.skipped || row.metrics === null) continue;
@@ -533,6 +700,8 @@ function printGateLines(rows: TableRow[]): { hardCount: number; softCount: numbe
     const tbtEv = evaluateMetric(m.route, 'tbt', m.tbtMs);
     const perfEv = evaluateMetric(m.route, 'perf', m.perfScore);
     const a11yEv = evaluateMetric(m.route, 'a11y', m.a11yScore);
+    // Amendment 1: first-load JS tier 기반 판정
+    const jsEv = evaluateJsBudget(m.route, m.firstLoadKb);
 
     if (lcpEv.verdict === 'hard-fail') {
       console.error(`❌ HARD ${lcpEv.message}`);
@@ -550,9 +719,19 @@ function printGateLines(rows: TableRow[]): { hardCount: number; softCount: numbe
       console.warn(`⚠️  SOFT ${a11yEv.message}`);
       softCount++;
     }
+    // first-load JS: hard → exit 1, soft → 경고만
+    if (jsEv.verdict === 'hard-fail') {
+      console.error(`❌ HARD ${jsEv.message}`);
+      hardCount++;
+      jsHardCount++;
+    } else if (jsEv.verdict === 'soft-fail') {
+      console.warn(`⚠️  SOFT ${jsEv.message}`);
+      softCount++;
+    }
+    // jsEv.verdict === 'info' (null 입력) 는 스킵 — 판정 없음
   }
 
-  return { hardCount, softCount, measuredCount };
+  return { hardCount, softCount, measuredCount, jsHardCount };
 }
 
 // ─── main ─────────────────────────────────────────────────────────────────────
@@ -615,15 +794,16 @@ async function main(): Promise<void> {
   // 5. 결과 표 출력
   printTable(tableRows);
 
-  // 6. 게이트 판정 라인 출력 (3.5.1.b — ADR-0023 T4)
-  console.log('  게이트 판정 (ADR-0023 T4):');
-  console.log('  hard(exit 1): LCP > 2500ms, TBT > 200ms | soft(warn, exit 0): Perf < 90, A11y < 95');
-  console.log('  first-load JS: advisory — 판정 없음, 측정값만 표시 (임계값 확정은 첫 측정 후 PLAN)\n');
+  // 6. 게이트 판정 라인 출력 (3.5.1.b — ADR-0023 T4 + Amendment 1)
+  console.log('  게이트 판정 (ADR-0023 T4 + Amendment 1 per-route 2-tier):');
+  console.log('  hard(exit 1): LCP > 2500ms, TBT > 200ms, first-load JS > hard tier');
+  console.log('  soft(warn, exit 0): Perf < 90, A11y < 95, first-load JS > advisory tier');
+  console.log('  first-load JS 게이트: light(≤120/140 KB), form(≤170/200 KB) — .next/ 없으면 스킵\n');
 
-  const { hardCount, softCount, measuredCount } = printGateLines(tableRows);
+  const { hardCount, softCount, measuredCount, jsHardCount } = printGateLines(tableRows);
 
-  // 7. 요약 라인
-  console.log(`\n  하드 게이트: ${measuredCount} 페이지 측정 / ${hardCount} 위반`);
+  // 7. 요약 라인 (first-load JS 위반 건수 포함)
+  console.log(`\n  하드 게이트: ${measuredCount} 페이지 측정 / ${hardCount} 위반 (JS hard: ${jsHardCount}건)`);
   console.log(`  소프트 경고: ${softCount}건\n`);
 
   // 8. exit code 우선순위:

@@ -29,7 +29,7 @@
 | [ADR-0020](0020-arbitoria-inventory-and-alignment-corrections.md) | ARBITORIA 인벤토리 명시 + ADR-0019 진단 사실 정정 | Accepted | 2026-05-10 |
 | [ADR-0021](0021-phase-3-results-page-design.md) | 페이즈 3 결과 페이지 설계 — 3층 구조 / caveats UI / `/api/compare` 풀 구현 | Accepted (T9 옵션 D + T11 SC-H + SC-F + SC-G, 2026-05-10) + Amendment 1 (2026-05-11, T9 인쇄 뷰 페이즈 3 환원) | 2026-05-11 |
 | [ADR-0022](0022-database-environment-separation.md) | DB 환경 분리 정책 — production / preview / development 3 브랜치 + prod URL Console-only SoT | Accepted (2026-05-11 — D.4 완료, verify:db all-green, 커밋 4b7faab) | 2026-05-11 |
-| [ADR-0023](0023-lighthouse-axe-perf-harness.md) | Lighthouse / axe-core 자동화 — `pnpm harness:perf` 신설 + 로컬 advisory 게이트 (CI 머지 차단 X) | Accepted (2026-05-11 — GATE-P 승인: lighthouse devDep + CI 머지 차단 X) | 2026-05-11 |
+| [ADR-0023](0023-lighthouse-axe-perf-harness.md) | Lighthouse / axe-core 자동화 — `pnpm harness:perf` 신설 + 로컬 advisory 게이트 (CI 머지 차단 X) | Accepted (2026-05-11 — GATE-P 승인: lighthouse devDep + CI 머지 차단 X) + **Amendment 1 (2026-05-12)** — first-load JS budget 확정 (per-route 2-tier) | 2026-05-11 |
 
 ---
 
