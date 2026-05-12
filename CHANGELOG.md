@@ -31,7 +31,7 @@
   - `PLAN.md` "Phase 3 검증" 라인 → `harness:perf` 실행 근거로 갱신 (Lighthouse Perf/Acc soft + LCP/TBT hard + first-load JS per-route 2-tier; BP/SEO 는 표시만, SEO 는 `/r/[shortId]` noindex 제외). harness:e2e→harness:perf 정정 + ADR-0023 cross-ref 는 3.5.1 본문·sub-task 들에 이미 반영. ci.yml 무변동(§T5).
   - **3.5.1 본 항목 [x]** — sub-task a/b/c/d 통과. 3.5.1.e(next-build-출력 4페이지 실측 편입)는 비차단 백로그로 잔존. 합계 44→45.
   - 검증: typecheck 0 / lint 0 / harness:plan 82 항목 정합 / harness:data 통과. (코드 무변동 — 253 unit tests 유지.)
-  - 커밋: `<커밋 후 채움>`.
+  - 커밋: `7f6e66f` (`feat(plan-3.5.1.d): /ship 에 harness:perf 통합 + 3.5.1 완료`).
 
 - Phase 3.5 — **3.5.1.b 성능 하네스 임계값 게이트** (ADR-0023 §T4/§T5 구현):
   - `scripts/harness/perf-budget.ts` 확장 — hard 임계값 (LCP ≤ 2.5s + TBT ≤ 200ms, exit 1) / soft 임계값 (Performance ≥ 90 + Accessibility ≥ 95, warn) / advisory only (first-load JS ≤ ~130 KB gz, dev 빌드 감지 시 보류). 측정 실패/서버 미가동/hard 위반 exit code 우선순위 명시.
