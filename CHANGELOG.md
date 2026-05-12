@@ -11,6 +11,13 @@
 
 ### Added
 
+- Phase 3.5 — **3.5.1.b 성능 하네스 임계값 게이트** (ADR-0023 §T4/§T5 구현):
+  - `scripts/harness/perf-budget.ts` 확장 — hard 임계값 (LCP ≤ 2.5s + TBT ≤ 200ms, exit 1) / soft 임계값 (Performance ≥ 90 + Accessibility ≥ 95, warn) / advisory only (first-load JS ≤ ~130 KB gz, dev 빌드 감지 시 보류). 측정 실패/서버 미가동/hard 위반 exit code 우선순위 명시.
+  - `scripts/harness/perf-budget.test.ts` 확장 — **38 unit tests** (경계값 ≤/≥ 케이스 + exit code 우선순위 + advisory-only 검증).
+  - 함수 export (`evaluateMetric` / `computeExitCode` / 임계값 상수) → 테스트 직접 import (단일 진실 원천) / `require.main === module` 가드로 vitest import 시 main() 미실행.
+  - 근거: ADR-0023 (§T4 hard/soft 임계값 / §T5 CI 머지 차단 X — 로컬 + `/ship` + 페이즈 종료 advisory, ADR-0002 Amendment 1 flaky→noise 교훈 정합).
+  - 검증: typecheck 0 / lint 0 / **206 unit tests** (회귀 0, 신규 22 케이스) / harness:plan 82 항목 / harness:data 통과.
+
 - Phase 3.5 — **3.5.1.a 성능 하네스 설정** (ADR-0023 측정 기반 구축):
   - `scripts/harness/perf-budget.ts` 신설 — Playwright 헤드리스 Chromium 에 Lighthouse CDP 연결, mobile 프리셋으로 대표 4 페이지(`/`, `/compare`, `/compare/[category]/postal`, `/r/[shortId]`) 측정. LCP/TBT + Performance/Accessibility/BestPractices/SEO 점수 표 출력.
   - `package.json` `harness:perf` 스크립트 신설 + `lighthouse` ^12.8.2 devDependency 추가 (1건).
