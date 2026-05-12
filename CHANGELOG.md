@@ -212,6 +212,7 @@
   - **외부 변호사 감사**: 7항목, 베타 직전/M16 (ADR-0004 §결정 3).
   - **코드 변동**: 0건 (설계 잠금, builder 4.1.b~e 잔여).
   - 검증: harness:plan **83 항목 정합** / harness:data 통과. (코드 무변동 — unit 271).
+  - 커밋: `fd81144` (`docs(adr-0026): affiliate_click 테이블 + 어트리뷰션 — 설계 잠금 + legal 1차`).
 
 ### Changed
 
