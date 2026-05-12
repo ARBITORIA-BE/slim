@@ -8,10 +8,20 @@
  * 데이터 정직 표시).
  */
 
+import type { Metadata } from 'next';
 import { Phone, Smartphone, Tv, Wifi, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+export const metadata: Metadata = {
+  title: '요금제 비교 시작',
+  description:
+    '모바일, 인터넷, 인터넷+TV, 유선전화 — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.',
+  alternates: {
+    canonical: '/compare',
+  },
+};
 import { TARIFF_CATEGORIES, type TariffCategoryInput } from '@/types/comparison-input';
 
 interface CategoryMeta {

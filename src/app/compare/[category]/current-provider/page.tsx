@@ -14,6 +14,7 @@
  * URL search param 으로. 본 라운드는 BE 단일.
  */
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -28,6 +29,18 @@ import {
 
 import { CompareLayout } from '../_components/CompareLayout';
 import { CurrentProviderForm } from './_components/CurrentProviderForm';
+
+/**
+ * 왜 noindex 인가?
+ *   현재 공급사 선택 단계는 sessionStorage 상태에 의존하며, 단독 URL 접근 시
+ *   의미 있는 콘텐츠가 없다 (공급사 목록만 있고 비교 결과는 없음).
+ *   색인해도 사용자가 비교 플로우 중간 단계에 진입해 혼란을 겪을 수 있다.
+ *   PLAN 3.5.2.c 참조.
+ */
+export const metadata: Metadata = {
+  title: '현재 공급사 선택',
+  robots: { index: false, follow: false },
+};
 
 export const revalidate = 3600; // 1시간 ISR — provider 마스터 변경 빈도 낮음
 

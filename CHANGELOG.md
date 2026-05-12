@@ -33,6 +33,18 @@
   - 검증: typecheck 0 / lint 0 / harness:plan 82 항목 정합 / harness:data 통과. (코드 무변동 — 253 unit tests 유지.)
   - 커밋: `7f6e66f` (`feat(plan-3.5.1.d): /ship 에 harness:perf 통합 + 3.5.1 완료`).
 
+- Phase 3.5 — **3.5.2 SEO 메타 / sitemap.xml / robots.txt** (베타 시드 — ADR 없음, architect 판정):
+  - 색인 대상 라우트(`/`, `/compare`, `/compare/[category]` 알려진 카테고리, `/data-sources`, `/legal/affiliate-disclosure`) 메타 정의 + 정적 sitemap.xml 생성 + robots.txt 규칙 정의. 색인 금지 라우트(`/r/[shortId]`, `/compare/[category]/{postal,household,current-provider,bill,preview}` 입력 폼) noindex 명시.
+  - **3.5.2.a** 루트 메타 기반 — `src/lib/site.ts` 신설 (`SITE_ORIGIN='https://slim.lu'` 단일 상수). `src/app/layout.tsx` — `metadataBase: new URL(SITE_ORIGIN)` + `openGraph`(type:website / locale:ko_KR / siteName:Slim) + `twitter`(card:summary_large_image) + title template (`%s · Slim`). og:image 미설정(ADR-0021 §T8 페이즈 4 ADR-OG 이연).
+  - **3.5.2.b** 색인 대상 라우트별 메타 — `/`, `/compare`, `/data-sources`, `/legal/affiliate-disclosure` 각각 고유 title/description/canonical. `/compare/[category]` generateMetadata 동적 구현 (알려진 카테고리만 canonical, 미지원 → robots noindex).
+  - **3.5.2.c** 색인 금지 라우트 명시 — `/compare/[category]/{postal,household,bill,preview}` 각각 layout.tsx 신설 (robots noindex). `/compare/[category]/current-provider` page.tsx 직접 메타 추가. `/r/[shortId]` 기존 generateMetadata 무변동(ADR-0021 §T8 유지).
+  - **3.5.2.d** sitemap.ts / robots.ts — `src/app/sitemap.ts` 신설 (6 URL: / + /compare + /compare/{mobile,internet_fixed} + /data-sources + /legal/affiliate-disclosure, /r/ 부재). `src/app/robots.ts` 신설 (Disallow: /r/ + /compare/*/postal·household·current-provider·bill·preview + /api/; Sitemap 라인).
+  - **3.5.2.e** e2e SEO 스모크 — `e2e/seo-meta.spec.ts` 신설 (11 케이스): 색인 대상 4개 canonical 존재·noindex 부재 + 색인 금지 6개 noindex 존재 / /sitemap.xml 200+XML+/r/ 부재 / /robots.txt 200+Sitemap:+Disallow:/r/. `e2e/landing.spec.ts` strict 회귀 수정.
+  - 범위 밖: 동적 og:image(페이즈 4 ADR-OG) / JSON-LD / hreflang.
+  - 검증: typecheck 0 / lint 0 / **253 unit tests** (회귀 0) / **`pnpm test:e2e` 37 passed / 5 skipped / 0 failed** (seo-meta 11 신규) / harness:plan 82 항목 정합 / harness:data 통과. PLAN 45→46.
+  - **3.5.2 본 항목 [x]** — sub-task a/b/c/d/e 통과.
+  - 커밋: `<배포 후 채움>`.
+
 - Phase 3.5 — **3.5.1.b 성능 하네스 임계값 게이트** (ADR-0023 §T4/§T5 구현):
   - `scripts/harness/perf-budget.ts` 확장 — hard 임계값 (LCP ≤ 2.5s + TBT ≤ 200ms, exit 1) / soft 임계값 (Performance ≥ 90 + Accessibility ≥ 95, warn) / advisory only (first-load JS ≤ ~130 KB gz, dev 빌드 감지 시 보류). 측정 실패/서버 미가동/hard 위반 exit code 우선순위 명시.
   - `scripts/harness/perf-budget.test.ts` 확장 — **38 unit tests** (경계값 ≤/≥ 케이스 + exit code 우선순위 + advisory-only 검증).

@@ -634,7 +634,73 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     DoD: `/ship` 실행 시 `harness:perf` 가 호출됨. 검증: 슬래시 커맨드 정의 파일 확인.
     ✅ 검증 (2026-05-12): `.claude/commands/ship.md` 코드 품질 섹션에 `pnpm harness:perf` 체크박스 추가 (`next build && pnpm start` 선행 + ADR-0023 §T5 advisory 주석). PLAN "Phase 3 검증" 라인 → `harness:perf` 실행 근거로 갱신 (Lighthouse Perf/Acc soft + LCP/TBT hard + first-load JS 2-tier). harness:e2e→harness:perf 정정 + ADR-0023 cross-ref 는 3.5.1 본문·sub-task 들에 이미 반영. ci.yml 무변동.
   - [ ] **3.5.1.e** (백로그) household/current-provider/bill/preview 4페이지를 harness:perf 측정 셋에 편입 — 현재 `next build` 출력 기준 추정치만 있음 (ADR-0023 §Amendment 1 §4 주). 게이트 차단 아님.
-- [ ] **3.5.2** SEO 메타 / sitemap.xml / robots.txt — 베타 시드를 위해 필수
+- [x] **3.5.2** SEO 메타 / sitemap.xml / robots.txt — 베타 시드를 위해 필수.
+  검색엔진이 색인 가능한 라우트를 올바른 메타·sitemap·robots 로 노출하고, 색인
+  금지 라우트(`/r/[shortId]` 개인 비교 결과 — ADR-0021 §T8 noindex 유지 ·
+  `/compare/[category]/{postal,household,current-provider,bill,preview}` 입력 폼
+  단계 — 색인 가치 낮음 + sessionStorage 상태 의존)를 명확히 제외하는 **최소선**.
+  **범위 밖**: 동적 `og:image` (ADR-0021 §T8 SC-G — 페이즈 4 ADR-OG) · JSON-LD
+  구조화 데이터 (베타 시드 비필수, 페이즈 4+ 후보) · hreflang/locale 대안 라우팅
+  (i18n 은 SC-E 로 페이즈 4 베타 직전 일괄 — 현재 ko 단일이라 hreflang 무의미) ·
+  PostHog/Sentry 외 새 추적기 (헌법 §8 #1). **새 dep 0 / 새 SaaS 0** — Next.js
+  App Router 네이티브 (`app/sitemap.ts` · `app/robots.ts` · `metadata`/`generateMetadata`).
+  DoD: (1) 루트 `layout.tsx` 에 `metadataBase: new URL('https://slim.lu')` +
+  `openGraph` 기본값 (`og:type=website` · `og:locale=ko_KR` · `og:site_name=Slim`)
+  설정 (2) 색인 대상 라우트(`/`, `/compare`, `/compare/[category]`, `/data-sources`,
+  `/legal/affiliate-disclosure`)가 고유 `title`/`description` + canonical 보유,
+  색인 금지 라우트는 `robots: { index: false }` 명시 (`/r/[shortId]` 는 기존
+  ADR-0021 §T8 설정 유지 — 변경 0) (3) `app/sitemap.ts` 가 색인 대상 라우트만
+  나열 (`/r/[shortId]` · `/compare/[category]/*` 입력 단계 제외) (4) `app/robots.ts`
+  가 `sitemap` 필드 + `Disallow: /r/` · `Disallow: /compare/*/postal` 등 입력
+  단계 패턴 명시, `Allow: /` (5) e2e 스모크: 색인 대상 라우트 head 에 canonical
+  존재 + 색인 금지 라우트 `<meta name="robots" content="noindex">` 존재 검증.
+  검증: `pnpm typecheck`/`lint`/`test` 0 + e2e SEO 스모크 통과 + `next build`
+  출력에 `/sitemap.xml`·`/robots.txt` 라우트 등장 + `harness:perf` SEO 점수
+  표시(게이트 아님 — ADR-0023 §T5, `/r/[shortId]` noindex 제외).
+  ✅ 검증 (2026-05-12): DoD 1~5 전체 완료 — typecheck 0 / lint 0 / test 253 passed / harness:plan 정합 / sitemap.xml 6 URL (og:image 미설정 의도적) / robots.txt Disallow 7 경로 + Sitemap 라인 / e2e seo-meta.spec.ts 11 케이스 pass (색인대상4 + 색인금지6 canonical noindex 존재검증 + sitemap XML 구조 + robots Disallow패턴). landing.spec.ts strict 회귀 수정. 커밋: `<미리 채움>`.
+  - [x] **3.5.2.a** 루트 메타 기반 — `src/app/layout.tsx` 의 `metadata` 에
+    `metadataBase: new URL('https://slim.lu')` + `openGraph` 기본값(`type:'website'`,
+    `locale:'ko_KR'`, `siteName:'Slim'`) + `twitter` card 기본값 추가. 도메인은
+    ADR-0020 §결정 7 / ADR-0021 §T8 와 동일 상수 (`/r/[shortId]` 의 `SITE_ORIGIN`
+    하드코딩과 정합 — `src/lib/site.ts` 단일 상수 추출 검토).
+    DoD: `next build` 시 색인 대상 페이지 head 에 절대 URL 기반 `og:url`/canonical 생성.
+    검증: typecheck 0 + e2e 에서 `/` head 의 `og:site_name` 존재 확인.
+    ✅ 검증 (2026-05-12): `src/lib/site.ts` 신설 + `SITE_ORIGIN='https://slim.lu'` 단일화. `src/app/layout.tsx` metadataBase 설정 + openGraph/twitter 메타 추가. og:image 미설정 (ADR-0021 §T8). `/r/[shortId]/page.tsx` SITE_ORIGIN import (하드코딩 제거).
+  - [x] **3.5.2.b** 색인 대상 라우트별 메타 — `/`, `/compare`, `/compare/[category]`,
+    `/data-sources`, `/legal/affiliate-disclosure` 의 `page.tsx` 에 `metadata`
+    (또는 동적 `generateMetadata` — `/compare/[category]` 는 카테고리명 포함)
+    추가: 고유 `title`/`description`/`alternates.canonical`. `/compare/[category]`
+    는 알려진 카테고리(통신)만 canonical, 미지원 카테고리는 `robots:{index:false}`.
+    DoD: 5개 라우트 각각 고유 title (탭 제목 중복 0) + canonical 절대 URL.
+    검증: typecheck 0 + e2e 에서 각 라우트 canonical href 가 `https://slim.lu/...` 매칭.
+    ✅ 검증 (2026-05-12): `/` / `/compare` / `/data-sources` / `/legal/affiliate-disclosure` 각각 metadata.title + canonical 설정. `/compare/[category]` generateMetadata 동적 구현 (알려진 카테고리만 canonical, 미지원 → robots noindex). e2e 색인 대상 테스트 4 케이스 통과.
+  - [x] **3.5.2.c** 색인 금지 라우트 명시 — `/compare/[category]/{postal,household,
+    current-provider,bill,preview}` 5개 `page.tsx` 에 `metadata = { robots:{ index:false,
+    follow:false } }` (입력 폼 단계 — 상태 의존 + 색인 가치 낮음). `/r/[shortId]`
+    는 ADR-0021 §T8 `generateMetadata` 가 이미 `robots:{index:false}` — 변경 0
+    (PLAN 일관성 위해 본 항목 주석에 명시만).
+    DoD: 6개(입력 5 + 결과 1) 라우트 head 에 `noindex` 존재, 그 외 라우트엔 부재.
+    검증: typecheck 0 + e2e 에서 색인 금지 라우트 `<meta name="robots">` 존재 + 색인 대상 부재.
+    ✅ 검증 (2026-05-12): `/compare/[category]/{postal,household,bill,preview}` 각각 layout.tsx 신설 (robots noindex). `/compare/[category]/current-provider` page.tsx 직접 메타 추가 (robots noindex). `/r/[shortId]` 기존 generateMetadata 무변동. e2e 색인 금지 테스트 6 케이스 통과.
+  - [x] **3.5.2.d** `sitemap.ts` / `robots.ts` — `src/app/sitemap.ts` 신설:
+    색인 대상 정적 라우트만 (`/`, `/compare`, `/compare/telecom`(알려진 카테고리),
+    `/data-sources`, `/legal/affiliate-disclosure`) `MetadataRoute.Sitemap` 반환
+    (`lastModified` = 빌드 시각 또는 정적, `changeFrequency`/`priority` 보수적).
+    `src/app/robots.ts` 신설: `MetadataRoute.Robots` — `rules: { userAgent:'*',
+    allow:'/', disallow:['/r/', '/compare/*/postal', '/compare/*/household',
+    '/compare/*/current-provider', '/compare/*/bill', '/compare/*/preview', '/api/'] }`
+    + `sitemap: 'https://slim.lu/sitemap.xml'`.
+    DoD: `next build` 출력에 `○ /sitemap.xml`·`○ /robots.txt` 등장 + 내용 수동 확인.
+    검증: typecheck 0 + `next build` 후 `/sitemap.xml` 에 `/r/` 부재 · `/robots.txt` 에 `Sitemap:` 라인 존재.
+    ✅ 검증 (2026-05-12): `src/app/sitemap.ts` 신설 (6 URL: / + /compare + /compare/{mobile,internet_fixed} + /data-sources + /legal/affiliate-disclosure). `src/app/robots.ts` 신설 (Disallow: /r/ + /compare/*/postal 등 5단계 + /api/ + Sitemap 라인). pnpm build ○ 출력 확인. curl 테스트: sitemap.xml 200 + /r/ 부재 + robots.txt 200 + Sitemap 라인 존재.
+  - [x] **3.5.2.e** e2e SEO 스모크 — `e2e/seo-meta.spec.ts` 신설: (1) 색인 대상
+    라우트 5개 — head 에 `<link rel="canonical">` 존재 + `noindex` 부재 (2) 색인
+    금지 라우트 6개 — `<meta name="robots" content*="noindex">` 존재 (3) `/sitemap.xml`
+    GET 200 + XML 파싱 가능 + `/r/` URL 부재 (4) `/robots.txt` GET 200 + `Sitemap:`
+    라인 + `Disallow: /r/` 존재. 새 dep 0 (Playwright 기본 `request` 픽스처).
+    DoD: `pnpm test:e2e` 가 SEO 스모크 포함 전체 green.
+    검증: 의도적 회귀(canonical 제거) 시 해당 케이스 fail + 복구 시 green.
+    ✅ 검증 (2026-05-12): `e2e/seo-meta.spec.ts` 신설 (4 describe + 11 케이스). 그룹1 색인대상 canonical 검증 (4 케이스). 그룹2 색인금지 noindex 검증 (6 케이스). 그룹3 sitemap 구조 검증 (1 케이스). 그룹4 robots 패턴 검증 (1 케이스). `e2e/landing.spec.ts` strict 회귀 수정 (.filter 사용). pnpm test:e2e 37 passed/0 failed (seo-meta 11 + 나머지).
 - [ ] **3.5.3** 첫 부하 테스트 — Vercel Hobby 100GB bandwidth 한도 도달
   시뮬레이션 (k6 또는 단순 Playwright 100 동시)
 
@@ -774,13 +840,13 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 1.5 | 7 | 6 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C) | 2026-05-10 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
-| 3.5 | 3 | 1 | 0 | M7 말 (**3.5.1 완료** — sub-task a/b/c/d; 3.5.1.e 비차단 백로그. 3.5.2 SEO·sitemap / 3.5.3 부하 테스트 남음) | 2026-05-12 |
+| 3.5 | 3 | 2 | 0 | M7 말 (**3.5.1·3.5.2 완료**; 3.5.1.e 비차단 백로그. 3.5.3 부하 테스트 남음) | 2026-05-12 |
 | 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합) | 2026-05-09 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **82** | **45** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
+| **합계** | **82** | **46** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

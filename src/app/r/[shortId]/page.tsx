@@ -41,6 +41,7 @@ import type {
   TariffCategoryInput,
 } from '@/types/comparison-input';
 import { POSTAL_COUNTRIES } from '@/types/comparison-input';
+import { SITE_ORIGIN } from '@/lib/site';
 
 import { CalculationDetails } from './_components/CalculationDetails';
 import { ComparisonControls } from './_components/ComparisonControls';
@@ -52,8 +53,6 @@ import {
   type CaveatTriggerRow,
 } from './_lib/caveat-triggers';
 import { applyView, parseSearchParams } from './_lib/compare-view';
-
-const SITE_ORIGIN = 'https://slim.lu';
 
 // ADR-0007 §T7 Amendment 1 + ADR-0021 §T1 부록 — nanoid default URL-safe alphabet
 // 64 chars × 12자. 형식 통과 후 DB 존재 검증(아래 page 본문).

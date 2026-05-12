@@ -27,6 +27,7 @@
  * 결정 근거: docs/adr/0011-data-sources-page-and-caveats-boundary.md
  */
 
+import type { Metadata } from 'next';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { provider } from '@/db/schema/provider';
@@ -37,6 +38,15 @@ import { getComparisonStatsByProvider } from '@/engine/comparison-stats';
 import { deriveCaveats } from '@/engine/caveats';
 import type { AffiliateStatus } from '@/db/schema/provider';
 import type { FetcherMetadata } from '@/fetchers/types';
+
+export const metadata: Metadata = {
+  title: '데이터 출처',
+  description:
+    'Slim이 사용하는 통신 요금 비교 데이터의 출처, 수집 방법, 갱신 주기를 투명하게 공개합니다.',
+  alternates: {
+    canonical: '/data-sources',
+  },
+};
 
 // ─── ISR 설정 ─────────────────────────────────────────────────────────────
 
