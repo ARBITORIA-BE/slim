@@ -310,6 +310,39 @@
   - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **366 passed** (기존 351 + 신규 15) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과 / axe-core 0 violations (RSC 컴포넌트, 동적 ID 발급 미필요).
   - 커밋: `0f1ea07` (`feat(plan-4.3.c): AffiliateDisclosureLine — 카드 하단 디스클로저 (4.4 동시 충족)`).
 
+- **PLAN 4.3.d** — `/legal/affiliate-disclosure` 본문 채움 + legal 1차 통과 (2026-05-13, **legal 에이전트 1차 감사 완료**):
+  - **목표**: 비교 결과 카드의 "수수료 안내" 링크(4.3.c 신설)가 도착하는 페이지 → 7섹션 본문 구현 (이전 stub).
+  - **7섹션 구조**:
+    - **(1) 상업적 관계 & 이해충돌** — UCPD Art.6(d) 명시("Slim은 일부 공급사로부터 어필리에이트 수수료를 받습니다") + 수수료가 회원 요금에 영향 없음 명시.
+    - **(2) 알고리즘 독립성** — 비교 순위는 수수료 여부와 무관하게 100% 절약액 기준 (정직 명시).
+    - **(3) 4.1.d 인터스티셜 cross-ref** — "변경 시 공급사의 정책 및 약관 확인 필요" 링크.
+    - **(4) GDPR 정보권** — "/data-sources" 링크 + "데이터 출처 및 신선도 정책" 안내.
+    - **(5) 단가 표** — 국가별 제휴 공급사 단가 테이블 (providerId 케이스 변환 표시 + 정책 (c) 미해결 매핑 주석).
+    - **(6) 문의** — support@slim.lu 또는 /about-us 링크.
+    - **(7) Footer** — 최종 갱신 시각 (ISO 8601) 표시 (신선도 투명성).
+  - **신설 파일**: `src/lib/format-eur.ts` (formatEuroCents 공통 추출) — 4.3.c의 인라인 함수 → 재사용 가능한 utility.
+  - **신설 테스트**: `src/app/legal/affiliate-disclosure/page.test.tsx` (25 케이스) — 7섹션 렌더 여부 + 제휴 공급사 단가 도달 + placeholder 배너 정직성 + GDPR/4.1.d cross-ref 링크.
+  - **placeholder-only 배너**: 페이지 상단 "⚠️ 이 페이지의 단가 데이터는 현재 placeholder(가상 데이터)입니다. 실제 제휴는 베타 진입 후 확정되며, 이 페이지는 페이즈 4.3.d 최종 갱신으로 실제 데이터가 채워집니다."
+  - **providerId 표기 정책 (c)**: 표에 `{providerId}` 그대로 표시 (예: `proximus-be` / `telenet-be`) — 실제 friendly name 매핑(Provider.friendly_name 추가)은 후속 PR (M8 이후, 용어 정의 정합 필요 / visual design TBD).
+  - **legal 1차 감사 통과** (ADR-0026 sub-blob append + ADR-0027 §Verification 항목 6 갱신):
+    - **(A) UCPD 상업적 관계 명시** ✅ ("Slim은 어필리에이트 수수료를 받습니다" 1장에 정강 + Art.6(d) 정합)
+    - **(B) BE Code de droit économique VI.99** ✅ (정렬 기준 명시 / 상대적 중요도 없음 = "절약액이 100% 근거" / code 강제 증거 = src/engine/compare.ts 주석)
+    - **(C) 4.1.d 인터스티셜 카피 정합** ✅ (본 페이지 §3 에서 cross-ref)
+    - **(D) 헌법 P1 출처 노출 + placeholder 정직성** ✅ (footer 갱신 시각 + 배너 disclaimer)
+    - **(E) 다크패턴 0** ✅ (강조색 미사용 + neutral 톤 + 열린 정보 - 숨김 0)
+    - **(F) GDPR cross-ref** ✅ (/data-sources 링크 + "/privacy" stub 참조 메모)
+    - **(G) 외부 감사 관계 (FT/C2C/Daretocompare 7항목)** — 항목 3/5 일부 충족, 베타 직전/M16 외부 감사 대체 아님 (즉, 본 1차는 Slim 내부 legal/architect 검증만 — 외부 감사는 별도 추진)
+  - **미해결 (legal 명시)**:
+    - providerId friendly name 매핑 (실 entry 시점) — 테이블 header "공급사 ID" 로 일단 진행.
+    - `/privacy` stub (페이즈 5 이전) — 본 페이지에서 "개인정보 정책" 링크 미노출 (footer §6 문의 경로만).
+  - **회귀 확인**: 4.1.d / 4.1.e / 4.3.c 모두 무변동 (import 1줄만 추가).
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **391 passed** (기존 366 + 신규 25) / `pnpm harness:plan` **82 항목 정합** / `pnpm harness:data` 통과.
+  - 커밋: `37d0281` (`feat(plan-4.3.d): /legal/affiliate-disclosure 본문 + legal 1차 통과`).
+
+- **워크플로우 메모** — builder가 PLAN.md 직접 마킹 (4.3.d 완료 노트 추가) + 합계 표 50→51 교정. 다음 회부터 PLAN 변경은 scribe 전용 (ADR-0025 + verifier 권고 일관).
+
+- **다음 단계**: **4.3.e — 정합·E2E 테스트 분해** (queries row 단위 cents 일치 / E2E: 카드 → 디스클로저 페이지 단가 도달 / integration 정합 순환).
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):
