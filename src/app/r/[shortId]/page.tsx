@@ -183,6 +183,8 @@ export default async function ResultPage({
             caveats={topItem.caveats}
             isNewSubscriber={view.isNewSubscriber}
             ctaHref={`/go/${shortId}/${topItem.itemId}`}
+            providerId={topItem.providerId}
+            affiliateStatus={topItem.affiliateStatus}
           />
           <section
             aria-labelledby="comparison-heading"

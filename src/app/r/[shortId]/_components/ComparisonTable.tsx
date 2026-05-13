@@ -20,6 +20,7 @@ import type { Confidence } from '@/db/schema/tariff_snapshot';
 import type { TariffCategory } from '@/db/schema/tariff';
 
 import { formatRelativeTime } from '../_lib/stale';
+import { AffiliateDisclosureLine } from './AffiliateDisclosureLine';
 
 // ─── Props ────────────────────────────────────────────────────────────────
 
@@ -198,6 +199,7 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
               const promoNote = formatPromoNote(r.promoPriceCents, r.promoMonths);
               const actNote = formatActivationNote(r.activationFeeCents);
               return (
+                // React.Fragment — 데이터 행 + 디스클로저 행을 tbody 안 묶음
                 <tr
                   key={r.tariffSnapshotId}
                   className="border-t border-fg/10 align-top"
@@ -214,6 +216,12 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
                     {subtitle && (
                       <div className="mt-0.5 text-xs text-fg-soft">{subtitle}</div>
                     )}
+                    {/* PLAN 4.3.c — 공급사 셀 하단: 디스클로저 라인 (ADR-0026 §T4) */}
+                    <AffiliateDisclosureLine
+                      providerId={r.providerId}
+                      providerName={r.providerName}
+                      affiliateStatus={r.affiliateStatus}
+                    />
                   </td>
                   <td className="px-4 py-3">
                     <div className="text-fg">{formatEuro(r.monthlyAvg12Cents)} / 월</div>
@@ -287,6 +295,12 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
                 <div className="mt-1 border-t border-fg/10 pt-2">
                   <SourceLink href={r.sourceUrl} fetchedAt={r.fetchedAt} now={ref} />
                 </div>
+                {/* PLAN 4.3.c — 카드 하단 슬롯: 디스클로저 라인 (ADR-0026 §T4) */}
+                <AffiliateDisclosureLine
+                  providerId={r.providerId}
+                  providerName={r.providerName}
+                  affiliateStatus={r.affiliateStatus}
+                />
               </article>
             </li>
           );

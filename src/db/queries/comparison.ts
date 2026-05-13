@@ -30,6 +30,7 @@ import { tariff } from '@/db/schema/tariff';
 import { tariffSnapshot } from '@/db/schema/tariff_snapshot';
 import type { Confidence } from '@/db/schema/tariff_snapshot';
 import type { TariffCategory } from '@/db/schema/tariff';
+import type { AffiliateStatus } from '@/db/schema/provider';
 
 import type { SnapshotJoinRow } from './comparison-helpers';
 
@@ -322,6 +323,10 @@ export interface TopResultItemRow {
   /** 라운드 (a) — 결론 카드 1위 공급사/요금제명 + 신뢰도 배지 표면화. */
   readonly providerName: string;
   readonly tariffName: string;
+  /** AffiliateDisclosureLine (PLAN 4.3.c) — getRateForProvider 인자. */
+  readonly providerId: string;
+  /** AffiliateDisclosureLine (PLAN 4.3.c) — 분기 키. */
+  readonly affiliateStatus: AffiliateStatus;
   readonly confidence: Confidence;
 }
 
@@ -341,8 +346,12 @@ export interface ResultRowData {
   readonly itemId: string;
   readonly rank: number;
   readonly tariffSnapshotId: string;
+  /** provider.id — AffiliateDisclosureLine (PLAN 4.3.c) getRateForProvider 인자. */
+  readonly providerId: string;
   readonly providerName: string;
   readonly providerSlug: string;
+  /** provider.affiliate_status — AffiliateDisclosureLine (PLAN 4.3.c) 분기 키. */
+  readonly affiliateStatus: AffiliateStatus;
   readonly tariffName: string;
   readonly tariffSlug: string;
   readonly category: TariffCategory;
@@ -364,7 +373,8 @@ export interface ResultRowData {
   readonly fetchedAt: Date;
 }
 
-type ResultRowRaw = Omit<ResultRowData, 'attributes'> & { attributes: unknown; itemId: string };
+// ResultRowRaw: ResultRowData 와 동일하되 attributes 는 unknown (Drizzle jsonb 추론)
+type ResultRowRaw = Omit<ResultRowData, 'attributes'> & { attributes: unknown };
 
 export async function getResultItems(
   resultId: string,
@@ -374,8 +384,10 @@ export async function getResultItems(
       itemId: comparisonResultItem.id,
       rank: comparisonResultItem.rank,
       tariffSnapshotId: comparisonResultItem.tariffSnapshotId,
+      providerId: provider.id,
       providerName: provider.name,
       providerSlug: provider.slug,
+      affiliateStatus: provider.affiliateStatus,
       tariffName: tariff.name,
       tariffSlug: tariff.slug,
       category: tariff.category,
@@ -432,6 +444,8 @@ export async function getTopResultItem(
       confidence: tariffSnapshot.confidence,
       providerName: provider.name,
       tariffName: tariff.name,
+      providerId: provider.id,
+      affiliateStatus: provider.affiliateStatus,
     })
     .from(comparisonResultItem)
     .innerJoin(

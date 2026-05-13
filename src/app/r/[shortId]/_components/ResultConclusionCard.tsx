@@ -23,6 +23,9 @@
 import Link from 'next/link';
 
 import type { Confidence } from '@/db/schema/tariff_snapshot';
+import type { AffiliateStatus } from '@/db/schema/provider';
+
+import { AffiliateDisclosureLine } from './AffiliateDisclosureLine';
 
 // ─── Props ────────────────────────────────────────────────────────────────
 
@@ -49,6 +52,10 @@ export interface ResultConclusionCardProps {
    * null 이면 CTA 비활성 (후보 0건 케이스).
    */
   readonly ctaHref: string | null;
+  /** PLAN 4.3.c — AffiliateDisclosureLine: provider.id */
+  readonly providerId: string;
+  /** PLAN 4.3.c — AffiliateDisclosureLine: affiliate_status 분기 키 */
+  readonly affiliateStatus: AffiliateStatus;
 }
 
 // ─── 표시 helper ──────────────────────────────────────────────────────────
@@ -114,6 +121,8 @@ export function ResultConclusionCard(props: ResultConclusionCardProps) {
     caveats,
     isNewSubscriber,
     ctaHref,
+    providerId,
+    affiliateStatus,
   } = props;
   const verdict = deriveVerdict(monthlySavingCents, isNewSubscriber);
 
@@ -197,6 +206,14 @@ export function ResultConclusionCard(props: ResultConclusionCardProps) {
           변경하기
         </button>
       )}
+
+      {/* PLAN 4.3.c — 결론 카드 하단 슬롯: 디스클로저 라인 (ADR-0026 §T4).
+           인쇄물에서도 표시 (print:hidden 금지 — 헌법 P3). */}
+      <AffiliateDisclosureLine
+        providerId={providerId}
+        providerName={providerName}
+        affiliateStatus={affiliateStatus}
+      />
     </article>
   );
 }
