@@ -33,7 +33,7 @@ import type { TariffSnapshotLike, UsageProfile } from './types';
  *   매번 적으면 *어떤 필드가 핵심* 인지 가독성 ↓. builder + override 패턴이
  *   *왜 이 케이스가 다른지* 명확.
  */
-function makeSnapshot(
+export function makeSnapshot(
   override: Partial<TariffSnapshotLike> & {
     id: string;
     providerSlug: string;
@@ -64,7 +64,7 @@ function makeSnapshot(
  *   vitest 의 `toContain` 은 strict equality 기반 — asymmetricMatcher 를
  *   원소로 받지 않는다. 부분 문자열 매칭에는 .some() 이 명료하고 견고.
  */
-function hasCaveatLike(caveats: readonly string[], needle: string): boolean {
+export function hasCaveatLike(caveats: readonly string[], needle: string): boolean {
   return caveats.some((c) => c.includes(needle));
 }
 
