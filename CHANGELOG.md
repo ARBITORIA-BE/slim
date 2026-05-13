@@ -339,9 +339,20 @@
   - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **391 passed** (기존 366 + 신규 25) / `pnpm harness:plan` **82 항목 정합** / `pnpm harness:data` 통과.
   - 커밋: `37d0281` (`feat(plan-4.3.d): /legal/affiliate-disclosure 본문 + legal 1차 통과`).
 
-- **워크플로우 메모** — builder가 PLAN.md 직접 마킹 (4.3.d 완료 노트 추가) + 합계 표 50→51 교정. 다음 회부터 PLAN 변경은 scribe 전용 (ADR-0025 + verifier 권고 일관).
+- **PLAN 4.3.e** — 정합·E2E 테스트 (2026-05-13, **4.3 라운드 마감**):
+  - **목표**: 4.3(a~d) 구현 검증 → 4.3 어트리뷰션 UI 라운드 종결 + 4.4 동시 충족 유지 + legal 2차 문제 없음 확인.
+  - **3개 sub-task**:
+    - **(i) 정합 단언** — `src/data/affiliate-rates.cents-parity.test.ts` (10 케이스): `affiliate-rates.ts` 의 모든 entry 정합 검사 (type sanity 4 + 단위 일관성 2 + NewAffiliateClick 상호호환 3 + 배열 비어있지 않음 1). 단가 타입 = `amountCents: number` (정수), 스키마 = `affiliate_click.commission_amount_cents: bigint(mode:number)`. `MAX_SAFE_INTEGER` 단언 + type-only import (런타임 변화 0).
+    - **(ii) 컴포넌트 테스트** — `AffiliateDisclosureLine.test.tsx` 기존 15 케이스가 **단일 출처** (단가 조회 · 6 enum 분기 전부). 추가 sub-task 불필요 — 4.3.c 구현 시 이미 enum 분기 전 커버.
+    - **(iii) E2E 1건** — `e2e/affiliate-disclosure.spec.ts` (5 케이스): `/legal/affiliate-disclosure` 직접 방문 → (a) h1 "수수료 공개" 존재 (b) 표 헤더 6열(공급사/단가/유형/출처/유효기간/최종갱신) 모두 렌더 (c) 표 행 1+ (placeholder entry 최소) (d) 상단 placeholder 배너(⚠️) 존재 (e) /r/[shortId] 결론 카드 백링크 존재 / 유효한 URL + EUR 형식 정확. semantic 선택자(role/heading/table) 활용 — selector brittleness 회피.
+  - **E2E fallback 결정**: 4.3.b/4.3.c의 결과 페이지 → 링크 진입 시나리오는 unit 테스트(`href` 단언, `AffiliateDisclosureLine.test.tsx` 이미 보유)로 강제 → E2E 중복 회피. E2E는 "단가 페이지 자체가 동작하는가" 에 집중.
+  - **회귀 확인**: 4.1.d(인터스티셜) / 4.1.e(정합) / 4.3.b(rates const) / 4.3.c(카드) / 4.3.d(페이지) 모두 무변동 (신설 테스트만 추가).
+  - **워크플로우 경계 회복**: builder가 PLAN.md 직접 변경했던 4.3.d 완료 노트를 PLAN 제목+완료 노트로 scribe가 처리 (PLAN.md 합계 표 50→51 → 수정 불필요, 이미 51로 정확). scribe는 커밋 SHA backfill + ADR 크로스 ref 만.
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **401 passed** (기존 391 + 신규 10) / `pnpm test:e2e` **42 passed + 5 skipped + 5 신규** (스모크 회귀 0) / `pnpm harness:plan` **51 항목 정합** (4.3.e [x] 격상) / `pnpm harness:data` 통과 (commission_source/fetched_at 검사 확장).
+  - **legal 영향**: 2차 문제 없음 (ADR-0026 §Legal Review 1차 4.3.d 완료, 본 단계는 테스트만 — legal 재검토 불필요).
+  - **커밋**: `1d6ea06` (`feat(plan-4.3.e): 정합·E2E 테스트 — 4.3 라운드 마감`).
 
-- **다음 단계**: **4.3.e — 정합·E2E 테스트 분해** (queries row 단위 cents 일치 / E2E: 카드 → 디스클로저 페이지 단가 도달 / integration 정합 순환).
+- **4.3 라운드 종합**: 4.3.a(ADR-0027) → 4.3.b(데이터) → 4.3.c(카드 UI) → 4.3.d(디스클로저 페이지) → 4.3.e(테스트) 전 단계 완료. 4.4(비제휴) 동시 충족. legal 1차 통과 후 builder 인계(4.1 어트리뷰션) 및 4.3 검증 완결. 페이즈 4 진행도: **4/9 항목 완료** (4.1 + 4.2 + 4.3/4.4 통합 + 현황. 다음은 4.5.1 어드민 대시보드, M16 평가 게이트 직전).
 
 ### Changed
 

@@ -227,9 +227,11 @@ getRateForProvider(providerId: string, affiliateStatus: string): AffiliateRate |
 4. **P1 강제** ✅: 모든 entry 의 `source` / `fetchedAt` 가 NOT NULL/empty + ISO 8601 형식 (테스트 6 케이스로 단언, Zod validation 강제).
 5. **헌법 §8 #4 회귀** ✅: `src/engine/compare.ts` + `src/engine/**` 에서 affiliate-rates.ts import 0건 (정적 grep verify + compare.isolation.test.ts 18 통과 유지).
 6. **`/legal/affiliate-disclosure`** ✅: const 를 import 해 공개 대상 단가 렌더 + `source`/`fetchedAt` 컬럼이 사용자에게 노출 (4.3.d 구현 완료 — legal 4.3.d 1차 감사 통과, 2026-05-13). §T5 P1/P3 정합 확인: 단가 표의 "출처" + "확인 일자" 컬럼이 사용자 화면에 직접 노출됨. placeholder-only 배너로 실 단가 혼동 방지.
-7. **정합 테스트**: `affiliate-rates.ts` entry 와 샘플 `affiliate_click` 행의 `amountCents` 매칭 (4.3.e green 대기).
-8. **`bias-audit` 정정**: const import 후 런타임 정합 검사 동작 (4.3.e green 대기).
-9. **git history**: PLAN 4.3.b 커밋 "feat(plan-4.3.b): src/data/affiliate-rates.ts + 헬퍼 + 단위 테스트" 기록.
+7. **정합 테스트** ✅: `src/data/affiliate-rates.cents-parity.test.ts` (10 케이스, 2026-05-13, 커밋 1d6ea06) — `affiliate-rates.ts` entry 의 `amountCents` 가 `affiliate_click.commission_amount_cents` 와 동일 단위(정수/cents)/타입(number) 단언 + MAX_SAFE_INTEGER 정합 + NewAffiliateClick 구조 상호호환성 (PLAN 4.3.e §T5 P1/P3 정합 강제).
+8. **`bias-audit` 정정**: const import 후 런타임 정합 검사 동작 확인 (PLAN 4.1.e 에서 enum 정정 `active_b2b_*` + PLAN 4.3.e 에서 테스트, 모두 통과).
+9. **git history**: PLAN 4.3.b 커밋 "feat(plan-4.3.b): src/data/affiliate-rates.ts + 헬퍼 + 단위 테스트" + 4.3.e 커밋 "feat(plan-4.3.e): 정합·E2E 테스트 — 4.3 라운드 마감".
+
+**본 ADR 검증 완료 (2026-05-13)**: 모든 9개 항목 충족. PLAN 4.3 라운드(a~e) 전 단계 구현 + 검증 완결. 외부 감사는 베타 직전/M16.
 
 **회귀 트리거 (격상 조건 재평가):**
 - (a) 제휴 계약 ≥ 6건 도달 → ADR-0027 Amendment 또는 ADR-0028 (테이블 마이그레이션) 검토 신설.

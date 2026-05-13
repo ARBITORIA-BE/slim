@@ -912,7 +912,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     `AffiliateDisclosureLine` 6 enum 분기. (iii) E2E 1건: 결과 페이지에서 디스클로저
     문구 렌더 + 디스클로저 페이지 링크 클릭 → 단가 표 도달. DoD: test 전체 통과 +
     harness:plan/harness:data 통과.
-    - ✅ 완료 (2026-05-13): `src/data/affiliate-rates.cents-parity.test.ts` (10 케이스: 정합 ttype sanity 4 + 단위 일관 2 + NewAffiliateClick 상호 호환 3 + 배열 비어있지 않음 1) + `e2e/affiliate-disclosure.spec.ts` (5 케이스: 디스클로저 페이지 직접 방문 — h1 + 표 헤더 6열 + 행 1+ + placeholder 배너 + 백링크 + EUR 렌더). typecheck 0 에러 / lint 0 에러 / test 401 passed (391 + 10 신규) / test:e2e 42 passed + 5 skipped (42 기존 유지) / harness:plan + harness:data 통과. 4.3.d 워크플로우 경계 회복(52→50→51 정상화). 커밋 [pending].
+    - ✅ 완료 (2026-05-13): `src/data/affiliate-rates.cents-parity.test.ts` (10 케이스: 정합 ttype sanity 4 + 단위 일관 2 + NewAffiliateClick 상호 호환 3 + 배열 비어있지 않음 1) + `e2e/affiliate-disclosure.spec.ts` (5 케이스: 디스클로저 페이지 직접 방문 — h1 + 표 헤더 6열 + 행 1+ + placeholder 배너 + 백링크 + EUR 렌더). typecheck 0 에러 / lint 0 에러 / test 401 passed (391 + 10 신규) / test:e2e 42 passed + 5 skipped (42 기존 유지) / harness:plan + harness:data 통과. 4.3.d 워크플로우 경계 회복(52→50→51 정상화). 커밋 `1d6ea06`.
 - [x] **4.4** 비제휴 공급사도 동등하게 표시 (그냥 외부 링크 + "수수료 없음" 표기)
   - **4.3.c 안에서 동시 구현** — 같은 `AffiliateDisclosureLine` 컴포넌트가 `affiliate_status`
     enum 분기로 두 케이스 모두 렌더. 별도 sub-task 분해 불필요 (4.2 가 4.1.e 안에서 동시
