@@ -147,6 +147,41 @@
   - 검증: [ADR-0025](docs/adr/0025-verifier-read-only-commit-boundary.md) §Verification
     — 다음 verifier 호출 시 (a) 커밋 안 함 (b) 불일치는 "❌ 차단 — 수정 필요" 로 인계
     (c) 게이트 발명 안 함.
+- [!] **D.6** `e2e/compare-flow.spec.ts` 2건 클라이언트 예외 fix — **4.6 베타
+  진입 blocker**. 2026-05-13 발견 (3.5.1.e 후속 색상 fix `e7c6f69` 정찰 중 builder
+  `git stash` 로 *기존* 실패 확인 → preview 색상 변경과 무관, 그 이전부터 존재).
+  - **증상**: `pnpm test:e2e e2e/compare-flow.spec.ts` 2건 모두 *5단계 입력 →
+    `/r/[shortId]` redirect* 단계 (preview 자동 submit) 에서 timeout 10s 초과.
+    Playwright error context: "Application error: a client-side exception has
+    occurred while loading localhost" — preview/page.tsx render 도중 클라이언트
+    예외 throw.
+  - **영향**: 5단계 입력 핵심 사용자 흐름 (페이즈 2 ADR-0016 §검증 2 산출물)
+    이 e2e 에서 깨짐. 4.6 베타 진입 시 사용자가 실제로 같은 에러를 경험할
+    가능성 — *불확실 (e2e 환경 특이성일 수도)*, 직접 사용자 흐름 manual QA
+    필요.
+  - **차단 사유 ([!])**: 4.6 베타 모집 카피가 "5분 안에 결과" 약속 (ADR-0029
+    §T2 정직성) — 실 사용자 흐름이 client exception 으로 깨지면 정직성 잠금
+    + 헌법 P3 위반 + 모집 신뢰 갭. **4.6 카피 배포 *전* 해소 필수**.
+  - **정찰 결과 (architect 분해 필요)**:
+    - 실패 위치: `e2e/compare-flow.spec.ts:68 / :112` — `page.waitForURL(/\/r\/[A-Za-z0-9_-]{12}$/)` timeout
+    - 페이지 상태: `/compare/mobile/preview` 도달 후 navigation 발생 X
+    - 클라이언트 예외 소스 미상 — preview/page.tsx 의 `useEffect` / `submit` /
+      `comparisonInputSchema.safeParse` / `useCompareSession` / `use(params)` 중
+      어디서 throw 하는지 미식별
+    - dev 서버 console / browser console 의 *정확한 stack trace* 필요
+    - 다른 e2e (accessibility / landing / result-page / seo-meta / affiliate-
+      disclosure / follow-up-email-flow) 는 통과 — *preview 페이지 단독 회귀*
+  - 분해 권고 (별도 세션 architect 호출):
+    - D.6.a — 정찰: dev 서버 실행 + `pnpm test:e2e e2e/compare-flow.spec.ts
+      --headed` 로 browser console stack trace 수집. 또는 페이지 직접 방문
+      + dev 콘솔 확인.
+    - D.6.b — fix (preview/page.tsx 또는 dependency hook 수정)
+    - D.6.c — 회귀 e2e 통과 확인 + 다른 e2e 영향 X
+  - DoD: (1) `pnpm test:e2e e2e/compare-flow.spec.ts` 2건 모두 통과 (2) 클라이언트
+    예외 stack trace 가 ADR 또는 CHANGELOG 에 기록 (P3 — 운영자의 짐) (3) 4.6 카피
+    배포 *전* 완료 검증.
+  - **재진입 트리거**: 4.6 배포 의존성이므로 *즉시* — 운영자가 D.3.a/c/d
+    배포 작업 진행하는 동안 Claude 가 D.6 처리.
 
 **Phase 0.5 검증:** `pnpm harness:plan && pnpm typecheck && pnpm lint &&
 pnpm test` + 위 DoD 모두 충족.
@@ -1298,7 +1333,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 5 | 3 | 0 | D.2·D.4·D.5 완료. D.1 코드 완료(잔여=운영자 브랜치 보호), D.3 GATE-K 직전 일괄, D.5 (a/b/c 완료 — c 는 /checkpoint 스킬 cross-ref 1줄 강화, 2026-05-13) | 2026-05-13 |
+| 0.5 | 6 | 3 | 1 | D.2·D.4·D.5 완료. D.1 코드 완료(잔여=운영자 브랜치 보호), D.3 GATE-K 직전 일괄, D.5 (a/b/c 완료, 2026-05-13). **D.6 신설** — compare-flow.spec.ts 2건 클라이언트 예외 ([!] 4.6 베타 진입 blocker, 2026-05-13 발견) | 2026-05-13 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 8 | 7 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C; 1.5.6.1 옵션 X 추정값 UI 완료, 2026-05-13) | 2026-05-13 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
@@ -1309,7 +1344,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **84** | **54** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
+| **합계** | **85** | **54** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
