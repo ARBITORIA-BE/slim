@@ -1,5 +1,5 @@
 /**
- * GET /go/[shortId]/[itemId] — 동의 인터스티셜 Server Component (PLAN 4.1.c / 4.1.d).
+ * GET /go/[shortId]/[itemId] — 동의 인터스티셜 Server Component (PLAN 4.1.c / 4.1.d / 4.5.c).
  *
  * 필수 5항목 (EDPB Guidelines 05/2020 on consent, ADR-0026 §검토 2):
  *   1. 받는 회사명 — provider.name
@@ -8,11 +8,11 @@
  *   4. 동의 철회 방법 — "기록 없이 취소됩니다"
  *   5. freely given — "거부해도 비교 결과는 그대로 유지됩니다"
  *
- * 다크 패턴 0 (CMA Dark Pattern Taxonomy, ADR-0026 §검토 6):
+ * 다크 패턴 0 (CMA Dark Pattern Taxonomy, ADR-0026 §검토 6 + ADR-0028 §T7):
  *   - Visual Interference X — 두 버튼 동등 가시성 (둘 다 filled, 시각적 무게 동등)
  *   - Confirmshaming X — 거부 카피 중립
  *   - Fake Urgency X — 긴급성 표현 0건
- *   - Pre-checked X — 체크박스 없음
+ *   - Pre-checked X — 체크박스 defaultChecked={false} 명시 (PLAN 4.5.c — pre-checked 0 강제, ADR-0028 §T7)
  *   - Roach Motel X — 거부 1단계, 복귀 1단계
  *
  * VI.99 랭킹 명시 (ADR-0026 §검토 5) — 푸터에 1줄
@@ -146,45 +146,111 @@ export default async function GoInterstitialPage({
           색상으로 의미를 구분하되 어느 한쪽이 명백히 더 눈에 띄지 않음.
           (일반 CTA hierarchy 와 다른 결정 — 동의 UI 에서 동등이 법적 요건)
         */}
-        <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-          {/* 동의 경로 — POST → confirm route handler → INSERT + 302 */}
-          <form
-            method="POST"
-            action={`/go/${shortId}/${itemId}/confirm`}
-            className="contents"
+        <form
+          method="POST"
+          action={`/go/${shortId}/${itemId}/confirm`}
+          className="flex flex-col gap-4"
+        >
+          {/*
+            ─── 후속 메일 섹션 (선택) ───────────────────────────────────────
+            PLAN 4.5.c — Art. 13 정보 제공 (ADR-0028 §T4) + 다크패턴 0 (ADR-0028 §T7).
+            - pre-checked 0: defaultChecked={false} 명시 (아래 체크박스 참조)
+            - fake urgency 0: 긴급 표현 없음
+            - confirmshaming 0: "받지 않을게요" 류 없음
+            - 동등 가시성: 체크/미체크 둘 다 자연스러운 선택
+          */}
+          <section
+            aria-labelledby="follow-up-heading"
+            className="flex flex-col gap-3 rounded-xl border border-fg/10 bg-bg-warm/40 px-5 py-4"
           >
+            <h3
+              id="follow-up-heading"
+              className="text-sm font-semibold text-fg"
+            >
+              후속 메일 (선택)
+            </h3>
+
+            {/* Art. 13 정보 제공 카피 (ADR-0028 §T4) */}
+            <p
+              id="follow-up-help"
+              className="text-sm leading-relaxed text-fg-soft"
+            >
+              이메일을 남기고 체크하면 7일 후 1회 &apos;Slim 후속 메일&apos;을 보냅니다
+              (&apos;변경하셨다면 알려주세요&apos;).
+            </p>
+            <p className="text-sm leading-relaxed text-fg-soft">
+              이메일은 발송 직후 익명화됩니다 (ADR-0007 §T4 정신 일관).
+            </p>
+            <p className="text-sm leading-relaxed text-fg-soft">
+              메일 안 1-click 해제 항상 가능 — <code className="rounded bg-fg/5 px-1 text-xs">/unsubscribe/[token]</code> (4.5.e).
+            </p>
+
+            {/* 이메일 입력 (선택) */}
+            <input
+              type="email"
+              name="email"
+              placeholder=""
+              aria-describedby="follow-up-help"
+              className="w-full rounded-lg border border-fg/15 bg-bg px-3 py-2 text-sm text-fg placeholder-fg-soft/50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+
+            {/*
+              체크박스 — PLAN 4.5.c — pre-checked 0 강제 (ADR-0028 §T7)
+              defaultChecked={false} 명시: 브라우저가 저장된 상태 복원 시에도 unchecked 유지.
+            */}
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-fg-soft">
+              {/* PLAN 4.5.c — pre-checked 0 강제 (ADR-0028 §T7) */}
+              <input
+                type="checkbox"
+                name="followUp"
+                value="yes"
+                defaultChecked={false}
+                className="h-4 w-4 rounded border-fg/20 accent-primary"
+              />
+              후속 메일 받기 (선택)
+            </label>
+
+            {/* 어트리뷰션 동의 종속 안내 — 오해 방지 (ADR-0028 §T3) */}
+            <p className="text-xs leading-relaxed text-fg-soft/70">
+              거부하면 후속 메일도 보내지 않습니다 (어트리뷰션 동의가 후속 메일의 전제 — ADR-0028 §T3 종속).
+            </p>
+          </section>
+
+          {/* 버튼 행 */}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            {/* 동의 경로 — POST → confirm route handler → INSERT + 302 */}
             <button
               type="submit"
               className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-bg transition hover:opacity-90"
             >
               동의하고 이동
             </button>
-          </form>
 
-          {/* 거부 경로 — INSERT 0, provider.website 직접 링크, ?ref 미부착 (ADR-0026 §T2) */}
-          {hasWebsite ? (
-            <a
-              href={providerWebsite}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-full bg-fg/10 px-6 py-2.5 text-sm font-medium text-fg transition hover:bg-fg/15"
-            >
-              {/* Confirmshaming 0: 중립 카피 (ADR-0026 §검토 6) */}
-              동의 없이 외부 링크로 이동{' '}
-              <span aria-hidden="true" className="ml-1">
-                ↗
-              </span>
-              <span className="sr-only"> (새 창에서 열림)</span>
-            </a>
-          ) : (
-            // provider.website 없음 — 이동 불가 안내 (에러 UI 4.1.d)
-            // 사용자 책임이 아님을 명시 — "관리자에게 문의" 류 X
-            <p className="text-sm text-fg-soft">
-              이 공급사의 웹사이트 정보가 아직 등록되지 않아 외부 이동이
-              불가합니다. 비교 결과로 돌아가세요.
-            </p>
-          )}
-        </div>
+            {/* 거부 경로 — form 밖 링크 (INSERT 0, ?ref 미부착, ADR-0026 §T2) */}
+            {hasWebsite ? (
+              <a
+                href={providerWebsite}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-full bg-fg/10 px-6 py-2.5 text-sm font-medium text-fg transition hover:bg-fg/15"
+              >
+                {/* Confirmshaming 0: 중립 카피 (ADR-0026 §검토 6) */}
+                동의 없이 외부 링크로 이동{' '}
+                <span aria-hidden="true" className="ml-1">
+                  ↗
+                </span>
+                <span className="sr-only"> (새 창에서 열림)</span>
+              </a>
+            ) : (
+              // provider.website 없음 — 이동 불가 안내 (에러 UI 4.1.d)
+              // 사용자 책임이 아님을 명시 — "관리자에게 문의" 류 X
+              <p className="text-sm text-fg-soft">
+                이 공급사의 웹사이트 정보가 아직 등록되지 않아 외부 이동이
+                불가합니다. 비교 결과로 돌아가세요.
+              </p>
+            )}
+          </div>
+        </form>
       </article>
 
       {/* 결과 페이지 복귀 링크 — 동의 철회 1단계 */}

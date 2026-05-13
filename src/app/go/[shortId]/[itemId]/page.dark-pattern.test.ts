@@ -1,16 +1,17 @@
 /**
- * 다크패턴 0 자가 검증 테스트 (PLAN 4.1.d).
+ * 다크패턴 0 자가 검증 테스트 (PLAN 4.1.d / 4.5.c).
  *
  * page.tsx 소스를 fs.readFile 로 읽어 정규식 스캔.
  * 목적: 향후 카피 수정 시 금지 토큰이 유입되면 즉시 FAIL.
  *
  * 검증 범위:
  *   A. Fake Urgency 금지 토큰 0건
- *   B. Confirmshaming 금지 토큰 0건
- *   C. Pre-checked 입력 0건
+ *   B. Confirmshaming 금지 토큰 0건 (4.5.c 후속 메일 섹션 포함)
+ *   C. Pre-checked 입력 0건 (defaultChecked={false} 는 허용, ={true} 는 금지)
  *   D. 필수 5항목 문자열 존재 (EDPB Guidelines 05/2020 on consent)
  *   E. VI.99 한 줄 존재 (ADR-0026 §검토 5)
  *   F. §T1 금지 — cookies()/headers()/Set-Cookie 0건
+ *   G. 4.5.c — 후속 메일 pre-checked 0 + Art. 13 카피 존재 (ADR-0028 §T4/T7)
  */
 
 import { readFile } from 'node:fs/promises';
@@ -90,10 +91,14 @@ describe('B. Confirmshaming 금지 토큰 0건', () => {
 
 // ─────────────────────────────────────────────
 // C. Pre-checked 입력 0건
+// 주의: defaultChecked={false} 는 허용 (pre-checked 0 명시 강제).
+//       defaultChecked={true} / checked={true} / checked="true" 만 금지.
 // ─────────────────────────────────────────────
 describe('C. Pre-checked 입력 0건', () => {
-  it('defaultChecked 속성 없음', () => {
-    expect(src).not.toMatch(/defaultChecked/);
+  it('defaultChecked={true} 없음 (false 는 허용)', () => {
+    // defaultChecked={false} 는 pre-checked 0 명시 — 허용.
+    // defaultChecked={true} 만 금지.
+    expect(src).not.toMatch(/defaultChecked=\{true\}/);
   });
 
   it('checked={true} 없음', () => {
@@ -153,5 +158,55 @@ describe('F. ADR-0026 §T1 — 사용자 추적 API 0건', () => {
 
   it('Set-Cookie 없음', () => {
     expect(src).not.toMatch(/Set-Cookie/i);
+  });
+});
+
+// ─────────────────────────────────────────────
+// G. 4.5.c — 후속 메일 pre-checked 0 + Art. 13 카피 + Confirmshaming 0
+//    ADR-0028 §T4 (Art. 13 정보 제공) + §T7 (다크패턴 0)
+// ─────────────────────────────────────────────
+describe('G. 4.5.c 후속 메일 — pre-checked 0 + Art. 13 카피 존재', () => {
+  it('체크박스 defaultChecked={false} 명시 존재 (pre-checked 0 강제, ADR-0028 §T7)', () => {
+    // page.tsx 에 defaultChecked={false} 가 명시되어야 한다.
+    // 이 값이 없으면 브라우저가 이전 상태를 복원해 pre-checked 위험 발생.
+    const match = src.match(/defaultChecked=\{false\}/);
+    if (!match) {
+      const line = src.split('\n').findIndex((l) => l.includes('type="checkbox"')) + 1;
+      expect.fail(
+        `defaultChecked={false} 미발견 — pre-checked 0 강제 위반 (ADR-0028 §T7), 체크박스 근처 line ~${line}`,
+      );
+    }
+    expect(match).not.toBeNull();
+  });
+
+  it('Art. 13 — "7일 후" 문구 존재 (ADR-0028 §T4)', () => {
+    expect(src).toMatch(/7일\s*후/);
+  });
+
+  it('Art. 13 — "익명화" 또는 "발송 직후 익명" 문구 존재 (ADR-0028 §T4)', () => {
+    expect(src).toMatch(/익명화|발송\s*직후\s*익명/);
+  });
+
+  it('Art. 13 / Art. 7(3) — "unsubscribe" 또는 "해제" 문구 존재 (ADR-0028 §T4)', () => {
+    expect(src).toMatch(/unsubscribe|해제/);
+  });
+
+  it('후속 메일 Confirmshaming 0 — "손해" / "후회" / "그냥 받지" 류 없음 (ADR-0028 §T7)', () => {
+    const patterns: Array<{ label: string; re: RegExp }> = [
+      { label: '손해', re: /손해/ },
+      { label: '후회', re: /후회/ },
+      { label: '그냥 받지', re: /그냥\s*받지/ },
+      { label: '받지 않으면', re: /받지\s*않으면/ },
+    ];
+    for (const { label, re } of patterns) {
+      const match = src.match(re);
+      if (match) {
+        const line = src.substring(0, src.search(re)).split('\n').length;
+        expect.fail(
+          `후속 메일 Confirmshaming 금지 토큰 발견: "${label}" (line ~${line})\n매치: "${match[0]}"`,
+        );
+      }
+      expect(match).toBeNull();
+    }
   });
 });

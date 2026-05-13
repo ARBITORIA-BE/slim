@@ -1,5 +1,5 @@
 /**
- * POST /go/[shortId]/[itemId]/confirm — 단위 테스트 (PLAN 4.1.c).
+ * POST /go/[shortId]/[itemId]/confirm — 단위 테스트 (PLAN 4.1.c / 4.5.c).
  *
  * DB 함수는 vi.mock 으로 격리 — 실제 DB 연결 불필요.
  *
@@ -12,6 +12,12 @@
  *      (이 경로는 헤더를 읽지 않음을 코드 레벨에서 보장 — 호출 검증으로 확인)
  *   6. ref_param = 'slim-r-<shortId>' 패턴
  *   7. Location 헤더에 ?ref= 포함
+ *   --- 4.5.c 추가 케이스 ---
+ *   8. email 유효 + followUp='yes' → follow_up_email 1행 INSERT
+ *   9. email 빈값 + followUp='yes' → follow_up_email 0행 (silent skip)
+ *  10. email 유효 + followUp 미선택 → follow_up_email 0행
+ *  11. follow_up_email INSERT 실패 → 500 (affiliate_click 이후 실패)
+ *  12. unsubscribeToken nanoid(16) 형식 검증 — 16자 alphanumeric
  */
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -22,15 +28,23 @@ vi.mock('@/db/queries/affiliate-click', () => ({
   insertAffiliateClick: vi.fn(),
 }));
 
+vi.mock('@/db/queries/follow-up-email', () => ({
+  insertFollowUpEmail: vi.fn(),
+}));
+
 // nanoid 는 결정적 값으로 대체 (토큰 검증 용이)
+// 12자 click token → 16자 unsubscribe token 구분을 위해 length 기반 반환
 vi.mock('nanoid', () => ({
-  nanoid: vi.fn(() => 'testtoken1234'),
+  nanoid: vi.fn((length?: number) =>
+    length === 16 ? 'unsub16charstokn' : 'testtoken1234',
+  ),
 }));
 
 import {
   getInterstitialData,
   insertAffiliateClick,
 } from '@/db/queries/affiliate-click';
+import { insertFollowUpEmail } from '@/db/queries/follow-up-email';
 import { POST } from './route';
 
 const VALID_SHORT_ID = 'abc123def456';
@@ -45,14 +59,30 @@ const MOCK_INTERSTITIAL: Awaited<ReturnType<typeof getInterstitialData>> = {
   tariffSnapshotId: '44444444-4444-4444-4444-444444444444',
 };
 
+const CLICK_ID = '55555555-5555-5555-5555-555555555555';
+
 function makeParams(shortId = VALID_SHORT_ID, itemId = VALID_ITEM_ID) {
   return Promise.resolve({ shortId, itemId });
 }
 
+/** form data 없는 기본 요청 (4.1.c 하위 호환) */
 function makeRequest() {
   return new Request('http://localhost/go/abc123def456/11111111-1111-1111-1111-111111111111/confirm', {
     method: 'POST',
   });
+}
+
+/** form data 포함 요청 (4.5.c) */
+function makeRequestWithForm(fields: Record<string, string>) {
+  const body = new URLSearchParams(fields).toString();
+  return new Request(
+    'http://localhost/go/abc123def456/11111111-1111-1111-1111-111111111111/confirm',
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body,
+    },
+  );
 }
 
 beforeEach(() => {
@@ -62,9 +92,7 @@ beforeEach(() => {
 describe('POST /go/[shortId]/[itemId]/confirm', () => {
   it('정상 경로 — 302 + Location 헤더에 ref_param 포함', async () => {
     vi.mocked(getInterstitialData).mockResolvedValue(MOCK_INTERSTITIAL);
-    vi.mocked(insertAffiliateClick).mockResolvedValue({
-      id: '55555555-5555-5555-5555-555555555555',
-    });
+    vi.mocked(insertAffiliateClick).mockResolvedValue({ id: CLICK_ID });
 
     const res = await POST(makeRequest(), { params: makeParams() });
 
@@ -79,9 +107,7 @@ describe('POST /go/[shortId]/[itemId]/confirm', () => {
 
   it('ref_param 패턴 = "slim-r-<shortId>"', async () => {
     vi.mocked(getInterstitialData).mockResolvedValue(MOCK_INTERSTITIAL);
-    vi.mocked(insertAffiliateClick).mockResolvedValue({
-      id: '55555555-5555-5555-5555-555555555555',
-    });
+    vi.mocked(insertAffiliateClick).mockResolvedValue({ id: CLICK_ID });
 
     await POST(makeRequest(), { params: makeParams() });
 
@@ -156,9 +182,7 @@ describe('POST /go/[shortId]/[itemId]/confirm', () => {
       ...MOCK_INTERSTITIAL,
       providerWebsite: 'https://proximus.be/mobile?lang=nl',
     });
-    vi.mocked(insertAffiliateClick).mockResolvedValue({
-      id: '55555555-5555-5555-5555-555555555555',
-    });
+    vi.mocked(insertAffiliateClick).mockResolvedValue({ id: CLICK_ID });
 
     const res = await POST(makeRequest(), { params: makeParams() });
 
@@ -167,5 +191,86 @@ describe('POST /go/[shortId]/[itemId]/confirm', () => {
     // &ref= 패턴 (? 이미 있음)
     expect(location).toContain('&ref=slim-r-');
     expect(location).not.toMatch(/\?ref=/);
+  });
+
+  // ─── 4.5.c 추가 케이스 ───────────────────────────────────────────────
+
+  it('4.5.c: email 유효 + followUp="yes" → insertFollowUpEmail 1회 호출', async () => {
+    vi.mocked(getInterstitialData).mockResolvedValue(MOCK_INTERSTITIAL);
+    vi.mocked(insertAffiliateClick).mockResolvedValue({ id: CLICK_ID });
+    vi.mocked(insertFollowUpEmail).mockResolvedValue({ id: 'fu-uuid-0001' });
+
+    const res = await POST(
+      makeRequestWithForm({ email: 'user@example.com', followUp: 'yes' }),
+      { params: makeParams() },
+    );
+
+    expect(res.status).toBe(302);
+    expect(vi.mocked(insertFollowUpEmail)).toHaveBeenCalledOnce();
+    expect(vi.mocked(insertFollowUpEmail)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        affiliateClickId: CLICK_ID,
+        email: 'user@example.com',
+        scheduledSendAt: expect.any(Date),
+        unsubscribeToken: expect.any(String),
+      }),
+    );
+  });
+
+  it('4.5.c: email 빈값 + followUp="yes" → insertFollowUpEmail 0회 (silent skip)', async () => {
+    vi.mocked(getInterstitialData).mockResolvedValue(MOCK_INTERSTITIAL);
+    vi.mocked(insertAffiliateClick).mockResolvedValue({ id: CLICK_ID });
+
+    const res = await POST(
+      makeRequestWithForm({ email: '', followUp: 'yes' }),
+      { params: makeParams() },
+    );
+
+    // 302 (affiliate_click 는 성공)
+    expect(res.status).toBe(302);
+    // follow_up_email INSERT 없음
+    expect(vi.mocked(insertFollowUpEmail)).not.toHaveBeenCalled();
+  });
+
+  it('4.5.c: email 유효 + followUp 미선택 → insertFollowUpEmail 0회', async () => {
+    vi.mocked(getInterstitialData).mockResolvedValue(MOCK_INTERSTITIAL);
+    vi.mocked(insertAffiliateClick).mockResolvedValue({ id: CLICK_ID });
+
+    const res = await POST(
+      makeRequestWithForm({ email: 'user@example.com' }),
+      { params: makeParams() },
+    );
+
+    expect(res.status).toBe(302);
+    expect(vi.mocked(insertFollowUpEmail)).not.toHaveBeenCalled();
+  });
+
+  it('4.5.c: follow_up_email INSERT 실패 → 500 반환', async () => {
+    vi.mocked(getInterstitialData).mockResolvedValue(MOCK_INTERSTITIAL);
+    vi.mocked(insertAffiliateClick).mockResolvedValue({ id: CLICK_ID });
+    vi.mocked(insertFollowUpEmail).mockRejectedValue(new Error('follow_up DB error'));
+
+    const res = await POST(
+      makeRequestWithForm({ email: 'user@example.com', followUp: 'yes' }),
+      { params: makeParams() },
+    );
+
+    expect(res.status).toBe(500);
+  });
+
+  it('4.5.c: unsubscribeToken 은 nanoid(16) — 16자 형식', async () => {
+    vi.mocked(getInterstitialData).mockResolvedValue(MOCK_INTERSTITIAL);
+    vi.mocked(insertAffiliateClick).mockResolvedValue({ id: CLICK_ID });
+    vi.mocked(insertFollowUpEmail).mockResolvedValue({ id: 'fu-uuid-0001' });
+
+    await POST(
+      makeRequestWithForm({ email: 'user@example.com', followUp: 'yes' }),
+      { params: makeParams() },
+    );
+
+    const call = vi.mocked(insertFollowUpEmail).mock.calls[0]?.[0];
+    expect(call).toBeDefined();
+    // 모킹된 nanoid(16) → 'unsub16charstokn' (16자)
+    expect(call?.unsubscribeToken).toHaveLength(16);
   });
 });
