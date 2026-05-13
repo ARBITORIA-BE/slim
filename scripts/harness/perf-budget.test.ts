@@ -581,6 +581,42 @@ describe('computeExitCode — first-load JS hard-fail 포함 (Amendment 1)', () 
 
 // ─── 3.5.1.c: formatAxeCell — axe advisory 컬럼 포맷 ─────────────────────────
 
+// ─── 3.5.1.e: 신규 4 form 페이지 측정 셋 편입 회귀 잠금 ──────────────────────
+//
+// buildPageSet() 은 async + 외부 fetch 의존 → 단위 테스트 범위 밖.
+// 대신 4 페이지 URL 이 routeTier('form') 으로 분류되는지 잠금.
+// (ADR-0023 Amendment 1 §4 — 다음 harness:perf 사이클 실측 보강 대상)
+
+describe('3.5.1.e — 신규 4 form 페이지 routeTier 회귀 잠금 (PLAN 3.5.1.e)', () => {
+  // 측정 셋에 추가된 4 페이지 URL (buildPageSet에서 mobile 카테고리로 접근)
+  it('/compare/mobile/household → form tier (JS 예산 170/200)', () => {
+    expect(routeTier('/compare/mobile/household')).toBe('form');
+  });
+
+  it('/compare/mobile/current-provider → form tier', () => {
+    expect(routeTier('/compare/mobile/current-provider')).toBe('form');
+  });
+
+  it('/compare/mobile/bill → form tier', () => {
+    expect(routeTier('/compare/mobile/bill')).toBe('form');
+  });
+
+  it('/compare/mobile/preview → form tier', () => {
+    expect(routeTier('/compare/mobile/preview')).toBe('form');
+  });
+
+  // 신규 4 페이지는 SEO 게이트 대상 (isSeoExempt false)
+  it('/compare/mobile/household → SEO 게이트 대상 (noindex 페이지 아님)', () => {
+    expect(isSeoExempt('/compare/mobile/household')).toBe(false);
+  });
+
+  it('/compare/mobile/current-provider → SEO 게이트 대상 (Lighthouse SEO 점수 낮아도 판정)', () => {
+    // current-provider 는 metadata robots noindex 이지만, isSeoExempt 는 /r/* 만 제외.
+    // Lighthouse 가 낮은 SEO 점수를 soft-fail 로 잡는 것이 의도된 동작 (운영자 인지).
+    expect(isSeoExempt('/compare/mobile/current-provider')).toBe(false);
+  });
+});
+
 describe('formatAxeCell — axe advisory 컬럼 포맷 (3.5.1.c, ADR-0023 §T2)', () => {
   // "비-게이트인 이유": 진짜 axe 게이트는 e2e/accessibility.spec.ts.
   // perf 하네스는 advisory 표시만 — exit code 영향 X.

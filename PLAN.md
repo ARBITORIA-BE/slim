@@ -690,7 +690,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     3.5.1 본문에 ADR-0023 cross-ref + "harness:e2e→harness:perf 정정" 주석 (= 본 줄들).
     DoD: `/ship` 실행 시 `harness:perf` 가 호출됨. 검증: 슬래시 커맨드 정의 파일 확인.
     ✅ 검증 (2026-05-12): `.claude/commands/ship.md` 코드 품질 섹션에 `pnpm harness:perf` 체크박스 추가 (`next build && pnpm start` 선행 + ADR-0023 §T5 advisory 주석). PLAN "Phase 3 검증" 라인 → `harness:perf` 실행 근거로 갱신 (Lighthouse Perf/Acc soft + LCP/TBT hard + first-load JS 2-tier). harness:e2e→harness:perf 정정 + ADR-0023 cross-ref 는 3.5.1 본문·sub-task 들에 이미 반영. ci.yml 무변동.
-  - [ ] **3.5.1.e** (백로그) household/current-provider/bill/preview 4페이지를 harness:perf 측정 셋에 편입 — 현재 `next build` 출력 기준 추정치만 있음 (ADR-0023 §Amendment 1 §4 주). 게이트 차단 아님.
+  - [x] **3.5.1.e** (백로그) household/current-provider/bill/preview 4페이지를 harness:perf 측정 셋에 편입 — 현재 `next build` 출력 기준 추정치만 있음 (ADR-0023 §Amendment 1 §4 주). 게이트 차단 아님.
 - [x] **3.5.2** SEO 메타 / sitemap.xml / robots.txt — 베타 시드를 위해 필수.
   검색엔진이 색인 가능한 라우트를 올바른 메타·sitemap·robots 로 노출하고, 색인
   금지 라우트(`/r/[shortId]` 개인 비교 결과 — ADR-0021 §T8 noindex 유지 ·

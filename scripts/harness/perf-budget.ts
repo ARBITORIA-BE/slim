@@ -379,6 +379,14 @@ async function buildPageSet(): Promise<Array<{ label: string; url: string; skip?
     { label: '① 랜딩 (/)',                  url: `${BASE_URL}/` },
     { label: '② 비교 선택 (/compare)',        url: `${BASE_URL}/compare` },
     { label: '③ 우편번호 입력 폼',            url: `${BASE_URL}/compare/mobile/postal` },
+    // PLAN 3.5.1.e — 4 form 페이지 측정 셋 편입 (ADR-0023 Amendment 1 §4).
+    // sessionStorage redirect 없음 (정찰 확인): household/bill/preview 는 'use client' 빈 폼 렌더,
+    // current-provider 는 RSC + getActiveProviders('BE') — DB 부재 시 ZeroProvidersFallback 렌더.
+    // 어느 경우든 LCP/TBT/first-load JS 측정 가능 (redirect 발생 조건: 잘못된 category 뿐).
+    { label: '③.b household',               url: `${BASE_URL}/compare/mobile/household` },
+    { label: '③.c current-provider',        url: `${BASE_URL}/compare/mobile/current-provider` },
+    { label: '③.d bill',                    url: `${BASE_URL}/compare/mobile/bill` },
+    { label: '③.e preview',                 url: `${BASE_URL}/compare/mobile/preview` },
   ];
 
   const shortId = await fetchShortId();
@@ -475,10 +483,15 @@ async function measurePage(
  *   "/r/[shortId]" → "/r/[shortId]/page"
  */
 const ROUTE_TO_MANIFEST_KEY: Record<string, string> = {
-  '/':                             '/page',
-  '/compare':                      '/compare/page',
-  '/compare/[category]/postal':    '/compare/[category]/postal/page',
-  '/r/[shortId]':                  '/r/[shortId]/page',
+  '/':                                         '/page',
+  '/compare':                                  '/compare/page',
+  '/compare/[category]/postal':                '/compare/[category]/postal/page',
+  // PLAN 3.5.1.e — 4 form 페이지 first-load JS 매핑 추가 (ADR-0023 Amendment 1 §4)
+  '/compare/[category]/household':             '/compare/[category]/household/page',
+  '/compare/[category]/current-provider':      '/compare/[category]/current-provider/page',
+  '/compare/[category]/bill':                  '/compare/[category]/bill/page',
+  '/compare/[category]/preview':               '/compare/[category]/preview/page',
+  '/r/[shortId]':                              '/r/[shortId]/page',
 };
 
 // app-build-manifest.json 구조 (value = 청크 파일 경로 배열)
