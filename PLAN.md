@@ -1124,7 +1124,52 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - DoD: (1) 3 매체 × 1~2 기자 발송 완료 (2) 응답률/인터뷰 결과 ADR-0029
       §운영 추적 추가 (3) 4.9 진입 신호 (NPS ≥ 30 + 실 conversion 검증
       완료 시) — 4.9 분해는 *별도 architect 호출*
-- [ ] **4.9** 런치 — 통신 카테고리만 BE 우선 오픈 (NL/LU는 페이즈 5에서)
+- [ ] **4.9** 런치 — 통신 카테고리만 BE 우선 오픈 (NL/LU는 페이즈 5에서).
+  4.8.d 완료 + ADR-0024 게이트(NPS ≥ 30 + 실 conversion 검증) 통과 시 진입.
+  **ADR 신설 0** — ADR-0024(게이트) + ADR-0029(정직성 카피)가 이미 본 전환을 커버.
+  베타→런치 *상태 전환*에 그치므로 PLAN 본문에 결정 명시로 충분.
+  - [ ] **4.9.a** ADR-0024 게이트 통과 검증 — **운영자 직접** (Claude 트랙 외)
+    - 측정: (1) 4.7.c NPS 응답 집계 (NPS ≥ 30 여부) (2) 실 conversion 카운트
+      (`affiliate_click.conversion_status = 'converted'` 행 — payout postback
+      미구현 단계라 운영자 수동/자가 self-report 허용, ADR-0026 §운영 추적)
+    - 게이트 통과 실패 시 옵션 (운영자 결정):
+      (a) 4.6/4.7 연장 (베타 추가 기간) — 권장 (모집/모니터링 흐름 변경 0)
+      (b) scope 축소 (BE 일부 지역) — 비권장 (제공 범위 카피 변경 + 정직성 토큰
+          ADR-0029 §T2 재조정 필요, 솔로 부하 증가)
+      (c) 런치 보류 — 페이즈 4.5 직행 (운영 평가 + 데이터 누적 후 재시도)
+    - DoD: (1) NPS/conversion 수치 공개 (`docs/launch-gate.md` 또는 ADR-0024
+      §운영 추적 backfill) (2) 통과/실패 결정 1줄 (3) 통과 시 4.9.b 트리거,
+      실패 시 옵션 (a/b/c) 선택 + PLAN 본문 backfill
+  - [ ] **4.9.b** 런치 전환 코드 변경 — builder (4.9.a 통과 후)
+    - 정찰 결과 (2026-05-13 architect): `src/app/robots.ts` 이미 `allow: '/'`
+      (베타 단계에서도 색인 허용). Disallow는 `/r/`, `/compare/*/{postal,
+      household,current-provider,bill,preview}`, `/api/` — 모두 privacy/노이즈
+      이유, 베타↔런치 *무관*. → **robots.ts 변경 0건**.
+    - 실제 변경 영역:
+      (1) `BetaEstimatedBanner` *유지* — 1.5.6 stub fetcher 차단 지속,
+          런치 후에도 stub 상태면 배너 유지가 헌법 P1 일관 (절대 제거 X)
+      (2) 모집 카피 (4.6 산출물 `docs/copy/recruit-*.md`) — "비공개 사전 운영"
+          → "정식 런치"/"공개" 변경 (scribe 트랙, 4.9.c)
+      (3) 분석 도구 활성 검토 — PostHog/Sentry 이미 활성 (페이즈 0/1), 베타→런치
+          전환에 변경 0건 (추정 — 운영자 dashboard 확인 후 backfill 가능)
+    - DoD: (1) typecheck/lint/test 0 에러 (2) BetaEstimatedBanner 정상 렌더 회귀
+      테스트 통과 (이미 1.5.6 커버) (3) robots.ts diff = 0 (정찰 결과 명시)
+  - [ ] **4.9.c** 런치 공지 — scribe 작성 + 운영자 발송
+    - 산출물: 4.6 동일 4 채널 카피 (`docs/copy/launch-*.md` 4 파일 —
+      LinkedIn/Reddit r/belgium/대학 게시판/지인 네트워크) "정식 런치" 톤
+    - GitHub README 1줄 갱신 (베타 → 런치) + `/about` 또는 `/` 카피 minor
+      갱신 (운영자 마케팅 결정 — scribe placeholder `{런치 일자}` `{베타 N}`)
+    - ADR-0029 §T2 정직성 토큰 *유지*: "BE ≥ 75% 2 공급사" / "솔로 신생" —
+      페이즈 5 진입 전엔 카피 변경 X (멀티 공급사/카테고리 확보 전 = 한계 일관)
+    - DoD: (1) md 4 파일 (2) ADR-0029 §T2 통과 (3) 운영자 review pass
+      (4) README diff 1줄 (5) 운영자 4 채널 발송 완료
+  - [ ] **4.9.d** 페이즈 4.5 진입 신호 — **운영자 직접** (Claude 트랙 외)
+    - 4.9.a~c 완료 = 페이즈 4 마감 = 페이즈 4.5 진입.
+    - 작업: (1) 4.5.1/4.5.2/4.5.3 sub-task 시작 트리거 (architect 별도 호출 가능)
+      (2) M16 6개월 평가 카운트다운 시작 (4.5.3 조건 모니터)
+      (3) CHANGELOG 페이즈 4 마감 entry (scribe)
+    - DoD: (1) 페이즈 4.5 진입 commit (2) 4.5.3 M16 평가 시점 `docs/m16-eval.md`
+      placeholder (또는 ADR backfill) (3) CHANGELOG 페이즈 4 요약 1 entry
 
 **Phase 4 검증:** 어트리뷰션 정확성 — `pnpm harness:price` + 수동 5건 검증
 + 베타 NPS ≥ 30.
