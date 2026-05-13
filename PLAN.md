@@ -856,7 +856,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     4.2 의 DoD 도 동시 충족. UI 의 "변경하기 버튼 색만 다름" 은 4.3/4.4 와 묶여 페이즈 4 UI 라운드에서
     builder 가 구현 (별도 분해 불필요 — 4.1 ADR 가 격리 원칙의 단일 출처).
   - ✅ 완료 (2026-05-13): **알고리즘 측면 — 4.1.e (`src/engine/compare.isolation.test.ts`) 가 본 항목의 격리 원칙(`affiliate_status` 무영향) 을 단일 출처로 강제 + ADR-0026 §T3 잠금**. UI 측면("변경하기" 버튼 색만 다름) 은 4.3 (디스클로저 카드) 과 4.4 (비제휴 동등 표시) UI 라운드에서 통합 구현. 별도 sub-task 분해 불필요 (PLAN 본문 명시).
-- [ ] **4.3** 제휴 비공개시 명시적 디스클로저 (각 결과 카드 하단)
+- [x] **4.3** 제휴 비공개시 명시적 디스클로저 (각 결과 카드 하단)
   - 예: "Slim은 변경 시 Proximus로부터 €X의 수수료를 받습니다 — 이 금액은 회원님의 요금에 영향이 없습니다"
   - **단가 데이터 출처 결정 — 옵션 C (정적 TS const `src/data/affiliate-rates.ts`)**.
     근거 2줄: (i) 솔로 + €300 cap + 4.x 초기 계약 ≤ 5건 + 변경 빈도 분기 ≤ 1회 — 별도
@@ -907,11 +907,12 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     (UCPD + BE Code de droit économique VI.99 — ADR-0026 §검토 5 일관). DoD: 단가 표 렌더
     + legal 1차 통과 + 4.1.d 인터스티셜 문구와 *일관성* 명시.
     - ✅ 완료 (2026-05-13): `src/app/legal/affiliate-disclosure/page.tsx` 전면 교체 (stub → 본문, 7 섹션: 상업적 관계/알고리즘 독립성/인터스티셜 cross-ref/GDPR/단가 표/문의/footer). `src/lib/format-eur.ts` 신설 (formatEuroCents 공통 추출). `AffiliateDisclosureLine.tsx` import 1줄 갱신. `page.test.tsx` 신설 25 케이스 (placeholder 배너/실 entry/빈 배열/EUR 포맷/컬럼 헤더 8개/UCPD-VI.99 키 문구/다크패턴 부재). typecheck/lint 0 에러 / test 391 passed. providerId 표기 정책 C (케이스 변환) 채택.
-  - [ ] **4.3.e** 테스트 — (i) 정합 테스트: `affiliate-rates.ts` entry 의 `amountCents`
+  - [x] **4.3.e** 테스트 — (i) 정합 테스트: `affiliate-rates.ts` entry 의 `amountCents`
     가 `affiliate_click.commission_amount_cents` 와 동일 단위/타입 단언. (ii) 컴포넌트 테스트:
     `AffiliateDisclosureLine` 6 enum 분기. (iii) E2E 1건: 결과 페이지에서 디스클로저
     문구 렌더 + 디스클로저 페이지 링크 클릭 → 단가 표 도달. DoD: test 전체 통과 +
     harness:plan/harness:data 통과.
+    - ✅ 완료 (2026-05-13): `src/data/affiliate-rates.cents-parity.test.ts` (10 케이스: 정합 ttype sanity 4 + 단위 일관 2 + NewAffiliateClick 상호 호환 3 + 배열 비어있지 않음 1) + `e2e/affiliate-disclosure.spec.ts` (5 케이스: 디스클로저 페이지 직접 방문 — h1 + 표 헤더 6열 + 행 1+ + placeholder 배너 + 백링크 + EUR 렌더). typecheck 0 에러 / lint 0 에러 / test 401 passed (391 + 10 신규) / test:e2e 42 passed + 5 skipped (42 기존 유지) / harness:plan + harness:data 통과. 4.3.d 워크플로우 경계 회복(52→50→51 정상화). 커밋 [pending].
 - [x] **4.4** 비제휴 공급사도 동등하게 표시 (그냥 외부 링크 + "수수료 없음" 표기)
   - **4.3.c 안에서 동시 구현** — 같은 `AffiliateDisclosureLine` 컴포넌트가 `affiliate_status`
     enum 분기로 두 케이스 모두 렌더. 별도 sub-task 분해 불필요 (4.2 가 4.1.e 안에서 동시
@@ -1038,12 +1039,12 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
-| 4 | 9 | 3 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c 완료) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
+| 4 | 9 | 4 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c/d/e 완료) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **83** | **50** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
+| **합계** | **83** | **51** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
