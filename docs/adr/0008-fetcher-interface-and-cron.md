@@ -316,6 +316,7 @@ async ({ step, logger }) => {
   = 6줄 (한 눈에 보임).
 - 1.9 실패 격리는 `for ... continue` 루프 + 각 fetcher가 자체 step → 한
   fetcher 폭발이 다음 fetcher에 영향 0.
+- **후속 메일 7일 트리거** (ADR-0028 §T6) — 동일 step.run() 패턴 (네트워크 + DB write 분리 + idempotency 필터) 재사용.
 
 **거부된 대안 — 옵션 B (1 step = 1 insert)**
 - 장점: DB 실패 시 1 insert만 재시도.

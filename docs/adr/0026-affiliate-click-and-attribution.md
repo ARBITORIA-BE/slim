@@ -89,6 +89,7 @@ T1~T8 8개 결정.
   FK 를 NULL화한 시각. NULL = 아직 비교 입력과 연결 중. (`comparison_result.piiAnonymizedAt` /
   `comparison_request.piiAnonymizedAt` 와 동일 패턴.)
 - 메타: `id uuid PK defaultRandom()`, `created_at timestamptz NOT NULL defaultNow()`.
+- **후속 메일 PII 격리**: 후속 메일 시스템(ADR-0028 §T2)은 이메일 수집을 별도 `follow_up_email` 테이블로 격리하여, 본 ADR의 §T1 "IP/fingerprint/session 컬럼 0" 부재 컬럼 잠금을 유지한다.
 
 ### T2 — 어트리뷰션 흐름 (동의 인터스티셜 → 서버사이드 insert → 302)
 
