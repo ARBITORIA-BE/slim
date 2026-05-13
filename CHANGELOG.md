@@ -483,6 +483,17 @@
     - 잔존 외부 트랙: Resend DPA (legal 조건 2, 외부 감사 항목 8, 베타 직전/M16 GATE-K)
   - **커밋**: `168106f` (`feat(plan-4.5.h): Day 90 follow-up-email 행 삭제 — ADR-0028 §T5 이행 + ADR-0026 §T6 cross-ref`).
 
+- Phase 0.5 — **D.5.c `/checkpoint` verifier 커밋 금지 명시 강화 — ADR-0025 §T1** (거버넌스):
+  - **변경 범위**: `.claude/commands/checkpoint.md` "4. **커밋**" 섹션 헤더에 **ADR-0025 §T1 cross-ref 1줄 강화** — `본 /checkpoint 또는 scribe 에이전트 전용. **verifier 에이전트는 절대 커밋하지 않음** (read-only). verifier 는 PLAN.md [x] 마킹만 허용, git commit / git add / git push 금지.`
+  - **배경**: 4.5 라운드 누적 위반 (4.5.c verifier 합계 오해 / 4.5.d verifier 페이즈 4.5 행 혼동) 회복 강화. D.5는 ADR-0025 (2026-05-12) 작성 후 운영 프로세스 강화 추가 대책.
+  - **D.5 라운드 종합** (2026-05-12~13):
+    - **D.5.a** ADR-0025 작성 (Accepted 2026-05-12) — T1(커밋 금지) / T2(불일치는 보고만, PLAN 마킹 외 Edit 금지) / T3(게이트 발명 금지) / T4(도구 차원 강제 준비 — verifier.md 갱신 대기)
+    - **D.5.b** `.claude/agents/verifier.md` system prompt 개선 (T1~T3 명시, 본 세션 spawn verifier 미반영 → 다음다음 세션부터 효과)
+    - **D.5.c** `/checkpoint` cross-ref 추가 (본 작업) — 슬래시 커맨드 호출 시마다 verifier 프롬프트 강조. 4.5 라운드 누적 위반 회복 + 향후 verifier 호출 시 추가 가드
+    - **페이즈 0.5 진행도**: 2→3 항목 완료 (D.1 코드 부채 + D.2 jq fallback + D.5 거버넌스). 전체 합계 **52→53**.
+  - **게이트 통과**: typecheck 0 / lint 0 / test 271 passed (회귀 0) / **harness:plan 83 항목 정합** (D.5.c [x] 갱신, 페이즈 0.5 합계 2→3, 전체 52→53) / harness:data 통과.
+  - **커밋**: `da75efd` (`docs(plan-D.5.c): /checkpoint 에 verifier 커밋 금지 명시 강화 — ADR-0025 §T1 cross-ref`).
+
 ### Changed
 
 - Phase 4 — **4.5.a Amendment: ADR-0028 §T1.a~T1.c `RESEND_API_KEY` 환경 분리 정책** (2026-05-13):
