@@ -118,6 +118,15 @@
 
 ### Fixed
 
+- Phase 0.5 — **D.6 compare-flow ChunkLoadError blocker 해제** (ADR-0030, 2026-05-13):
+  - **배경**: 2026-05-13 발견 `e2e/compare-flow.spec.ts` 2건 (`/preview → /r/[shortId]` redirect) timeout — 4.6 베타 진입 [!] blocker 잠금. 1차 architect 정찰(`a7fc480`)에서 `ChunkLoadError: Loading chunk 68 failed` 식별 + React render throw 가설 폐기.
+  - **본 세션 재검증 (2026-05-13)**: 좀비 dev process(PID 28080, 1차 세션 잔류) 정리 + 클린 dev 기동 후 `pnpm test:e2e e2e/compare-flow.spec.ts` 재실행 → **2/2 통과 (2.2s + 2.2s, 콘솔 에러 0)**. curl 단독 검증: `/compare/mobile/preview` HTML 200 + "결과를 준비 중입니다" / JS 청크 3건 모두 200 / `POST /api/compare` `{"ok":true,"shortId":"..."}` 200 / `GET /r/[shortId]` h1 "비교 결과" 200.
+  - **분류**: Claude 세션 환경 특이성 (좀비 dev process + 누적 turbopack 상태). 코드/스펙/설정 결함 아님 — 재현 안 됨.
+  - **결정 (ADR-0030)**: D.6.b 분기 채택. Fix 옵션 (a) `pnpm dev` → `pnpm build && pnpm start` 거부 (재현 안 됨 상태에서 e2e 5~10분 증가 + dev-mode 신호 약화, ADR-0002 Amendment 1 flaky→noise 정합). Fix 옵션 (b) Next.js/webpack 설정 거부 (추측 + 회귀 위험). `global-error.tsx` 방어 코드 거부 (검증 불가능). 코드 변경 0건.
+  - **남은 게이트** (운영자 환경 의존): V1 `pnpm dev` 클린 기동 + V2 `pnpm test:e2e` 2/2 + V3 ≥2 브라우저 manual 5단계 — 3단 통과 시 4.6 카피 배포. V1·V3 통과 시 운영자가 PLAN §D.6 [x] 마킹.
+  - **재발 트리거** (ADR-0030 §T2): 1차 = 좀비 dev kill / 2차 = `.next/` 삭제 / 3차 = D.6 재오픈 + Fix (a) 적용 + ADR-0030 Amendment 1.
+  - **검증**: typecheck 0 / `pnpm harness:plan` 정합 (D.6 [!]→[ ] 격하, 차단 1→0, 합계 미변동) / `pnpm test:e2e e2e/compare-flow.spec.ts` 2/2 통과. 코드 diff 0줄, 문서 diff = ADR-0030 신설 + INDEX.md 행 + PLAN.md 표기 + 본 항목.
+
 - Phase 3.5 — **3.5.1.e 후속 청소: preview 페이지 axe color-contrast advisory 해소**:
   - **위반 요소**: `<p class="font-semibold text-accent">결과 생성 실패</p>` (line 122, `/compare/[category]/preview/page.tsx`).
   - **대비 비율**: foreground #e97462 (`text-accent`) / background #f9f0eb (error alert box `bg-accent/5`) = **2.61:1** (WCAG AA 요구 4.5:1 미달).

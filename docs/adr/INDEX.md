@@ -36,6 +36,7 @@
 | [ADR-0027](0027-affiliate-rate-data-source.md) | Affiliate rate data source — static TS const (`src/data/affiliate-rates.ts`) 로 단가 데이터 관리 (옵션 C 채택, 격상 트리거 명시) | Accepted (2026-05-13 — architect 권고, 운영자 최종 결정). ADR-0026 §T4 "builder 결정" 격상. 옵션 C 정적 const, 옵션 B 마이그레이션 트리거(계약 ≥6 또는 분기≥2회) 설정. | 2026-05-13 |
 | [ADR-0028](0028-follow-up-email.md) | Follow-up email — infrastructure (Resend) + data model (`follow_up_email` table) + consent flow + GDPR retention | Accepted (2026-05-13 — 운영자 직접 결정, architect 권고). Builder 인계 가능. Legal 1차 트리거 = 4.5.f. 외부 감사 = M16. | 2026-05-13 |
 | [ADR-0029](0029-beta-recruitment.md) | Beta recruitment — channels + honesty + tracking + scope cut | Accepted (2026-05-13 — 운영자 직접 결정, architect 권고). 모집 카피 4개 (scribe 신설). 정직성 토큰 4개 + 과장 금지 토큰 확인. D.3.a/c/d 선행 필수. | 2026-05-13 |
+| [ADR-0030](0030-d6-compare-flow-chunkloaderror-retrospective.md) | D.6 compare-flow ChunkLoadError 회고 — Claude 세션 환경 특이성으로 close | Accepted (2026-05-13 — 운영자 직접 결정, Pieter 단일 세션 검증). 코드 변경 0건. V1·V3 운영자 환경 게이트 추가. | 2026-05-13 |
 
 ---
 

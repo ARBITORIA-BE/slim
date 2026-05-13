@@ -147,8 +147,9 @@
   - 검증: [ADR-0025](docs/adr/0025-verifier-read-only-commit-boundary.md) §Verification
     — 다음 verifier 호출 시 (a) 커밋 안 함 (b) 불일치는 "❌ 차단 — 수정 필요" 로 인계
     (c) 게이트 발명 안 함.
-- [!] **D.6** `e2e/compare-flow.spec.ts` 2건 클라이언트 예외 fix — **4.6 베타
-  진입 blocker**. 2026-05-13 발견 (3.5.1.e 후속 색상 fix `e7c6f69` 정찰 중 builder
+- [ ] **D.6** `e2e/compare-flow.spec.ts` 2건 클라이언트 예외 fix — ~~**4.6 베타
+  진입 blocker**~~ → blocker 해제 ([ADR-0030](docs/adr/0030-d6-compare-flow-chunkloaderror-retrospective.md), 2026-05-13). **운영자 V1·V3 통과 시 [x] 마킹** (§ADR-0030 Verification).
+  2026-05-13 발견 (3.5.1.e 후속 색상 fix `e7c6f69` 정찰 중 builder
   `git stash` 로 *기존* 실패 확인 → preview 색상 변경과 무관, 그 이전부터 존재).
   - **증상**: `pnpm test:e2e e2e/compare-flow.spec.ts` 2건 모두 *5단계 입력 →
     `/r/[shortId]` redirect* 단계 (preview 자동 submit) 에서 timeout 10s 초과.
@@ -199,6 +200,7 @@
     배포 *전* 완료 검증.
   - **재진입 트리거**: 4.6 배포 의존성이므로 *즉시* — 운영자가 D.3.a/c/d
     배포 작업 진행하는 동안 Claude 가 D.6 처리.
+  - **close 메모 (2026-05-13, [ADR-0030](docs/adr/0030-d6-compare-flow-chunkloaderror-retrospective.md))**: D.6.b 분기 채택 — 좀비 dev process (PID 28080, 1차 세션 잔류) 정리 후 본 세션 e2e 2/2 통과 (2.2s+2.2s, 콘솔 에러 0) + curl 단독 검증 4건 통과 (SSR HTML / 청크 3건 / `/api/compare` 200 / `/r/[shortId]` 200). 환경 특이성 분류. Fix 옵션 (a/b) 미적용 — 코드/설정 변경 0건. **[!] blocker 해제** + 4.6 진입 차단 해제. **남은 운영자 게이트** = ADR-0030 §Verification V1 (`pnpm dev` 클린 기동) + V3 (≥2 브라우저 manual 5단계). V1·V3 통과 시 운영자가 본 항목 [x] 마킹 + ADR-0030 §Status 에 검증 날짜 추가. **재발 트리거** = §ADR-0030 §T2 (좀비 dev 1차 / `.next/` 삭제 2차 / D.6 재오픈 + Fix (a) 3차).
 
 **Phase 0.5 검증:** `pnpm harness:plan && pnpm typecheck && pnpm lint &&
 pnpm test` + 위 DoD 모두 충족.
@@ -1350,7 +1352,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 6 | 3 | 1 | D.2·D.4·D.5 완료. D.1 코드 완료(잔여=운영자 브랜치 보호), D.3 GATE-K 직전 일괄, D.5 (a/b/c 완료, 2026-05-13). **D.6 신설** — compare-flow.spec.ts 2건 클라이언트 예외 ([!] 4.6 베타 진입 blocker, 2026-05-13 발견) | 2026-05-13 |
+| 0.5 | 6 | 3 | 0 | D.2·D.4·D.5 완료. D.1 코드 완료(잔여=운영자 브랜치 보호), D.3 GATE-K 직전 일괄, D.5 (a/b/c 완료, 2026-05-13). **D.6 blocker 해제** — 좀비 dev process 환경 특이성, ADR-0030 회고 close. 운영자 V1·V3 통과 시 [x] 마킹. | 2026-05-13 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 8 | 7 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C; 1.5.6.1 옵션 X 추정값 UI 완료, 2026-05-13) | 2026-05-13 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
