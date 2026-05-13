@@ -447,6 +447,27 @@
   - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **445 passed** (4.5.e 이후 코드 무변동) / `pnpm harness:plan` **51 항목 정합** (PLAN 체크박스/합계 무변동) / `pnpm harness:data` 통과.
   - 커밋: `2d981a5` (`docs(legal-adr): 4.5.f legal 1차 검토 — GDPR A~I 8통과/1조건부 + PA-05 + 항목 8`).
 
+- Phase 4 — **4.5.g 통합 + E2E 테스트** (ADR-0028 §T6 idempotency + §T5 익명화 검증) (2026-05-13):
+  - **범위**: 4.5.c/d/e 코드 통합 검증 + 대안 b (UI 흐름 + DB 효과, Inngest 실 실행 X).
+  - **통합 테스트 8 케이스** — `src/inngest/follow-up-email.integration.test.ts` 신설:
+    - pending → sent 상태 전이 (scheduled_send_at 초과 시 발송)
+    - provider LEFT JOIN 정합 (affiliate_click → follow_up_email → provider 역추적)
+    - unsubscribed_at 필터 (거부자 제외)
+    - sent_at idempotency (2회 발송 조건 재시뮬 = 1회만 실제 발송, DB 중복 0)
+    - scheduled_send_at 미래 조건 (아직 발송 대상 X)
+    - unsubscribeByToken 원자성 (token 일치 = unsubscribed_at + email NULL 동시)
+    - Resend retry 패턴 (mock store chain 에러 시뮬)
+  - **E2E 2 케이스** — `e2e/follow-up-email-flow.spec.ts` 신설 (대안 b 선택 — Inngest cron 실 실행 X):
+    - 인터스티셜 form submit → POST /api/compare/confirm 성공 → 302 redirect to /r/[shortId]
+    - unsubscribe 페이지 진입 (fake token 1-click) → page 렌더링 성공 + message 시각화
+  - **dark-pattern 회귀 추가 0** — 4.5.c/d/e 가 이미 `page.dark-pattern.test.ts` 31 케이스 (G 섹션 : pre-checked 양방향 + Art. 13 카피 + Confirmshaming) 로 커버. 4.5.g는 이미 테스트된 동작 통합 검증만.
+  - **4.5.a~f 회귀 X** (4.1.d/e — affiliate 어트리뷰션 / 4.3.* — 캐시) 모두 영향 0.
+  - **게이트 통과**: typecheck/lint/test **453 passed** (445+8 신규) / test:e2e **45 passed + 7 skipped** (43 기존 + 2 신규, skipped 대안 c 논리적 skip) / harness:plan 51 정합 / harness:data 통과.
+  - **커밋**: `c95fafa` (`feat(plan-4.5.g): 통합 8 케이스 + E2E 2 케이스 — cross-module storeRef in-memory + 대안 b UI 흐름`).
+  - **ADR-0028 갱신**: §Verification 섹션 **T6 + T5 체크** 추가 — "(2026-05-13) T6 idempotency 검증 통과: pending→sent 상태 2회 조건 재시뮬 = 1회만 실 변경, sent_at NOT NULL 필터 중복 발송 차단. T5 익명화 검증 통과: sent_at 갱신 + email NULL 원자 확인, unsubscribeByToken 시점 email NULL 동시 실행."
+
+### Changed
+
 - Phase 4 — **4.5.a Amendment: ADR-0028 §T1.a~T1.c `RESEND_API_KEY` 환경 분리 정책** (2026-05-13):
   - **ADR-0028 §T1.a**: `RESEND_API_KEY` 환경 분리 — production/preview/development 3 환경, 각각 다른 키, 환경별 SoT (ADR-0022 §D3 DB 환경 분리 패턴 일관). 운영자 prod/dev 두 키 발급 완료.
   - **ADR-0028 §T1.b**: Vercel project settings 에서 production env 등록 (5분), 선택사항 preview env 등록, development 제외.
