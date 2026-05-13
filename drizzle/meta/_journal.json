@@ -36,6 +36,13 @@
       "when": 1778449805361,
       "tag": "0004_sudden_sprite",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778651872118,
+      "tag": "0005_pale_praxagora",
+      "breakpoints": true
     }
   ]
 }
