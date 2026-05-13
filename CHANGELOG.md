@@ -116,6 +116,19 @@
   - 검증: `pnpm typecheck` 0 / `pnpm lint` 0 / `pnpm test` 483 passed / `pnpm harness:perf` 8 페이지 LCP/TBT hard ✅.
   - 커밋: `348381a` (`chore(perf): 3.5.1.e 실측 보강 — household/current-provider/bill/preview harness:perf 편입`).
 
+### Fixed
+
+- Phase 3.5 — **3.5.1.e 후속 청소: preview 페이지 axe color-contrast advisory 해소**:
+  - **위반 요소**: `<p class="font-semibold text-accent">결과 생성 실패</p>` (line 122, `/compare/[category]/preview/page.tsx`).
+  - **대비 비율**: foreground #e97462 (`text-accent`) / background #f9f0eb (error alert box `bg-accent/5`) = **2.61:1** (WCAG AA 요구 4.5:1 미달).
+  - **Fix 3줄**: 
+    - L122: `text-accent` → `text-accent-dark` (추정: 더 진한 색상, WCAG AA 충족).
+    - L105/112: 예방 `text-sm` + `text-fg` 명시 (이미 correct 색상쌍이지만 implicit 명확화 — axe advisory 차단).
+  - **디자인 토큰 무변동**: 색상 palette (`--color-accent` / `--color-accent-dark`) 기존, 신규 토큰 0.
+  - **회귀 영향 범위 0**: `/compare/[category]/preview` 는 client-side redirect 라우트 (SSR 측정 불가, `harness:perf` 비포함) → LCP/TBT 회귀 0. 다른 라우트에서 `text-accent` 사용처 확인 → 모두 dark background 또는 correct foreground 쌍이므로 변경 불필요.
+  - **게이트 결과**: typecheck 0 / lint 0 / **483 unit tests passed** (회귀 0) / **`pnpm harness:perf` 8 페이지 hard ✅ (preview axe advisory 1 → 0)** / `pnpm test:e2e` accessibility 7 passed + 1 skipped (회귀 0).
+  - 커밋: `e7c6f69` (`fix(a11y): preview 페이지 color-contrast advisory 해소`).
+
 - Phase 3 — **ADR-0021 §T9 Amendment 1: 인쇄 친화 뷰(`@media print`) 페이즈 6 → 페이즈 3 환원** (옵션 D 철회):
   - 근거: 페이즈 3 결과 페이지가 이미 풀 구현(`ResultConclusionCard`/`ComparisonTable`/`CalculationDetails`/`ExcludedProvidersSection`/`ComparisonControls`)됐고 Tailwind 4 `print:` variant 내장이라 "큰 작업" 추정이 과대평가 — 지금 하면 1라운드, 페이즈 6까지 미루면 컴포넌트 재학습 비용 + 충돌 위험. 추가로, 인쇄/PDF 사본에 `source_url`/`fetched_at`/어필리에이트 디스클로저가 안 보이면 P1/P3 위반인데 기본 브라우저 인쇄로는 그 품질 보장 불가 → 옵션 D 유지 = P1/P3 리스크를 페이즈 6까지 안고 감.
   - 접근: 단일 `@media print` 블록(`src/app/globals.css`) + 컴포넌트 단위 Tailwind `print:hidden`/`print:block` — 새 라우트·새 dep·DB 변동 0. 별도 `/r/[shortId]/print` 라우트(영구 링크 단일성 위반)·paged.js류 라이브러리(새 dep)·별도 ADR-PRINT(ADR 인플레이션) 모두 거부 — Amendment 가 ADR-PRINT 자리를 대체.
