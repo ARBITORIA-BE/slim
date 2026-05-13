@@ -466,6 +466,23 @@
   - **커밋**: `c95fafa` (`feat(plan-4.5.g): 통합 8 케이스 + E2E 2 케이스 — cross-module storeRef in-memory + 대안 b UI 흐름`).
   - **ADR-0028 갱신**: §Verification 섹션 **T6 + T5 체크** 추가 — "(2026-05-13) T6 idempotency 검증 통과: pending→sent 상태 2회 조건 재시뮬 = 1회만 실 변경, sent_at NOT NULL 필터 중복 발송 차단. T5 익명화 검증 통과: sent_at 갱신 + email NULL 원자 확인, unsubscribeByToken 시점 email NULL 동시 실행."
 
+- Phase 4 — **4.5.h Day 90 행 삭제 cron — ADR-0028 §T5 잔존 조건 이행 + ADR-0026 §T6 cross-ref** (2026-05-13):
+  - **범위**: ADR-0026 §T6 기존 익명화 Inngest job (ADR-0008 §cron, 일 1회 UTC 06:00) 에 `follow_up_email` Day 90 행 삭제 step 추가. 신규 job 0 (€300 cap — Inngest run 수 절약, ADR-0028 §T6 정신 일관). 동일 cron 안에서 `comparison_request` PII 일반화 + `affiliate_click` FK SET NULL + `follow_up_email` Day 90 행 삭제가 순차 step 으로 실행.
+  - **구현**: `scripts/harness/price-snapshot.ts` 에 `deleteAnonymizedFollowUpEmails(dbClient)` 함수 export + `main()` 에서 호출 + Vitest 가드. SQL 조건 = `pii_anonymized_at IS NOT NULL AND pii_anonymized_at <= NOW() - INTERVAL '90 days'`. 발송 전 행(pii_anonymized_at=NULL) 보호.
+  - **보조 작업 4 통합 테스트**: 
+    - **(A) 100일 경과**: pii_anonymized_at ≤ now-100d → DELETE 1행 실행
+    - **(B) 89일 경과**: pii_anonymized_at ≤ now-89d → 0행 유지 (경계 검증)
+    - **(C) 익명화 미함**: pii_anonymized_at=NULL → DELETE 제외 (발송 전 보호)
+    - `src/inngest/follow-up-email.integration.test.ts` 3 케이스 추가
+  - **ADR-0026 §T6 cross-ref 추가** (scribe 작업): "`follow_up_email` Day 90 행 삭제도 본 cron에 step 추가 — ADR-0028 §T5 참조 (PLAN 4.5.h, 커밋 `168106f`)."
+  - **게이트 통과**: typecheck 0 / lint 0 / test **456 passed** (453+3 신규) / harness:plan **52 항목 정합** (4.5.h [x] → 합계 51→52) / harness:data 통과.
+  - **4.5 라운드 마감** (4.5.a~4.5.h 완료):
+    - a (ADR-0028 설계) → b (스키마 0006) → c (UI 동의) → d (Inngest 함수) → e (unsubscribe RSC) → f (legal 1차) → g (통합+E2E) → h (Day 90 cron) 8단계 전부 완료
+    - ADR-0028 결정 T1~T7 모두 충족
+    - 페이즈 4 진행도: **5/9 항목 완료** (4.1 + 4.2 + 4.3/4.4 + 4.5 — 4.6 베타 모집이 다음, 운영자 마케팅)
+    - 잔존 외부 트랙: Resend DPA (legal 조건 2, 외부 감사 항목 8, 베타 직전/M16 GATE-K)
+  - **커밋**: `168106f` (`feat(plan-4.5.h): Day 90 follow-up-email 행 삭제 — ADR-0028 §T5 이행 + ADR-0026 §T6 cross-ref`).
+
 ### Changed
 
 - Phase 4 — **4.5.a Amendment: ADR-0028 §T1.a~T1.c `RESEND_API_KEY` 환경 분리 정책** (2026-05-13):

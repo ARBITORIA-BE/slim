@@ -192,6 +192,7 @@ T1~T8 8개 결정.
     익명 회계 원장은 법정 기간 보존).
 - 익명화 cron 은 **신규 job 을 만들지 않고** 기존 `comparison_request` 익명화 Inngest job
   (ADR-0008 §cron)에 `affiliate_click` 처리를 추가한다 (€300 cap — Inngest run 수 절약).
+- `follow_up_email` Day 90 행 삭제도 본 cron 에 step 추가 — ADR-0028 §T5 참조 (PLAN 4.5.h, 커밋 `168106f`).
 - **이 90일 / 7년 분리는 본 ADR 의 잠정 권고다 — legal 에이전트 (4.1.f) 가 확정해야 한다**
   (특히 BE 거래 기록 보관 의무 기간, "정산 필드만 장기 보존" 의 GDPR 적합성, 동의 철회 시
   처리). 외부 감사는 베타 직전.

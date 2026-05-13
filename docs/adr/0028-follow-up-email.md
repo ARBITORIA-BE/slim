@@ -305,6 +305,8 @@ Slim
 - ✅ **4.5.f: legal 1차 GDPR Art. 6/7/13 + 다크패턴 통과** (`docs/legal/gdpr-register.md` PA-05 신설). A~I 8통과/1조건부. 잔존: Day 90 cron + Resend DPA. 커밋 진행 중.
 - ✅ **4.5.g: 통합 + E2E 테스트 (T6 idempotency + T5 익명화 검증)** — `src/inngest/follow-up-email.integration.test.ts` 신설 (8 케이스: pending→sent 상태 전이 + provider LEFT JOIN + unsubscribed_at 필터 + sent_at idempotency 2회 조건 동일 결과 + scheduled_send_at 미래 제외 + unsubscribeByToken 원자성 + Resend retry 패턴 + mock store 체인). `e2e/follow-up-email-flow.spec.ts` 신설 (2 E2E 케이스: 인터스티셜 form submit → 302 redirect + unsubscribe 페이지 렌더링, 대안 b — Inngest 실행 X UI 흐름 + DB 검증). dark-pattern 회귀 추가 0 (4.5.c/d/e 가 이미 `page.dark-pattern.test.ts` 31 케이스로 커버). 4.1.d/e + 4.3.* 회귀 X. typecheck/lint/test 453 passed (445+8) / test:e2e 45 passed + 7 skipped (43 기존+2 신규) / harness:plan 51 정합 / harness:data 통과. 커밋 `c95fafa`. **T6 idempotency 검증**: pending→sent 상태 2회 조건 재시뮬 = 1회만 실 변경, sent_at NOT NULL 필터가 중복 발송 0 보장. **T5 익명화 검증**: sent_at 갱신 + email NULL 동기 확인, unsubscribeByToken 시점 email NULL 원자 실행.
 
+- ✅ **4.5.h: Day 90 행 삭제 cron — T5 마감** (2026-05-13) — ADR-0026 §T6 기존 익명화 cron 에 `follow_up_email` Day 90 step 추가. SQL: `pii_anonymized_at IS NOT NULL AND pii_anonymized_at <= NOW() - INTERVAL '90 days'` (발송 전 행 IS NULL 보호). 보조 작업 4 (3 케이스: A 100d DELETE / B 89d 경계 / C NULL 보호) + `src/inngest/follow-up-email.integration.test.ts` 추가 (3 신규). typecheck/lint/test **456 passed** (453+3) / harness:plan **52 항목 정합** / harness:data 통과. 커밋 `168106f`. **모든 T1~T7 결정 충족. §Verification 마감. Status: Accepted (2026-05-13).**
+
 ---
 
 ## References
