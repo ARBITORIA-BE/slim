@@ -9,11 +9,9 @@ Legal review (internal 1차): 2026-05-13 **조건부 통과** — builder 인계
 
 본 ADR 은 *결정 + builder/legal 인계 명세*다. **코드/마이그레이션 변경 0건** — 실제 신설
 (`src/db/schema/affiliate_click.ts`, `drizzle/0005_*`)은 PLAN 4.1.b~e builder 라운드, GDPR
-처리 등록부 항목은 4.1.f legal. 단 **legal 에이전트 1차 검토(4.1.f)가 본 ADR §데이터 모델
-(§스키마)·§어트리뷰션 흐름·§GDPR 보존 정책을 통과해야 builder 인계가 시작된다** — 그 전까지
-Status 의 "(legal review pending)" 주석을 유지하고, 통과 시 verifier/scribe 가 주석을 제거한다.
-외부 변호사 감사는 베타 직전 / M16 평가 게이트 1회 (ADR-0004 §결정 3, ADR-0007 §Legal
-review pending 와 동일 트랙).
+처리 등록부 항목은 4.1.f legal. **legal 에이전트 1차 검토(4.1.f) 조건부 통과(2026-05-13)** —
+builder 인계 시작. 외부 변호사 감사는 베타 직전 / M16 평가 게이트 1회 (ADR-0004 §결정 3,
+ADR-0007 §Legal review pending 와 동일 트랙).
 
 ## Context
 

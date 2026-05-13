@@ -834,6 +834,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     ✅ 완료 (2026-05-13): `docs/adr/0026-affiliate-click-and-attribution.md` 신설 (Accepted, 결정 T1~T8 + §스키마 표 18컬럼 + Alternatives a~e). `docs/adr/INDEX.md` 정식 항목 + `docs/adr/0007-...md` §"Legal review pending" cross-ref. legal 1차(4.1.f) 조건부 통과 — Status 에 잔존 조건 2건(BE 회계 보존 10년 보수 / 4.1.d 인터스티셜 필수항목) 명시. 외부 변호사 감사 7항목은 베타 직전/M16.
   - [x] **4.1.b** `src/db/schema/affiliate_click.ts` 신설 + Drizzle 마이그레이션 (drizzle/0005_*) —
     ADR-0026 §데이터 모델 컬럼. `src/db/schema/index.ts` export 1줄. `pnpm db:push` 검증.
+    ✅ 완료 (2026-05-13): `src/db/schema/affiliate_click.ts` 신설 (18컬럼, enum, FK 4개, 인덱스 5개). `drizzle/0005_pale_praxagora.sql` (enum + table + FK + 인덱스). `src/db/schema/index.ts` export 1줄 추가. typecheck/lint/test/harness:plan/harness:data 모두 통과. 3-way 정합(ADR-0026 ↔ 스키마 ↔ 마이그레이션) ✅. CHANGELOG 항목 추가. builder 인계 가능.
   - [ ] **4.1.c** 클릭 기록 경로 — `src/app/r/[shortId]` "변경하기" CTA → 동의 확인 인터스티셜
     (`src/app/go/[...]` 또는 route handler) → `affiliate_click` insert → 302 redirect to provider site
     (`?ref=slim`). 동의 거부 시 외부 링크만 (기록 0). PostHog/Sentry 외 추적기 0.

@@ -32,7 +32,7 @@
 | [ADR-0023](0023-lighthouse-axe-perf-harness.md) | Lighthouse / axe-core 자동화 — `pnpm harness:perf` 신설 + 로컬 advisory 게이트 (CI 머지 차단 X) | Accepted (2026-05-11 — GATE-P 승인: lighthouse devDep + CI 머지 차단 X) + **Amendment 1 (2026-05-12)** — first-load JS budget 확정 (per-route 2-tier) | 2026-05-11 |
 | _ADR-0024_ | _(예약) Neon-side Vercel Integration — PR마다 DB branch 자동 생성_ | _가칭 / 미작성 — 페이즈 4 베타 (GATE-K) 트리거. PLAN §D.3.e_ | — |
 | [ADR-0025](0025-verifier-read-only-commit-boundary.md) | verifier 에이전트 read-only 경계 — 커밋 금지 + 불일치는 보고만 + 게이트 발명 금지 | Accepted (2026-05-12 — 운영자 직접 결정) | 2026-05-12 |
-| [ADR-0026](0026-affiliate-click-and-attribution.md) | `affiliate_click` 테이블 + 어트리뷰션 모델 — 동의 흐름(GDPR Art. 6(1)(a)) / 수수료 공개 정합 / 순위-격리 단위 테스트 / `bias-audit` 정정 / GDPR 90일·7년 분리 보존 / legal 트리거 | Accepted (2026-05-12 — 운영자 직접 결정) **(legal review pending — §보존 + §동의 흐름, 4.1.f)**. 코드 변경 0건 — 신설은 builder(4.1.b~e) / GDPR 등록부 legal(4.1.f) | 2026-05-12 |
+| [ADR-0026](0026-affiliate-click-and-attribution.md) | `affiliate_click` 테이블 + 어트리뷰션 모델 — 동의 흐름(GDPR Art. 6(1)(a)) / 수수료 공개 정합 / 순위-격리 단위 테스트 / `bias-audit` 정정 / GDPR 90일·7년 분리 보존 / legal 트리거 | Accepted (2026-05-12). Legal review 조건부 통과 (2026-05-13 — 4.1.a/f 완료). Builder 인계 가능. 외부 감사 = M16. | 2026-05-13 |
 
 ---
 

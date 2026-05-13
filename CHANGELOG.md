@@ -214,6 +214,16 @@
   - 검증: harness:plan **83 항목 정합** / harness:data 통과. (코드 무변동 — unit 271).
   - 커밋: `fd81144` (`docs(adr-0026): affiliate_click 테이블 + 어트리뷰션 — 설계 잠금 + legal 1차`).
 
+- **PLAN 4.1.b** — `src/db/schema/affiliate_click.ts` 신설 + Drizzle 마이그레이션 (2026-05-13):
+  - **스키마 신설**: ADR-0026 §T1~T8 데이터 모델 18컬럼 (id + click_token + result_id + result_item_id + provider_id + tariff_snapshot_id + consent_given_at + ref_param + commission_amount_cents + commission_currency + commission_source + commission_fetched_at + conversion_status + converted_at + payout_batch_id + pii_anonymized_at + created_at). Enum 1종(`affiliate_conversion_status` 4값: pending/converted/rejected/expired).
+  - **FK 정책** (헌법 §8 #1 + ADR-0026): result_id/result_item_id SET NULL (영구 링크 비충돌 + 90일 익명화 목표), provider_id/tariff_snapshot_id RESTRICT (정산 추적 + snapshot append-only).
+  - **부재 컬럼 (의도적)**: IP address / User-Agent / device fingerprint / session ID / referrer → 헌법 §8 #1 스키마 강제.
+  - **P1 (정보 우선)**: commission_source + commission_fetched_at 존재 → harness:data 검증 대상.
+  - **마이그레이션**: `drizzle/0005_pale_praxagora.sql` — enum 생성 + 테이블 + FK 4개 + 인덱스 5개 (`click_token UNIQUE` + provider/result/conversion_status/pii_anonymized).
+  - **Export**: `src/db/schema/index.ts` 에 1줄 추가 (`export * from './affiliate_click'`).
+  - **검증**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` 271 passed / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과. 3-way 정합(ADR-0026 §T1~T8 ↔ affiliate_click.ts ↔ drizzle/0005).
+  - 커밋: `633dc3a` (`feat(plan-4.1.b): affiliate_click 스키마 + Drizzle 마이그레이션 0005`).
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):
