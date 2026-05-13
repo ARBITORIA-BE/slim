@@ -129,12 +129,12 @@ PLAN 3.5.1 본문이 "harness:e2e 에 통합" 이라 했으나 본 ADR §Context
 | `/compare` | 103.2 | `harness:perf` 실측 | light |
 | `/r/[shortId]` 결과 | 103.2 | `harness:perf` 실측 | light |
 | `/compare/[category]/postal` | 161.5 | `harness:perf` 실측 | form |
-| `/compare/[category]/household` | 146 | `next build` 출력 | form |
-| `/compare/[category]/current-provider` | 151 | `next build` 출력 | form |
-| `/compare/[category]/bill` | 124 | `next build` 출력 | form |
-| `/compare/[category]/preview` | 124 | `next build` 출력 | form |
+| `/compare/[category]/household` | 142.6 | `harness:perf` 실측 (gzip) | form |
+| `/compare/[category]/current-provider` | 148.1 | `harness:perf` 실측 (gzip) | form |
+| `/compare/[category]/bill` | 121.1 | `harness:perf` 실측 (gzip) | form |
+| `/compare/[category]/preview` | 121.7 | `harness:perf` 실측 (gzip) | form |
 
-주: `next build 출력` 행 4개는 `harness:perf` 측정 4페이지 셋(ADR-0023 §T3)에 없어 실측 미수행 — 다음 `harness:perf` 사이클에서 보강 (PLAN 백로그 항목으로 추가, 아래 §3.5.1.x 참조). `next build` 의 "First Load JS" 컬럼은 `harness:perf` 의 gzip 계산과 ~3KB 차이.
+주: 본 표의 8행 모두 `harness:perf` 실측 완료 (2026-05-13, PLAN 3.5.1.e, 커밋 `348381a`). 이전 4행의 `next build 출력` 기준 추정치는 본 실측으로 교체됨.
 
 **5. Budgets** (표 + 계산 근거):
 | tier | advisory | hard |
@@ -164,8 +164,7 @@ PLAN 3.5.1 본문이 "harness:e2e 에 통합" 이라 했으나 본 ADR §Context
 **9. Consequences**:
 - 신규 페이지 추가 시 PR 에서 tier 명시 의무(`light`/`form`) — `routeTier()` 매핑 테이블에 등록.
 - 임계값 재조정: 분기 1회 또는 회귀 빈발 시 (Amendment 2+).
-- `next build` 출력 기준 4페이지(household/current-provider/bill/preview)는 다음 `harness:perf` 사이클에서 실측 보강.
-- form-advisory 170KB → 현 측정 최대 postal 161.5KB 가 그 아래 — 즉시 위반 0건. light-advisory 120KB → light 3페이지 모두 ≤104KB, 여유.
+- 완료 (2026-05-13, PLAN 3.5.1.e, 커밋 `348381a`): 4페이지(household/current-provider/bill/preview) 실측 수치로 갱신. form-advisory 170KB → 현 최대 postal 161.5KB < 170KB 준수, light-advisory 120KB → light 3페이지 모두 ≤104KB, 여유.
 
 **10. Verification**:
 - `scripts/harness/perf-budget.test.ts`: `ceilToTen` 경계(112.3→120, 120→120, 120.1→130, 132.7→140) / `routeTier` (postal→form, `/`→light, `/r/...`→light, 미지→light) / `evaluateJsBudget` tier 경계(light 120 pass / 121 soft / 140 soft / 141 hard; form 170 pass / 171 soft / 200 soft / 201 hard) / SEO override(`/r/[shortId]` SEO 63→exempt) / `computeExitCode` (JS hard-fail→1, soft만→0) / 예산 상수 = 120/140/170/200 회귀 잠금. (builder: 전체 249 passed.)

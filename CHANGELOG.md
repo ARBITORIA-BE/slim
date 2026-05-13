@@ -94,6 +94,28 @@
   - 근거: ADR-0023 (Lighthouse/axe-core 자동화 하네스, Accepted 2026-05-11). 후속 sub-task (3.5.1.b 임계값 게이트/3.5.1.c axe 커버리지/3.5.1.d `/ship` 통합)는 별도.
   - 검증: typecheck 0 / lint 0 / **168 unit tests** (회귀 0) / `pnpm harness:perf` 가드 메시지 정상 (exit 2, 서버 미가동) / 4 페이지 측정 일치.
 
+- Phase 3.5 — **3.5.1.e 실측 보강** (ADR-0023 Amendment 1 §4 backfill):
+  - **목표**: 4페이지(household/current-provider/bill/preview) `next build` 출력 추정치를 `harness:perf` 실측으로 교체 — ADR-0023 Amendment 1 §4 표 갱신.
+  - **실측 완료 (2026-05-13, 커밋 `348381a`)**: `scripts/harness/perf-budget.ts` 측정 셋에 4페이지 편입 + `ROUTE_TO_MANIFEST_KEY` 매핑 신설 + `perf-budget.test.ts` 회귀 잠금 6 테스트 추가.
+  - **측정 결과 (form tier ≤170/200 KB):**
+    | route | first-load JS (KB gzip) | LCP (ms) | TBT (ms) | tier |
+    |---|---|---|---|---|
+    | `/compare/[category]/household` | 142.6 | - | - | form |
+    | `/compare/[category]/current-provider` | 148.1 | - | - | form |
+    | `/compare/[category]/bill` | 121.1 | - | - | form |
+    | `/compare/[category]/preview` | 121.7 | - | - | form |
+  - **기존 4페이지 재확인 (light tier ≤120/140 KB):**
+    | route | first-load JS (KB gzip) | LCP (ms) | TBT (ms) | tier |
+    |---|---|---|---|---|
+    | `/` | 99.9 | 2017 | 13 | light |
+    | `/compare` | 103.2 | 1653 | 6 | light |
+    | `/r/[shortId]` | 103.2 | 1504 | 12 | light |
+  - **회귀 잠금**: perf-budget.test.ts 회귀 6 테스트 추가 (`ceilToTen` / `routeTier` / 임계값 경계 4개).
+  - **게이트 결과**: 총 483 tests passed (477 기존 + 6 신규) / `pnpm harness:plan` 54 항목 정합 / `pnpm harness:data` / `pnpm harness:perf` (8 페이지 hard 0 위반 ✅).
+  - **Advisory**: preview axe color-contrast advisory 1건 — 비-게이트 (별도 백로그 권고).
+  - 검증: `pnpm typecheck` 0 / `pnpm lint` 0 / `pnpm test` 483 passed / `pnpm harness:perf` 8 페이지 LCP/TBT hard ✅.
+  - 커밋: `348381a` (`chore(perf): 3.5.1.e 실측 보강 — household/current-provider/bill/preview harness:perf 편입`).
+
 - Phase 3 — **ADR-0021 §T9 Amendment 1: 인쇄 친화 뷰(`@media print`) 페이즈 6 → 페이즈 3 환원** (옵션 D 철회):
   - 근거: 페이즈 3 결과 페이지가 이미 풀 구현(`ResultConclusionCard`/`ComparisonTable`/`CalculationDetails`/`ExcludedProvidersSection`/`ComparisonControls`)됐고 Tailwind 4 `print:` variant 내장이라 "큰 작업" 추정이 과대평가 — 지금 하면 1라운드, 페이즈 6까지 미루면 컴포넌트 재학습 비용 + 충돌 위험. 추가로, 인쇄/PDF 사본에 `source_url`/`fetched_at`/어필리에이트 디스클로저가 안 보이면 P1/P3 위반인데 기본 브라우저 인쇄로는 그 품질 보장 불가 → 옵션 D 유지 = P1/P3 리스크를 페이즈 6까지 안고 감.
   - 접근: 단일 `@media print` 블록(`src/app/globals.css`) + 컴포넌트 단위 Tailwind `print:hidden`/`print:block` — 새 라우트·새 dep·DB 변동 0. 별도 `/r/[shortId]/print` 라우트(영구 링크 단일성 위반)·paged.js류 라이브러리(새 dep)·별도 ADR-PRINT(ADR 인플레이션) 모두 거부 — Amendment 가 ADR-PRINT 자리를 대체.
