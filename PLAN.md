@@ -999,7 +999,56 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     (2) ADR-0029 채택 (3) D.3.a/c/d 완료 (4) 운영자 4 채널 배포 + slim.lu
     방문 가능 (5) PostHog cookieless 방문자 수 집계 활성 (6) 4.7 진입 신호
     1주차 = 피드백 0건 이상 수신 → 4.7 [ ] 진입.
-- [ ] **4.7** 피드백 1주 + 반영
+- [ ] **4.7** 피드백 1주 + 반영 — 4.6 배포 + 1주 트리거. 2~4주 운영 후
+  종료 → 4.8 트리거. ADR-0029 Amendment 1 (운영 추적 §Verification 확장)
+  로 단일 출처 유지 (신설 ADR 불요). 분해 5건 (운영자 트랙 3 + builder 1
+  + scribe 1):
+  - [ ] **4.7.a** 피드백 채널 운영 가이드 (3 채널 일관) — scribe 작성
+    - 채널: 이메일 kim.wonmin91@gmail.com (직접 응답) / Korean Society
+      그룹 댓글 (Facebook/카카오톡 모니터링) / GitHub Issues (전문
+      사용자, 태그 `feedback-beta` / `bug` / `feature`)
+    - SLA: **48h** 이내 1차 응답 (솔로 + €300 cap 일관, 24h 는 무리)
+    - 분류: bug / UX / 카피 / feature / 다크패턴 / 기타 (6 카테고리)
+    - 통합 대시보드 *없음* — 각 채널 독립 모니터링 + 운영자 수동 통합
+      (솔로 시점 합리)
+    - 산출물: `docs/runbooks/beta-feedback-handling.md` (scribe)
+    - DoD: (1) 3 채널 SLA + 분류 + 응답 템플릿 문서화 (2) ADR-0029
+      §Verification §운영 추적 cross-ref
+  - [ ] **4.7.b** 정량 측정 PostHog 대시보드 — 운영자 트랙
+    - 측정 5건 (cookieless, §8 #1 PII 0 일관):
+      (1) 방문자 수 (slim.lu 도착, 1주/3주 누적)
+      (2) 비교 시도 수 (`/compare/[category]` 접근)
+      (3) 결과 페이지 도달 수 (`/r/[shortId]`)
+      (4) "변경하기" 클릭 수 (어트리뷰션 인터스티셜 진입)
+      (5) 후속 메일 옵션 체크율 (`follow_up_email` INSERT / 결과 도달)
+    - DoD: (1) PostHog 5 이벤트 활성 (2) 운영자 대시보드 1개 생성
+      (3) 1주차/3주차 스냅샷 수동 캡처 → ADR-0029 §운영 추적
+  - [ ] **4.7.c** NPS 1문항 추가 — builder (코드 1건, 작음)
+    - 위치: `src/inngest/follow-up-email.ts` (4.5.d) 의 `buildPlaintext`
+      + `buildHtml` 본문에 1줄 추가. 별도 폼 *불요* (PII 0 일관 — 이미
+      이메일 동의 채널).
+    - 형식: "1~10 점 (Promoter ≥9 / Passive 7~8 / Detractor ≤6) 으로
+      답장 보내주세요. NPS = %Promoter − %Detractor."
+    - 측정: 4.7 종료 시점 운영자 수동 집계 (이메일 inbox 응답률 + 점수)
+      → ADR-0024 게이트 (NPS ≥ 30)
+    - DoD: (1) plaintext + HTML 본문에 NPS 1문항 추가 (2) typecheck
+      0 (3) 4.5.d 테스트 1건 추가 (NPS 문구 포함 확인)
+  - [ ] **4.7.d** 1주 검토 → 베스트 3 우선순위 분류 — 운영자
+    - 1주차 시점 누적 피드백 → 분류 (4.7.a 6 카테고리) → 베스트 3 선정
+    - bug = 즉시 fix (베타 단계, builder 즉시 인계)
+    - feature / UX / 카피 = 4.7 종료 시점 다음 라운드 (architect 재분해)
+    - 헌법 P3: 반영 결정 *공개* (CHANGELOG + 사용자 댓글 응답)
+    - DoD: (1) 1주차 보고서 1건 (`docs/reports/beta-week1-feedback.md`)
+      (2) 베스트 3 → bug 즉시 / feature 다음 라운드 분류
+  - [ ] **4.7.e** scope cut + 4.8 트리거 결정 — 운영자
+    - **1주차** 조기 경보: 누적 방문자 ≤ **25명** → 카피 수정 또는
+      채널 1개 추가 검토 (운영자 판단)
+    - **3주차** 결정 (ADR-0029 §T6 본문): 누적 ≤ 50명 → 50 마감 +
+      4.7 종료 / > 50 → 100 강행 (운영자 시간 여유 평가)
+    - **4.7 종료 시점** = 배포 + **2~4주** = 4.8 PR 매체 트리거
+      (architect 재호출 → 4.8 분해)
+    - DoD: (1) 1주/3주 스냅샷 ADR-0029 §운영 추적 추가 (2) 4.7 종료
+      결정 (50 vs 100) 운영자 공개 (3) 4.8 architect 호출 신호
 - [ ] **4.8** PR 매체 컨택 (베타 후) — De Tijd / FD / Tech.eu / Bright / Trends
   중 **3곳** (5곳은 솔로 부담 큼)
 - [ ] **4.9** 런치 — 통신 카테고리만 BE 우선 오픈 (NL/LU는 페이즈 5에서)
