@@ -17,7 +17,7 @@ argument-hint: [PLAN-ID 예 1.7] [한 줄 메시지]
    - CHANGELOG 항목 추가
    - 영향 받는 README 동기화
 
-4. **커밋**:
+4. **커밋** — *본 `/checkpoint` 또는 `scribe` 에이전트 전용*. **`verifier` 에이전트는 절대 커밋하지 않음** (ADR-0025 §T1: read-only). verifier 는 PLAN.md `[x]` 마킹만 허용, `git commit` / `git add` / `git push` 금지:
    ```bash
    git add -A
    git commit -m "feat(plan-${ID}): ${MSG}"
