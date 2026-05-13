@@ -295,6 +295,21 @@
   - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **351 passed** (기존 328 + 신규 23) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과.
   - 커밋: `17cec6a` (`feat(plan-4.3.b): src/data/affiliate-rates.ts + 헬퍼 + 단위 테스트`).
 
+- **PLAN 4.3.c** — `AffiliateDisclosureLine` 컴포넌트 + 디스클로저 UI (2026-05-13, **4.4 동시 충족**):
+  - **신설 컴포넌트**: `src/app/r/[shortId]/_components/AffiliateDisclosureLine.tsx` (97 lines, RSC) — 제휴 공개 또는 비제휴 표시 라인. 두 경로 분기:
+    - (i) **`affiliate_status IN ('active_b2b_intra_eu', 'active_b2b_domestic_be')`** ⇒ 디스클로저: "Slim은 변경 시 {providerName}로부터 €{X}의 수수료를 받습니다 — 이 금액은 회원님의 요금에 영향이 없습니다" + `/legal/affiliate-disclosure` 링크 (UCPD/BE Code 정합, ADR-0026 §T4 / ADR-0027 §T3~T5). 형식: `formatEuroCents(amountCents)` = 5000 → "€50".
+    - (ii) **그 외 4값 (none/pending/paused/terminated)** ⇒ "수수료 없음 — Slim은 이 공급사로부터 수수료를 받지 않습니다. 외부 링크로 직접 이동합니다" (**PLAN 4.4 동시 충족**).
+  - **배치 위치**: `ComparisonTable` 각 행 카드 하단 + `ResultConclusionCard` 1위 추천 슬롯. 헌법 §8 #4 (광고-비교 분리) 정합 — 표/카드 본문(알고리즘 100%) 위에 `<Separator>` 구분선 후 별도 영역.
+  - **Props**: `providerId`, `providerName`, `affiliateStatus` (`affiliate_status` enum 6값 중 1). `getRateForProvider(providerId, affiliateStatus)` → active 2값일 때만 rate entry 반환, 나머지 null → "수수료 없음" 메시지 렌더.
+  - **헬퍼 신설**: `formatEuroCents(amountCents: number): string` (5000 → "€50") — Intl.NumberFormat('ko-KR', {style:'currency', currency:'EUR'}) 또는 동등 형식, `{minimumFractionDigits: 0, maximumFractionDigits: 0}` (어필리에이트 단가는 정수 EUR — BN.js부동소수 X).
+  - **신설 테스트**: `src/app/r/[shortId]/_components/AffiliateDisclosureLine.test.tsx` (15 케이스) — (1) 2개 active enum 분기 각각 + 요금 표시 정확성 (2) 4개 비-active enum 분기 각각 + "수수료 없음" 메시지 (3) formatEuroCents 단위 4 케이스.
+  - **데이터 전파**: `src/db/queries/comparison.ts` 의 `getTopResultItem` + `getResultItems` 에 `provider.affiliate_status` select 추가 (2줄, 반환 타입 확장 0 — 기존 provider join에서 자동 노출). `src/app/r/[shortId]/_lib/compare-view.ts` 의 비교 표 행 data 에 `affiliateStatus` 필드 포함 (props 전달 1줄). RSC 렌더링 경로는 무변동 (클라이언트 상태 0).
+  - **헌법 §8 #4 회귀**: `src/engine/**` 에 affiliate-status/affiliate_rates 의존 0 유지 (기존 isolation test 유지, compare.ts 미변동). 알고리즘 순위는 100% `compare()` 함수 단독 → UI 디스클로저 분기와 격리 ✅.
+  - **헌법 §8 #3 (다크패턴 0)**: 광고-비교 시각 분리(Separator) + neutral 톤(text-fg-soft, 작은 텍스트) + 강조색 0 + 링크는 gray + "변경하기" CTA는 disabled 상태 유지(이전 placeholder에서 무변동).
+  - **4.4 동시 충족 정의**: 본 컴포넌트의 enum 분기가 이미 4개 비-active enum(none/pending/paused/terminated)을 "수수료 없음" 메시지로 렌더 → 4.4 "비제휴 공급사도 동등하게 표시" 요구사항을 충족. PLAN 4.4 항목 자체는 **별도 sub-task 분해 없음** (4.2가 4.1.e 안에서 동시 충족된 패턴과 일관).
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **366 passed** (기존 351 + 신규 15) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과 / axe-core 0 violations (RSC 컴포넌트, 동적 ID 발급 미필요).
+  - 커밋: `0f1ea07` (`feat(plan-4.3.c): AffiliateDisclosureLine — 카드 하단 디스클로저 (4.4 동시 충족)`).
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):

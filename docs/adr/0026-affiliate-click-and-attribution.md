@@ -149,6 +149,8 @@ T1~T8 8개 결정.
   "builder 결정" 표현을 대체. 격상 트리거(계약 ≥ 6건 OR 분기 ≥ 2회 변경) 도달 시 옵션 B
   (별도 테이블) 로 amendment 검토. cf. PLAN 4.3.b (데이터) / 4.3.c (UI — 4.4 동시 충족).
 
+**구현 (2026-05-13, 커밋 `0f1ea07`)**: `src/app/r/[shortId]/_components/AffiliateDisclosureLine.tsx` 가 결과 카드 하단 디스클로저(active 2값) + 비-active 4값 '수수료 없음' (PLAN 4.4 동시 충족) 을 enum 분기로 렌더. `getRateForProvider(providerId, affiliateStatus)` 호출 → active 2값일 때만 rate entry 반환 → `formatEuroCents(amountCents)` 형식. `comparison.ts` 의 getTopResultItem/getResultItems 에 `affiliate_status` select 추가. typecheck/lint/test 366 passed / harness:plan/harness:data 통과.
+
 ### T5 — `bias-audit.ts` 정정 (회귀 아님 — 데이터 정합 부채)
 
 현 `scripts/harness/bias-audit.ts` 는 미래 스키마/enum 을 가정한 placeholder 쿼리를 들고 있다.

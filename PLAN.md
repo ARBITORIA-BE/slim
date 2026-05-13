@@ -900,6 +900,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     (ii) 그 외 ⇒ "수수료 없음 — 외부 링크로 이동" (4.4 충족). compare-view 가
     `affiliate_status` 를 props 로 전달 (현재 미전달 — 1줄 추가). DoD:
     typecheck/lint/test + axe 0 violations + 시각 회귀 없음.
+    - ✅ 완료 (2026-05-13): `AffiliateDisclosureLine.tsx` 신설 (97줄, RSC, 2 분기 enum) + `.test.tsx` (15 케이스, formatEuroCents 헬퍼 포함). `comparison.ts` 의 getTopResultItem/getResultItems 에 `affiliate_status` select 추가 (2줄). compare-view 의 비교 표 row data 에 `affiliateStatus` 필드 (props 1줄). typecheck/lint/test 366 passed / harness:plan/harness:data 통과. **4.4 동시 충족** (enum 분기의 비-active 4값 "수수료 없음" 메시지). 커밋 `0f1ea07`.
   - [ ] **4.3.d** `/legal/affiliate-disclosure` 페이지 본문 채움 (현재 stub) — `src/data/
     affiliate-rates.ts` 를 *렌더* 하는 단가 표 (공급사 / 단가 / 유형 / source / fetched_at /
     effectiveFrom). 4.3.c 의 카드 디스클로저 링크 도착지. legal 에이전트 1차 감사 트리거
@@ -910,10 +911,11 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     `AffiliateDisclosureLine` 6 enum 분기. (iii) E2E 1건: 결과 페이지에서 디스클로저
     문구 렌더 + 디스클로저 페이지 링크 클릭 → 단가 표 도달. DoD: test 전체 통과 +
     harness:plan/harness:data 통과.
-- [ ] **4.4** 비제휴 공급사도 동등하게 표시 (그냥 외부 링크 + "수수료 없음" 표기)
+- [x] **4.4** 비제휴 공급사도 동등하게 표시 (그냥 외부 링크 + "수수료 없음" 표기)
   - **4.3.c 안에서 동시 구현** — 같은 `AffiliateDisclosureLine` 컴포넌트가 `affiliate_status`
     enum 분기로 두 케이스 모두 렌더. 별도 sub-task 분해 불필요 (4.2 가 4.1.e 안에서 동시
     충족된 패턴과 일관).
+  - ✅ 완료 (2026-05-13): 4.3.c (`AffiliateDisclosureLine`) 가 본 항목을 enum 분기(`affiliate_status` 그 외 4값 → '수수료 없음 — Slim은 이 공급사로부터 수수료를 받지 않습니다. 외부 링크로 직접 이동합니다') 로 동시 충족. 별도 컴포넌트/sub-task 불필요. 커밋 `0f1ea07`.
 - [ ] **4.5** 전환 후 7일 이내 후속 메일 (선택 동의)
   - "변경 잘 됐나요?" — 변경 실패시 Slim이 자동 메일로 후속 (인적 switching service는 솔로에서 비현실)
 - [ ] **4.6** **베타 모집** — Antwerpen / Brussels / Luxembourg 시티에서 100명
@@ -1035,12 +1037,12 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
-| 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
+| 4 | 9 | 3 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c 완료) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **83** | **49** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
+| **합계** | **83** | **52** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
