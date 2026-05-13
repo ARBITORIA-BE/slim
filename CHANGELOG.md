@@ -236,6 +236,18 @@
   - **다음**: 4.1.d(동의 UI 다크패턴 검증) + 4.1.e(순위-격리 단위 테스트) 진행. 4.1.d는 legal 검토 대상(ADR-0026 §T2 5개 필수 항목 명시 후 구현).
   - 커밋: `a8cbe13` (`feat(plan-4.1.c): 어트리뷰션 클릭 기록 경로 골격 — /go interstitial + INSERT + 302`).
 
+- **PLAN 4.1.e** — 순위-격리 단위 테스트 (2026-05-13):
+  - **테스트 목표**: `compare()` 엔진이 어트리뷰션 상태와 무관하게 항상 동일 순위를 반환하며, 비교 알고리즘이 어트리뷰션 모듈을 절대 import 하지 않음을 검증 (ADR-0026 §T3 강제 조건).
+  - **두 강제 검증**:
+    1. **정적 격리 (정규식 grep)**: `src/engine/compare.ts` + `src/engine/**` 경로 내 6개 금지 토큰(`affiliate_status` / `affiliateStatus` / `AffiliateStatus` / `affiliate_click` / `affiliateClick` / `AffiliateClick`) 0건 선언. 테스트 파일 자체(`.endsWith('compare.isolation.test.ts')`)는 제외. 매치 시 file:line 정확히 보고.
+    2. **Behavioral 격리**: 3개 공급사 픽스처(Engie BE / Proximus BE / Electrabel) + 동일 입력값 → `compare()` 함수 6회 호출 → rank 배열 불변식(동일 순위) 검증. `CompareInput` 시그니처 자체에 `affiliate_status` 부재 = 구조적 격리.
+  - **자가 검증** (meta-test): `src/engine/compare.ts` 에 `// affiliate_status example` 코멘트 1줄 주입 → `pnpm test` 즉시 FAIL → 코멘트 되돌림 → `pnpm test` 302 passed 복원 (격리 침해 감지 가능 증명).
+  - **신설 파일**: `src/engine/compare.isolation.test.ts` (정적 grep + behavioral 테스트, export 함수 재사용).
+  - **수정 파일**: `src/engine/compare.test.ts` (export 2줄 추가: `export { makeSnapshot, hasCaveatLike }`).
+  - **단일 출처 약속**: 이 테스트가 `/ship` §윤리 체크리스트의 "어트리뷰션 코드가 알고리즘 순위에 영향 없음 (단위 테스트 확인)" 줄을 **유일하게** 충족한다 (ADR-0026 §T3 §Legal Review 명시). 다른 문서는 여기를 참조.
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **302 passed** (기존 284 + 신규 18) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과.
+  - 커밋: `16ee8da` (`feat(plan-4.1.e): 순위-격리 단위 테스트 — ADR-0026 §T3 단일 출처`).
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):

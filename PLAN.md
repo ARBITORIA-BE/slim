@@ -844,6 +844,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - [x] **4.1.e** 순위-격리 단위 테스트 — `src/engine/compare.test.ts` 또는 신규 테스트:
     `affiliate_status` 가 무엇이든 동일 입력 → 동일 순위. compare() 가 `provider.affiliate_status` /
     `affiliate_click` 를 import 하지 않음을 정적 검증 (의존성 그래프 단언 또는 코드 grep 테스트).
+    ✅ 완료 (2026-05-13): `src/engine/compare.isolation.test.ts` 신설 (정적 grep 6토큰 0건 + behavioral 3픽스처 6값 동일 순위 + 자가 검증). `src/engine/compare.test.ts` export 2줄 추가. typecheck/lint/test 302 passed (기존 284 + 18신규)/harness:plan/harness:data 통과. ADR-0026 §T3 §Legal Review에서 `/ship` §윤리 줄의 **단일 출처** 지정. 커밋 `16ee8da` (feat(plan-4.1.e): 순위-격리 단위 테스트 — ADR-0026 §T3 단일 출처).
   - [x] **4.1.f** legal 에이전트 검토 — GDPR 등록부 (`docs/legal/gdpr-register.md` — 미존재 시 신설)
     에 새 처리 활동(어트리뷰션 클릭 기록) 등재 + 동의 UI 다크패턴 검토 + 보존 기간(정산 목적 vs
     `comparison_result` 90일 익명화 정합) 의견. 외부 변호사 감사는 베타 직전/M16 (ADR-0004 §결정 3).
