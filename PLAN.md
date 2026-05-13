@@ -162,21 +162,38 @@
   - **차단 사유 ([!])**: 4.6 베타 모집 카피가 "5분 안에 결과" 약속 (ADR-0029
     §T2 정직성) — 실 사용자 흐름이 client exception 으로 깨지면 정직성 잠금
     + 헌법 P3 위반 + 모집 신뢰 갭. **4.6 카피 배포 *전* 해소 필수**.
-  - **정찰 결과 (architect 분해 필요)**:
+  - **정찰 결과 갱신 (Playwright trace 분석 2026-05-13)**:
     - 실패 위치: `e2e/compare-flow.spec.ts:68 / :112` — `page.waitForURL(/\/r\/[A-Za-z0-9_-]{12}$/)` timeout
-    - 페이지 상태: `/compare/mobile/preview` 도달 후 navigation 발생 X
-    - 클라이언트 예외 소스 미상 — preview/page.tsx 의 `useEffect` / `submit` /
-      `comparisonInputSchema.safeParse` / `useCompareSession` / `use(params)` 중
-      어디서 throw 하는지 미식별
-    - dev 서버 console / browser console 의 *정확한 stack trace* 필요
+    - **실제 원인**: **`ChunkLoadError: Loading chunk 68 failed`** — preview 페이지의
+      Next.js dynamic chunk `app/compare/[category]/preview/page-<hash>.js` 로드 실패.
+      `pageError` event 안의 stack trace 가 webpack runtime 의 `r.f.j` 에서 발생.
+    - **React render throw 아님** — Explore 초기 가설 *오류*. preview/page.tsx 의
+      `useEffect` / `submit` / `safeParse` / `useCompareSession` / `use(params)` 는
+      *모두 정상* (정찰 완료).
+    - **백엔드 정상**: `/api/compare` POST 직접 호출 시 `{"ok":true,"shortId":"..."}`
+      정상 응답 (curl 검증).
+    - **dev 서버 정상**: `/compare/mobile/preview` HTTP 200 + RSC HTML 정상 렌더.
     - 다른 e2e (accessibility / landing / result-page / seo-meta / affiliate-
-      disclosure / follow-up-email-flow) 는 통과 — *preview 페이지 단독 회귀*
-  - 분해 권고 (별도 세션 architect 호출):
-    - D.6.a — 정찰: dev 서버 실행 + `pnpm test:e2e e2e/compare-flow.spec.ts
-      --headed` 로 browser console stack trace 수집. 또는 페이지 직접 방문
-      + dev 콘솔 확인.
-    - D.6.b — fix (preview/page.tsx 또는 dependency hook 수정)
-    - D.6.c — 회귀 e2e 통과 확인 + 다른 e2e 영향 X
+      disclosure / follow-up-email-flow) 는 통과 — *preview 페이지 단독 회귀*.
+  - **`.next/` 캐시 클리어 + 재실행 시도 (2026-05-13)**: 동일 ChunkLoadError 재현.
+    Claude 환경 (Windows bash + dev server background) 의 *dev mode chunk hash race*
+    가능성: dev 서버 hot reload 가 chunk 재생성하는데 e2e spec 의 browser 가 *stale
+    hash* 요청. **사용자 환경 (별개 dev 서버 + 다른 timing) 에서 재현 안 될 가능성** —
+    운영자 확인 필요.
+  - **Fix 옵션**:
+    - (a) `playwright.config.ts` 의 `webServer.command` 를 `pnpm dev` → `pnpm build
+      && pnpm start` 로 변경. production build 의 chunk hash 안정 → race 회피.
+      e2e 실행 시간 5~10분 증가 (production build 1회).
+    - (b) dev mode race 별도 fix — `next.config.ts` 의 `output: 'standalone'` 또는
+      webpack `optimization.runtimeChunk` 설정. 복잡 + 회귀 위험.
+    - (c) 사용자 환경에서 통과 확인 시 *환경 특이성 close* + e2e CI 트랙은 (a)
+      적용.
+  - 분해 권고 (별도 세션):
+    - D.6.a — **정찰 완료 (2026-05-13)**: ChunkLoadError 식별. React render throw
+      가설 폐기. 사용자 환경 재현 여부 확인 우선.
+    - D.6.b — 운영자: 본인 환경에서 `pnpm test:e2e e2e/compare-flow.spec.ts` 실행.
+      통과 시 → D.6 close (Claude 환경 특이성). 실패 시 → D.6.c 진입.
+    - D.6.c — Fix 옵션 (a/b/c 중 선택) — architect 재호출.
   - DoD: (1) `pnpm test:e2e e2e/compare-flow.spec.ts` 2건 모두 통과 (2) 클라이언트
     예외 stack trace 가 ADR 또는 CHANGELOG 에 기록 (P3 — 운영자의 짐) (3) 4.6 카피
     배포 *전* 완료 검증.
