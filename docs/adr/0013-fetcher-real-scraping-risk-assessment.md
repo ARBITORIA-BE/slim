@@ -729,3 +729,7 @@ HIGH 격상 요건인 "명시 금지 강도 중간 이상 발견"은 충족되�
 - **ADR-0029 §T2** — 정직성 토큰 "솔로 신생 사이트" + "베타 = 데이터 수집" 톤 일관
 - **헌법 P1 (정보 우선)** / **P3 (투명성)** — UI 미표시 = 위반
 - **ADR-0013:253~263 §평가 6 옵션 X** — 본 Amendment 1 이 옵션 X 의 구현 부속 명세
+
+#### Implementation guide 구현 완료
+
+**구현 완료 (2026-05-13, 커밋 `a0b876c`)**: BetaEstimatedBanner.tsx RSC 신설 (amber warning bg, role="status") + .test.tsx 7 케이스. deriveCaveats 규칙 9 추가 ("추정값 — 실 데이터 페이즈 5 이후") + caveats.test.ts 10 케이스. comparison.ts SQL COALESCE isStub propagation. page.tsx 조건부 노출. typecheck/lint/test 477 passed / harness:plan 54 정합 / harness:data 통과. **4.6 베타 배포 의존성 해소**.

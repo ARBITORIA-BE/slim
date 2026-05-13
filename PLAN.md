@@ -425,6 +425,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - **재진입 트리거**: 페이즈 5 옵션 B (실 스크래핑) 진입 시 batch 별 stub→실
     데이터 전환 → 본 sub-task 산출물의 트리거 조건이 자동 *비활성* (rawPayload.stub
     === false 시 배너/caveat 미노출). 추가 변경 없이 점진적 전환 흡수.
+    - ✅ 완료 (2026-05-13): BetaEstimatedBanner.tsx RSC 신설 (47줄, amber warning bg, role=status) + .test.tsx (7 케이스). deriveCaveats 규칙 9 추가 ("추정값 — 실 데이터 페이즈 5 이후") + caveats.test.ts (10 케이스). comparison.ts SQL COALESCE isStub propagation. page.tsx 조건부 노출 (allItems.some(item => item.isStub)). 4.1.e/d / 4.3.* / 4.5.* 회귀 X. typecheck/lint/test 477 passed (456+21) / harness:plan 54 정합 / harness:data 통과. 커밋 `a0b876c`. **4.6 베타 배포 의존성 해소**.
 - [x] **1.5.7** Bash 보안 패턴 자동 차단 hook (운영 안전 부채). 사고 근거:
   2026-05-10 — Pieter가 echo + 백틱 substitution + `>>` 리다이렉트로 마크다운
   파일을 갱신하려다 보안 경고("Newline followed by # inside a quoted argument")

@@ -11,6 +11,18 @@
 
 ### Added
 
+- Phase 4 — **1.5.6.1 "추정값" UI 배너 + caveat 규칙 9 구현** (ADR-0013 Amendment 1 §Implementation guide):
+  - **배경**: 스텁 fetcher(`method='stub'`) 대상 ADR-0013 옵션 X(베타 동안 "추정값" 정직성 표기) 구현. 4.6 베타 배포 의존성 — 헌법 P1(정보 우선) + P3(투명성) + ADR-0029 §T2(정직성) 일관.
+  - **UI 위치 2개**: (1) 결과 페이지 헤더 `BetaEstimatedBanner` RSC 신설(47줄, amber warning bg, role="status", AlertTriangle aria-hidden) (2) `deriveCaveats` 규칙 9 (`src/engine/caveats.ts`, caveat 메시지 "이 가격은 추정값 — 실 스크래핑은 페이즈 5 이후" 추가).
+  - **트리거**: SQL `COALESCE((raw_payload->>'stub')::boolean, false)` → `isStub` propagation → `allItems.some(item => item.isStub)` 시 배너 노출. caveat 9는 개별 row 단위 트리거.
+  - **구현 파일**: 신설 `src/app/r/[shortId]/_components/BetaEstimatedBanner.tsx` + `.test.tsx`(7 케이스) / 수정 `src/engine/caveats.ts`(isStub + 규칙 9) + `caveats.test.ts`(10 케이스) / `src/app/r/[shortId]/page.tsx` 조건부 배너 마운트 / `comparison.ts` SELECT isStub 컬럼 추가 / `compare-view.test.ts` 픽스처 + 4 케이스.
+  - **스타일 결정**: amber warning background + soft border-top 대비 정보 품질 경고 시각화. 텍스트 (배너 제목 "⚠️ 베타 단계: 추정값" / 본문 "가격은 운영자가 수동 검증한 추정값입니다. 실 스크래핑은 페이즈 5 이후 격상 예정." / "자세히 알아보기" → `/legal/affiliate-disclosure`).
+  - **접근성** (a11y): `role="status"` aria-live region (스크린 리더 자동 읽음) / `AlertTriangle` 아이콘 `aria-hidden` (텍스트 중복 방지) / link 명확성.
+  - **회귀 0건**: 4.1.e(engine) / 4.1.d(page.tsx 결론 렌더) / 4.3.* (데이터 추출) / 4.5.* (caveats 패턴) 비영향.
+  - 검증: typecheck 0 / lint 0 / **477 unit tests** (456 기존 + 21 신규 BetaEstimatedBanner.test + caveats.test 10) / harness:plan 54 정합 (1.5.6.1 [x] + 합계 54) / harness:data 통과.
+  - 커밋: `a0b876c` (`feat(plan-1.5.6.1): BetaEstimatedBanner RSC + caveat 9 — ADR-0013 Amendment 1 구현 (4.6 베타 배포 의존성)`).
+  - **4.6 베타 배포 의존성 해소** — 스텁 데이터의 정직성 표기 의무(헌법 P1/P3 + ADR-0029 §T2) 완료.
+
 - Phase 3.5 — **3.5.1.b' first-load JS budget 확정 — per-route 2-tier** (ADR-0023 §Amendment 1):
   - 실측(`harness:perf`, 커밋 `29baf6e`): postal 161.5KB, /·/compare·/r/[shortId] ~100KB → 단일 임계값 무의미 판단.
   - `light` 120/140 KB · `form` 170/200 KB (advisory/hard). 산식 = light 평균×1.10/×1.30, form 최대×1.05/×1.20, 10KB ceil(`ceilToTen`).
