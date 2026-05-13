@@ -18,6 +18,7 @@ import { registry, type Fetcher } from '@/fetchers';
 import { inngest } from '@/lib/inngest';
 
 import { persistFetchResult } from './persist';
+import { followUpEmailFn } from './follow-up-email';
 
 // ─── Cron 함수 (T6 일 1회 + 수동 이벤트) ─────────────────────────────────
 
@@ -125,4 +126,4 @@ export { persistFetchResult } from './persist';
  * 본 모듈이 등록하는 모든 Inngest 함수. `serve({ functions })`가 import.
  * 페이즈 5에서 함수 추가 시 본 배열에 push.
  */
-export const functions = [dailyFetchAll];
+export const functions = [dailyFetchAll, followUpEmailFn];

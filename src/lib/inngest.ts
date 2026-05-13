@@ -42,6 +42,17 @@ type Events = {
       only?: string[];
     };
   };
+
+  /**
+   * 후속 메일 수동 발송 트리거 (PLAN 4.5.d).
+   * - 평소: cron이 매시간 정각 자동 발사
+   * - 디버깅: 어드민/dev가 수동 트리거
+   */
+  'follow-up-email/run.requested': {
+    data: {
+      requestedBy: 'admin' | 'dev';
+    };
+  };
 };
 
 // ─── Client ───────────────────────────────────────────────────────────────
