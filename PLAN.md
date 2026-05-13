@@ -952,6 +952,52 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     공급사(Proximus + Telenet)를 깊이 비교 중. Orange BE는 다음 페이즈에서
     추가." 솔로 신생 사이트의 *비교 좁은 폭 + 깊은 신뢰* 포지셔닝과 일관.
   - **scope cut 옵션 E**: 50명으로 축소 가능 (피드백 신호엔 충분)
+  - **4.6 = 단일 sub-task 라운드** (운영자 트랙 + 코드 게이트 없음, 분해 시
+    verifier 의미 약함). 본 항목 안에 카피 4개 + 결정 5개 일괄 명시.
+  - **모집 카피 4 초안** (scribe 본문 작성): (1) Korean Society BE/NL/LU
+    한국어 500~800자 — 정직 톤, ADR-0009 한계 명시, salair-plus.com 운영자
+    크레딧 1줄. (2) Reddit r/belgium 영어/네덜란드어 200~400자 — humble 톤
+    + 자기 홍보 규칙은 운영자 직접 확인 (subreddit rules). (3) salair-plus.com
+    한국어 banner/footer 1~2줄 + slim.lu 링크 — 운영자 직접 편집. (4) 한국어
+    트위터/스레드 280자 / 500자 — (1) 의 짧은 버전.
+  - **정직성 잠금 토큰** (모든 카피 공통, ADR-0009 + ADR-0026 + 헌법 P3·§8):
+    "BE 시장 ≥ 75% 점유 2개 공급사만 비교 (Proximus + Telenet, Orange BE/Voo
+    미포함)" / "솔로 신생 사이트" / "베타 = 비공개 사전 운영, 데이터 수집 목적"
+    / "무료, 광고 0, 어트리뷰션 100% 공개 (`/legal/affiliate-disclosure`)".
+  - **과장 금지 토큰** (architect 잠금, 카피 4개 전체): "최고" / "유일" / "혁신"
+    / "AI" / "가장 빠른" / "100% 절약 보장" — 사이트 진실 ≠ 사용자 인식 갭 금지.
+  - **베타 신청 채널 = 옵션 (나)** — 별도 폼 없음, `https://slim.lu` 직접 방문
+    + 비교 시도 = 베타 참여. PII 0 (이메일/이름 수집 0건). 헌법 §8 #1 + GDPR
+    데이터 최소화 + 추적 0 정신 일관. 운영자 측 신호 = PostHog cookieless 방문자
+    수만 집계 (이미 셋업). 옵션 (가) 별도 `/beta-signup` 폼은 PII 추가 발생 →
+    채택 X. 옵션 (다) salair-plus.com 공지 페이지는 (나) 의 *채널 4* 와 중복.
+  - **추적 0** (헌법 §8 #1): 모집 URL 은 *단순 도메인* (`https://slim.lu`).
+    UTM 파라미터 0. ADR-0026 §T7 의 `?ref=` 어트리뷰션 패턴은 *제휴 클릭 단계*
+    전용 — 모집 도착 URL 은 비교 결과 페이지 *전* 단계라 컨텍스트 아님. 채널별
+    도달 신호 필요 시 PostHog Referrer 헤더로 운영자 측 집계 (사용자 식별 0).
+  - **scope cut 옵션 E 트리거**: 4.6 배포 후 **3주** 시점 누적 방문자 ≤ 50명
+    이면 *50명 목표로 마감 처리* + 4.7 진입. 4.6 배포 후 1주 = 4.7 (피드백)
+    *병렬 시작*, 3주는 baseline. €300 cap + 솔로 일관.
+  - **피드백 채널 명시** (4.7 트리거 = 4.6 배포 후 1주차 시작): 카피 4개 전체에
+    "피드백: kim.wonmin91@gmail.com (이메일) / Korean Society 그룹 댓글 /
+    GitHub Issues (전문 사용자)" 3 채널 footer. 4.7 별도 분해 시 채널 운영
+    상세는 그곳에서.
+  - **D.3 GATE-K cross-ref**: 4.6 진입 = D.3 GATE-K 트리거 (ADR-0020 후속
+    5작업 D.3.a~e, 운영자 수동 트랙). 본 카피 4개 배포 *전* D.3.a/c/d 완료
+    필수 (Vercel app 설치 + runtime env vars + slim.lu 도메인 + SSL). D.3.b
+    (team scope) / D.3.e (Neon Integration / ADR-0024) 는 비-blocker, 4.6
+    배포 후 처리 가능.
+  - **ADR 신설 여부 = 신설** (ADR-0029 예약, scribe 본문 작성): "Beta
+    recruitment — channels + honesty + tracking + scope cut". ADR-0009
+    amendment 보다 *신설* 권장 근거 = 0009 는 *fetcher 범위* 결정 (기술),
+    0029 는 *마케팅/모집 정책* (운영) — 도메인 분리. 단, 0029 §맥락 에
+    0009 cross-ref 필수. 본 ADR-0029 가 위 잠금 토큰 + 신청 채널 + 추적 0
+    + scope cut 트리거 + 피드백 채널 정책 *모두* 1 ADR 로 잠금.
+  - DoD: (1) 카피 4 초안 작성 완료 (scribe, ADR-0029 §결정 본문에 첨부 또는
+    `docs/marketing/beta-recruitment-copy.{kr,reddit,salair,tw}.md` 4 파일)
+    (2) ADR-0029 채택 (3) D.3.a/c/d 완료 (4) 운영자 4 채널 배포 + slim.lu
+    방문 가능 (5) PostHog cookieless 방문자 수 집계 활성 (6) 4.7 진입 신호
+    1주차 = 피드백 0건 이상 수신 → 4.7 [ ] 진입.
 - [ ] **4.7** 피드백 1주 + 반영
 - [ ] **4.8** PR 매체 컨택 (베타 후) — De Tijd / FD / Tech.eu / Bright / Trends
   중 **3곳** (5곳은 솔로 부담 큼)
