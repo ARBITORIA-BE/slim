@@ -401,6 +401,20 @@
   - **운영자 검토 항목** ⚠️: builder가 `follow_up_email` INSERT 실패 시 500 응답 채택. ADR-0028 명세 권고는 silent skip (어트리뷰션 과정 분리). 현재 placeholder data 단계라 즉시 변경 불필요하나, 4.5.d/4.5.g (Inngest 통합 + E2E) 또는 4.5.g 시점에 운영자 판단 후 (a) silent skip 전환 또는 (b) 500 유지 재결정 권고. [ADR-0028 §Consequences](docs/adr/0028-follow-up-email.md#consequences) 참조.
   - 커밋: `c8fa163` (`feat(plan-4.5.c): 인터스티셜 동의 UI 확장 — 옵션 이메일 + pre-checked 0 + Art. 13 카피 3줄`).
 
+- Phase 4 — **4.5.d Inngest function + 단위 테스트 (2026-05-13)**:
+  - **구현 범위**: ADR-0028 §T6(7일 트리거/cron) + §T7(다크패턴 0) 최종 + Resend mock 단위 테스트.
+  - **Inngest function**: `src/inngest/follow-up-email.ts` 신설 (265줄) — cron 매시간 정각 (TZ=UTC `0 * * * *`) + concurrency 1 + 5m jitter.
+    - **4 step 흐름**: (1) `step.run('fetch-pending')` — `scheduled_send_at ≤ now AND sent_at IS NULL AND unsubscribed_at IS NULL` 조건 최대 100건 SELECT. (2) `step.run('send-email-${row.id}')` — Resend 호출 비동기 발송. (3) 발송 성공 → **atomic UPDATE** (neon-http 트랜잭션 미지원 우회): `sent_at` + `pii_anonymized_at` + `email := NULL` 동기 갱신. (4) `step.run('log-summary')` — 발송 결과(성공/실패 수) 기록.
+  - **캐시 무효화 (idempotency)**: WHERE 절 `sent_at IS NULL` 필터로 중복 발송 0건 보장. cron 재실행 시 기 발송 건은 스킵.
+  - **Resend Mock**: `vi.mock('resend')` — 운영자가 API 키 미등록이어도 unit 테스트 통과.
+  - **본문 다크패턴 0**: image beacon 0 / UTM 추적 파라미터 0 / fake urgency 0 (ADR-0028 §T7). 메일 템플릿 `emailTemplate(row)` — 중립 톤 "변경하셨다면 알려주세요".
+  - **환경변수 등록 가이드**: `.env.example` + `.env.local.example` 에 `RESEND_API_KEY` + `RESEND_FROM_EMAIL` placeholder 추가. ADR-0028 §T1.a~c 환경 분리 정책 반영.
+  - **의존성**: `resend@^6.12.3` (`package.json` + `pnpm.lock`). SDK 패키지명은 `resend` (`@resend/node` 아님 — 오기 정정 in ADR-0028).
+  - **테스트**: `src/inngest/follow-up-email.test.ts` 신설 (14 케이스) — idempotency (2회 cron 발송 1회만) + anonymization (sent_at + email NULL 화 동기) + 실패 경로 + Resend mock.
+  - **회귀 0**: 4.1.e / 4.1.d / 4.5.b / 4.5.c 영향 X. fetcher/비교 엔진 격리.
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` 425 passed (411 → 425, +14 신규 follow-up-email.test.ts) / `pnpm harness:plan` 51 항목 정합 / `pnpm harness:data` 통과 (Resend API 키 미등록이어도 unit mock 동작).
+  - 커밋: `9c44c4a` (`feat(plan-4.5.d): Inngest followUpEmail function + 단위 테스트 14케이스`).
+
 - Phase 4 — **4.5.a Amendment: ADR-0028 §T1.a~T1.c `RESEND_API_KEY` 환경 분리 정책** (2026-05-13):
   - **ADR-0028 §T1.a**: `RESEND_API_KEY` 환경 분리 — production/preview/development 3 환경, 각각 다른 키, 환경별 SoT (ADR-0022 §D3 DB 환경 분리 패턴 일관). 운영자 prod/dev 두 키 발급 완료.
   - **ADR-0028 §T1.b**: Vercel project settings 에서 production env 등록 (5분), 선택사항 preview env 등록, development 제외.
