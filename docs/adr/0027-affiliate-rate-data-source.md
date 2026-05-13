@@ -219,14 +219,17 @@ getRateForProvider(providerId: string, affiliateStatus: string): AffiliateRate |
 
 ## Verification
 
-1. **파일 신설**: `src/data/affiliate-rates.ts` 존재 + TypeScript 컴파일 통과 + Zod schema validation 통과.
-2. **타입 검증**: `AffiliateRate` 타입이 6 필드(providerId/currency/amountCents/commissionType/source/fetchedAt/effectiveFrom/effectiveTo) 전부 포함 + Zod `z.object()` 로 강제.
-3. **헬퍼 검증**: `getRateForProvider(providerId, affiliateStatus)` 함수가 존재 + 필터 로직(affiliateStatus active_b2b_*, 유효기간) 테스트 통과.
-4. **P1 강제**: 모든 entry 의 `source` / `fetchedAt` 가 NOT NULL/empty (Zod validation green).
-5. **`/legal/affiliate-disclosure`**: const 를 import 해 공개 대상 단가 렌더 + `source` 링크/각주 표시 (4.3.d 구현 후 확인).
-6. **정합 테스트**: `affiliate-rates.ts` entry 와 샘플 `affiliate_click` 행의 `amountCents` 매칭 (4.3.e green).
-7. **`bias-audit` 정정**: const import 후 런타임 정합 검사 동작 (4.3.e green).
-8. **git history**: PR 메시지 형식 "chore(affiliate): [공급사명] €X (계약 링크)" 적용.
+**구현 완료 (2026-05-13, 커밋 17cec6a): `src/data/affiliate-rates.ts` 신설 + 23 단위 테스트 → §T1~T5 충족.**
+
+1. **파일 신설** ✅: `src/data/affiliate-rates.ts` 존재 + TypeScript 컴파일 통과 + Zod schema validation 통과.
+2. **타입 검증** ✅: `AffiliateRate` 타입이 8 필드(providerId/currency/amountCents/commissionType/source/fetchedAt/effectiveFrom/effectiveTo?) 전부 포함 + 인터페이스 정의.
+3. **헬퍼 검증** ✅: `getRateForProvider(providerId, affiliateStatus)` 함수 존재 + 필터 로직(affiliateStatus `active_b2b_*` 2값 분기 통과, 나머지 4값 null 반환, 유효기간 필터) 23 테스트 케이스로 검증.
+4. **P1 강제** ✅: 모든 entry 의 `source` / `fetchedAt` 가 NOT NULL/empty + ISO 8601 형식 (테스트 6 케이스로 단언, Zod validation 강제).
+5. **헌법 §8 #4 회귀** ✅: `src/engine/compare.ts` + `src/engine/**` 에서 affiliate-rates.ts import 0건 (정적 grep verify + compare.isolation.test.ts 18 통과 유지).
+6. **`/legal/affiliate-disclosure`**: const 를 import 해 공개 대상 단가 렌더 + `source` 링크/각주 표시 (4.3.d 구현 후 확인).
+7. **정합 테스트**: `affiliate-rates.ts` entry 와 샘플 `affiliate_click` 행의 `amountCents` 매칭 (4.3.e green 대기).
+8. **`bias-audit` 정정**: const import 후 런타임 정합 검사 동작 (4.3.e green 대기).
+9. **git history**: PLAN 4.3.b 커밋 "feat(plan-4.3.b): src/data/affiliate-rates.ts + 헬퍼 + 단위 테스트" 기록.
 
 **회귀 트리거 (격상 조건 재평가):**
 - (a) 제휴 계약 ≥ 6건 도달 → ADR-0027 Amendment 또는 ADR-0028 (테이블 마이그레이션) 검토 신설.

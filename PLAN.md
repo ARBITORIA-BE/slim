@@ -891,6 +891,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     `getRateForProvider(providerId, status)` — `status` 가 표시 대상 enum 2값일 때만
     return, 외엔 `null`. 단위 테스트: enum 분기 6값 모두. DoD: typecheck/test 통과 +
     `affiliate_click.commission_amount_cents` 와 *동일 단위* (cents) 단언 코멘트.
+    - ✅ 완료 (2026-05-13): 신설 파일 + 23 단위 테스트 + 헬퍼 + 헌법 §8 #4 회귀 0 (compare.isolation.test.ts 18 통과). 커밋 `17cec6a`.
   - [ ] **4.3.c** UI 컴포넌트 — `src/app/r/[shortId]/_components/AffiliateDisclosureLine.tsx`
     (신설). `ComparisonTable` 각 행 + `ResultConclusionCard` 1위 슬롯에 삽입. props:
     `providerId`, `providerName`, `affiliateStatus`. 분기:

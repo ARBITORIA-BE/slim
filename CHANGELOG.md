@@ -277,6 +277,24 @@
   - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **328 passed** (기존 302 + 신규 26) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과.
   - 커밋: `9275628` (`feat(plan-4.1.d): 동의 인터스티셜 — 필수 5항목 + 다크패턴 0 + legal 후속 통과`).
 
+- **PLAN 4.3.a** — ADR-0027 신설 (2026-05-13):
+  - 제휴 단가 데이터 모델 정식 결정. 정적 TypeScript const (`src/data/affiliate-rates.ts`) 채택 (ADR-0027 옵션 C).
+  - `AffiliateRate` 인터페이스: 8필드 (providerId / currency / amountCents / commissionType / source / fetchedAt / effectiveFrom / effectiveTo?).
+  - 결정 근거: [ADR-0027](docs/adr/0027-affiliate-rates.md) — T1(정적 TS const 선택) / T2(literal 타입 EUR/CPA) / T3(8필드 정합) / T4(헬퍼 함수 활성 2값 분기) / T5(P1/P3 정합 — source/fetchedAt NOT empty + ISO 8601 + amountCents 정수>0).
+  - **ADR-0027 발행 (2026-05-13)** + `docs/adr/INDEX.md` 정식 항목화 + ADR-0026 §T4 cross-ref 기존 보유.
+  - 검증: ADR 본문 신설 + INDEX 반영. (코드 아직 미구현 — 4.3.b 이어서 진행)
+
+- **PLAN 4.3.b** — `src/data/affiliate-rates.ts` 신설 + 헬퍼 + 단위 테스트 (2026-05-13):
+  - **신설 파일**: `src/data/affiliate-rates.ts` (130 lines) — ADR-0027 §T1~T5 구현 (정적 배열 + `AffiliateRate` 타입 export + `getRateForProvider(providerId, status)` 헬퍼).
+  - **헬퍼 동작** (`getRateForProvider`): (1) `status IN ('active_b2b_intra_eu', 'active_b2b_domestic_be')` 분기만 진행, 나머지 4값(none/pending/paused/terminated) → null (2) 유효기간 필터: `effectiveFrom ≤ today ≤ effectiveTo?` 검증 (3) `today` 파라미터 주입 가능 — deterministic 테스트.
+  - **단위 테스트**: `src/data/affiliate-rates.test.ts` (286 lines, **23 케이스**) — (1) 모든 entry 필드 정합 (source/fetchedAt NOT empty + ISO 8601) 6 케이스 (2) enum 분기 6값 모두 — `active_b2b_*` 통과 / 나머지 null 6 케이스 (3) 유효기간 필터 3 케이스 (4) providerId 미매치 → null 2 케이스.
+  - **정합 단언**: 코멘트로 `amountCents` = `affiliate_click.commission_amount_cents` 동일 단위(cents) 명시 (ADR-0027 §T5). 4.3.e 정합 테스트/bias-audit이 DB 크로스 체크 담당.
+  - **헌법 §8 #4 회귀**: `src/engine/**` 에서 affiliate-rates.ts import 0건 (정적 grep 검증 + compare.isolation.test.ts 18 통과 유지).
+  - **placeholder 정직성** (4.3.d 예약): `placeholder-proximus-be` / `placeholder-telenet-be` 엔트리로 스텁. TODO(4.3.d) 주석 명시.
+  - **Export**: 모듈 export (`AffiliateRate`, `affiliateRates`, `getRateForProvider`) 3종.
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **351 passed** (기존 328 + 신규 23) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과.
+  - 커밋: `17cec6a` (`feat(plan-4.3.b): src/data/affiliate-rates.ts + 헬퍼 + 단위 테스트`).
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):
