@@ -415,6 +415,16 @@
   - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` 425 passed (411 → 425, +14 신규 follow-up-email.test.ts) / `pnpm harness:plan` 51 항목 정합 / `pnpm harness:data` 통과 (Resend API 키 미등록이어도 unit mock 동작).
   - 커밋: `9c44c4a` (`feat(plan-4.5.d): Inngest followUpEmail function + 단위 테스트 14케이스`).
 
+- Phase 4 — **4.5.e Unsubscribe 1-click — `/unsubscribe/[token]/page.tsx` RSC** (2026-05-13):
+  - **구현 범위**: ADR-0028 §T4 (Art. 7(3) 1-click unsubscribe) + §T7 (다크패턴 0 confirmation page) 최종 실행.
+  - **RSC 라우트**: `src/app/unsubscribe/[token]/page.tsx` 신설 (75줄) — GET 요청 → `unsubscribeToken` nanoid(16) 매칭 + atomic UPDATE. 다크패턴 0 (재구독 유도/Confirmshaming/마케팅톤 0). Discriminated union `UnsubscribeResult` (not-found/already-unsubscribed/just-unsubscribed). idempotency: 재클릭도 동일 페이지 (상태 차이 노출 X).
+  - **Atomic UPDATE**: `unsubscribed_at = now()` + `email = NULL` + `pii_anonymized_at = COALESCE(기존, now())` 단일 UPDATE 로 일관성 보장. 토큰 형식 검증: `/^[A-Za-z0-9_-]{16}$/` (nanoid 16자).
+  - **4.5.d Inngest 발송 본문과 URL 정합**: inngest 메일 본문에 생성된 1-click 링크 → 본 라우트 도착 (라우트 88줄 `const { token } = params` ↔ Inngest 링크 생성).
+  - **회귀 0**: 4.5.b/c/d 영향 X. 후속 메일 수집/발송 로직 무변동.
+  - **헌법 P3 준수**: 사용자 데이터 외부 전송 0 (headers/cookies 0건). 철회 후 PII 즉시 NULL 화.
+  - **테스트**: `src/app/unsubscribe/[token]/page.test.tsx` 신설 (20 케이스: token 형식 검증 / not-found / already-unsubscribed / just-unsubscribed / idempotency 재클릭). typecheck/lint/test 445 passed (425+20) / harness:plan 51 정합 / harness:data 통과.
+  - 커밋: `1e4d5a1` (`feat(plan-4.5.e): /unsubscribe/[token] RSC — 1-click unsubscribe + atomic UPDATE + idempotency`).
+
 - Phase 4 — **4.5.a Amendment: ADR-0028 §T1.a~T1.c `RESEND_API_KEY` 환경 분리 정책** (2026-05-13):
   - **ADR-0028 §T1.a**: `RESEND_API_KEY` 환경 분리 — production/preview/development 3 환경, 각각 다른 키, 환경별 SoT (ADR-0022 §D3 DB 환경 분리 패턴 일관). 운영자 prod/dev 두 키 발급 완료.
   - **ADR-0028 §T1.b**: Vercel project settings 에서 production env 등록 (5분), 선택사항 preview env 등록, development 제외.
