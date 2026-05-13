@@ -248,6 +248,35 @@
   - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **302 passed** (기존 284 + 신규 18) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과.
   - 커밋: `16ee8da` (`feat(plan-4.1.e): 순위-격리 단위 테스트 — ADR-0026 §T3 단일 출처`).
 
+- **PLAN 4.1.d** — 동의 UI — 다크패턴 0 + 필수 5항목 (2026-05-13):
+  - **핵심**: 어트리뷰션 시스템(4.1.a~f 라운드)의 **법적 검증 마지막 게이트**. 동의 인터스티셜(`/go/[shortId]/[itemId]`)에 EDPB Guidelines 05/2020 필수 5항목 + BE Code de droit économique Art. VI.99 정렬 기준 명시 + CMA Dark Pattern Taxonomy 0건.
+  - **필수 5항목 (EDPB Guidelines 05/2020)** — 모두 페이지 RSC 본문에 명시:
+    1. **받는 회사명** — "Slim" (제휴사 아님, Slim이 리다이렉트)
+    2. **처리 목적** — "제휴 수수료 정산을 위한 어트리뷰션 추적"
+    3. **전송 데이터 3 sub-항목** — (a) 클릭 토큰(어트리뷰션용, PII 최소화) (b) 결과 ID (익명 UUID) (c) 공급사/요금제 ID (선택)
+    4. **동의 철회** — "언제든지 거부할 수 있습니다. 이 카테고리를 거부해도 비교 결과 페이지는 유지됩니다."
+    5. **Freely Given** — 동의/거부 버튼 동등 가시성 (둘 다 `px-6 py-2.5 text-sm font-medium rounded-full`, solid fill, `bg-primary` vs `bg-fg/10` 색상만 다름) — 강조/미강조 인식적 차별 0, Visual Interference 회피 ✅.
+  - **VI.99 정렬 기준** (BE Code de droit économique) — 푸터에 한 줄: "정렬 기준: 절약액 내림차순. 제휴 여부는 정렬에 영향 없습니다."
+  - **다크패턴 0** (CMA Dark Pattern Taxonomy) — 신설 `src/app/go/[shortId]/[itemId]/page.dark-pattern.test.ts` 26 회귀 테스트로 단언:
+    - Fake Urgency: "지금만 가능" / "곧 마감" / "시간 제한" 정규식 10토큰 검사, 0건 ✅
+    - Confirmshaming: "거부" 버튼에 부정적 렌더링(사이즈/색상/opacity) 검사 4토큰, 0건 ✅
+    - Pre-checked: 동의 체크박스 기본값 검사, 0건 ✅
+    - Visual Interference: 동의 버튼이 거부 버튼보다 훨씬 크거나 밝은 색 강제 검사, 0건 ✅
+    - 필수 5항목 텍스트 노출 검사 5토큰 ✅
+    - 자가 검증: 의도적으로 "지금만 가능합니다" 주입 후 테스트 실패 확인 → 되돌림 (false positive 방지) ✅
+  - **신설 파일**: `src/app/go/[shortId]/[itemId]/page.dark-pattern.test.ts` (26 케이스).
+  - **수정 파일**: `src/app/go/[shortId]/[itemId]/page.tsx` — 필수 5항목 마크업 추가, VI.99 한 줄 푸터 추가, 동의/거부 버튼 동등 가시성 CSS 갱신.
+  - **Legal Review 1차 후속** (2026-05-13) — ADR-0026 §Legal Review §검토 2/5/6 모두 통과:
+    - §검토 2 (EDPB 필수 5항목): 모두 구현 ✅
+    - §검토 5 (VI.99 정렬 기준): 한 줄 명시 ✅
+    - §검토 6 (CMA 다크패턴): 26 회귀 테스트 모두 통과 ✅
+  - **잔존 조건** (베타 직전 / M16):
+    - BE 회계 보존 기간: invoices 10년 보수 적용 (ADR-0026 §T6 — 외부 감사 필수)
+    - 외부 변호사 감사 7항목 (동의 흐름/PII 최소화/GDPR 정합/수수료 공개 등) — M16 게이트
+  - **4.1 라운드 종합**: 4.1.a(ADR) + 4.1.b(스키마) + 4.1.c(라우트) + 4.1.d(UI 폴리시 + legal) + 4.1.e(격리 테스트) + 4.1.f(legal 1차) 모두 완료. 다음 어트리뷰션: 4.2(제휴 우선, 순위 0) — 4.1.e 격리 테스트가 단일 검증점.
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **328 passed** (기존 302 + 신규 26) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과.
+  - 커밋: `9275628` (`feat(plan-4.1.d): 동의 인터스티셜 — 필수 5항목 + 다크패턴 0 + legal 후속 통과`).
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):

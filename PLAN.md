@@ -812,7 +812,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 > 페이즈 4는 원 PLAN의 페이즈 4(전환) + 페이즈 7(런치)을 **솔로 + TVA 발급
 > 후의 어트리뷰션 검증 1주기**로 묶었다. ADR-0003 §결정 4 참조.
 
-- [ ] **4.1** 어트리뷰션 시스템 (`affiliate_click` 테이블) — **ADR-0026** (페이즈 4 진입 시
+- [x] **4.1** 어트리뷰션 시스템 (`affiliate_click` 테이블) — **ADR-0026** (페이즈 4 진입 시
   builder 트리거, 본 항목은 GATE-K 무관 = 인프라 독립; 베타 *런치*만 GATE-K(D.3) 의존).
   데이터 모델 + 클릭 기록 + 명시적 동의 흐름 + 디스클로저 정합 + 순위-격리 테스트까지.
   실 Stripe payout 실행/베타 모집은 페이즈 4 후반(4.5~4.9).
@@ -841,7 +841,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     ✅ 완료 (2026-05-13): `/r/[shortId]/_components/ResultConclusionCard.tsx` 의 CTA → `/go/[shortId]/[itemId]` 라우트. `src/app/go/[shortId]/[itemId]/page.tsx` 인터스티셜 RSC (provider.name + "전송 데이터: 없음" + "거부해도 결과 그대로" 명시). POST `confirm/route.ts` → affiliate_click INSERT(consent_given_at=now(), ref_param=`slim-r-<shortId>`, click_token=nanoid(12)) + 302 to `provider.website?ref=...`. 거부 → 외부 링크만 (`?ref` 미부착, 쿠키/SaaS 0). 헌법 §8 #1 자가 검증 ✅ (user-agent/x-forwarded-for/cf-connecting-ip/referer 헤더 0건, cookies()/Set-Cookie 0건). 헌법 §8 #4 ✅ (`src/engine/**` 에 affiliate_click/affiliate_status import 0 — 4.1.e가 정적 강제). typecheck/lint/test 284 passed (8 신규)/harness:plan/harness:data 통과. 커밋 `a8cbe13` (feat(plan-4.1.c): 어트리뷰션 클릭 기록 경로 골격). 다음: 4.1.d(동의 UI 다크패턴 0 + legal 최종) + 4.1.e(compare ↔ affiliate_click 정적 격리 테스트).
   - [x] **4.1.d** 동의 UI — 다크패턴 0 (헌법 §8 #3): 동의/거부 동등 가시성, "긴급" 카피 0,
     pre-checked 0. 받는 회사명 + 전송 데이터(없음 — 단순 리다이렉트) 명시. legal 검토 대상.
-    ✅ 완료 (2026-05-13): `src/app/go/[shortId]/[itemId]/page.tsx` RSC + 필수 5항목(EDPB Guidelines 05/2020) 모두 명시 + VI.99 정렬 기준 한 줄 + 다크패턴 0(Fake Urgency/Confirmshaming/Pre-checked/Visual Interference 정규식 테스트). `src/app/go/[shortId]/[itemId]/page.dark-pattern.test.ts` 신설 (26 테스트: A~F 섹션 커버). 동의/거부 버튼 동등 가시성(둘 다 filled, px-6 py-2.5 text-sm font-medium rounded-full, 색상만 다름 bg-primary vs bg-fg/10). typecheck/lint/test 328 passed (기존 302 + 26신규)/harness:plan 정합/legal 1차 후속 §검토 2/5/6 통과. 커밋 `[pending]` (feat(plan-4.1.d): 동의 인터스티셜 — 필수 5항목 + 다크패턴 0).
+    ✅ 완료 (2026-05-13): `src/app/go/[shortId]/[itemId]/page.tsx` RSC + 필수 5항목(EDPB Guidelines 05/2020) 모두 명시 + VI.99 정렬 기준 한 줄 + 다크패턴 0(Fake Urgency/Confirmshaming/Pre-checked/Visual Interference 정규식 테스트). `src/app/go/[shortId]/[itemId]/page.dark-pattern.test.ts` 신설 (26 테스트: A~F 섹션 커버). 동의/거부 버튼 동등 가시성(둘 다 filled, px-6 py-2.5 text-sm font-medium rounded-full, 색상만 다름 bg-primary vs bg-fg/10). typecheck/lint/test 328 passed (기존 302 + 26신규)/harness:plan 정합/legal 1차 후속 §검토 2/5/6 통과. 커밋 `9275628` (feat(plan-4.1.d): 동의 인터스티셜 — 필수 5항목 + 다크패턴 0).
   - [x] **4.1.e** 순위-격리 단위 테스트 — `src/engine/compare.test.ts` 또는 신규 테스트:
     `affiliate_status` 가 무엇이든 동일 입력 → 동일 순위. compare() 가 `provider.affiliate_status` /
     `affiliate_click` 를 import 하지 않음을 정적 검증 (의존성 그래프 단언 또는 코드 grep 테스트).
