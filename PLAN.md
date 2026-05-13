@@ -1082,8 +1082,48 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       (architect 재호출 → 4.8 분해)
     - DoD: (1) 1주/3주 스냅샷 ADR-0029 §운영 추적 추가 (2) 4.7 종료
       결정 (50 vs 100) 운영자 공개 (3) 4.8 architect 호출 신호
-- [ ] **4.8** PR 매체 컨택 (베타 후) — De Tijd / FD / Tech.eu / Bright / Trends
-  중 **3곳** (5곳은 솔로 부담 큼)
+- [ ] **4.8** PR 매체 컨택 (베타 후) — 4.7 종료 트리거. **3 매체 선정 잠금**
+  (architect 결정 2026-05-13): **De Tijd** (BE Vlaamse 비즈니스 / 통신 비교
+  친화) + **Tech.eu** (유럽 스타트업 영어 / 솔로 + 베타 단계 친화) +
+  **Trends** (BE 비즈니스 매거진 / 베타 후 본격). 거부: **FD** (NL 한정,
+  BE 베타 부조화) + **Bright** (NL 매체, NL 진출 전 부조화). ADR 신설/Amendment
+  *없음* — 4.8 = 단순 운영자 마케팅 결정, PLAN 본문 잠금 충분 (ADR-0029 §T2
+  정직성 / ADR-0009 2 공급사 한계 / 헌법 P3 자동 일관). 분해 4건
+  (scribe 3 + 운영자 1, 운영자 *실 데이터 backfill* 별도):
+  - [ ] **4.8.a** One-pager 미디어 kit — scribe 작성 (4.7 종료 후)
+    - 산출물: `docs/press/one-pager.{ko,en}.md` (한국어 + 영어 2 버전)
+    - 구조: (1) Slim 한 줄 — "BE 통신 비교 베타, 솔로 신생, 무료 + 광고 0"
+      (2) 베타 결과 데이터 — placeholder `{베타 방문자 N}` `{NPS}` `{평균
+      절약액}` `{피드백 베스트 3}` (4.7 종료 후 운영자 backfill)
+      (3) 운영자 프로필 — 한국어 운영자, 8년차 풀스택, salair-plus.com 링크
+      (4) 차별점 — ADR-0009 2 공급사 한계 + 어트리뷰션 100% 공개 + 헌법 P3
+      (5) 컨택 — kim.wonmin91@gmail.com + CET (6) 로고/색상/스크린샷 2장
+      (결과 페이지 + `/legal/affiliate-disclosure`)
+    - ADR-0029 §T2 정직성 일관: "최고/유일/혁신" 과장 0, 한계 *명시*
+    - DoD: (1) md 2 파일 (한국어/영어) (2) placeholder 4종 명시 (3)
+      운영자 review pass (Critical/Major 0)
+  - [ ] **4.8.b** Press release (보도자료) — scribe 작성 (4.7 종료 후)
+    - 산출물: `docs/press/press-release.{ko,en}.md` (한국어 + 영어 2 버전)
+    - 구조: 헤드라인 객관적 (예: "Slim — 베네룩스 통신 비교 비공개 베타
+      `{N}`명 마감") + 본문 (one-pager 요약) + 운영자 인용 1~2줄 +
+      boilerplate (Slim 1줄 + 운영자 1줄)
+    - 네덜란드어 버전: 운영자 직접 OR DeepL (scribe 트랙 외)
+    - DoD: (1) md 2 파일 (2) 헤드라인/본문 ADR-0029 §T2 통과 (3) 운영자
+      review pass
+  - [ ] **4.8.c** 이메일 템플릿 3건 — scribe 작성 (4.7 종료 후)
+    - 산출물: `docs/press/email-{de-tijd,tech-eu,trends}.md` (3 파일)
+    - De Tijd / Trends — 한국어 + 영어 초안 (운영자/DeepL 네덜란드어 변환);
+      Tech.eu — 영어 1 버전
+    - 톤: 짧음 (200~300자) + one-pager 링크 + 운영자 직접 컨택 시그니처
+    - DoD: (1) md 3 파일 (2) 매체별 1 기자 placeholder `{기자 이름}` 명시
+      (3) 운영자 review pass
+  - [ ] **4.8.d** 기자 리스트 + 발송 + 응답 — **운영자 직접** (Claude 트랙 외)
+    - 작업: 각 매체 "통신/소비자/스타트업" 담당 기자 1~2명 식별
+      (LinkedIn/Twitter/매체 이메일), 4.8.a~c 산출물 첨부 발송, 응답 처리,
+      인터뷰 일정 조율
+    - DoD: (1) 3 매체 × 1~2 기자 발송 완료 (2) 응답률/인터뷰 결과 ADR-0029
+      §운영 추적 추가 (3) 4.9 진입 신호 (NPS ≥ 30 + 실 conversion 검증
+      완료 시) — 4.9 분해는 *별도 architect 호출*
 - [ ] **4.9** 런치 — 통신 카테고리만 BE 우선 오픈 (NL/LU는 페이즈 5에서)
 
 **Phase 4 검증:** 어트리뷰션 정확성 — `pnpm harness:price` + 수동 5건 검증
