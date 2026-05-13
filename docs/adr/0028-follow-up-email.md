@@ -3,6 +3,7 @@
 ## Status
 
 **Accepted** (2026-05-13 — 운영자 직접 결정 / architect 권고).
+Legal review 1차 (2026-05-13) — A~I 항목 8통과/1조건부. 잔존 조건: Day 90 행 삭제 cron 미구현(4.5.f 후속 태스크), Resend DPA 공식 체결 미완료(외부 감사 항목 8번). 외부 변호사 감사(베타 직전/M16) 대체 아님.
 
 ---
 
@@ -301,7 +302,7 @@ Slim
 - ✅ **4.5.c: 동의 UI 확장 (T3/T4/T7) + 수집 흐름** — `src/app/go/[shortId]/[itemId]/page.tsx` 후속 메일 섹션 신설 (email input + 체크박스 `defaultChecked={false}` + Art. 13 카피 3줄 + 종속 안내 1줄). `src/app/go/[shortId]/[itemId]/confirm/route.ts` form 파싱 + 조건부 `insertFollowUpEmail` 호출. `src/db/queries/follow-up-email.ts` 신설 — unsubscribe_token=nanoid(16) 생성, scheduled_send_at=created_at+7d 계산. neon-http 트랜잭션 미지원 → 순차 실행, FK CASCADE 정합. `page.dark-pattern.test.ts` 26→31 (G 섹션 5건: pre-checked 양방향 잠금 + Art. 13 카피 + Confirmshaming). `confirm/route.test.ts` 8→13 (5건: email+followUp 조합 + silent skip + nanoid(16) 형식). typecheck/lint/test 411 passed (401+10) / harness:plan 51 정합 / harness:data 통과. 커밋 `c8fa163`.
 - ✅ **4.5.d: Inngest function + 단위 테스트 (T6 전체 + T7 다크패턴 최종)** — `src/inngest/follow-up-email.ts` 신설 (cron 매시간 + 4 step: fetch-pending/send-each/anonymize-sent/log-summary). atomic UPDATE 우회(neon-http 트랜잭션 미지원) — sent_at + email NULL + pii_anonymized_at 동기 갱신. Resend mock (`vi.mock('resend')`) — 운영자 API 키 미등록이어도 unit test 통과. 본문 다크패턴 0 (image beacon/UTM/fake urgency 모두 0). `.env.example` + `.env.local.example`에 RESEND_API_KEY + RESEND_FROM_EMAIL placeholder. `resend@^6.12.3` 의존성. `src/inngest/follow-up-email.test.ts` 신설 (14 케이스: idempotency 2회 발송 1회만 / anonymization email NULL 화 동기 / 실패 경로). typecheck/lint/test 425 passed (411+14) / harness:plan 51 정합 / harness:data 통과. 커밋 `9c44c4a`. (2026-05-13 정정: SDK 패키지명 `resend` — 오기 `@resend/node` 정정).
 - ✅ **4.5.e: `/unsubscribe/[token]` RSC + 단위 테스트 (T4 + T7 최종)** — `src/app/unsubscribe/[token]/page.tsx` RSC 신설 (75줄, Discriminated union). GET 요청 → nanoid(16) token 형식 검증 `/^[A-Za-z0-9_-]{16}$/` + atomic UPDATE (unsubscribed_at=now() + email=NULL + pii_anonymized_at=COALESCE(기존, now())). 응답: 간결 confirmation 페이지 (not-found/already-unsubscribed/just-unsubscribed 분기). idempotency: 재클릭도 동일 메시지 (상태 차이 노출 X — CMA dark pattern 회피). 다크패턴 0 (재구독 CTA/Confirmshaming/마케팅톤 모두 0). 4.5.d Inngest 메일 본문의 1-click 언서브스크라이브 URL 도착지 (path validation 일치). `.test.tsx` 20 케이스 (token 형식 검증 / not-found / already-unsubscribed / just-unsubscribed / idempotency). 헌법 §8 #1 자가 (headers/cookies 0건, PII 외부 전송 0). typecheck/lint/test 445 passed (425+20) / harness:plan 51 정합 / harness:data 통과. 커밋 `1e4d5a1`. **T4 (Art. 7(3) 1-click unsubscribe) + T7 (다크패턴 0 confirmation page) 충족**.
-- ⏳ **4.5.f: legal 1차 GDPR Art. 6/7/13 + 다크패턴 통과** (`docs/legal/gdpr-register.md` 신규 항목).
+- ✅ **4.5.f: legal 1차 GDPR Art. 6/7/13 + 다크패턴 통과** (`docs/legal/gdpr-register.md` PA-05 신설). A~I 8통과/1조건부. 잔존: Day 90 cron + Resend DPA. 커밋 진행 중.
 - ⏳ **4.5.g: E2E** (인터스티셜 → 동의 → INSERT → mock 7일 후 발송 → unsubscribe → unsubscribed_at 기록).
 
 ---
@@ -314,3 +315,43 @@ Slim
 - **ADR-0004** — €300 cap (본 ADR이 Resend 무료 한도 선택으로 정합)
 - **헌법** P1 (정보 우선) / P3 (투명성) / §8 #1 (사용자 데이터 외부 전송 0 — Resend는 발송 전용, 추적 0)
 - **GDPR Art. 5(1)(e)** Storage Limitation / **Art. 6(1)(a)** Consent / **Art. 7(2)(3)** Withdrawal & Granularity / **Art. 13** Information to be provided / **EDPB Guidelines 05/2020** Legitimate Interest Assessment / **CMA Guidance** Dark Patterns
+
+---
+
+## Legal Review (4.5.f 1차 — 2026-05-13)
+
+> **법률 자문이 아닙니다.** 본 1차 검토는 외부 변호사 감사(베타 직전/M16)를 대체하지 않습니다.
+
+### 검토 결과 요약
+
+| # | 검토 항목 | 판정 | 근거 요약 |
+|---|---|---|---|
+| A | GDPR Art. 6(1)(a) 동의 — 수집 + 발송 | 통과 | `consent_given_at NOT NULL` 스키마 강제. 체크박스 `defaultChecked={false}` + Zod email 검증 후 INSERT. 동의 없으면 행 미생성 (EDPB Guidelines 05/2020 §3.1 요건 충족) |
+| B | Art. 7(3) 동의 철회 (1-click unsubscribe) | 통과 | 모든 발송 메일 본문에 unsubscribe URL 포함. GET 1회로 `unsubscribed_at` + `email=NULL` atomic UPDATE. 재클릭 idempotent (discriminated union). nanoid(16) brute force 안전 |
+| C | Art. 13 정보 제공 | 조건부 통과 | 인터스티셜에 처리 빈도·보존 기간·철회 방법 3항목 표시 확인. 단, 인터스티셜 카피에 회사명·연락처 명시 없음 — `/legal/privacy` cross-ref 필요. 베타 직전 `/legal/privacy` 페이지 신설 시 인터스티셜에 링크 추가 필요 |
+| D | 보존 정책 Art. 5(1)(e) Storage Limitation | 조건부 통과 | 발송 직후 `email=NULL` + `pii_anonymized_at` 갱신 코드 확인. Day 90 행 삭제 cron 미구현 — 4.5.f 후속 태스크로 인계. 미구현 기간에는 메타 컬럼만 남아 GDPR 위반이 아니나 공약 불이행 상태. 조속 구현 권장 |
+| E | 다크패턴 0 (헌법 §8 #3, CMA Dark Pattern Taxonomy) | 통과 | pre-checked=false 코드 확인. Confirmshaming 0 (거부 카피 "받지 않을게요" 류 없음). Visual Interference 0 (체크박스 레이블 중립). Fake urgency 0. 메일 본문: 이미지 beacon 컬럼 없음, UTM 파라미터 없음, 재구독 유도 없음. unsubscribe 페이지: 재구독/마케팅톤/Confirmshaming 0 |
+| F | 데이터 정합 (ADR-0026 §T1 잠금 보존) | 통과 | `affiliate_click`에 이메일 컬럼 추가 없음. `follow_up_email` 별도 테이블 격리. 부재 컬럼 5건 (IP/UA/fingerprint/session/referrer) 스키마 주석으로 의도 명시 확인 |
+| G | 종속 결정 Art. 7(2) "freely given" | 통과 | FK NOT NULL로 어트리뷰션 거부 시 후속 메일 자동 0. 체크박스 미체크 시 INSERT 미실행 (단순 의존, 패키지 결합 아님). Art. 7(4) "서비스 조건부 동의 금지" 위반 아님 — 비교 결과 접근은 어트리뷰션 동의와 무관하게 허용됨 (page.tsx 코드 확인) |
+| H | INSERT 실패 처리 (운영자 검토 항목) | 통과 (builder 채택 500 수용) | 500 응답 = 어트리뷰션 클릭과 후속 메일 INSERT가 동일 try-catch 블록 안에 있어, follow_up_email INSERT 실패가 affiliate_click을 깨지 않음 (affiliate_click은 이미 커밋). 단, 이 경우 어트리뷰션은 기록됐으나 사용자는 500 응답을 받음. 사용자 UX 관점에서는 silent skip(ADR-0028 명세 권고)이 더 안전하나, 운영자가 500 채택. 법적 권리 침해 없음 — 후속 메일 동의 실패가 리다이렉트를 막을 뿐이며, 재시도하면 정상 동작. 4.5.g E2E에서 이 경로 검증 권장 |
+| I | 외부 변호사 감사 7항목 영향 | 해당 (1건 추가) | 후속 메일은 신규 처리 활동(PA-05)이므로 항목 8번 추가: "Resend DPA 공식 체결 확인 + EU region 처리 보장 (Art. 28 프로세서 계약)" — ADR-0026 §Legal Review 외부 감사 표에 반영. |
+
+### 잔존 조건
+
+1. **Day 90 행 삭제 cron 미구현** — 4.5.f 후속 태스크(또는 4.5.g 이후 별도 PR). ADR-0028 §T5 공약 이행을 위해 필수. 미이행 기간에는 보존 정책 위반으로 간주될 수 있음.
+2. **Resend DPA 미체결** — 발송 전 Art. 28 프로세서 계약 체결 필요. [Resend DPA](https://resend.com/legal/dpa) 서명 + EU region 설정 확인. 외부 감사 항목 8번 등재.
+3. **Art. 13 `/legal/privacy` cross-ref 부재** — 인터스티셜 카피에 회사명·연락처 링크 없음. 베타 전 `/legal/privacy` 페이지 신설 + 인터스티셜 footer에 1줄 링크 추가 필요.
+
+### 4.1.d vs 4.5.c 카피 일관성 검토
+
+동일 인터스티셜 페이지 안에서 사용자가 두 동의(어트리뷰션 / 후속 메일)를 구분해야 한다. 코드 검토 결과:
+- 어트리뷰션 동의는 메인 article(dl 항목 5개)로 표시, 후속 메일은 하위 section으로 분리 (`aria-labelledby="follow-up-heading"`).
+- 후속 메일 섹션에 종속 안내 1줄 명시: "거부하면 후속 메일도 보내지 않습니다 (어트리뷰션 동의가 후속 메일의 전제)".
+- 두 동의의 시각적 위계(article > section)가 명확하고, 체크박스 레이블이 각각 독립적으로 읽힌다.
+- 판정: 혼동 위험 낮음. 단, `ADR-0028 §T3` 내부 참조 표현("ADR-0007 §T4 정신 일관") 등 기술 용어가 일반 사용자에게 노출됨 — 베타 UX 리뷰에서 카피 단순화 권장 (법적 필수 아님).
+
+### 외부 변호사 감사 항목 8번 (신규)
+
+ADR-0026 §Legal Review "외부 변호사 감사 필수 항목" 표에 아래 항목 추가됨:
+
+**8. Resend DPA 공식 체결 확인 (PA-05 후속 메일 시스템)** — Resend를 Art. 28 데이터 처리자로 계약, EU region 데이터 잔류 보장 문서화. [Resend DPA](https://resend.com/legal/dpa)

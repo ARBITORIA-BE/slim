@@ -572,6 +572,7 @@ ADR-0026의 설계 차원 다크패턴 점검:
 5. **동의 철회 시 기존 클릭 삭제 요청 처리** — Art. 6(1)(c) 전환 논리 개인정보처리방침 명시
 6. **Neon DPA 체결 완료 확인** — [Neon DPA](https://neon.com/dpa) 공식 서명 + Neon EU 리전(eu-central-1) 처리 확인
 7. **Sentry/PostHog 국외 이전 적합성** — SCCs 또는 adequacy decision 확인
+8. **Resend DPA 공식 체결 확인 (PA-05 후속 메일 시스템)** — Resend를 Art. 28 데이터 처리자로 계약, EU region 데이터 잔류 보장 문서화 ([Resend DPA](https://resend.com/legal/dpa)) — PLAN 4.5.f legal 1차 검토(ADR-0028 §Legal Review) 신규 추가
 
 ## References
 

@@ -106,6 +106,28 @@
 
 ---
 
+### PA-05: 후속 메일 발송 (Follow-up Email Sending)
+
+**근거 ADR:** ADR-0028 (2026-05-13 Accepted)
+**Legal 1차 검토:** PLAN 4.5.f (2026-05-13)
+
+| 항목 | 내용 |
+|---|---|
+| **처리 목적** | 어트리뷰션 클릭 후 7일 경과 시 1회 후속 메일 발송 — 사용자 요금제 변경 성공 여부 self-report 데이터 수집 (베타 100명 전환율 측정) |
+| **합법 근거** | GDPR Art. 6(1)(a) — 명시적 동의. 인터스티셜에서 별도 체크박스(pre-checked=false)로 수집. `consent_given_at NOT NULL` 스키마 강제 — 동의 없으면 INSERT 불가. 어트리뷰션 동의(PA-03)와 분리된 granular consent (Art. 7(2)) |
+| **데이터 카테고리** | 이메일 주소(PII, 발송 직후 NULL화), `affiliate_click_id` FK(1:1, PA-03 클릭과 연결), `consent_given_at`, `scheduled_send_at`, `sent_at`, `unsubscribed_at`, `unsubscribe_token`(nanoid(16)), `pii_anonymized_at`. 추적 식별자(IP/UA/fingerprint/session/referrer) 없음 |
+| **데이터 주체** | 후속 메일 동의 체크박스에 체크 후 이메일을 입력한 비교 이용자 |
+| **수령자** | Resend (EU region — 데이터 처리자, DPA 체결 필요). Resend 외 제3자 전송 없음 |
+| **보존 기간** | 이메일(PII): 발송 성공 직후 즉시 NULL화 + `pii_anonymized_at` 기록. 미발송 unsubscribe 시: 즉시 NULL화. 메타 컬럼(sent_at·consent_given_at·scheduled_send_at): PII 부재 상태로 분리 보존. Day 90: `pii_anonymized_at` ≤ (now - 90d) 행 삭제 또는 메타만 보존 (cron 구현 필요 — 4.5.f 후속 태스크) |
+| **보안 조치** | TLS 전송(Resend API). `unsubscribe_token` nanoid(16) — brute force 안전 (약 9 × 10^28 경우의 수). 이메일 추적 beacon 없음(opened_at/clicked_at 컬럼 없음). Neon EU 리전 저장 암호화 |
+| **국외 이전** | 없음 — Resend EU region 사용. Resend 본사(미국)이나 EU region 선택 시 데이터는 EU 내 처리. Resend DPA 공식 체결 필요 (외부 감사 대기 항목 8번) |
+| **데이터 주체 권리** | Art. 7(3) 동의 철회: 모든 메일 본문 1-click unsubscribe (`/unsubscribe/[token]`) — GET 1회로 즉시 `unsubscribed_at` 기록 + 이메일 NULL화. Art. 15/16/17 일반 권리: `/account` 경로 또는 운영자 이메일(kim.wonmin91@gmail.com) 통해 행사 가능 |
+| **비고** | (1) Day 90 행 삭제 cron 미구현 — 4.5.f 후속 태스크로 인계. (2) Resend DPA 공식 체결 미완료 — 외부 감사 항목 8번 신규 등재. (3) Art. 13 정보 제공: 인터스티셜에 처리 빈도·보존 기간·철회 방법 3항목 표시됨 (4.5.c 구현 확인). 회사명·연락처는 `/legal/privacy` cross-ref 필요 (외부 감사에서 확인) |
+
+**TODO:** Day 90 행 삭제 cron 구현 (4.5.f 후속 태스크). Resend DPA 공식 체결 (외부 감사 항목 8번).
+
+---
+
 ## 변경 이력
 
 | 날짜 | 변경 내용 | 담당 |
@@ -113,6 +135,7 @@
 | 2026-05-13 | 최초 신설 — PA-01(비교 요청), PA-02(비교 결과), PA-03(어트리뷰션 클릭), PA-04(보안 로그) 등재. PLAN 4.1.f legal 1차 검토 산출물 | legal 에이전트 (4.1.f) |
 | 2026-05-13 | PA-03 — 4.1.d 구현 후속 검토 완료. 동의 인터스티셜 필수 5항목(EDPB Guidelines 05/2020) 및 VI.99 랭킹 공개 UI 구현 확인. ADR-0026 §검토 2/5/6 통과 판정. 외부 감사 대기 항목 7개 유지 | legal 에이전트 (4.1.d 후속) |
 | 2026-05-13 | PA-03 — 4.3.d 디스클로저 페이지 본문 채움 검토 완료. `/legal/affiliate-disclosure` 가 UCPD 상업적 관계 명시 + VI.99 정렬 기준 공개 + Art. 6(1)(a)/6(1)(c) GDPR cross-ref + 다크패턴 0 충족. 처리 활동 자체(PA-03 내용) 변경 없음 — 디스클로저 노출 사이드 정합 확인만. ADR-0026 §검토 5 sub-blob 추가. 외부 감사 대기 항목 7개 유지 | legal 에이전트 (4.3.d 후속) |
+| 2026-05-13 | PA-05 신설 — 후속 메일 발송 처리 활동 등재. PLAN 4.5.f legal 1차 검토 산출물. 외부 감사 대기 항목 8번(Resend DPA) 신규 추가. 총 외부 감사 대기 항목 8개 | legal 에이전트 (4.5.f) |
 
 ---
 
@@ -125,3 +148,4 @@
 5. `click_token` 장기 보존 필요성 vs 정산 종료 후 삭제 가능 여부
 6. Sentry/PostHog DPA + 국외 이전 적합성 결정 (SCCs)
 7. Art. 37 DPO 의무 여부 재확인 (서비스 성장 시점 기준)
+8. **Resend DPA 공식 체결 확인** — EU region 처리 보장 + Resend를 데이터 처리자로 등재하는 DPA 서명. Art. 28 프로세서 계약 요건 (PA-05 후속 메일 발송 시스템 운영 전제)
