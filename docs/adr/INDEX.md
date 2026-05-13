@@ -33,6 +33,7 @@
 | _ADR-0024_ | _(예약) Neon-side Vercel Integration — PR마다 DB branch 자동 생성_ | _가칭 / 미작성 — 페이즈 4 베타 (GATE-K) 트리거. PLAN §D.3.e_ | — |
 | [ADR-0025](0025-verifier-read-only-commit-boundary.md) | verifier 에이전트 read-only 경계 — 커밋 금지 + 불일치는 보고만 + 게이트 발명 금지 | Accepted (2026-05-12 — 운영자 직접 결정) | 2026-05-12 |
 | [ADR-0026](0026-affiliate-click-and-attribution.md) | `affiliate_click` 테이블 + 어트리뷰션 모델 — 동의 흐름(GDPR Art. 6(1)(a)) / 수수료 공개 정합 / 순위-격리 단위 테스트 / `bias-audit` 정정 / GDPR 90일·7년 분리 보존 / legal 트리거 | Accepted (2026-05-12). Legal review 조건부 통과 (2026-05-13 — 4.1.a~f 완료, §검토 2/5/6 해소). Builder 인계 가능. 외부 감사 = M16. | 2026-05-13 |
+| [ADR-0027](0027-affiliate-rate-data-source.md) | Affiliate rate data source — static TS const (`src/data/affiliate-rates.ts`) 로 단가 데이터 관리 (옵션 C 채택, 격상 트리거 명시) | Accepted (2026-05-13 — architect 권고, 운영자 최종 결정). ADR-0026 §T4 "builder 결정" 격상. 옵션 C 정적 const, 옵션 B 마이그레이션 트리거(계약 ≥6 또는 분기≥2회) 설정. | 2026-05-13 |
 
 ---
 

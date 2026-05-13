@@ -879,10 +879,11 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     안에서 동시 구현 (4.2 가 4.1.e 안에서 동시 충족된 패턴과 일관).
   - **legal 트리거**: 4.3.d 에서 UCPD + BE Code de droit économique VI.99 (ADR-0026
     §검토 5 일관) 카피 + 링크 텍스트 1차 감사. 4.1.d 인터스티셜과 *문구 일관성* 확인.
-  - [ ] **4.3.a** ADR-0027 신설 — "Affiliate rate data source — static TS const"
+  - [x] **4.3.a** ADR-0027 신설 — "Affiliate rate data source — static TS const"
     (단가 데이터 모델 + 격상 트리거 + P1/P3 정합 방식). ADR-0026 §T4 의 "builder 결정"
     부분을 정식 결정으로 격상. scribe 가 본문 작성. DoD: ADR-0027 Accepted + INDEX
     등재 + ADR-0026 §T4 cross-ref 1줄.
+    - ✅ 완료 (2026-05-13, scribe): ADR-0027 본문 신설(T1~T5 + Alternatives a/b/c + Consequences). INDEX.md 행 추가. ADR-0026 §T4 이미 cross-ref 보유.
   - [ ] **4.3.b** `src/data/affiliate-rates.ts` 신설 — `AffiliateRate` 타입
     (`providerId`, `currency: 'EUR'`, `amountCents: number`, `commissionType: 'CPA'`,
     `source: string`, `fetchedAt: string`, `effectiveFrom: string`, `effectiveTo?: string`)
@@ -1038,7 +1039,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **83** | **47** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-12 |
+| **합계** | **83** | **49** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
