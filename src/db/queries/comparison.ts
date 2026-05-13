@@ -17,7 +17,7 @@
  *   6. getResultByShortId         — /r/[shortId] 진입 검증 (ADR-0021 §T1 + §T8)
  */
 
-import { and, desc, eq, ne } from 'drizzle-orm';
+import { and, desc, eq, ne, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { comparisonRequest } from '@/db/schema/comparison_request';
@@ -371,10 +371,20 @@ export interface ResultRowData {
   readonly caveats: string[];
   readonly sourceUrl: string;
   readonly fetchedAt: Date;
+  /**
+   * ADR-0013 Amendment 1 — raw_payload.stub 트리거.
+   * true = 운영자 수동 입력 추정값. BetaEstimatedBanner + caveat 규칙 9 트리거.
+   * false = 실제 fetcher 수집 데이터 (페이즈 5+).
+   */
+  readonly isStub: boolean;
 }
 
 // ResultRowRaw: ResultRowData 와 동일하되 attributes 는 unknown (Drizzle jsonb 추론)
-type ResultRowRaw = Omit<ResultRowData, 'attributes'> & { attributes: unknown };
+// isStub 은 sql 식 결과라 Drizzle 가 unknown 으로 추론 → 별도로 재선언
+type ResultRowRaw = Omit<ResultRowData, 'attributes' | 'isStub'> & {
+  attributes: unknown;
+  isStub: unknown;
+};
 
 export async function getResultItems(
   resultId: string,
@@ -407,6 +417,12 @@ export async function getResultItems(
       caveats: comparisonResultItem.caveats,
       sourceUrl: tariffSnapshot.sourceUrl,
       fetchedAt: tariffSnapshot.fetchedAt,
+      // ADR-0013 Amendment 1 — raw_payload->>'stub' 값을 boolean 으로 추출.
+      // 왜 sql 식인가? Drizzle select 에서 jsonb 서브키를 boolean 으로 가져오려면
+      //   raw SQL 식이 필요. rawPayload 전체를 fetch 하면 불필요한 데이터 전송.
+      // 왜 COALESCE('false') 인가? NULL (stub 키 없음 또는 raw_payload NULL) 시
+      //   false 로 간주해서 isStub=false → 배너 미표시.
+      isStub: sql<boolean>`COALESCE((${tariffSnapshot.rawPayload}->>'stub')::boolean, false)`,
     })
     .from(comparisonResultItem)
     .innerJoin(
@@ -423,6 +439,9 @@ export async function getResultItems(
       r.attributes && typeof r.attributes === 'object' && !Array.isArray(r.attributes)
         ? (r.attributes as Record<string, unknown>)
         : {},
+    // sql 식 결과는 boolean 이 아닌 unknown 으로 올 수 있음 (PG driver 차이).
+    // 명시 좁힘: truthy 이면 true, 아니면 false.
+    isStub: r.isStub === true || r.isStub === 'true' || r.isStub === 't',
   }));
 }
 

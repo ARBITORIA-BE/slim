@@ -26,6 +26,12 @@ export interface DeriveCaveatsInput {
   /** null = 신규 가입자 (currentTariff 없음). */
   readonly currentTariff: TariffSnapshotLike | null;
   readonly usageProfile: UsageProfile;
+  /**
+   * ADR-0013 Amendment 1 — raw_payload.stub 트리거.
+   * true = 운영자 수동 입력 추정값 → caveat 규칙 9 트리거.
+   * 기본 false (stub 키 없음 = 페이즈 5+ 실 데이터).
+   */
+  readonly isStub?: boolean;
 }
 
 // ─── 표시 helper (cents → € 사람 친화 문자열) ─────────────────────────────
@@ -74,7 +80,7 @@ function formatCentsAsEuro(cents: number): string {
  *   (P3 위반).
  */
 export function deriveCaveats(input: DeriveCaveatsInput): string[] {
-  const { candidate, currentTariff, usageProfile } = input;
+  const { candidate, currentTariff, usageProfile, isStub = false } = input;
   const caveats: string[] = [];
 
   // ─── 1. 약정 길이 ───────────────────────────────────────────────────────
@@ -181,6 +187,16 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
   // 절약액 자체의 정밀도가 낮음. 사용자에게 *기준의 한계* 를 노출 (P3).
   if (currentTariff && currentTariff.confidence !== 'high') {
     caveats.push(`현재 요금제 데이터 신뢰도: ${currentTariff.confidence}`);
+  }
+
+  // ─── 9. stub 추정값 (ADR-0013 Amendment 1) ──────────────────────────────
+  // 왜 isStub 트리거인가?
+  //   raw_payload.stub === true = 운영자 2026-05-09 수동 검증 추정값.
+  //   페이즈 5 이전까지 실시간 스크래핑 데이터가 없으므로 *모든 현 단계 row* 가
+  //   해당. 사용자에게 "추정값임"을 짧게 고지 (P1 + ADR-0013 Amendment 1).
+  //   긴 고지는 BetaEstimatedBanner (배너) 에서 담당 — 여기는 caveat 단 1줄.
+  if (isStub === true) {
+    caveats.push('추정값 — 실 데이터 페이즈 5 이후');
   }
 
   return caveats;

@@ -48,6 +48,7 @@ function row(overrides: Partial<ResultRowData> = {}): ResultRowData {
     caveats: [],
     sourceUrl: 'https://example.com',
     fetchedAt: new Date('2026-05-11T00:00:00Z'),
+    isStub: false,
     ...overrides,
   };
 }
@@ -220,5 +221,48 @@ describe('applyView', () => {
     const before = rows.map((r) => r.tariffSlug);
     applyView(rows, { sort: 'price_asc', filters: new Set() }, 5);
     expect(rows.map((r) => r.tariffSlug)).toEqual(before);
+  });
+});
+
+// ─── ADR-0013 Amendment 1 — isStub propagation ───────────────────────────
+
+describe('ResultRowData.isStub propagation', () => {
+  it('isStub=true row → applyView 후 isStub 값 보존', () => {
+    const stubRow = row({ isStub: true, tariffSlug: 'stub-tariff' });
+    const nonStubRow = row({ isStub: false, tariffSlug: 'live-tariff', rank: 2, monthlySavingCents: 500 });
+    const result = applyView(
+      [stubRow, nonStubRow],
+      { sort: 'saving_desc', filters: new Set() },
+      5,
+    );
+    const found = result.find((r) => r.tariffSlug === 'stub-tariff');
+    expect(found).toBeDefined();
+    expect(found?.isStub).toBe(true);
+  });
+
+  it('isStub=false row → applyView 후 isStub=false 유지', () => {
+    const liveRow = row({ isStub: false, tariffSlug: 'live-only' });
+    const result = applyView(
+      [liveRow],
+      { sort: 'saving_desc', filters: new Set() },
+      5,
+    );
+    expect(result[0]?.isStub).toBe(false);
+  });
+
+  it('적어도 1 row isStub=true → some(isStub) 트리거', () => {
+    const items: ResultRowData[] = [
+      row({ isStub: true }),
+      row({ isStub: false, rank: 2 }),
+    ];
+    expect(items.some((i) => i.isStub)).toBe(true);
+  });
+
+  it('전체 isStub=false → some(isStub) 미트리거', () => {
+    const items: ResultRowData[] = [
+      row({ isStub: false }),
+      row({ isStub: false, rank: 2 }),
+    ];
+    expect(items.some((i) => i.isStub)).toBe(false);
   });
 });

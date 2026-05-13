@@ -43,6 +43,7 @@ import type {
 import { POSTAL_COUNTRIES } from '@/types/comparison-input';
 import { SITE_ORIGIN } from '@/lib/site';
 
+import { BetaEstimatedBanner } from './_components/BetaEstimatedBanner';
 import { CalculationDetails } from './_components/CalculationDetails';
 import { ComparisonControls } from './_components/ComparisonControls';
 import { ComparisonTable } from './_components/ComparisonTable';
@@ -133,6 +134,11 @@ export default async function ResultPage({
   const isAnonymized = row.piiAnonymizedAt !== null;
   const basePath = `/r/${shortId}`;
 
+  // 5.a. ADR-0013 Amendment 1 — BetaEstimatedBanner 트리거.
+  // 적어도 1 row 가 stub 이면 배너 표시 (현 단계 = 전체 row stub).
+  // 페이즈 5 부분 전환 시 some() 조건 그대로 유지됨.
+  const showBetaBanner = allItems.some((item) => item.isStub);
+
   // 6. 라운드 d (PLAN 3.5) — caveat 트리거 조건 표. rank=1 item 의 tariff/snapshot
   //    컬럼 + usageProfile 로 deriveCaveats 규칙 1~7 거울 평가.
   const rank1 = allItems.find((i) => i.rank === 1) ?? null;
@@ -170,6 +176,9 @@ export default async function ResultPage({
           </p>
         )}
       </header>
+
+      {/* ADR-0013 Amendment 1 — 위치 2: ResultConclusionCard 바로 위. */}
+      {showBetaBanner && <BetaEstimatedBanner />}
 
       {topItem ? (
         <>
