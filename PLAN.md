@@ -884,7 +884,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     부분을 정식 결정으로 격상. scribe 가 본문 작성. DoD: ADR-0027 Accepted + INDEX
     등재 + ADR-0026 §T4 cross-ref 1줄.
     - ✅ 완료 (2026-05-13, scribe): ADR-0027 본문 신설(T1~T5 + Alternatives a/b/c + Consequences). INDEX.md 행 추가. ADR-0026 §T4 이미 cross-ref 보유.
-  - [ ] **4.3.b** `src/data/affiliate-rates.ts` 신설 — `AffiliateRate` 타입
+  - [x] **4.3.b** `src/data/affiliate-rates.ts` 신설 — `AffiliateRate` 타입
     (`providerId`, `currency: 'EUR'`, `amountCents: number`, `commissionType: 'CPA'`,
     `source: string`, `fetchedAt: string`, `effectiveFrom: string`, `effectiveTo?: string`)
     + 운영자 입력 entry (현 시점은 placeholder 또는 실계약 1~2건). 헬퍼:
