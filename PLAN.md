@@ -918,8 +918,24 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     enum 분기로 두 케이스 모두 렌더. 별도 sub-task 분해 불필요 (4.2 가 4.1.e 안에서 동시
     충족된 패턴과 일관).
   - ✅ 완료 (2026-05-13): 4.3.c (`AffiliateDisclosureLine`) 가 본 항목을 enum 분기(`affiliate_status` 그 외 4값 → '수수료 없음 — Slim은 이 공급사로부터 수수료를 받지 않습니다. 외부 링크로 직접 이동합니다') 로 동시 충족. 별도 컴포넌트/sub-task 불필요. 커밋 `0f1ea07`.
-- [ ] **4.5** 전환 후 7일 이내 후속 메일 (선택 동의)
-  - "변경 잘 됐나요?" — 변경 실패시 Slim이 자동 메일로 후속 (인적 switching service는 솔로에서 비현실)
+- [ ] **4.5** 전환 후 7일 이내 후속 메일 (선택 동의) — **ADR-0028** (architect, 2026-05-13 분해)
+  - "변경 잘 됐나요?" — 변경 실패시 Slim이 자동 메일로 후속 (인적 switching service는 솔로에서 비현실).
+  - **인프라 결정**: **Resend** (EU region, 100/day 무료 → 베타 100명 ≤7일 1회 발송 충분; 솔로 단순성; €300 cap — ADR-0004 일관). 격상 트리거: 월 ≥ 3k 이메일 시 Postmark 또는 SES 재평가.
+  - **수집 시점**: 4.1.d 인터스티셜에 *옵션 필드 1개 + 체크박스 1개 추가* (pre-checked 0, 거부 시 INSERT 0). 어트리뷰션 동의와 *별개 동의* (granular consent — GDPR Art. 7).
+  - **데이터 모델**: **새 `follow_up_email` 테이블** (`affiliate_click` 확장 X) — ADR-0026 §T1 "affiliate_click 에 PII 컬럼 0" 잠금 보존 + 보존 기간 분리. 1:1 with `affiliate_click` (FK CASCADE).
+  - **7일 트리거**: Inngest function `followUpEmail` — `scheduled_send_at <= now() AND sent_at IS NULL AND unsubscribed_at IS NULL` 일괄 처리 → Resend 호출 → `sent_at` 갱신 + 즉시 `email` NULL 화 (PII 최소화 — ADR-0007 §T4 정신 일관).
+  - **본문 톤**: 톤 중립 ("변경하셨다면 알려주세요") — 외부 conversion postback 미구현 시점 (§T5 정산 자동화 미완) — 성공/실패 self-report. 베타 데이터 수집 목적.
+  - **다크패턴 0** (헌법 §8 #3 + 4.1.d 패턴 일관): pre-checked 0, 동등 가시성, confirmshaming 0, fake urgency 0. `page.dark-pattern.test.ts` 회귀 케이스 확장.
+  - **GDPR**: 합법근거 = Art. 6(1)(a) 동의 (수집 + 발송 둘 다). Art. 13 정보 제공 = 인터스티셜 시점 간결 카피. Art. 7(3) 철회 = 모든 후속 메일에 1-click unsubscribe NOT-optional.
+  - legal 에이전트 1차 트리거 (4.5.f). 외부 변호사 감사는 베타 직전/M16 (ADR-0004 §결정 3).
+  - **ADR-0026 §T1 cross-ref**: ADR-0028 Accepted 시 ADR-0026 §T1 끝에 1줄 추가 — "후속 메일 PII (이메일) 은 ADR-0028 의 별도 테이블 (`follow_up_email`) 로 격리 — 본 ADR 의 §T1 부재 컬럼 잠금 유지" (scribe, 4.5.a 안에서).
+  - [ ] **4.5.a** ADR-0028 신설 — "Follow-up email — infrastructure (Resend) + data model (`follow_up_email` table) + consent flow + GDPR retention". scribe 가 본문 작성. DoD: ADR-0028 Accepted + INDEX 등재 + ADR-0026 §T1 cross-ref 1줄 + ADR-0008 §cron 흐름 추가 cross-ref.
+  - [ ] **4.5.b** `src/db/schema/follow_up_email.ts` 신설 + Drizzle 마이그레이션 (drizzle/0006_*) — 필드: `id` (uuid PK) · `affiliate_click_id` (uuid FK CASCADE NOT NULL) · `email` (text NULL — 익명화 후 NULL) · `consent_given_at` (timestamp NOT NULL) · `scheduled_send_at` (timestamp NOT NULL = created_at + 7d) · `sent_at` (timestamp NULL) · `unsubscribed_at` (timestamp NULL) · `unsubscribe_token` (text UNIQUE NOT NULL — nanoid, 1-click 인증) · `pii_anonymized_at` (timestamp NULL) · `created_at` (timestamp NOT NULL). 인덱스: `(scheduled_send_at, sent_at)` (Inngest hot path) · `(unsubscribe_token)`. `src/db/schema/index.ts` export 1줄. `pnpm db:push` 검증.
+  - [ ] **4.5.c** 인터스티셜 동의 UI 확장 — 4.1.d (`src/app/go/[shortId]/[itemId]/page.tsx` 또는 동등 경로) 에 *옵션* 이메일 필드 + "후속 메일 받기 (선택)" 체크박스 추가 (pre-checked 0). 어트리뷰션 동의 거부 시에도 후속 메일은 *독립적으로* 선택 가능한지 결정 (현재 분해: **종속** — `follow_up_email.affiliate_click_id` FK NOT NULL → 어트리뷰션 동의 거부 시 후속 메일 0). builder 가 4.5.b 후 구현. dark-pattern 회귀 테스트 확장 (4.1.d `page.dark-pattern.test.ts` 위).
+  - [ ] **4.5.d** Inngest function `followUpEmail` 신설 (`src/inngest/follow-up-email.ts`) — cron 또는 step.sleep 패턴. Resend SDK (`@resend/node`) 호출. 본문: plaintext + 미니멀 HTML (회사명 / 클릭 일자 / 결과 페이지 링크 / unsubscribe 링크). 발송 직후 `sent_at` 갱신 + `email` NULL 화 + `pii_anonymized_at` 스탬프. Idempotency: `sent_at IS NULL` 필터. 환경변수: `RESEND_API_KEY` (운영자 가입 후 발급 — builder 가 가입 X).
+  - [ ] **4.5.e** Unsubscribe 1-click — `src/app/unsubscribe/[token]/route.ts` 신설. GET 으로 `unsubscribe_token` 매칭 → `unsubscribed_at` 기록 + 즉시 `email` NULL 화. 응답: 간결 confirmation 페이지 (다크패턴 0 — 재구독 유도 0).
+  - [ ] **4.5.f** legal 에이전트 1차 검토 — GDPR Art. 6(1)(a) 동의 + Art. 7(3) 철회 + Art. 13 정보 제공 + 다크패턴 0 + 보존 정책. `docs/legal/gdpr-register.md` 에 새 처리 활동(후속 메일 발송) 등재. 4.1.d 인터스티셜 카피와 *일관성* 확인. 외부 변호사 감사 항목은 베타 직전/M16.
+  - [ ] **4.5.g** 테스트 — (i) 단위: 7일 트리거 idempotency + 익명화 트리거 + unsubscribe 토큰 매칭. (ii) E2E: 인터스티셜 → 동의 → INSERT 1행 → (Inngest mock) 7일 후 발송 → unsubscribe 클릭 → `unsubscribed_at` 기록. (iii) dark-pattern 회귀 (4.1.d 위 확장 — pre-checked 0 + 동등 가시성).
 - [ ] **4.6** **베타 모집** — Antwerpen / Brussels / Luxembourg 시티에서 100명
   - 채널: 한인 커뮤니티(Korean Society BE/NL/LU), Reddit r/belgium, salair-plus.com
     링크 (운영자 기존 자산), 한국어 트위터/스레드
@@ -1039,7 +1055,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
-| 4 | 9 | 4 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c/d/e 완료) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
+| 4 | 9 | 4 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c/d/e 완료) + 4.5 분해 (a~g, ADR-0028 예약, architect 2026-05-13 — 합계 불변) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
