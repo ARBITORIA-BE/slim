@@ -4,7 +4,8 @@
 
 **Accepted** (2026-05-12 — 운영자 직접 결정, Kim Wonmin).
 Legal review (internal 1차): 2026-05-13 **조건부 통과** — builder 인계 가능.
-잔존 조건: (1) BE 회계 보존 기간 정확한 구분(invoices 10년 vs 장부 7년)은 외부 감사 확정 전까지 보수적으로 10년 적용 권장, (2) 동의 인터스티셜 UI 구현(4.1.d) 시 freely given·specific·informed·unambiguous 4요소 + "거부해도 비교 결과 그대로" 명시 필수.
+잔존 조건: (1) BE 회계 보존 기간 정확한 구분(invoices 10년 vs 장부 7년)은 외부 감사 확정 전까지 보수적으로 10년 적용 권장.
+Legal review (internal 1차 후속 — 4.1.d 구현 검증): 2026-05-13 — §검토 2(필수 5항목) / §검토 5(VI.99 랭킹 공개) / §검토 6(다크패턴 0) 모두 **통과**. 잔존 조건 (2) "동의 인터스티셜 UI 구현(4.1.d) 필수 5항목" 해소. 남은 외부 감사 항목: ADR §Legal Review §외부 변호사 감사 필수 항목 1~7 (베타 직전/M16 트랙 유지).
 외부 변호사 감사: 베타 직전/M16 (ADR-0004 §결정 3, ADR-0007 §Legal review pending과 동일 트랙) — 세부 항목은 §Legal Review (4.1.f 1차) 참조.
 
 본 ADR 은 *결정 + builder/legal 인계 명세*다. **코드/마이그레이션 변경 0건** — 실제 신설
@@ -432,6 +433,8 @@ T1~T8 8개 결정.
 - Art. 7(4) — "서비스 이용을 동의에 조건부로 연결" 금지. 비교 결과 열람에 동의를 조건으로 붙이면 안 됨. ADR-0026 구조상 클릭 전까지는 동의 불필요 — 결과 열람 단계와 분리됨. 적합.
 - 거부 버튼이 동의 버튼과 동등한 가시성을 가져야 함 (Visual Interference 다크패턴 방지 — §검토 6 참조).
 
+**4.1.d 구현 후속 검토 (2026-05-13): 통과** — `src/app/go/[shortId]/[itemId]/page.tsx` 에서 필수 5항목 전부 확인. (1) 받는 회사명: `{providerName}` DD 표시. (2) 처리 목적: "방문 사실이 Slim 서버에 어트리뷰션 목적으로 기록됩니다." (3) 전송 데이터 3 sub-항목: 리다이렉트 흐름 / "전송하는 데이터: 없음 (단순 리다이렉트, ?ref 태그만)" / "공급사가 자체적으로 IP·브라우저 정보를 수집할 수 있습니다 — 공급사의 개인정보처리방침에 따릅니다." (4) 동의 철회: "기록 없이 취소됩니다." (5) freely given: "거부해도 비교 결과는 그대로 유지됩니다" 단독 줄 부각. `page.dark-pattern.test.ts` D섹션이 정규식으로 회귀 검증. 본 검토는 1차 후속 검토이며 베타 직전/M16 외부 감사를 대체하지 않음.
+
 ---
 
 ### §검토 3 — T6 보존 — 90일 vs 장기 분리 (GDPR Art. 5(1)(e))
@@ -507,6 +510,8 @@ WebSearch + WebFetch 확인 결과 (출처: [Accountable.eu BE invoice retention
 - 확인 결과 (출처: [Tapfiliate affiliate compliance](https://tapfiliate.com/blog/affiliate-marketing-compliance-gp/), [EU Commission UCPD guidance](https://commission.europa.eu/law/law-topic/consumer-protection-law/unfair-commercial-practices-and-price-indication/unfair-commercial-practices-directive_en)): EU UCPD는 상업적 관계(commission 수수)를 소비자에게 명시 요구. 비교 사이트가 제휴 수수료를 받는 경우, 결과 페이지에서 이를 명시해야 함 (PLAN 4.3 — 카드별 "Slim은 변경 시 €X 수수료를 받습니다").
 - ADR-0026 T4 + PLAN 4.3 구조가 이를 충족하는 방향. 구현 완료(4.1.d/4.3) 후 재확인 필요.
 
+**4.1.d 구현 후속 검토 (2026-05-13): 통과** — `src/app/go/[shortId]/[itemId]/page.tsx` 푸터 line 203 "정렬 기준: 절약액 내림차순. 제휴 여부는 정렬에 영향 없음." 명시 확인. `page.dark-pattern.test.ts` E섹션이 정규식으로 회귀 검증. `text-xs text-muted` 스타일은 시각적으로 소형이나 소비자보호법상 "사용자 접근 가능 형태" 최소 요건 충족. 결과 페이지(`/r/[shortId]`)의 동일 문구 존재 여부는 PLAN 4.3/4.4 라운드에서 별도 확인. 본 검토는 1차 후속 검토이며 베타 직전/M16 외부 감사를 대체하지 않음.
+
 ---
 
 ### §검토 6 — 다크패턴 종합 (헌법 §8 #3, CMA Dark Pattern Taxonomy)
@@ -528,6 +533,8 @@ ADR-0026의 설계 차원 다크패턴 점검:
 **4.1 전체 흐름 다크패턴 추가 확인사항:**
 - PLAN 4.2: 제휴 공급사 "변경하기" 버튼 색만 다름 — 색 차이만으로 사용자가 상업적 의미를 인지할 수 있는지 보완 표시(예: 작은 배지 또는 툴팁 "수수료 있음") 검토 권장. 색만으로는 접근성 + 명확성 불충분 가능.
 - 비제휴 공급사 표시(PLAN 4.4): 제휴/비제휴 공급사가 동등한 행 수와 디자인으로 표시되어야 함 — bias-audit(T5 정정 후)이 런타임 검증.
+
+**4.1.d 구현 후속 검토 (2026-05-13): 통과** — `src/app/go/[shortId]/[itemId]/page.tsx` 에서 CMA Dark Pattern Taxonomy 6개 패턴 0건 확인. (1) Fake Urgency: `page.dark-pattern.test.ts` A섹션 10개 정규식 커버, 소스 직접 확인 0건. (2) Confirmshaming: 거부 카피 "동의 없이 외부 링크로 이동" — 중립적, B섹션 4패턴 0건. (3) Pre-checked: `<input>`/`<checkbox>` 구조 자체 없음, form POST 단일 버튼 구조로 pre-check 불발생, C섹션 검증. (4) Visual Interference: 동의(bg-primary)/거부(bg-fg/10) 모두 solid fill, 동일 rounded-full px-6 py-2.5 text-sm font-medium — EDPB freely given 동등 가시성 요건 충족. (5) Roach Motel: 동의 1단계/거부 1단계(a href 직접)/복귀 1단계 — 비대칭 없음. `page.dark-pattern.test.ts` F섹션이 cookies()/headers()/Set-Cookie 0건 추가 검증. 본 검토는 1차 후속 검토이며 베타 직전/M16 외부 감사를 대체하지 않음.
 
 ---
 
