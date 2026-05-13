@@ -379,6 +379,13 @@
   - **추적 beacon 0** — 스키마 일관 (사용자 추적 컬럼 부재).
   - 커밋: `172743e` (`feat(plan-4.5.b): follow_up_email 스키마 + Drizzle 마이그레이션 0006`).
 
+- Phase 4 — **4.5.a Amendment: ADR-0028 §T1.a~T1.c `RESEND_API_KEY` 환경 분리 정책** (2026-05-13):
+  - **ADR-0028 §T1.a**: `RESEND_API_KEY` 환경 분리 — production/preview/development 3 환경, 각각 다른 키, 환경별 SoT (ADR-0022 §D3 DB 환경 분리 패턴 일관). 운영자 prod/dev 두 키 발급 완료.
+  - **ADR-0028 §T1.b**: Vercel project settings 에서 production env 등록 (5분), 선택사항 preview env 등록, development 제외.
+  - **ADR-0028 §T1.c**: 로컬 `.env.local` 에 dev 키 등록 (1분), `.env.local.example` 갱신 (운영자 직접), `.gitignore` 확인.
+  - 코드 변동 0 (환경 설정 정책만) / builder는 `process.env.RESEND_API_KEY` 만 읽음.
+  - **PLAN 4.5.d 갱신**: 환경 분리 + 등록 가이드 cross-ref 추가.
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):

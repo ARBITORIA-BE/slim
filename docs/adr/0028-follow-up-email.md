@@ -35,6 +35,60 @@ T1~T7 7개 결정.
 - 월 ≥ 3,000 이메일 도달 시 → Postmark / AWS SES 재평가.
 - 현 추정(베타 단계): 월 ~400 emails (100명 × 1회/7일 + 재발송 여유).
 
+#### T1.a — `RESEND_API_KEY` 환경 분리 정책
+
+**배경**: [ADR-0022 §D3](0022-database-environment-separation.md) 에서 정한 DB endpoint 환경 분리 패턴(production/preview/development 3 브랜치, 각각 다른 endpoint, 환경별 SoT)을 Resend API key 에도 일관적으로 적용. 운영자가 2026-05-13 Resend dashboard에서 prod/dev 두 개 키 발급 완료.
+
+| 환경 | 키 출처 | 비고 |
+|---|---|---|
+| production | Vercel production env (`RESEND_API_KEY`) | prod 키 — 운영자가 Resend dashboard 에서 발급 + Vercel UI 에서 등록. **영속 저장 0** (ADR-0022 §D2 정신 일관). |
+| preview | Vercel preview env (`RESEND_API_KEY`) | dev 키 *재사용* 또는 별도 preview 키 — 운영자 판단. 권장: dev 키 재사용 (베타 단계, preview = 비-프로덕션). |
+| development (`.env.local`) | `RESEND_API_KEY=<dev key>` | 운영자가 로컬 `.env.local` 에 직접 등록. **Claude/builder 절대 수정 X** — `.env.local` 보안 권한 차단. |
+
+**원칙**: 모든 환경에서 `process.env.RESEND_API_KEY` 만 읽음 — 코드는 키 *값* 을 보지 않으므로 환경 분리는 운영 책임.
+
+#### T1.b — 운영자 Vercel env 등록 가이드
+
+**Vercel project settings에서 5분 진행:**
+
+1. **Production env 등록**
+   - "Environment Variables" → "Create (또는 edit `RESEND_API_KEY`)
+   - Name: `RESEND_API_KEY`
+   - Value: <Resend dashboard prod 키>
+   - Environments: **Production 만 체크** (Preview/Development 체크 해제)
+   - Save
+
+2. **(선택) Preview env 등록**
+   - 동일 절차, Value: <dev 키 또는 별도 preview 키>
+   - Environments: **Preview 만 체크**
+   - 권장: dev 키 재사용 (비용/단순성)
+
+3. **Development env 제외**
+   - `.env.local` 이 SoT → Vercel에 등록하지 말 것
+
+#### T1.c — 로컬 `.env.local` 등록 가이드
+
+**운영자 1분 작업:**
+
+1. 로컬 프로젝트 디렉토리: `.env.local` 에 1줄 추가
+   ```
+   RESEND_API_KEY=<dev key>
+   ```
+
+2. `.env.local.example` 갱신 (운영자가 직접 — Claude 권한 차단)
+   ```
+   # Resend transactional email (ADR-0028 §T1.a)
+   # 환경 분리: prod 키 = Vercel production only / dev 키 = 본 파일 / preview = dev 재사용 or Vercel preview env
+   # 발급: https://resend.com/api-keys
+   RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxx
+   ```
+
+3. `.env.local` 은 이미 `.gitignore` 에 등재됨 (확인: `grep .env.local .gitignore`)
+
+**보안 체크:**
+- prod 키는 Resend dashboard 외부(Vercel 외부) 절대 저장 X → git commit 0 확인
+- 유출 시: Resend dashboard revoke → 신규 발급 → Vercel env + `.env.local` 둘 다 갱신
+
 ### T2 — 데이터 모델 = 별도 `follow_up_email` 테이블
 
 **테이블 구조** (10 컬럼):
