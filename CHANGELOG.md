@@ -425,6 +425,28 @@
   - **테스트**: `src/app/unsubscribe/[token]/page.test.tsx` 신설 (20 케이스: token 형식 검증 / not-found / already-unsubscribed / just-unsubscribed / idempotency 재클릭). typecheck/lint/test 445 passed (425+20) / harness:plan 51 정합 / harness:data 통과.
   - 커밋: `1e4d5a1` (`feat(plan-4.5.e): /unsubscribe/[token] RSC — 1-click unsubscribe + atomic UPDATE + idempotency`).
 
+- Phase 4 — **4.5.f legal 1차 검토** (GDPR Art. 6/7/13 + 다크패턴 0) (2026-05-13):
+  - **검토 범위**: ADR-0028 (후속 메일 시스템) legal 1차 검수 — A~I 9 항목, GDPR 준거성 + 다크패턴 저촉 검증.
+  - **검토 판정**: **8통과 / 1조건부**.
+    - ✅ **A. Art. 6(1)(a) 동의** — `consent_given_at NOT NULL` 스키마 강제 + 체크박스 `defaultChecked={false}` + 미동의 시 INSERT 미실행.
+    - ✅ **B. Art. 7(3) 철회** — 1-click unsubscribe 모든 메일 본문 포함 + idempotent.
+    - ⚠️ **C. Art. 13 정보 제공** — 인터스티셜 카피에 처리 빈도/보존/철회 3항목 표시 확인. 단, 회사명/연락처 미명시 → `/legal/privacy` cross-ref 필요 (베타 직전).
+    - ⚠️ **D. 보존 정책 Art. 5(1)(e)** — 발송 직후 `email := NULL` + `pii_anonymized_at` 코드 확인. **Day 90 행 삭제 cron 미구현** — 4.5.f 후속 태스크. 메타 컬럼 보존이 GDPR 위반은 아니나 공약 불이행 상태.
+    - ✅ **E. 다크패턴 0** — pre-checked=false / 동등 가시성 / Confirmshaming 0 / 이미지 beacon 0 / UTM 0 / fake urgency 0 (CMA 타소노미 부합).
+    - ✅ **F. 데이터 정합** — ADR-0026 §T1 "affiliate_click PII 컬럼 0" 잠금 보존 확인. follow_up_email 별도 테이블 + 부재 컬럼 5건(IP/UA/fingerprint/session/referrer).
+    - ✅ **G. Art. 7(2) Granular consent** — 어트리뷰션/후속 메일 체크박스 분리. FK 종속은 "자유로운 동의"(freely given) 위배 아님 — 서비스 조건부 동의 금지(Art. 7(4)) 미해당 (비교 결과 접근은 어트리뷰션과 무관).
+    - ✅ **H. INSERT 실패 처리** — 운영자가 500 응답 채택. silent skip 권고(ADR-0028)와 차이이나 법적 권리 침해 없음. 4.5.g E2E 검증 권장.
+    - ✅ **I. 외부 감사 영향** — 신규 처리 활동(PA-05 후속 메일) → ADR-0026 외부 감사 항목 8번 추가: "Resend DPA 공식 체결 + EU region 보장".
+  - **신설 파일**: `docs/legal/gdpr-register.md` PA-05 (후속 메일 발송 처리 활동) — legal이 신설.
+  - **ADR-0028 갱신**: `docs/adr/0028-follow-up-email.md` §Legal Review 신설 (A~I 9 항목 판정 표 + 잔존 조건 + Art. 13 cross-ref) + §Status 격상 → "Accepted + legal 1차 조건부 통과". 본문 §Decision (T1~T7) 무수정.
+  - **ADR-0026 갱신**: `docs/adr/0026-affiliate-click-and-attribution.md` 외부 감사 표 항목 8번 신규 추가 (Resend DPA).
+  - **잔존 조건 2건**:
+    1. **Day 90 cron 미구현** — `pii_anonymized_at ≤ (now - 90d)` 행 삭제 또는 영구 익명화. 4.5.f 후속 태스크 또는 4.5.g 이후 별도 PR로 인계. architect 가 PLAN 4.5.g 또는 별도 sub-task 신설 결정 필요.
+    2. **Resend DPA 미체결** — Art. 28 데이터 처리자 계약. [Resend DPA](https://resend.com/legal/dpa) 체결 + 우리 운영자가 직접 진행 (외부 감사 항목 8번).
+  - **외부 변호사 감사**: 베타 직전/M16 대체 아님. 본 1차 검토는 설계 잠금 단계 예비 점검.
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **445 passed** (4.5.e 이후 코드 무변동) / `pnpm harness:plan` **51 항목 정합** (PLAN 체크박스/합계 무변동) / `pnpm harness:data` 통과.
+  - 커밋: `2d981a5` (`docs(legal-adr): 4.5.f legal 1차 검토 — GDPR A~I 8통과/1조건부 + PA-05 + 항목 8`).
+
 - Phase 4 — **4.5.a Amendment: ADR-0028 §T1.a~T1.c `RESEND_API_KEY` 환경 분리 정책** (2026-05-13):
   - **ADR-0028 §T1.a**: `RESEND_API_KEY` 환경 분리 — production/preview/development 3 환경, 각각 다른 키, 환경별 SoT (ADR-0022 §D3 DB 환경 분리 패턴 일관). 운영자 prod/dev 두 키 발급 완료.
   - **ADR-0028 §T1.b**: Vercel project settings 에서 production env 등록 (5분), 선택사항 preview env 등록, development 제외.
