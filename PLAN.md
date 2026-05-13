@@ -1185,7 +1185,24 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 
 - [ ] **4.5.1** 어드민 대시보드 v0 (`/admin`) — 일별 비교 수, 전환율, fetcher
   헬스 (페이즈 6.1의 축소판)
+  - 인증: **환경변수 토큰 + middleware** (`ADMIN_TOKEN` + 쿠키 `admin_token`).
+    솔로 운영자 1명 + €300 cap + Vercel 종속 회피 — NextAuth/OAuth 과잉, Vercel
+    Password Protection 은 vendor lock-in. ADR 신설 없음 (PLAN 본문 직결).
+  - 측정 3종 — 모두 Postgres SQL 직결 (PostHog 미사용):
+    - 일별 비교 수: `comparison_request` COUNT GROUP BY `date_trunc('day', created_at)` (최근 30일)
+    - 전환율: `affiliate_click WHERE conversion_status='converted'` COUNT / 비교 수 COUNT (월별)
+    - fetcher 헬스: `tariff_snapshot WHERE fetched_at > now() - 24h` 활성 tariff 비율
+  - sub-task 분해:
+    - [ ] **4.5.1.a** 인증 middleware — `src/middleware.ts` 에 `/admin/*` 가드 (`ADMIN_TOKEN` env 비교, 미일치 → 404). DoD: 토큰 없으면 404, 토큰 일치 시 통과 + 쿠키 30일.
+    - [ ] **4.5.1.b** `/admin` 라우트 + SQL 3종 + 단순 테이블 UI (shadcn `Table`). DoD: 세 메트릭 모두 실데이터 렌더, `source` + `fetched_at` 표기 (헌법 P1).
+    - [ ] **4.5.1.c** 7일 추세 — CSS bar chart (차트 라이브러리 추가 X, Tailwind 단순). DoD: 일별 비교 수 7개 막대 + 호버 시 숫자.
+    - [ ] **4.5.1.d** 테스트 — 단위 (SQL 쿼리 + 토큰 가드) + E2E 1건 (토큰 없이 접근 → 404, 토큰 + 접근 → 200). DoD: `pnpm test` + `pnpm test:e2e` 통과.
 - [ ] **4.5.2** Sentry 알림 + Inngest 실패율 모니터
+  - 코드 작업 ≈ 0 — 운영자 dashboard 설정 중심. Sentry init 은 페이즈 0/1 에서
+    setup 됨 (production 활성 정찰 필요).
+  - sub-task 분해:
+    - [ ] **4.5.2.a** Sentry init production 활성 정찰 + 알림 룰 명세 — 룰 3종: (1) error rate > 5/min → 운영자 이메일 즉시 (2) 신규 issue 첫 발생 → 즉시 (3) LCP > 5s sample → 일 1회 요약. DoD: `docs/sentry-alert-rules.md` 명세 + Sentry dashboard 룰 ON.
+    - [ ] **4.5.2.b** Inngest 실패율 임계값 설정 — `dailyFetchAll` / `followUpEmail` 함수 실패율 ≥ 10% → 운영자 알림. DoD: Inngest dashboard 알림 룰 ON + `docs/inngest-alert-rules.md` 명세.
 - [ ] **4.5.3** **6개월 평가 시작** — 페이즈 5 (멀티 카테고리)는 다음 조건이
   M16에 만족할 때만 시작:
   - 통신 BE에서 월 매출 ≥ €1,000 (CPA 어트리뷰션 검증됨)
@@ -1193,6 +1210,14 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
   - fetcher 안정성 ≥ 95% (24h 신선도)
   - 운영자 시간 여유 ≥ 주 10h (사이드 유지 가능 신호)
   - 미달 시: 통신 카테고리 자체 개선에 페이즈 5 시간을 다시 투입
+  - 측정 방법:
+    - 월 매출: `affiliate_click.commission_amount_cents` SUM 월별 — 4.5.1.b 어드민에 추가 표기
+    - CVR: 4.5.1.b 어드민 메트릭 재사용 (월별)
+    - fetcher 안정성: 4.5.1.b 어드민 메트릭 재사용 (24h 신선도 비율)
+    - 운영자 시간 여유: 운영자 자가 평가 (정량 측정 어려움, 주간 회고 기록)
+  - 산출물: `docs/m16-eval.md` (운영자 트랙, 페이즈 4.5 진입 후 6개월 시점)
+  - 통과 시 → 페이즈 5.0 (Orange BE fetcher) 분해 위해 **architect 재호출**
+  - 미달 시 → 통신 카테고리 자체 개선 sub-task **architect 재호출** 분해
 
 ---
 
