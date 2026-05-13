@@ -518,6 +518,12 @@ WebSearch + WebFetch 확인 결과 (출처: [Accountable.eu BE invoice retention
 
 **4.1.d 구현 후속 검토 (2026-05-13): 통과** — `src/app/go/[shortId]/[itemId]/page.tsx` 푸터 line 203 "정렬 기준: 절약액 내림차순. 제휴 여부는 정렬에 영향 없음." 명시 확인. `page.dark-pattern.test.ts` E섹션이 정규식으로 회귀 검증. `text-xs text-muted` 스타일은 시각적으로 소형이나 소비자보호법상 "사용자 접근 가능 형태" 최소 요건 충족. 결과 페이지(`/r/[shortId]`)의 동일 문구 존재 여부는 PLAN 4.3/4.4 라운드에서 별도 확인. 본 검토는 1차 후속 검토이며 베타 직전/M16 외부 감사를 대체하지 않음.
 
+**4.3.d 디스클로저 페이지 후속 검토 (2026-05-13): 통과** — `src/app/legal/affiliate-disclosure/page.tsx` (stub 전면 교체)가 A~G 7개 항목 모두 충족.
+
+A(UCPD): §1 섹션 "상업적 관계 명시"에 "Slim은 어필리에이트 수수료를 받는 비교 서비스입니다" + 수수료 흐름(동의→클릭→계약 체결→수수료 수령) + "일부 공급사로부터" 정직 표현 존재. B(VI.99): §2 섹션 "비교 순위 알고리즘 독립성"에 "절약액 내림차순 단일 기준" + "어필리에이트 여부/수수료 수령 여부는 순위에 영향을 주지 않습니다" + `compare.isolation.test.ts` 검증 근거 명시 — 랭킹 주요 파라미터 및 상대적 중요도 공개 의무 충족. C(4.1.d 카피 정합): §3 섹션이 4.1.d 인터스티셜의 3원칙(전송 데이터 없음·거부해도 결과 유지·알고리즘 독립)과 모순 없이 일치하며, 인터스티셜 경로(`/go/...`) cross-ref 1줄 존재. D(P1/P3): 수수료 단가 표에 `source` + `fetchedAt` 컬럼이 사용자에게 눈으로 보이며(P1 충족), placeholder-only 상태에서 "개발용 placeholder" 배너와 `source` 셀 텍스트("placeholder — TODO(4.3.d)")가 실 단가 오해 가능성 0으로 명확. E(다크패턴 0): `page.test.tsx` §7 자가검사에서 "지금만/오늘만/마감/Hurry/Limited/마지막" 6패턴 0건, Confirmshaming 0건, 색 비대칭 없음(순수 문서 페이지). F(GDPR cross-ref): §4 섹션이 Art. 6(1)(a) + 90일 SET NULL + 익명 회계 원장 분리 보존을 1단락으로 요약하고 개인정보처리방침으로 cross-ref 유도. G(외부 감사 7항목): 본 4.3.d 본문이 §외부 변호사 감사 항목 중 "5. 동의 철회 시 삭제 처리(Art. 6(1)(c) 전환 논리)"와 "3. 동의 인터스티셜 유효성"의 사용자-노출 사이드를 충족하나, 7개 항목 전체는 베타 직전/M16 외부 감사에서만 최종 확정. 본 1차 감사는 외부 변호사 감사를 대체하지 않음.
+
+미해결 항목: (1) `formatProviderId()` — 케이스 변환(정책 C) 사용으로 실 UUID 진입 시 "Placeholder Proximus Be" 형태 표시명 생성. 실 계약 entry 도입 시점에 `providerId`→표시명 매핑 추가 PR 필요 (4.3.b 후속 또는 별도 sub-task). (2) 개인정보처리방침 페이지(`/privacy`)가 아직 stub 상태이면 §4 GDPR cross-ref 링크가 404 도달 — 페이즈 5 이전 해소 필요.
+
 ---
 
 ### §검토 6 — 다크패턴 종합 (헌법 §8 #3, CMA Dark Pattern Taxonomy)

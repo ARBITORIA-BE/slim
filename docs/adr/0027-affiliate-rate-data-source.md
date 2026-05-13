@@ -226,7 +226,7 @@ getRateForProvider(providerId: string, affiliateStatus: string): AffiliateRate |
 3. **헬퍼 검증** ✅: `getRateForProvider(providerId, affiliateStatus)` 함수 존재 + 필터 로직(affiliateStatus `active_b2b_*` 2값 분기 통과, 나머지 4값 null 반환, 유효기간 필터) 23 테스트 케이스로 검증.
 4. **P1 강제** ✅: 모든 entry 의 `source` / `fetchedAt` 가 NOT NULL/empty + ISO 8601 형식 (테스트 6 케이스로 단언, Zod validation 강제).
 5. **헌법 §8 #4 회귀** ✅: `src/engine/compare.ts` + `src/engine/**` 에서 affiliate-rates.ts import 0건 (정적 grep verify + compare.isolation.test.ts 18 통과 유지).
-6. **`/legal/affiliate-disclosure`**: const 를 import 해 공개 대상 단가 렌더 + `source` 링크/각주 표시 (4.3.d 구현 후 확인).
+6. **`/legal/affiliate-disclosure`** ✅: const 를 import 해 공개 대상 단가 렌더 + `source`/`fetchedAt` 컬럼이 사용자에게 노출 (4.3.d 구현 완료 — legal 4.3.d 1차 감사 통과, 2026-05-13). §T5 P1/P3 정합 확인: 단가 표의 "출처" + "확인 일자" 컬럼이 사용자 화면에 직접 노출됨. placeholder-only 배너로 실 단가 혼동 방지.
 7. **정합 테스트**: `affiliate-rates.ts` entry 와 샘플 `affiliate_click` 행의 `amountCents` 매칭 (4.3.e green 대기).
 8. **`bias-audit` 정정**: const import 후 런타임 정합 검사 동작 (4.3.e green 대기).
 9. **git history**: PLAN 4.3.b 커밋 "feat(plan-4.3.b): src/data/affiliate-rates.ts + 헬퍼 + 단위 테스트" 기록.

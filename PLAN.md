@@ -901,11 +901,12 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     `affiliate_status` 를 props 로 전달 (현재 미전달 — 1줄 추가). DoD:
     typecheck/lint/test + axe 0 violations + 시각 회귀 없음.
     - ✅ 완료 (2026-05-13): `AffiliateDisclosureLine.tsx` 신설 (97줄, RSC, 2 분기 enum) + `.test.tsx` (15 케이스, formatEuroCents 헬퍼 포함). `comparison.ts` 의 getTopResultItem/getResultItems 에 `affiliate_status` select 추가 (2줄). compare-view 의 비교 표 row data 에 `affiliateStatus` 필드 (props 1줄). typecheck/lint/test 366 passed / harness:plan/harness:data 통과. **4.4 동시 충족** (enum 분기의 비-active 4값 "수수료 없음" 메시지). 커밋 `0f1ea07`.
-  - [ ] **4.3.d** `/legal/affiliate-disclosure` 페이지 본문 채움 (현재 stub) — `src/data/
+  - [x] **4.3.d** `/legal/affiliate-disclosure` 페이지 본문 채움 (현재 stub) — `src/data/
     affiliate-rates.ts` 를 *렌더* 하는 단가 표 (공급사 / 단가 / 유형 / source / fetched_at /
     effectiveFrom). 4.3.c 의 카드 디스클로저 링크 도착지. legal 에이전트 1차 감사 트리거
     (UCPD + BE Code de droit économique VI.99 — ADR-0026 §검토 5 일관). DoD: 단가 표 렌더
     + legal 1차 통과 + 4.1.d 인터스티셜 문구와 *일관성* 명시.
+    - ✅ 완료 (2026-05-13): `src/app/legal/affiliate-disclosure/page.tsx` 전면 교체 (stub → 본문, 7 섹션: 상업적 관계/알고리즘 독립성/인터스티셜 cross-ref/GDPR/단가 표/문의/footer). `src/lib/format-eur.ts` 신설 (formatEuroCents 공통 추출). `AffiliateDisclosureLine.tsx` import 1줄 갱신. `page.test.tsx` 신설 25 케이스 (placeholder 배너/실 entry/빈 배열/EUR 포맷/컬럼 헤더 8개/UCPD-VI.99 키 문구/다크패턴 부재). typecheck/lint 0 에러 / test 391 passed. providerId 표기 정책 C (케이스 변환) 채택.
   - [ ] **4.3.e** 테스트 — (i) 정합 테스트: `affiliate-rates.ts` entry 의 `amountCents`
     가 `affiliate_click.commission_amount_cents` 와 동일 단위/타입 단언. (ii) 컴포넌트 테스트:
     `AffiliateDisclosureLine` 6 enum 분기. (iii) E2E 1건: 결과 페이지에서 디스클로저
@@ -1042,7 +1043,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **83** | **52** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
+| **합계** | **83** | **50** | **1** | M0 ~ M24 (≈ 18-24개월) | 2026-05-13 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

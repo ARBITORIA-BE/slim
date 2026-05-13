@@ -20,6 +20,7 @@ import Link from 'next/link';
 
 import type { AffiliateStatus } from '@/db/schema/provider';
 import { getRateForProvider } from '@/data/affiliate-rates';
+import { formatEuroCents } from '@/lib/format-eur';
 
 // ─── Props ─────────────────────────────────────────────────────────────────
 
@@ -30,35 +31,6 @@ export interface AffiliateDisclosureLineProps {
   readonly providerName: string;
   /** affiliate_status enum 6값 — 분기 키 */
   readonly affiliateStatus: AffiliateStatus;
-}
-
-// ─── 통화 포맷 헬퍼 ────────────────────────────────────────────────────────
-
-/**
- * cents → "€X" 형식 (nl-BE 로케일 EUR, 소수점 없음).
- *
- * Intl.NumberFormat 사용 — SSR 에서도 결정적 결과.
- * minimumFractionDigits=0 / maximumFractionDigits=0: cents 가 100의 배수여야 정수 표시.
- * 절사(floor) 없이 toFixed(0) 반올림 방지 — cents/100 을 정수 연산으로 처리.
- */
-function formatEuroCents(amountCents: number): string {
-  const euros = Math.floor(amountCents / 100);
-  // cents 나머지가 있으면 소수 표시
-  const remainder = amountCents % 100;
-  if (remainder === 0) {
-    return new Intl.NumberFormat('nl-BE', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(euros);
-  }
-  return new Intl.NumberFormat('nl-BE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amountCents / 100);
 }
 
 // ─── 컴포넌트 ─────────────────────────────────────────────────────────────
