@@ -838,6 +838,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - [x] **4.1.c** 클릭 기록 경로 — `src/app/r/[shortId]` "변경하기" CTA → 동의 확인 인터스티셜
     (`src/app/go/[...]` 또는 route handler) → `affiliate_click` insert → 302 redirect to provider site
     (`?ref=slim`). 동의 거부 시 외부 링크만 (기록 0). PostHog/Sentry 외 추적기 0.
+    ✅ 완료 (2026-05-13): `/r/[shortId]/_components/ResultConclusionCard.tsx` 의 CTA → `/go/[shortId]/[itemId]` 라우트. `src/app/go/[shortId]/[itemId]/page.tsx` 인터스티셜 RSC (provider.name + "전송 데이터: 없음" + "거부해도 결과 그대로" 명시). POST `confirm/route.ts` → affiliate_click INSERT(consent_given_at=now(), ref_param=`slim-r-<shortId>`, click_token=nanoid(12)) + 302 to `provider.website?ref=...`. 거부 → 외부 링크만 (`?ref` 미부착, 쿠키/SaaS 0). 헌법 §8 #1 자가 검증 ✅ (user-agent/x-forwarded-for/cf-connecting-ip/referer 헤더 0건, cookies()/Set-Cookie 0건). 헌법 §8 #4 ✅ (`src/engine/**` 에 affiliate_click/affiliate_status import 0 — 4.1.e가 정적 강제). typecheck/lint/test 284 passed (8 신규)/harness:plan/harness:data 통과. 커밋 `a8cbe13` (feat(plan-4.1.c): 어트리뷰션 클릭 기록 경로 골격). 다음: 4.1.d(동의 UI 다크패턴 0 + legal 최종) + 4.1.e(compare ↔ affiliate_click 정적 격리 테스트).
   - [ ] **4.1.d** 동의 UI — 다크패턴 0 (헌법 §8 #3): 동의/거부 동등 가시성, "긴급" 카피 0,
     pre-checked 0. 받는 회사명 + 전송 데이터(없음 — 단순 리다이렉트) 명시. legal 검토 대상.
   - [ ] **4.1.e** 순위-격리 단위 테스트 — `src/engine/compare.test.ts` 또는 신규 테스트:

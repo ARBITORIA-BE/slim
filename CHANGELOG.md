@@ -224,6 +224,18 @@
   - **검증**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` 271 passed / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과. 3-way 정합(ADR-0026 §T1~T8 ↔ affiliate_click.ts ↔ drizzle/0005).
   - 커밋: `633dc3a` (`feat(plan-4.1.b): affiliate_click 스키마 + Drizzle 마이그레이션 0005`).
 
+- **PLAN 4.1.c** — 어트리뷰션 클릭 기록 경로 (2026-05-13):
+  - **라우트 구조**: `/r/[shortId]` → 결론 카드 "변경하기" CTA(`<Link href="/go/[shortId]/[itemId]">`) → `GET /go/[shortId]/[itemId]` 인터스티셜 RSC → 동의 버튼 POST `/go/[shortId]/[itemId]/confirm` → `affiliate_click` INSERT + 302 redirect `?ref=slim-r-<shortId>` → 거부 시 외부 링크만(기록 0).
+  - **인터스티셜 표시** (ADR-0026 §T2): provider.name + "전송 데이터: 없음" + "동의 거부해도 비교 결과 유지됨" 명시 (honest copy, 다크패턴 회피).
+  - **헌법 §8 #1 자가 검증** ✅ — `src/app/go/**` + `src/db/queries/affiliate-click.ts` + `src/lib/append-ref.ts` 내에서 (a) `request.headers.get()` (user-agent / x-forwarded-for / cf-connecting-ip / referer) 0건, (b) `cookies()` 읽기 0건, (c) `Set-Cookie` 생성 0건. 쿠키 기반 추적 0.
+  - **거부 경로 정직성** (ADR-0026 §T2 조조): 거부 시 301/302 redirect에 `?ref` 파라미터 미부착 — 사용자가 제휴사로 이동하되 Slim 어트리뷰션 기록 없음 ✅.
+  - **광고-비교 분리** (헌법 §8 #4): `src/engine/compare.ts` + 정렬 로직이 `affiliate_click` / `affiliate_status` import 0, 절약액 DESC만 사용 → 4.1.e 순위-격리 테스트로 단일 검증점 단위화.
+  - **신설 파일**: `src/app/go/[shortId]/[itemId]/page.tsx` (GET 인터스티셜 RSC) + `src/app/go/[shortId]/[itemId]/confirm/route.ts` (POST handler) + 단위 테스트 `.test.ts` 2건, `src/db/queries/affiliate-click.ts` (INSERT helper), `src/lib/append-ref.ts` (URL 빌더) + 단위 테스트.
+  - **수정 파일**: `src/db/queries/comparison.ts` (itemId 추가), `src/app/r/[shortId]/_components/ResultConclusionCard.tsx` (disabled placeholder → `<Link>` 활성, href=`/go/`), `src/app/r/[shortId]/page.tsx` (ctaHref 전달).
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` **284 passed** (기존 271 + 신규 13) / `pnpm harness:plan` 정합 / `pnpm harness:data` 통과.
+  - **다음**: 4.1.d(동의 UI 다크패턴 검증) + 4.1.e(순위-격리 단위 테스트) 진행. 4.1.d는 legal 검토 대상(ADR-0026 §T2 5개 필수 항목 명시 후 구현).
+  - 커밋: `a8cbe13` (`feat(plan-4.1.c): 어트리뷰션 클릭 기록 경로 골격 — /go interstitial + INSERT + 302`).
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):
