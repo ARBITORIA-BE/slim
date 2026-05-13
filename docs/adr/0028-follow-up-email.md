@@ -298,7 +298,7 @@ Slim
 
 - ✅ **4.5.a: ADR-0028 설계 잠금** — T1~T7 결정 + Alternatives (a)~(f) 거부 근거 명시 + cross-ref 2건 추가 (ADR-0026 §T1 + ADR-0008 §cron). 커밋 `f562de3`.
 - ✅ **4.5.b: 데이터 모델 (T2) 구현** — `src/db/schema/follow_up_email.ts` 신설 (10 필드, 2 인덱스, FK CASCADE). `drizzle/0006_graceful_proteus.sql` 마이그레이션. `pnpm db:push` 성공 + `pnpm verify:db` allowlist 확인 (schema 변경 무고장, 환경 분리 영향 0). 부재 컬럼 5건(IP/UA/fingerprint/session/referrer — ADR-0026 §T1 잠금 보존). 추적 beacon 0. typecheck/lint/test 401 passed. 커밋 `172743e`.
-- ✅ 4.5.c: 동의 UI dark-pattern.test.ts 회귀 (pre-checked 0, 동등 가시성).
+- ✅ **4.5.c: 동의 UI 확장 (T3/T4/T7) + 수집 흐름** — `src/app/go/[shortId]/[itemId]/page.tsx` 후속 메일 섹션 신설 (email input + 체크박스 `defaultChecked={false}` + Art. 13 카피 3줄 + 종속 안내 1줄). `src/app/go/[shortId]/[itemId]/confirm/route.ts` form 파싱 + 조건부 `insertFollowUpEmail` 호출. `src/db/queries/follow-up-email.ts` 신설 — unsubscribe_token=nanoid(16) 생성, scheduled_send_at=created_at+7d 계산. neon-http 트랜잭션 미지원 → 순차 실행, FK CASCADE 정합. `page.dark-pattern.test.ts` 26→31 (G 섹션 5건: pre-checked 양방향 잠금 + Art. 13 카피 + Confirmshaming). `confirm/route.test.ts` 8→13 (5건: email+followUp 조합 + silent skip + nanoid(16) 형식). typecheck/lint/test 411 passed (401+10) / harness:plan 51 정합 / harness:data 통과. 커밋 `c8fa163`.
 - ✅ 4.5.d: `src/inngest/follow-up-email.ts` 단위 테스트 (idempotency + anonymization + Resend mock).
 - ✅ 4.5.e: `/unsubscribe/[token]` 단위 테스트 (token matching + NULL화).
 - ✅ 4.5.f: legal 1차 GDPR Art. 6/7/13 + 다크패턴 통과 (`docs/legal/gdpr-register.md` 신규 항목).

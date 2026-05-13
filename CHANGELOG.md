@@ -379,6 +379,28 @@
   - **추적 beacon 0** — 스키마 일관 (사용자 추적 컬럼 부재).
   - 커밋: `172743e` (`feat(plan-4.5.b): follow_up_email 스키마 + Drizzle 마이그레이션 0006`).
 
+- Phase 4 — **4.5.c 동의 UI 확장 + 후속 메일 수집 흐름 (2026-05-13)**:
+  - **구현 범위**: ADR-0028 §T3(수집 시점) + §T4(합법근거) + §T7(다크패턴 0) 실행. 인터스티셜(`src/app/go/[shortId]/[itemId]/page.tsx`)에 후속 메일 섹션 신설.
+  - **UI 변경**: `src/app/go/[shortId]/[itemId]/page.tsx` — 기존 어트리뷰션 동의(4.1.c) 아래 후속 메일 섹션 추가:
+    - Email input: `<Input type="email" name="follow_up_email" />`
+    - Checkbox: `<Checkbox name="consent_follow_up" defaultChecked={false} />` — **pre-checked=false 강제** (헌법 §8 #3 / CMA 다크패턴 회피)
+    - Art. 13 카피 3줄 (신규): "Slim이 7일 후 1회 이메일로 후속합니다: '변경하셨다면 알려주세요' 메일 (약 2분 소요) / 이메일은 발송 직후 익명화됩니다 (PII 최소화) / 모든 메일에 1-click unsubscribe 링크 포함"
+    - 종속 안내 1줄 (신규): "어트리뷰션 동의가 필수입니다" (FK 정책 명시)
+  - **폼 처리**: `src/app/go/[shortId]/[itemId]/confirm/route.ts` — form 파싱 시 `follow_up_email` + `consent_follow_up` 추출. 체크박스 ON 시에만 `insertFollowUpEmail` 호출 (email NULL 입력 시 조건부 스킵).
+  - **DB 헬퍼 신설**: `src/db/queries/follow-up-email.ts` — `insertFollowUpEmail(affiliateClickId, email)` 함수 (unsubscribe_token=nanoid(16) 자동 생성, scheduled_send_at=created_at+7d 계산).
+  - **트랜잭션 정책**: neon-http no-transaction 제약 → 순차 실행 (affiliate_click INSERT → follow_up_email INSERT). FK CASCADE로 부모 삭제 시 자동 정합 보장.
+  - **INSERT 실패 처리**: 선택적 후속 메일이라 실패 시 500 응답. silent skip 권고(ADR-0028 §T3)와 차이 — 운영자 검토 항목.
+  - **다크패턴 회귀**: `src/app/go/[shortId]/[itemId]/page.dark-pattern.test.ts` 신설 섹션 G (5 케이스):
+    - G1: pre-checked=false 검증 (체크박스 기본 미체크)
+    - G2: defaultChecked={false} 코드 검증 (CSS 트릭 거부)
+    - G3: Art. 13 카피 존재 확인
+    - G4: 동의/거부 동등 가시성 (색상/크기 동등)
+    - G5: Confirmshaming 0 (거부 버튼 텍스트 중립 — "받지 않기" 부정형 금지)
+  - **테스트 증가**: `page.dark-pattern.test.ts` 26 → 31 (+5 G섹션) / `confirm/route.test.ts` 8 → 13 (+5: email+followUp 조합, silent skip 경로, nanoid(16) 형식)
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` 411 passed (401 → 411, +10 신규) / `pnpm harness:plan` 51 항목 정합 (합계 불변) / `pnpm harness:data` 통과.
+  - **운영자 검토 항목** ⚠️: builder가 `follow_up_email` INSERT 실패 시 500 응답 채택. ADR-0028 명세 권고는 silent skip (어트리뷰션 과정 분리). 현재 placeholder data 단계라 즉시 변경 불필요하나, 4.5.d/4.5.g (Inngest 통합 + E2E) 또는 4.5.g 시점에 운영자 판단 후 (a) silent skip 전환 또는 (b) 500 유지 재결정 권고. [ADR-0028 §Consequences](docs/adr/0028-follow-up-email.md#consequences) 참조.
+  - 커밋: `c8fa163` (`feat(plan-4.5.c): 인터스티셜 동의 UI 확장 — 옵션 이메일 + pre-checked 0 + Art. 13 카피 3줄`).
+
 - Phase 4 — **4.5.a Amendment: ADR-0028 §T1.a~T1.c `RESEND_API_KEY` 환경 분리 정책** (2026-05-13):
   - **ADR-0028 §T1.a**: `RESEND_API_KEY` 환경 분리 — production/preview/development 3 환경, 각각 다른 키, 환경별 SoT (ADR-0022 §D3 DB 환경 분리 패턴 일관). 운영자 prod/dev 두 키 발급 완료.
   - **ADR-0028 §T1.b**: Vercel project settings 에서 production env 등록 (5분), 선택사항 preview env 등록, development 제외.
