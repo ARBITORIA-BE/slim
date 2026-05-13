@@ -9,6 +9,7 @@
  *   2. 90일 초과 raw_payload + price_payload NULL화 (ADR-0006 §T6)
  *   3. 90일 초과 comparison_request PII 일반화 (ADR-0007 §T4)
  *   4. 90일 초과 comparison_result.locked_inputs NULL (ADR-0007 §T9)
+ *   5. 90일 초과 follow_up_email 행 삭제 (ADR-0028 §T5)
  *
  * 실행: pnpm harness:price
  *
@@ -90,10 +91,41 @@ async function detectAnomalies(): Promise<Anomaly[]> {
   }));
 }
 
+// drizzle execute의 rowCount는 driver 별. neon 의 경우 .rowCount
+function safeCount(r: unknown): number {
+  if (typeof r === 'object' && r !== null && 'rowCount' in r) {
+    const v = (r as { rowCount: unknown }).rowCount;
+    return typeof v === 'number' ? v : 0;
+  }
+  return 0;
+}
+
+/**
+ * 보조 작업 4 (ADR-0028 §T5 + ADR-0026 §T6): 90일 초과 follow_up_email 행 삭제.
+ *
+ * 조건:
+ *   - pii_anonymized_at IS NOT NULL  → 발송 후 익명화 완료 (또는 unsubscribe 처리 완료)
+ *   - pii_anonymized_at <= NOW() - 90d → 익명화 시점 기준 90일 경과
+ *
+ * pii_anonymized_at IS NULL (발송 전 또는 발송 실패) 행은 삭제 대상 아님.
+ */
+export async function deleteAnonymizedFollowUpEmails(
+  dbClient: typeof db,
+): Promise<number> {
+  // RETENTION_DAYS = 90 고정값이므로 sql.raw 불필요 — 리터럴 직접 사용.
+  const result = await dbClient.execute(sql`
+    DELETE FROM follow_up_email
+    WHERE pii_anonymized_at IS NOT NULL
+      AND pii_anonymized_at <= NOW() - INTERVAL '90 days'
+  `);
+  return safeCount(result);
+}
+
 async function applyRetention(): Promise<{
   snapshotsAnonymized: number;
   requestsAnonymized: number;
   resultsAnonymized: number;
+  followUpEmailsDeleted: number;
 }> {
   // 보조 작업 1 (ADR-0006 §T6) — 90일 초과 snapshot의 jsonb 컬럼 NULL화
   const snap = await db.execute(sql`
@@ -123,19 +155,14 @@ async function applyRetention(): Promise<{
       AND pii_anonymized_at IS NULL
   `);
 
-  // drizzle execute의 rowCount는 driver 별. neon 의 경우 .rowCount
-  const safeCount = (r: unknown): number => {
-    if (typeof r === 'object' && r !== null && 'rowCount' in r) {
-      const v = (r as { rowCount: unknown }).rowCount;
-      return typeof v === 'number' ? v : 0;
-    }
-    return 0;
-  };
+  // 보조 작업 4 (ADR-0028 §T5 + ADR-0026 §T6): 90일 초과 follow_up_email 행 삭제
+  const followUpDeleted = await deleteAnonymizedFollowUpEmails(db);
 
   return {
     snapshotsAnonymized: safeCount(snap),
     requestsAnonymized: safeCount(req),
     resultsAnonymized: safeCount(res),
+    followUpEmailsDeleted: followUpDeleted,
   };
 }
 
@@ -162,10 +189,11 @@ async function main() {
     }
   }
 
-  console.log('\n  🗄️  90일 리텐션 작업 (ADR-0006 §T6, ADR-0007 §T4/§T9):');
+  console.log('\n  🗄️  90일 리텐션 작업 (ADR-0006 §T6, ADR-0007 §T4/§T9, ADR-0028 §T5):');
   console.log(`    snapshots NULL화         : ${retention.snapshotsAnonymized}건`);
   console.log(`    request PII 일반화       : ${retention.requestsAnonymized}건`);
   console.log(`    result lockedInputs NULL : ${retention.resultsAnonymized}건`);
+  console.log(`    90일 초과 ${retention.followUpEmailsDeleted}행 삭제 (ADR-0028 §T5)`);
 
   // 운영 cron에서는 exit 0 (알림만), CI에서는 anomaly 발견 시 exit 1
   if (anomalies.length > 0 && process.env.CI === 'true') {
@@ -174,7 +202,10 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((err) => {
-  console.error('하네스 실행 실패:', err);
-  process.exit(2);
-});
+// Vitest 환경에서는 main() 자동 실행 금지 — export 함수 단위 테스트용.
+if (!process.env['VITEST']) {
+  main().catch((err) => {
+    console.error('하네스 실행 실패:', err);
+    process.exit(2);
+  });
+}

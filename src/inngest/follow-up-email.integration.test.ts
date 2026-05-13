@@ -200,6 +200,8 @@ vi.mock('@/db', () => {
     db: {
       select: vi.fn(() => makeSelectChain()),
       update: vi.fn(() => makeUpdateChain()),
+      // execute: 보조 작업 4 (ADR-0028 §T5) 단위 케이스에서 각 it() 안에서 재할당
+      execute: vi.fn().mockResolvedValue({ rowCount: 0 }),
     },
   };
 });
@@ -516,6 +518,81 @@ describe('통합 케이스 5b — unsubscribeByToken query 실행 (queries 레�
 
     expect(result.kind).toBe('just-unsubscribed');
     expect(updateCalled).toBe(true);
+  });
+});
+
+// ─── 보조 작업 4 케이스 (ADR-0028 §T5): deleteAnonymizedFollowUpEmails ────────
+// scripts/harness/price-snapshot.ts 의 export 함수 직접 호출 — SQL 분리 단위 테스트.
+// db.execute 를 mock 으로 대체해 rowCount 반환값 검증.
+
+describe('보조 작업 4 (ADR-0028 §T5) — deleteAnonymizedFollowUpEmails 단위 케이스', () => {
+  // 각 케이스에서 db mock 을 재할당하므로 afterEach 에서 복원
+  let originalExecute: ReturnType<typeof vi.fn> | undefined;
+
+  beforeEach(async () => {
+    // @builder-justification: vi.mock('@/db') 가 런타임 db.execute 를 vi.fn()으로 교체.
+    // tsc 원본 타입 없음 → unknown 경유 이중 단언.
+    const { db } = (await import('@/db')) as unknown as {
+      db: { execute: ReturnType<typeof vi.fn> };
+    };
+    originalExecute = db.execute;
+  });
+
+  afterEach(async () => {
+    const { db } = (await import('@/db')) as unknown as {
+      db: { execute: ReturnType<typeof vi.fn> };
+    };
+    if (originalExecute) db.execute = originalExecute;
+  });
+
+  it('케이스 A — pii_anonymized_at = now-100d row → DELETE 실행 (rowCount=1 반환)', async () => {
+    const { db } = (await import('@/db')) as unknown as {
+      db: { execute: ReturnType<typeof vi.fn> };
+    };
+    db.execute = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+    const { deleteAnonymizedFollowUpEmails } = await import(
+      '../../scripts/harness/price-snapshot'
+    );
+    // @builder-justification: db 타입이 scripts/ 내부 import 와 다를 수 있어 단언.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const count = await deleteAnonymizedFollowUpEmails(db as any);
+    expect(count).toBe(1);
+    expect(db.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('케이스 B — pii_anonymized_at = now-89d row → DELETE 0 (경계 — 90일 미만)', async () => {
+    // 89일 row 는 WHERE 조건 불충족 → DB 가 0 반환
+    const { db } = (await import('@/db')) as unknown as {
+      db: { execute: ReturnType<typeof vi.fn> };
+    };
+    db.execute = vi.fn().mockResolvedValue({ rowCount: 0 });
+
+    const { deleteAnonymizedFollowUpEmails } = await import(
+      '../../scripts/harness/price-snapshot'
+    );
+    // @builder-justification: 위와 동일 사유.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const count = await deleteAnonymizedFollowUpEmails(db as any);
+    expect(count).toBe(0);
+    expect(db.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('케이스 C — pii_anonymized_at IS NULL row → DELETE 0 (발송 전 행)', async () => {
+    // IS NULL 행은 WHERE pii_anonymized_at IS NOT NULL 조건 불충족 → DB 가 0 반환
+    const { db } = (await import('@/db')) as unknown as {
+      db: { execute: ReturnType<typeof vi.fn> };
+    };
+    db.execute = vi.fn().mockResolvedValue({ rowCount: 0 });
+
+    const { deleteAnonymizedFollowUpEmails } = await import(
+      '../../scripts/harness/price-snapshot'
+    );
+    // @builder-justification: 위와 동일 사유.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const count = await deleteAnonymizedFollowUpEmails(db as any);
+    expect(count).toBe(0);
+    expect(db.execute).toHaveBeenCalledTimes(1);
   });
 });
 
