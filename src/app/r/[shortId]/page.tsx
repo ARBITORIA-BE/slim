@@ -182,6 +182,7 @@ export default async function ResultPage({
             confidence={topItem.confidence}
             caveats={topItem.caveats}
             isNewSubscriber={view.isNewSubscriber}
+            ctaHref={`/go/${shortId}/${topItem.itemId}`}
           />
           <section
             aria-labelledby="comparison-heading"

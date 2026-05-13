@@ -20,6 +20,8 @@
  *   - CTA 활성 = 페이즈 4 어트리뷰션 ADR.
  */
 
+import Link from 'next/link';
+
 import type { Confidence } from '@/db/schema/tariff_snapshot';
 
 // ─── Props ────────────────────────────────────────────────────────────────
@@ -40,6 +42,13 @@ export interface ResultConclusionCardProps {
    * 이 경우 monthlySavingCents = -monthlyAvg12 (절약 의미 X, absolute cost).
    */
   readonly isNewSubscriber: boolean;
+  /**
+   * PLAN 4.1.c — 동의 인터스티셜 CTA href 구성.
+   * shortId: comparison_result.short_id
+   * itemId: comparison_result_item.id (1위 rank 행)
+   * null 이면 CTA 비활성 (후보 0건 케이스).
+   */
+  readonly ctaHref: string | null;
 }
 
 // ─── 표시 helper ──────────────────────────────────────────────────────────
@@ -104,6 +113,7 @@ export function ResultConclusionCard(props: ResultConclusionCardProps) {
     confidence,
     caveats,
     isNewSubscriber,
+    ctaHref,
   } = props;
   const verdict = deriveVerdict(monthlySavingCents, isNewSubscriber);
 
@@ -165,17 +175,28 @@ export function ResultConclusionCard(props: ResultConclusionCardProps) {
         </section>
       )}
 
-      {/* PLAN 3.7.b — disabled "변경하기" CTA: 인쇄에서 숨김 (클릭 불가 + 노이즈).
-           P1/P3 항목(결론 텍스트·절약액·신뢰도·caveats)은 위에서 그대로 노출. */}
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="페이즈 4 어트리뷰션 활성 예정"
-        className="print:hidden inline-flex w-fit cursor-not-allowed items-center justify-center rounded-full border border-fg/15 bg-bg px-5 py-2.5 text-sm font-medium text-fg-soft opacity-70"
-      >
-        변경하기 (페이즈 4 활성 예정)
-      </button>
+      {/* PLAN 4.1.c — "변경하기" CTA 활성화.
+           ctaHref null = 후보 0건 케이스 → 버튼 비활성.
+           // PLAN 4.1.d TODO: 다크패턴 0 검증 (동등 가시성, 긴급성 표현 X), 인터스티셜 스타일 최종화.
+           인쇄에서 숨김 (클릭 불가 환경 + 노이즈). */}
+      {ctaHref ? (
+        <Link
+          href={ctaHref}
+          className="print:hidden inline-flex w-fit items-center justify-center rounded-full bg-fg px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-primary"
+        >
+          변경하기
+        </Link>
+      ) : (
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          title="비교 후보 없음"
+          className="print:hidden inline-flex w-fit cursor-not-allowed items-center justify-center rounded-full border border-fg/15 bg-bg px-5 py-2.5 text-sm font-medium text-fg-soft opacity-70"
+        >
+          변경하기
+        </button>
+      )}
     </article>
   );
 }

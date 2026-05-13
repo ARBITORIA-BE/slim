@@ -308,6 +308,8 @@ export async function getResultByShortId(
  * 없으면 null — 후보 0건 (compare 결과 빈 ranked) 케이스.
  */
 export interface TopResultItemRow {
+  /** comparison_result_item.id — PLAN 4.1.c CTA href 구성에 필요. */
+  readonly itemId: string;
   readonly rank: number;
   readonly tariffSnapshotId: string;
   readonly monthlySavingCents: number;
@@ -335,6 +337,8 @@ export interface TopResultItemRow {
  * 안내로 분기 (라운드 a).
  */
 export interface ResultRowData {
+  /** comparison_result_item.id — PLAN 4.1.c 비교 표 CTA href 구성에 필요. */
+  readonly itemId: string;
   readonly rank: number;
   readonly tariffSnapshotId: string;
   readonly providerName: string;
@@ -360,13 +364,14 @@ export interface ResultRowData {
   readonly fetchedAt: Date;
 }
 
-type ResultRowRaw = Omit<ResultRowData, 'attributes'> & { attributes: unknown };
+type ResultRowRaw = Omit<ResultRowData, 'attributes'> & { attributes: unknown; itemId: string };
 
 export async function getResultItems(
   resultId: string,
 ): Promise<ResultRowData[]> {
   const rows: ResultRowRaw[] = await db
     .select({
+      itemId: comparisonResultItem.id,
       rank: comparisonResultItem.rank,
       tariffSnapshotId: comparisonResultItem.tariffSnapshotId,
       providerName: provider.name,
@@ -414,6 +419,7 @@ export async function getTopResultItem(
 ): Promise<TopResultItemRow | null> {
   const rows = await db
     .select({
+      itemId: comparisonResultItem.id,
       rank: comparisonResultItem.rank,
       tariffSnapshotId: comparisonResultItem.tariffSnapshotId,
       monthlySavingCents: comparisonResultItem.monthlySavingCents,

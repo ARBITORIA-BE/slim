@@ -835,7 +835,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - [x] **4.1.b** `src/db/schema/affiliate_click.ts` 신설 + Drizzle 마이그레이션 (drizzle/0005_*) —
     ADR-0026 §데이터 모델 컬럼. `src/db/schema/index.ts` export 1줄. `pnpm db:push` 검증.
     ✅ 완료 (2026-05-13): `src/db/schema/affiliate_click.ts` 신설 (18컬럼, enum, FK 4개, 인덱스 5개). `drizzle/0005_pale_praxagora.sql` (enum + table + FK + 인덱스). `src/db/schema/index.ts` export 1줄 추가. typecheck/lint/test/harness:plan/harness:data 모두 통과. 3-way 정합(ADR-0026 ↔ 스키마 ↔ 마이그레이션) ✅. CHANGELOG 항목 추가. builder 인계 가능.
-  - [ ] **4.1.c** 클릭 기록 경로 — `src/app/r/[shortId]` "변경하기" CTA → 동의 확인 인터스티셜
+  - [x] **4.1.c** 클릭 기록 경로 — `src/app/r/[shortId]` "변경하기" CTA → 동의 확인 인터스티셜
     (`src/app/go/[...]` 또는 route handler) → `affiliate_click` insert → 302 redirect to provider site
     (`?ref=slim`). 동의 거부 시 외부 링크만 (기록 0). PostHog/Sentry 외 추적기 0.
   - [ ] **4.1.d** 동의 UI — 다크패턴 0 (헌법 §8 #3): 동의/거부 동등 가시성, "긴급" 카피 0,

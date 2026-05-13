@@ -22,6 +22,7 @@ import {
 
 function row(overrides: Partial<ResultRowData> = {}): ResultRowData {
   return {
+    itemId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     rank: 1,
     tariffSnapshotId: '11111111-1111-1111-1111-111111111111',
     providerName: 'Proximus',
