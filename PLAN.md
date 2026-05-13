@@ -850,14 +850,68 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     에 새 처리 활동(어트리뷰션 클릭 기록) 등재 + 동의 UI 다크패턴 검토 + 보존 기간(정산 목적 vs
     `comparison_result` 90일 익명화 정합) 의견. 외부 변호사 감사는 베타 직전/M16 (ADR-0004 §결정 3).
     - 조건부 통과 (2026-05-13): 6개 항목 검토 완료 — PII 최소화 통과 / 동의 흐름 조건부(4.1.d 인터스티셜 필수 표시 항목 준수) / BE 보존 기간 조건부(invoices 10년 보수 적용, 외부 감사 확정) / 합법근거 분리 통과 / 수수료 공개 조건부(정렬 기준 UI 명시) / 다크패턴 조건부(4.1.d 구현 검증). builder 인계 가능. `docs/legal/gdpr-register.md` 신설 (PA-01~04). ADR-0026 §Legal Review 섹션 + §Status 갱신. 외부 감사 필수 항목 7건 문서화.
-- [ ] **4.2** 제휴 가능 공급사 우선 — **그러나 절대 검색 결과 순위에 영향 X**
+- [x] **4.2** 제휴 가능 공급사 우선 — **그러나 절대 검색 결과 순위에 영향 X**
   - 알고리즘: 절약액 순. 제휴 여부는 "변경하기" 버튼 색만 다름 (헌법 §8 #4 광고-비교 분리).
   - **4.1 ADR-0026 §어트리뷰션 흐름에서 함께 다룸** — 4.1 의 순위-격리 단위 테스트(4.1.e)가
     4.2 의 DoD 도 동시 충족. UI 의 "변경하기 버튼 색만 다름" 은 4.3/4.4 와 묶여 페이즈 4 UI 라운드에서
     builder 가 구현 (별도 분해 불필요 — 4.1 ADR 가 격리 원칙의 단일 출처).
+  - ✅ 완료 (2026-05-13): **알고리즘 측면 — 4.1.e (`src/engine/compare.isolation.test.ts`) 가 본 항목의 격리 원칙(`affiliate_status` 무영향) 을 단일 출처로 강제 + ADR-0026 §T3 잠금**. UI 측면("변경하기" 버튼 색만 다름) 은 4.3 (디스클로저 카드) 과 4.4 (비제휴 동등 표시) UI 라운드에서 통합 구현. 별도 sub-task 분해 불필요 (PLAN 본문 명시).
 - [ ] **4.3** 제휴 비공개시 명시적 디스클로저 (각 결과 카드 하단)
   - 예: "Slim은 변경 시 Proximus로부터 €X의 수수료를 받습니다 — 이 금액은 회원님의 요금에 영향이 없습니다"
+  - **단가 데이터 출처 결정 — 옵션 C (정적 TS const `src/data/affiliate-rates.ts`)**.
+    근거 2줄: (i) 솔로 + €300 cap + 4.x 초기 계약 ≤ 5건 + 변경 빈도 분기 ≤ 1회 — 별도
+    테이블(B) / 컬럼 추가(A) 의 마이그레이션 비용이 가치보다 큼. (ii) P1 (출처) 충족은
+    const entry 마다 `source` (계약 PDF + 페이지) + `fetched_at` (운영자 수동 입력 일자)
+    필드로 가능 — DB 칼럼 없이도 헌법 P3 정합. 격상 트리거: 계약 ≥ 6건 OR 분기 ≥ 2회
+    변경 시 ADR amendment 로 B 재검토.
+  - **표시 형식**: CPA flat fee (€ 단일 숫자, BE 텔레컴 어필리에이트 시장 통설 — 운영자
+    salair-plus 사전 지식). `affiliate_click.commission_amount_cents` 와 동일 단위 ⇒
+    정합 단순. % 형식은 채택하지 않음.
+  - **표시 위치**: `ComparisonTable` 행 카드 *하단 별도 영역* (카드 본문 가격/절약액 슬롯
+    과 시각적 구분선 + `text-xs text-fg-soft` 톤). 헌법 §8 #4 (광고-비교 분리) 정합 —
+    상단은 100% 알고리즘 결과, 하단 디스클로저는 별도 슬롯. 결론 카드(`ResultConclusionCard`)
+    1위 공급사도 동일 슬롯. 헌법 P3 (결론 → 근거 → 원본) 의 *근거* 층.
+  - **표시 대상**: `affiliate_status IN ('active_b2b_intra_eu', 'active_b2b_domestic_be')`
+    (ADR-0026 §T4). 그 외 4값(`none` / `pending` / `paused` / `terminated`) 은 4.4
+    슬롯("수수료 없음" 또는 비표시) 으로 이동.
+  - **4.4 와의 관계**: 같은 카드 슬롯의 *반대편* — 동일 컴포넌트 (`AffiliateDisclosureLine`
+    또는 유사) 가 `affiliate_status` 분기로 두 케이스 모두 렌더. 4.4 는 별도 분해 없이 4.3.c
+    안에서 동시 구현 (4.2 가 4.1.e 안에서 동시 충족된 패턴과 일관).
+  - **legal 트리거**: 4.3.d 에서 UCPD + BE Code de droit économique VI.99 (ADR-0026
+    §검토 5 일관) 카피 + 링크 텍스트 1차 감사. 4.1.d 인터스티셜과 *문구 일관성* 확인.
+  - [ ] **4.3.a** ADR-0027 신설 — "Affiliate rate data source — static TS const"
+    (단가 데이터 모델 + 격상 트리거 + P1/P3 정합 방식). ADR-0026 §T4 의 "builder 결정"
+    부분을 정식 결정으로 격상. scribe 가 본문 작성. DoD: ADR-0027 Accepted + INDEX
+    등재 + ADR-0026 §T4 cross-ref 1줄.
+  - [ ] **4.3.b** `src/data/affiliate-rates.ts` 신설 — `AffiliateRate` 타입
+    (`providerId`, `currency: 'EUR'`, `amountCents: number`, `commissionType: 'CPA'`,
+    `source: string`, `fetchedAt: string`, `effectiveFrom: string`, `effectiveTo?: string`)
+    + 운영자 입력 entry (현 시점은 placeholder 또는 실계약 1~2건). 헬퍼:
+    `getRateForProvider(providerId, status)` — `status` 가 표시 대상 enum 2값일 때만
+    return, 외엔 `null`. 단위 테스트: enum 분기 6값 모두. DoD: typecheck/test 통과 +
+    `affiliate_click.commission_amount_cents` 와 *동일 단위* (cents) 단언 코멘트.
+  - [ ] **4.3.c** UI 컴포넌트 — `src/app/r/[shortId]/_components/AffiliateDisclosureLine.tsx`
+    (신설). `ComparisonTable` 각 행 + `ResultConclusionCard` 1위 슬롯에 삽입. props:
+    `providerId`, `providerName`, `affiliateStatus`. 분기:
+    (i) `active_b2b_*` ⇒ "Slim은 변경 시 {name}로부터 €X의 수수료를 받습니다 — 이 금액은
+    회원님의 요금에 영향이 없습니다" + `/legal/affiliate-disclosure` 링크.
+    (ii) 그 외 ⇒ "수수료 없음 — 외부 링크로 이동" (4.4 충족). compare-view 가
+    `affiliate_status` 를 props 로 전달 (현재 미전달 — 1줄 추가). DoD:
+    typecheck/lint/test + axe 0 violations + 시각 회귀 없음.
+  - [ ] **4.3.d** `/legal/affiliate-disclosure` 페이지 본문 채움 (현재 stub) — `src/data/
+    affiliate-rates.ts` 를 *렌더* 하는 단가 표 (공급사 / 단가 / 유형 / source / fetched_at /
+    effectiveFrom). 4.3.c 의 카드 디스클로저 링크 도착지. legal 에이전트 1차 감사 트리거
+    (UCPD + BE Code de droit économique VI.99 — ADR-0026 §검토 5 일관). DoD: 단가 표 렌더
+    + legal 1차 통과 + 4.1.d 인터스티셜 문구와 *일관성* 명시.
+  - [ ] **4.3.e** 테스트 — (i) 정합 테스트: `affiliate-rates.ts` entry 의 `amountCents`
+    가 `affiliate_click.commission_amount_cents` 와 동일 단위/타입 단언. (ii) 컴포넌트 테스트:
+    `AffiliateDisclosureLine` 6 enum 분기. (iii) E2E 1건: 결과 페이지에서 디스클로저
+    문구 렌더 + 디스클로저 페이지 링크 클릭 → 단가 표 도달. DoD: test 전체 통과 +
+    harness:plan/harness:data 통과.
 - [ ] **4.4** 비제휴 공급사도 동등하게 표시 (그냥 외부 링크 + "수수료 없음" 표기)
+  - **4.3.c 안에서 동시 구현** — 같은 `AffiliateDisclosureLine` 컴포넌트가 `affiliate_status`
+    enum 분기로 두 케이스 모두 렌더. 별도 sub-task 분해 불필요 (4.2 가 4.1.e 안에서 동시
+    충족된 패턴과 일관).
 - [ ] **4.5** 전환 후 7일 이내 후속 메일 (선택 동의)
   - "변경 잘 됐나요?" — 변경 실패시 Slim이 자동 메일로 후속 (인적 switching service는 솔로에서 비현실)
 - [ ] **4.6** **베타 모집** — Antwerpen / Brussels / Luxembourg 시티에서 100명
@@ -979,7 +1033,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
-| 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 들여쓰기 sub-task — 합계 불변) + ADR-0026 권고 (architect, 2026-05-12) | 2026-05-12 |
+| 4 | 9 | 0 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
 | 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |

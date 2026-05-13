@@ -144,6 +144,10 @@ T1~T8 8개 결정.
     `none` / `paused` / `terminated` 은 디스클로저 단가 비대상.
 - `bias-audit` 하네스가 (또는 별도 정합 체크가) 디스클로저 데이터와 `affiliate_click` 정산
   필드의 정합을 검사 (T5/T8 — builder 가 4.1 라운드에서 확정).
+- **정식 결정 (2026-05-13, architect)**: 단가 데이터 출처는 **옵션 C — 정적 TS const**
+  (`src/data/affiliate-rates.ts`). PLAN 4.3.a 에서 **ADR-0027** 로 격상 + 본 §T4 의
+  "builder 결정" 표현을 대체. 격상 트리거(계약 ≥ 6건 OR 분기 ≥ 2회 변경) 도달 시 옵션 B
+  (별도 테이블) 로 amendment 검토. cf. PLAN 4.3.b (데이터) / 4.3.c (UI — 4.4 동시 충족).
 
 ### T5 — `bias-audit.ts` 정정 (회귀 아님 — 데이터 정합 부채)
 
