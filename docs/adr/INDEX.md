@@ -20,7 +20,7 @@
 | [ADR-0009](0009-scope-cut-fetcher-2-providers.md) | PLAN 1.8 fetcher 갯수 축소 — 3개 → 2개 (Proximus + Telenet) | Accepted | 2026-05-09 |
 | [ADR-0010](0010-comparison-engine.md) | 비교 엔진 (compare) — 절약액 계산 + caveats + 6 테스트 케이스 | Proposed | 2026-05-09 |
 | [ADR-0011](0011-data-sources-page-and-caveats-boundary.md) | `/data-sources` 투명성 페이지 + caveats 함수/UI 경계 (PLAN 1.10 + 1.13) | Accepted | 2026-05-09 |
-| [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md) | PLAN 1.5.6 실 스크래핑 진입 전 리스크 평가 + 분기 결정 (LOW/MEDIUM/HIGH) | Proposed (Appendix A 추가 — legal 에이전트, 2026-05-09) | 2026-05-09 |
+| [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md) | PLAN 1.5.6 실 스크래핑 진입 전 리스크 평가 + 분기 결정 (LOW/MEDIUM/HIGH) | Accepted (옵션 C, 2026-05-10) + Amendment 1 (2026-05-13, 옵션 X "추정값" UI 잠금) | 2026-05-09 |
 | [ADR-0015](0015-vercel-integration-and-d1-closure.md) | Vercel 통합 운영 결정 + PLAN D.1 마감 게이트 | Proposed (GATE-H 대기) | 2026-05-10 |
 | [ADR-0016](0016-phase-2-input-flow-design.md) | 페이즈 2 입력 플로우 설계 — 5단계 5분 / shadcn / 모바일 우선 | Accepted (T9 옵션 A + T10 SC-E, 2026-05-10) | 2026-05-10 |
 | [ADR-0017](0017-db-mismatch-incident-postmortem.md) | DB 미스매치 사건 종결 보고 (silent-darkness + slim-prod hidden-recipe) | Accepted | 2026-05-10 |

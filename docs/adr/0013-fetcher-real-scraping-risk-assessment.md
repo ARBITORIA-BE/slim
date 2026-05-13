@@ -639,3 +639,93 @@ HIGH 격상 요건인 "명시 금지 강도 중간 이상 발견"은 충족되�
    직접 열람해 Ctrl+F로 "automated", "geautomatiseerde", "scrapen", "robot" 키워드
    수동 검색 (약 30분 작업) — 가장 비용 효율적 잔여 위험 해소 방법.
 2. 결과를 본 Appendix A Amendment로 추가 기록.
+
+---
+
+## Amendment 1 (2026-05-13) — 옵션 X "추정값" UI 위치/문구 잠금
+
+### Context
+
+**PLAN 1.5.6.1 신설** (architect 정찰 2026-05-13): 옵션 X(스텁 데이터로 베타 출시)의 실행 명세 미확정.
+
+- ADR-0013:429~430 원문: "추정값 표시 위치/배치 = 페이즈 3.5 결과 페이지 진입 시 별도 결정" 유보.
+- PLAN 1.5.6.1이 본 Amendment 1 역할을 함.
+- 4.6 베타 배포 *전* **필수 구현** — 옵션 X UI 미표시 = 헌법 P1(정보 우선) / P3(투명성) + ADR-0029 §T2(정직성 잠금) 위반.
+
+**architect 격상 선택**:
+- 본 Amendment 1 이 **§평가 6 옵션 X 의 *결정 격상*** (유보 → 잠금).
+- 옵션 A~W 본문 변경 0. 옵션 X 의 후속 구현 명세만 append.
+- ADR status = **Accepted 유지** (옵션 C 채택 기반 수정 아님, 옵션 X 격상).
+
+### Decision
+
+#### 위치 2 — architect 잠금 확정
+
+**1. 결과 페이지 헤더 배너** (`src/app/r/[shortId]/page.tsx` 상단)
+- 신규 컴포넌트: `<BetaEstimatedBanner />`
+- 배치: `<ResultConclusionCard />` **위** (결론 카드보다 위에 노출, 중요도 우선)
+- 트리거: 결과의 `view.items[0]?.rawPayload?.stub === true` (현 스텁 100% 단계)
+- 페이즈 5 옵션 B 진입 후: 적어도 1 row가 stub 이면 표시 (row 단위 혼재 대비)
+
+**2. `deriveCaveats` 9번째 규칙** (`src/engine/caveats.ts`)
+- 트리거: 각 row의 `tariffSnapshot.rawPayload?.stub === true`
+- 기존 8 규칙 동형 톤 (추가 caveat 규칙)
+- 콘텍스트: `rawPayload.stub === false` 진입 시 자동 비활성 (조건부 표시)
+
+**거부된 후보**:
+- 결과 카드 셀별 배지 — 시각 noise (카드마다 반복)
+- 결론 카드 내부 인라인 — 배너와 중복 + 결론 카드 길이 증가
+
+#### 정확 문구 잠금
+
+**배너 문구** (scribe 결정 근거: 간결성 + ADR-0029 §T2 톤 정합):
+
+- **제목** (알림 아이콘 + 텍스트): `⚠️ 베타 단계: 추정값`
+- **본문** (1~2줄): `"가격은 운영자가 2026-05-09에 수동 검증한 추정값입니다. 실시간 가격은 페이즈 5 이후 격상 예정. 자세히: `/data-sources`"`
+- **링크 대안**: `/data-sources` 또는 ADR-0013 문서 (사용자 가독 형태 선호 — ADR 기술 용어 회피)
+
+**caveat 문구** (기존 8 규칙 동형, `src/engine/caveats.ts` 패턴 일관):
+
+- **caveat 타입**: info (경고 대신 정보성)
+- **문구**: `"이 가격은 추정값 — 실시간 데이터는 페이즈 5 이후 격상"`
+- 또는 더 짧게: `"추정값 — 실 데이터 페이즈 5 이후"`
+
+**ADR-0029 §T2 정직성 잠금 톤 일관**:
+- 배너 + caveat 모두 **"솔로 신생 사이트" + "베타 = 데이터 수집 목적"** 암시
+- 급박함 금지 ("지금 바로" X), 거짓 우위 금지 ("가장 저렴" X)
+- 사용자 신뢰 보호 (과장 X, 정직 표기)
+
+#### 트리거 조건 확정
+
+- **배너**: `useMemo` 내 단순 조건: `view.items[0]?.rawPayload?.stub === true`
+- **caveat**: 각 row 단위: `tariffSnapshot.rawPayload?.stub === true`
+- **페이즈 5 환원**: `rawPayload.stub === false` 시 자동 비활성 (조건부 제거)
+
+#### 스타일 + a11y
+
+- **아이콘**: `lucide-react` `AlertTriangle` 또는 단순 ⚠️ 이모지
+- **배경**: `bg-warning-soft` 또는 `bg-blue-50` (긴급성 X, 정보성)
+- **텍스트**: `text-sm` + `text-fg-soft` (4.1.d 인터스티셜 톤 일관)
+- **a11y**: `role="status"` (정보 공시, 긴급 알림 아님)
+
+### Implementation guide (builder 인계)
+
+1. **컴포넌트 신설**: `src/app/r/[shortId]/components/BetaEstimatedBanner.tsx`
+   - Props: `isStub: boolean` (트리거)
+   - 조건부 렌더: `{isStub && <BetaEstimatedBanner />}`
+   - 배치: `<ResultConclusionCard />` 위
+
+2. **caveat 규칙 추가**: `src/engine/caveats.ts` line ~180
+   - 규칙 9: `if (tariffSnapshot.rawPayload?.stub === true) → { type: 'info', message: '추정값...' }`
+   - 테스트: `caveats.test.ts`에 케이스 추가
+
+3. **테스트 명세**:
+   - `src/app/r/[shortId]/__tests__/page.test.tsx` — 배너 렌더 (stub 시 O, not stub 시 X)
+   - `src/engine/__tests__/caveats.test.ts` — 규칙 9 caveat (stub 시 포함, not stub 시 제외)
+
+### References
+
+- **PLAN 1.5.6.1** — 본 Amendment 1 의 실행 명세 원본
+- **ADR-0029 §T2** — 정직성 토큰 "솔로 신생 사이트" + "베타 = 데이터 수집" 톤 일관
+- **헌법 P1 (정보 우선)** / **P3 (투명성)** — UI 미표시 = 위반
+- **ADR-0013:253~263 §평가 6 옵션 X** — 본 Amendment 1 이 옵션 X 의 구현 부속 명세
