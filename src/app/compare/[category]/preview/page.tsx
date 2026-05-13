@@ -102,14 +102,14 @@ export default function PreviewPage({
         <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
           결과를 준비 중입니다
         </h1>
-        <p className="text-sm text-fg-soft">
+        <p className="text-sm text-fg">
           입력하신 정보를 바탕으로 비교 결과 영구 링크를 생성하고 있습니다. 완료 후
           자동으로 결과 페이지로 이동합니다.
         </p>
       </header>
 
       {status === 'submitting' && (
-        <div className="rounded-2xl border border-fg/10 bg-bg-warm/40 p-6 text-sm text-fg-soft">
+        <div className="rounded-2xl border border-fg/10 bg-bg-warm p-6 text-sm text-fg">
           <p>비교 엔진 호출 중… (보통 1초 미만)</p>
         </div>
       )}
@@ -119,7 +119,7 @@ export default function PreviewPage({
           role="alert"
           className="rounded-2xl border border-accent/30 bg-accent/5 p-6 text-sm text-fg"
         >
-          <p className="font-semibold text-accent">결과 생성 실패</p>
+          <p className="font-semibold text-accent-dark">결과 생성 실패</p>
           <p className="mt-2">{errorMessage}</p>
           <div className="mt-4 flex gap-2">
             <Button
