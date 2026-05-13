@@ -7,3 +7,4 @@ export * from './tariff_snapshot';
 export * from './comparison_request';
 export * from './comparison_result';
 export * from './affiliate_click';
+export * from './follow_up_email';

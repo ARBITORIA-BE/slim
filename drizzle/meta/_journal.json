@@ -43,6 +43,13 @@
       "when": 1778651872118,
       "tag": "0005_pale_praxagora",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778666624540,
+      "tag": "0006_graceful_proteus",
+      "breakpoints": true
     }
   ]
 }
