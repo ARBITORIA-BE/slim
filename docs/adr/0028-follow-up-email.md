@@ -240,7 +240,10 @@ Slim
 
 ## Verification
 
-- ✅ 4.5.b: 마이그레이션 통과 + `pnpm verify:db` allowlist (schema 변경 확인, 환경 분리 영향 0).
+**기록 (2026-05-13, PLAN 4.5 시행중)**:
+
+- ✅ **4.5.a: ADR-0028 설계 잠금** — T1~T7 결정 + Alternatives (a)~(f) 거부 근거 명시 + cross-ref 2건 추가 (ADR-0026 §T1 + ADR-0008 §cron). 커밋 `f562de3`.
+- ✅ **4.5.b: 데이터 모델 (T2) 구현** — `src/db/schema/follow_up_email.ts` 신설 (10 필드, 2 인덱스, FK CASCADE). `drizzle/0006_graceful_proteus.sql` 마이그레이션. `pnpm db:push` 성공 + `pnpm verify:db` allowlist 확인 (schema 변경 무고장, 환경 분리 영향 0). 부재 컬럼 5건(IP/UA/fingerprint/session/referrer — ADR-0026 §T1 잠금 보존). 추적 beacon 0. typecheck/lint/test 401 passed. 커밋 `172743e`.
 - ✅ 4.5.c: 동의 UI dark-pattern.test.ts 회귀 (pre-checked 0, 동등 가시성).
 - ✅ 4.5.d: `src/inngest/follow-up-email.ts` 단위 테스트 (idempotency + anonymization + Resend mock).
 - ✅ 4.5.e: `/unsubscribe/[token]` 단위 테스트 (token matching + NULL화).
@@ -251,8 +254,8 @@ Slim
 
 ## References
 
-- **ADR-0026** §T1 — PII 부재 컬럼 잠금 (본 ADR이 별도 테이블로 정신 보존)
-- **ADR-0008** — Inngest cron + step.run() 패턴 (본 ADR이 followUpEmail step 추가)
+- **ADR-0026** §T1 — PII 부재 컬럼 잠금 (본 ADR이 별도 테이블로 정신 보존 / "후속 메일 PII 격리" cross-ref 추가)
+- **ADR-0008** §T7 — Inngest cron + step.run() 분할 패턴 (본 ADR이 followUpEmail Inngest function으로 같은 패턴 따름 — cron 트리거 + step.run 격리 + idempotency)
 - **ADR-0007** §T4 — PII 익명화 패턴 (본 ADR이 발송 직후 익명화로 일관)
 - **ADR-0004** — €300 cap (본 ADR이 Resend 무료 한도 선택으로 정합)
 - **헌법** P1 (정보 우선) / P3 (투명성) / §8 #1 (사용자 데이터 외부 전송 0 — Resend는 발송 전용, 추적 0)

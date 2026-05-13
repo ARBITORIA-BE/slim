@@ -354,6 +354,31 @@
 
 - **4.3 라운드 종합**: 4.3.a(ADR-0027) → 4.3.b(데이터) → 4.3.c(카드 UI) → 4.3.d(디스클로저 페이지) → 4.3.e(테스트) 전 단계 완료. 4.4(비제휴) 동시 충족. legal 1차 통과 후 builder 인계(4.1 어트리뷰션) 및 4.3 검증 완결. 페이즈 4 진행도: **4/9 항목 완료** (4.1 + 4.2 + 4.3/4.4 통합 + 현황. 다음은 4.5.1 어드민 대시보드, M16 평가 게이트 직전).
 
+- Phase 4 — **4.5.a ADR-0028 신설** (Follow-up email — infrastructure + data model + consent + GDPR):
+  - **결정 T1~T7** (Accepted 2026-05-13, architect 권고 / 운영자 직접 결정):
+    - **(T1) 이메일 인프라 = Resend (EU region)**: 월 100 emails/day 무료 한도 → 베타 100명 × 1회/7일 ≈ 14 emails/day 충분. 비용 0, GDPR Art. 44 data residency 호환, 솔로 단순성 (IAM/reputation 오버헤드 X), `@resend/node` SDK.
+    - **(T2) 데이터 모델 = 별도 `follow_up_email` 테이블** (ADR-0026 §T1 "affiliate_click PII 컬럼 0" 잠금 보존): 10 필드 (id/affiliate_click_id FK CASCADE/email NULL→익명화/consent_given_at/scheduled_send_at/sent_at/unsubscribed_at/unsubscribe_token UNIQUE/pii_anonymized_at/created_at). 인덱스 2개 `(scheduled_send_at,sent_at)` + `(unsubscribe_token)`.
+    - **(T3) 수집 시점**: 4.1.d 인터스티셜에 옵션 이메일 필드 + "후속 메일 받기" 체크박스 추가 (별개 동의, granular consent).
+    - **(T4) 발송 트리거**: Inngest cron — `scheduled_send_at ≤ now AND sent_at IS NULL AND unsubscribed_at IS NULL` → Resend 호출 → `sent_at` + `pii_anonymized_at` 갱신 + 즉시 `email` NULL 화.
+    - **(T5) 다크패턴 0**: pre-checked 0 / 동등 가시성 / confirmshaming 0 / fake urgency 0 (CMA Dark Pattern Taxonomy 검증, 4.1.d 패턴 일관).
+    - **(T6) GDPR**: 합법근거 Art. 6(1)(a) (동의) / Art. 13 정보권 / Art. 7(3) 철회 = 모든 메일에 1-click unsubscribe.
+    - **(T7) 보존 분리**: 어트리뷰션 메타(affiliate_click) 90일 vs 이메일 PII(follow_up_email) 발송 직후 익명화.
+  - **거부된 대안 (a)~(f)**: (a) Mailgun (→ EU region 보증 X) (b) SendGrid (→ 요금 구조 복잡) (c) AWS SES (→ 솔로 reputation 관리 부담) (d) affiliate_click 확장 (→ PII 격리 위반 ADR-0026 §T1) (e) 수동 발송 (→ 솔로 불가능) (f) 초기 수집 스킵 (→ 베타 데이터 수집 목표 손상).
+  - **ADR-0026 §T1 cross-ref**: "후속 메일 PII(이메일)은 ADR-0028의 별도 테이블(`follow_up_email`)로 격리 — 본 ADR의 §T1 부재 컬럼 잠금 유지" 1줄 추가.
+  - **ADR-0008 §cron 흐름 cross-ref**: `followUpEmail` Inngest job이 ADR-0008 패턴(step.run 분할 + idempotency) 따름.
+  - **검증**: ADR-0028 Accepted + docs/adr/INDEX.md 등재 + cross-ref 2건 추가 + `pnpm harness:plan` 정합.
+  - 커밋: `f562de3` (`docs(adr-0028): follow-up email — 설계 잠금 + ADR-0026·ADR-0008 cross-ref`).
+
+- Phase 4 — **4.5.b 스키마 + Drizzle 마이그레이션 (2026-05-13)**:
+  - **신설 파일**: `src/db/schema/follow_up_email.ts` (follow_up_email 테이블 정의) — 10 필드: id (uuid PK) · affiliate_click_id (uuid FK CASCADE NOT NULL) · email (text NULL) · consent_given_at (timestamptz NOT NULL) · scheduled_send_at (timestamptz NOT NULL) · sent_at (timestamptz NULL) · unsubscribed_at (timestamptz NULL) · unsubscribe_token (text UNIQUE NOT NULL, nanoid 1-click 인증) · pii_anonymized_at (timestamptz NULL) · created_at (timestamptz NOT NULL).
+  - **인덱스 2개**: (scheduled_send_at, sent_at) Inngest hot path / (unsubscribe_token) 1-click 매칭.
+  - **FK 정책**: affiliate_click_id CASCADE (영구 링크 비충돌 + GDPR 익명화 전파). 부재 컬럼 5건 (IP/UA/fingerprint/session/referrer — ADR-0026 §T1 잠금 보존).
+  - **신설 마이그레이션**: `drizzle/0006_graceful_proteus.sql` (enum 없음, 테이블 신설, FK + 인덱스 명시).
+  - **Export**: `src/db/schema/index.ts`에 1줄 추가 (`export * from './follow_up_email'`).
+  - **게이트 통과**: `pnpm typecheck` 0 에러 / `pnpm lint` 0 에러 / `pnpm test` 401 passed (회귀 0) / `pnpm db:push` 마이그레이션 성공 / `pnpm harness:plan` 51 항목 정합 / `pnpm harness:data` 통과.
+  - **추적 beacon 0** — 스키마 일관 (사용자 추적 컬럼 부재).
+  - 커밋: `172743e` (`feat(plan-4.5.b): follow_up_email 스키마 + Drizzle 마이그레이션 0006`).
+
 ### Changed
 
 - Phase 0.5 — **ADR-0025: verifier 에이전트 read-only 커밋 경계** (거버넌스):
