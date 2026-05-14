@@ -1185,6 +1185,8 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       check (운영자 트랙, 5분/일). SLA 48h 1차 응답 (솔로 + €300 cap 일관).
     - **GitHub Issues triage 라벨**: `beta-feedback` / `bug` / `feature-request`
       / `legal` 4개 라벨 생성 (gh CLI 또는 GitHub UI).
+    - **운영자 setup 단일 출처**: `docs/runbook/beta-feedback.md` (2026-05-15
+      신설) — 4 채널 절차 + SLA + scope cut E 평가 데이터 흐름.
     - DoD: (1) 4 채널 모두 setup 완료 (2) 1주차 첫 피드백 수신 또는 (피드백
       0 시) PostHog 0 방문자 확인 → 4.6.d scope cut E 평가 데이터 (3) ADR-0029
       §Verification §운영 추적 cross-ref
