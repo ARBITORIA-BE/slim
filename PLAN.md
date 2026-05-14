@@ -1170,55 +1170,57 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - DoD (4.6 부모): (1) 4.6.a/b ✅ 완료 (2) ADR-0029 채택 (3) D.3.a/c/d 완료 (4) 운영자 4.6.c 배포 +
     slim.lu 방문 가능 (5) PostHog cookieless 방문자 수 집계 활성 (6) 4.7 진입 신호 1주차 = 피드백 0건 이상 수신 → 4.7 [ ] 진입.
 - [ ] **4.7** 피드백 1주 + 반영 — 4.6 배포 + 1주 트리거. 2~4주 운영 후
-  종료 → 4.8 트리거. ADR-0029 Amendment 1 (운영 추적 §Verification 확장)
-  로 단일 출처 유지 (신설 ADR 불요). 분해 5건 (운영자 트랙 3 + builder 1
-  + scribe 1):
-  - [ ] **4.7.a** 피드백 채널 운영 가이드 (3 채널 일관) — scribe 작성
-    - 채널: 이메일 kim.wonmin91@gmail.com (직접 응답) / Korean Society
-      그룹 댓글 (Facebook/카카오톡 모니터링) / GitHub Issues (전문
-      사용자, 태그 `feedback-beta` / `bug` / `feature`)
-    - SLA: **48h** 이내 1차 응답 (솔로 + €300 cap 일관, 24h 는 무리)
-    - 분류: bug / UX / 카피 / feature / 다크패턴 / 기타 (6 카테고리)
-    - 통합 대시보드 *없음* — 각 채널 독립 모니터링 + 운영자 수동 통합
-      (솔로 시점 합리)
-    - 산출물: `docs/runbooks/beta-feedback-handling.md` (scribe)
-    - DoD: (1) 3 채널 SLA + 분류 + 응답 템플릿 문서화 (2) ADR-0029
+  종료 → 4.8 트리거. ADR-0029 Amendment 1 단일 출처 유지 (신설 ADR 불요).
+  옵션 B: 부모 [ ] 유지, 자식 카운트는 verify-plan 합계 비대상 (itemRe
+  최상위 매치). architect 분해 2026-05-14 → 4 sub-task (운영자 트랙 3
+  + builder 조건부 1, P0 fix 신호 시만):
+  - [ ] **4.7.a** 피드백 수집 자동화 — 운영자 트랙 (코드 변경 0건, 인라인 노트)
+    - **PostHog 펀널**: 방문자 → `/compare/[category]` 진입 → 5단계 완주 →
+      `/r/[shortId]` 도달 4-스텝 펀널 작성 (cookieless, §8 #1 PII 0 일관).
+      운영자 대시보드 1개. 이벤트 5건 (방문 / compare 진입 / step 1-5 완주
+      / r/[shortId] 도달 / 변경 클릭) 활성.
+    - **이메일 inbox 라벨**: kim.wonmin91@gmail.com 받은편지함에 "slim-beta"
+      라벨 생성 + 자동 분류 룰 (subject contains "Slim" or sender domain).
+    - **Korean Society 그룹 댓글 일일 모니터링**: 4 채널 게시글 댓글 daily
+      check (운영자 트랙, 5분/일). SLA 48h 1차 응답 (솔로 + €300 cap 일관).
+    - **GitHub Issues triage 라벨**: `beta-feedback` / `bug` / `feature-request`
+      / `legal` 4개 라벨 생성 (gh CLI 또는 GitHub UI).
+    - DoD: (1) 4 채널 모두 setup 완료 (2) 1주차 첫 피드백 수신 또는 (피드백
+      0 시) PostHog 0 방문자 확인 → 4.6.d scope cut E 평가 데이터 (3) ADR-0029
       §Verification §운영 추적 cross-ref
-  - [ ] **4.7.b** 정량 측정 PostHog 대시보드 — 운영자 트랙
-    - 측정 5건 (cookieless, §8 #1 PII 0 일관):
-      (1) 방문자 수 (slim.lu 도착, 1주/3주 누적)
-      (2) 비교 시도 수 (`/compare/[category]` 접근)
-      (3) 결과 페이지 도달 수 (`/r/[shortId]`)
-      (4) "변경하기" 클릭 수 (어트리뷰션 인터스티셜 진입)
-      (5) 후속 메일 옵션 체크율 (`follow_up_email` INSERT / 결과 도달)
-    - DoD: (1) PostHog 5 이벤트 활성 (2) 운영자 대시보드 1개 생성
-      (3) 1주차/3주차 스냅샷 수동 캡처 → ADR-0029 §운영 추적
-  - [ ] **4.7.c** NPS 1문항 추가 — builder (코드 1건, 작음)
-    - 위치: `src/inngest/follow-up-email.ts` (4.5.d) 의 `buildPlaintext`
-      + `buildHtml` 본문에 1줄 추가. 별도 폼 *불요* (PII 0 일관 — 이미
-      이메일 동의 채널).
-    - 형식: "1~10 점 (Promoter ≥9 / Passive 7~8 / Detractor ≤6) 으로
-      답장 보내주세요. NPS = %Promoter − %Detractor."
-    - 측정: 4.7 종료 시점 운영자 수동 집계 (이메일 inbox 응답률 + 점수)
-      → ADR-0024 게이트 (NPS ≥ 30)
-    - DoD: (1) plaintext + HTML 본문에 NPS 1문항 추가 (2) typecheck
-      0 (3) 4.5.d 테스트 1건 추가 (NPS 문구 포함 확인)
-  - [ ] **4.7.d** 1주 검토 → 베스트 3 우선순위 분류 — 운영자
-    - 1주차 시점 누적 피드백 → 분류 (4.7.a 6 카테고리) → 베스트 3 선정
-    - bug = 즉시 fix (베타 단계, builder 즉시 인계)
-    - feature / UX / 카피 = 4.7 종료 시점 다음 라운드 (architect 재분해)
-    - 헌법 P3: 반영 결정 *공개* (CHANGELOG + 사용자 댓글 응답)
-    - DoD: (1) 1주차 보고서 1건 (`docs/reports/beta-week1-feedback.md`)
-      (2) 베스트 3 → bug 즉시 / feature 다음 라운드 분류
-  - [ ] **4.7.e** scope cut + 4.8 트리거 결정 — 운영자
-    - **1주차** 조기 경보: 누적 방문자 ≤ **25명** → 카피 수정 또는
-      채널 1개 추가 검토 (운영자 판단)
-    - **3주차** 결정 (ADR-0029 §T6 본문): 누적 ≤ 50명 → 50 마감 +
-      4.7 종료 / > 50 → 100 강행 (운영자 시간 여유 평가)
-    - **4.7 종료 시점** = 배포 + **2~4주** = 4.8 PR 매체 트리거
-      (architect 재호출 → 4.8 분해)
-    - DoD: (1) 1주/3주 스냅샷 ADR-0029 §운영 추적 추가 (2) 4.7 종료
-      결정 (50 vs 100) 운영자 공개 (3) 4.8 architect 호출 신호
+  - [ ] **4.7.b** 1주 베이스라인 리뷰 — scribe (마크다운 1건 신설)
+    - 산출물: `docs/retro/4.7-week1-review.md` (운영자 작성, 데이터는 PostHog
+      대시보드 스크린샷 + 텍스트 요약 + 다음 1주 action items).
+    - **측정 4항**: (1) 누적 방문자 (PostHog cookieless) (2) 비교 완료율 (entered
+      `/compare` → reached `/r/`) (3) 피드백 카테고리 분포 — bug / UX / 요청
+      / legal / 기타 (4) Top 3 마찰점 — 5단계 흐름 어디서 가장 많이 이탈
+      (PostHog 펀널 + 사용자 피드백 cross).
+    - **권고 템플릿**: 헤더 (주차 / 날짜 범위) + §1 정량 (4 메트릭 표) + §2
+      정성 (피드백 카테고리별 인용 3개) + §3 Top 3 마찰점 + §4 다음 주 action
+      + §5 scope cut E 평가 (≤50 / >50 결정 1줄).
+    - DoD: (1) `docs/retro/4.7-week1-review.md` 신설 (2) 4 메트릭 수치 (3)
+      scope cut E 결정 1줄
+  - [ ] **4.7.c** 마찰점 P0 fix — 조건부 (있을 때만, 인라인 노트)
+    - 트리거: 4.7.b §3 Top 3 마찰점 중 **P0** (사용자 흐름 차단급) 발견 시만
+      builder 인계. 없으면 본 sub-task **SKIP** (`[x]` 로 마킹 + "P0 0건"
+      메모).
+    - **제약**: 4.7 의 본질은 *피드백 신호 수집* — 신호 없이 추가 기능 /
+      리팩토링 금지 (premature).
+    - 게이트: typecheck + e2e green 강제. P0 fix 당 별도 commit + ADR
+      (heavy 시) 또는 인라인 (light 시).
+    - DoD: P0 fix 0 (피드백 신호 약함 시) OR 1~3 commit + 회귀 0
+  - [ ] **4.7.d** 2~4주 운영 후 4.8 진입 결정 (GO / NO-GO) — 운영자
+    - 트리거: 4.6 배포 +2주~+4주 시점.
+    - 결정 인풋: 4.7.b 리뷰 + 누적 NPS (있을 경우) + 운영자 시간 여유 +
+      €300 cap 사용량.
+    - 산출: PLAN §4.7 본문 끝에 결정 + 근거 1줄 — "GO 4.8 (3 매체 컨택,
+      근거: <NPS / 도달 / 운영자 시간>)" OR "NO-GO 4.8 (근거: <피드백 0
+      / scope 미완 / 운영자 시간 부족>) → ADR-0029 후속 ADR (가칭 **ADR-0032**)
+      트리거".
+    - DoD: (1) 본 결정 1줄 (2) NO-GO 시 ADR-0032 architect 호출 트리거 메모
+  - **4.7 부모 DoD**: (1) 4 sub-task 모두 [x] (4.7.c 는 P0 0건 시 SKIP 으로
+    마킹 가능) (2) 4.6.d scope cut E 결정 (continue / pivot / kill) (3) 4.8
+    진입 OR ADR-0032 트리거
 - [ ] **4.8** PR 매체 컨택 (베타 후) — 4.7 종료 트리거. **3 매체 선정 잠금**
   (architect 결정 2026-05-13): **De Tijd** (BE Vlaamse 비즈니스 / 통신 비교
   친화) + **Tech.eu** (유럽 스타트업 영어 / 솔로 + 베타 단계 친화) +
@@ -1441,7 +1443,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
-| 4 | 9 | 5 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c/d/e 완료) + 4.5 분해 (a~h, ADR-0028 + Day 90 cron 4.5.h 완료 2026-05-13 — 합계 +1) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
+| 4 | 9 | 5 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c/d/e 완료) + 4.5 분해 (a~h, ADR-0028 + Day 90 cron 4.5.h 완료 2026-05-13 — 합계 +1) + ADR-0026/0027 (architect, 2026-05-13) + **4.7 재분해 a~d (architect 2026-05-14 — 5건 → 4건 단순화, 옵션 B 부모 [ ] 유지 → 합계 불변)** | 2026-05-14 |
 | 4.5 | 3 | 1 | 0 | M10 ~ M11 + M16 평가 (**4.5.1 완료 2026-05-14** — 어드민 v0 a/b/c/d 풀, `/admin` + 3 메트릭 + 7일 추세 + 단위 10 / E2E 4 통과; ADMIN_TOKEN 운영자 env 등록 follow-up) | 2026-05-14 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
