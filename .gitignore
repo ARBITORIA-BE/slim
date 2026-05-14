@@ -20,3 +20,6 @@ e2e/screenshots/
 
 # Claude Code 런타임 아티팩트 (ScheduleWakeup 락 등 — 세션마다 생성)
 .claude/scheduled_tasks.lock
+
+# Claude Code agent worktrees (각 에이전트 isolation copy — main trunk 영향 0)
+.claude/worktrees/

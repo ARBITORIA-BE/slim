@@ -9,6 +9,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **2026-05-14 — Fresh-start 완성: Git history 정체성 통합** ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md)):
+  - **이유**: 음성 PR #1 (`test/build-gate-negative → main`) 검증 중 Vercel access control 이 git author 권한으로 차단된 것이 도화선 — 운영자가 ARBITORIA-BE org 신설 후에도 옛 history(`HanSap` 27건 + `kimwonmin91-4132` 100건 + 평문 `kim.wonmin91@gmail.com`)가 따라온 fresh-start 침해 + Free org plan ruleset 한계 + 인프라 정보 노출 3 사안 동시 발견.
+  - **무엇을 했나**: `git-filter-repo 2.47.0` (`python -m git_filter_repo --mailmap .git/mailmap.txt --force`) 로 128 commit 의 author/committer 라인을 `Arbitoria <261937864+Arbitoria@users.noreply.github.com>` 단일로 통합. `bootstrap <bootstrap@slim.eu>` 1건은 Drizzle initial migration 등 시스템 흔적 보존. 태그 `pre-arbitoria-migration` 도 함께 rewrite (annotated tag `ba863cd...`, target commit `07af4d6...`).
+  - **결과**: local + `origin/main` = `129 Arbitoria + 1 bootstrap` (HanSap 0 / kimwonmin91-4132 0). 새 main HEAD `fe51a8e`. 재 rewrite 1회 (Phase 9 1차 회귀 발견 후 — 운영자 push 전 `git pull --rebase` 흐름이 옛 history 53건 회귀시킴, 재 rewrite 로 복구).
+  - **부분 침해 잔존** (§T3 카테고리 — 인지 + 수용): (a) `refs/pull/1/head` HanSap commit 1건 — GitHub 영구 보존, 삭제 불가 (b) 백업·외부 클론·Vercel build cache 잔재 — 다음 deployment 시 자동 invalidate.
+  - **백업**: `C:\Users\kimwo\slim-backup\` bundle (1.15MB, sha256 `350e9f392f7f95f8871c1f9ddc9555e406317fd805df87fd71990c561aa32c7b`) + mirror clone (`slim-mirror-2026-05-14.git`, fsck 통과, commit count 128 일치).
+  - **PLAN 영향**: §D.7 신설 (페이즈 0.5, 합계 85 → 86) + §D.1.c §T2 cross-ref (Free org plan 한계 → TVA + Team $4 전환 트리거 명시).
+  - **운영자 게이트 (Proposed → Accepted)**: (i) `git push --force origin pre-arbitoria-migration` 1줄 실행 (ii) Vercel deployment 빌드 통과 확인 (iii) GitHub Tags 페이지 새 hash 확인.
+  - 신규 commit 규칙 (헌장 보강): noreply email 강제 + GitHub "Block command line pushes that expose my email" ON 으로 평문 gmail/work email 박힘 차단.
+
 ### Added
 
 - Phase 4 — **1.5.6.1 "추정값" UI 배너 + caveat 규칙 9 구현** (ADR-0013 Amendment 1 §Implementation guide):
