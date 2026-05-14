@@ -2,7 +2,9 @@
 
 ## Status
 
-**Proposed** (2026-05-14, Pieter 세션 작성 — 운영자 review 대기). Phase 4 (도구 설치 ✅) + Phase 5 (mailmap + 본 ADR draft) 산출물. Phase 7 (실 rewrite) + Phase 9 (force push) 완료 + 운영자 confirm 시 **Accepted** 전이.
+**Accepted** (2026-05-14, 운영자 confirm 완료). Phase 1~9 산출 통과 (V1~V5 ✅) + Phase 9 force push 완료 (V6 ✅, V7 §1/§3 ✅, §2 SKIP — Free repo Insights 잠금, Team 전환 시 재확인). Phase 10 본 commit (PLAN/CHANGELOG/INDEX 갱신 + §V6/§V7 §3 실측 채움). **Phase 11~14 = deferred (D.7 잔존, 운영자 선택 트리거)**.
+
+> 직전 상태: Proposed (2026-05-14, Pieter 세션 작성). 전이 사유 = §V6 tag push + §V7 §3 (Tags 페이지 새 hash) 둘 다 검증 통과 (본 §Verification 표 실측 채움 참조).
 
 > ADR 번호 메모: `docs/adr/` 현황 = 0001~0011, 0013, 0015~0023, 0025~0030 사용. **0012·0014 = 갭(끼워넣기 금지)**. **0024 = "가칭" 예약** (Neon-side Vercel Integration, GATE-K 트리거, 파일 미작성). 따라서 본 ADR 은 다음 빈 번호 **0031**. (작성 시점 `docs/adr/` 파일 목록 재확인.)
 
@@ -104,8 +106,8 @@ Phase 6 (--dry-run) → 7 (실 rewrite) → 8 (검증) → 9 (force push) 순. �
 | V3 | `git log --all --format='%an <%ae>' \| sort \| uniq -c \| sort -rn` | `127 Arbitoria <261937864+...>` + `1 bootstrap <bootstrap@slim.eu>` 만 노출 (HanSap 0 / kimwonmin91-4132 0) | ✅ **통과 (2026-05-14)**. 실측 = `127 Arbitoria <261937864+Arbitoria@users.noreply.github.com>` + `1 bootstrap <bootstrap@slim.eu>` 정확 일치. HanSap 0 / kimwonmin91-4132 0 ✓. |
 | V4 | `git rev-list --all --count` | **128** (변화 없음) | ✅ **통과 (2026-05-14)**. 실측 128 일치. |
 | V5 | 새 main HEAD = ? / 새 `pre-arbitoria-migration` 태그 hash = ? | 둘 다 기록 + 백업 hash 와 비교해 변경 확인 | ✅ **통과 (2026-05-14)**. 새 main HEAD = `4277aee06e794c4ca5f9543dce2d021a37fd1e0a` (원본 `e2c626654138757af47d1177c02783cf0fe7dbea` ↔ 다름). 새 `pre-arbitoria-migration` 태그 = `ba863cdbc70d2bc2779aa8ff81262dff42acfa1b` (annotated, target commit `07af4d6f78b605b49d107d84afb19dcb92ec5670`) ↔ 원본 `7e03449af78253b9644ecd4a9a1cc28cb2030c55` 다름. `.git/filter-repo/commit-map` 에 옛↔새 hash 매핑 보존 (10,541 bytes — 감사 추적 가능). |
-| V6 | `git push --force-with-lease origin main` + tag force push | GitHub `Arbitoria` 모든 commit author + Vercel preview rebuild 정상 | Phase 9 결과 기록 |
-| V7 | GitHub UI 에서 `ARBITORIA-BE/slim` commit 목록 확인 | 모든 author 가 `Arbitoria` (HanSap / kimwonmin91-4132 0건) | Phase 9 후 운영자 screenshot |
+| V6 | `git push --force-with-lease origin main` + tag force push | GitHub `Arbitoria` 모든 commit author + Vercel preview rebuild 정상 | ✅ **통과 (2026-05-14)**. (i) main force push 완료 — origin/main `fe51a8e` (HEAD at fresh-start 완료 시점) + 후속 `d2364df` (Vercel retrigger empty commit) 정상 반영 + 본 commit 으로 ADR-0031 Accepted 전이. (ii) tag `pre-arbitoria-migration` force push 완료 (운영자, 2026-05-14) — `git ls-remote origin refs/tags/pre-arbitoria-migration` = `ba863cdbc70d2bc2779aa8ff81262dff42acfa1b` (annotated tag SHA, target commit `07af4d6f78b605b49d107d84afb19dcb92ec5670` ↔ 옛 `7e03449...` `1384668...` 다름). (iii) Vercel deployment `5gJ3bDskj` Production Ready 45s — Git connection 재연결(15m, 2026-05-14) 후 `d2364df` push가 자동 webhook 트리거, `/compare` 라우트 200 OK 실측 (`https://slim.lu/compare` 4 카테고리 카드 렌더). 옛 build cache 자동 invalidate. |
+| V7 | GitHub UI 에서 `Arbitoria/slim` commit 목록 확인 | 모든 author 가 `Arbitoria` (HanSap / kimwonmin91-4132 0건) | ✅ **통과 (2026-05-14, 운영자 + Pieter 분담).** **§1 Commits 페이지** ✅ — 운영자 첫 10 commit 모두 Arbitoria 확인 (HanSap / kimwonmin91-4132 0건). **§2 Contributors/Insights** SKIP — Free private repo Insights 잠금 (Team plan 전환 시 재확인 트리거 = §T2 보류 해제 시점). **§3 Tags 페이지** ✅ — `https://github.com/Arbitoria/slim/tags` 시각 확인 (Pieter MCP) + `git ls-remote refs/tags/pre-arbitoria-migration` 명령 검증: tag object SHA `ba863cd...` / target commit `07af4d6...` / 메시지 "Backup before ARBITORIA org migration (ADR-0019)" 정합. 본질 신호 (`git log --all --format='%an <%ae>' \| sort \| uniq -c`) = **129 Arbitoria + 1 bootstrap** (Phase 9 후 재 rewrite 자동 prune 결과, HanSap 0 / kimwonmin91-4132 0). |
 
 `--force-with-lease` 사용 사유: `--force` 가 무조건 overwrite 인 반면, lease 는 origin 의 마지막 알려진 상태 ≠ 실제 ref 시 차단 → 협업자(현 0명) 의 push 충돌 방지 안전망. 본 repo 협업자 0이라 차이는 미미하지만, 정석 사용으로 향후 협업 시 자연스러운 패턴.
 

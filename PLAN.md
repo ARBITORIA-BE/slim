@@ -207,8 +207,8 @@
     배포 작업 진행하는 동안 Claude 가 D.6 처리.
   - **close 메모 (2026-05-13, [ADR-0030](docs/adr/0030-d6-compare-flow-chunkloaderror-retrospective.md))**: D.6.b 분기 채택 — 좀비 dev process (PID 28080, 1차 세션 잔류) 정리 후 본 세션 e2e 2/2 통과 (2.2s+2.2s, 콘솔 에러 0) + curl 단독 검증 4건 통과 (SSR HTML / 청크 3건 / `/api/compare` 200 / `/r/[shortId]` 200). 환경 특이성 분류. Fix 옵션 (a/b) 미적용 — 코드/설정 변경 0건. **[!] blocker 해제** + 4.6 진입 차단 해제. **남은 운영자 게이트** = ADR-0030 §Verification V1 (`pnpm dev` 클린 기동) + V3 (≥2 브라우저 manual 5단계). V1·V3 통과 시 운영자가 본 항목 [x] 마킹 + ADR-0030 §Status 에 검증 날짜 추가. **재발 트리거** = §ADR-0030 §T2 (좀비 dev 1차 / `.next/` 삭제 2차 / D.6 재오픈 + Fix (a) 3차).
 
-- [ ] **D.7** fresh-start 완성 — 정체성 통합 + branch protection 보류 +
-  history 인프라 노출 인지 ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md), 2026-05-14 진행 중)
+- [x] **D.7** fresh-start 완성 — 정체성 통합 + branch protection 보류 +
+  history 인프라 노출 인지 ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md), 2026-05-14 Accepted)
   - **트리거**: 음성 PR #1 (`test/build-gate-negative`) 검증 중 Vercel
     access control 이 git author 권한으로 deployment 차단 → fresh-start
     침해 + Free org plan 한계 + 평문 gmail 노출 3 사안 동시 발견.
@@ -221,18 +221,24 @@
   - **결과**: local + origin/main = **129 Arbitoria + 1 bootstrap** (HanSap
     0 / kimwonmin91-4132 0). 새 HEAD `fe51a8e`. ADR-0031 mailmap = HanSap
     27 + kimwonmin91-4132 100 → Arbitoria 통합, bootstrap 1건 보존.
-  - **잔존**:
-    - **§V6 태그 push 미완** — `pre-arbitoria-migration` origin 여전히
-      옛 hash `7e03449` (target `1384668...` = 옛 kim.wonmin91@gmail.com
-      tagger). 운영자 한 줄 (`git push --force origin pre-arbitoria-migration`)
-      실행 대기.
-    - **§V7 §1 ✅** Commits 페이지 첫 10 커밋 모두 Arbitoria 확인 (운영자,
+  - **검증 통과 (2026-05-14)**:
+    - **§V6 ✅** — 태그 force push 완료 (운영자, 2026-05-14). `git ls-remote
+      origin refs/tags/pre-arbitoria-migration` = `ba863cdbc70d2bc2779aa8ff81262dff42acfa1b`
+      (annotated tag SHA) / target commit `07af4d6f78b605b49d107d84afb19dcb92ec5670`
+      ↔ 옛 `7e03449...` / `1384668...` 다름.
+    - **§V7 §1 ✅** Commits 페이지 첫 10 커밋 모두 Arbitoria (운영자,
       2026-05-14). **§V7 §2 SKIP** — Free private repo Insights 잠금
-      (Team 전환 후 재확인). **§V7 §3 ⏳** 태그 push 후 Tags 페이지 재확인.
+      (Team 전환 후 재확인 트리거 = §T2 해제 시점). **§V7 §3 ✅** Tags
+      페이지 시각 확인 (Pieter MCP) + `ls-remote` 명령 검증 정합 — tag SHA
+      `ba863cd...` / target commit `07af4d6...` / 메시지 "Backup before
+      ARBITORIA org migration (ADR-0019)".
+    - **Vercel ✅** — Git connection 재연결(15m, 2026-05-14) 후 `d2364df`
+      "chore(vercel): retrigger build after git reconnect (D.1 follow-up)"
+      push가 자동 webhook 트리거 → deployment `5gJ3bDskj` Production Ready
+      45s. 라이브 `https://slim.lu/compare` 200 OK (4 카테고리 카드 렌더,
+      MCP 시각 검증). 옛 build cache 자동 invalidate.
     - **`refs/pull/1/head` HanSap commit 1건 잔존** — GitHub 영구 보존 ref,
       삭제 불가 (ADR-0031 §T3 카테고리 — 인지 + 수용).
-    - **Vercel deployment** — `fe51a8e` "chore(vercel): trigger redeploy"
-      push 후 webhook 자동 빌드 (운영자 Dashboard 확인 대기).
   - **Phase 10~14 후속**:
     - **10** PLAN.md / CHANGELOG / INDEX.md 갱신 (본 작업, 2026-05-14)
     - **11** 메모리 회고 — `project_identity_unification.md` 신설 +
@@ -1397,7 +1403,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 7 | 3 | 0 | D.2·D.4·D.5 완료. D.1 코드 완료(잔여=운영자 브랜치 보호, **2026-05-14 ADR-0031 §T2 로 Free 플랜 제약 명시 → Team $4 전환 트리거 보존**), D.3 GATE-K 직전 일괄, D.5 (a/b/c 완료, 2026-05-13). **D.6 blocker 해제** — 좀비 dev process 환경 특이성, ADR-0030 회고 close. 운영자 V1·V3 통과 시 [x] 마킹. **D.7 신설 (2026-05-14, ADR-0031)** — fresh-start 완성, Phase 1~9 완료 (127 commit author Arbitoria 통합, HanSap 0 / kim 0), 태그 push + Vercel 결과 + Phase 10~14 후속. | 2026-05-14 |
+| 0.5 | 7 | 4 | 0 | D.2·D.4·D.5·**D.7** 완료. D.1 코드 완료(잔여=운영자 브랜치 보호, **2026-05-14 ADR-0031 §T2 로 Free 플랜 제약 명시 → Team $4 전환 트리거 보존**), D.3 GATE-K 직전 일괄, D.5 (a/b/c 완료, 2026-05-13). **D.6 blocker 해제** — 좀비 dev process 환경 특이성, ADR-0030 회고 close. 운영자 V1·V3 통과 시 [x] 마킹. **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 8 | 7 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C; 1.5.6.1 옵션 X 추정값 UI 완료, 2026-05-13) | 2026-05-13 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
@@ -1408,7 +1414,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **86** | **54** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-14 |
+| **합계** | **86** | **55** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-14 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

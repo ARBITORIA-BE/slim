@@ -18,7 +18,7 @@
   - **부분 침해 잔존** (§T3 카테고리 — 인지 + 수용): (a) `refs/pull/1/head` HanSap commit 1건 — GitHub 영구 보존, 삭제 불가 (b) 백업·외부 클론·Vercel build cache 잔재 — 다음 deployment 시 자동 invalidate.
   - **백업**: `C:\Users\kimwo\slim-backup\` bundle (1.15MB, sha256 `350e9f392f7f95f8871c1f9ddc9555e406317fd805df87fd71990c561aa32c7b`) + mirror clone (`slim-mirror-2026-05-14.git`, fsck 통과, commit count 128 일치).
   - **PLAN 영향**: §D.7 신설 (페이즈 0.5, 합계 85 → 86) + §D.1.c §T2 cross-ref (Free org plan 한계 → TVA + Team $4 전환 트리거 명시).
-  - **운영자 게이트 (Proposed → Accepted)**: (i) `git push --force origin pre-arbitoria-migration` 1줄 실행 (ii) Vercel deployment 빌드 통과 확인 (iii) GitHub Tags 페이지 새 hash 확인.
+  - **Accepted (2026-05-14)** — 운영자 게이트 3건 모두 통과: (i) `git push --force origin pre-arbitoria-migration` 완료 (운영자) → `ls-remote` SHA `ba863cd...` (annotated, target `07af4d6...`) 정합 (ii) Vercel deployment `5gJ3bDskj` Production Ready 45s — Git connection 재연결 후 `d2364df` push 자동 webhook 트리거, slim.lu/compare 200 OK 4 카테고리 카드 렌더 (Pieter MCP 시각 검증) (iii) GitHub Tags 페이지 `Arbitoria/slim/tags` 새 hash 정합. **본질 신호**: `git log --all --format='%an <%ae>' \| sort \| uniq -c` = **129 Arbitoria + 1 bootstrap** (HanSap 0 / kimwonmin91-4132 0). PLAN §D.7 [x] 마킹 + ADR-0031 §Verification V6/V7 §3 실측 채움 + §Status `Proposed → Accepted` 전이. Phase 11~14 deferred (운영자 트리거).
   - 신규 commit 규칙 (헌장 보강): noreply email 강제 + GitHub "Block command line pushes that expose my email" ON 으로 평문 gmail/work email 박힘 차단.
 
 ### Added
