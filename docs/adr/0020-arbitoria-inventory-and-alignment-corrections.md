@@ -40,6 +40,23 @@
 - `EXPECTED_DB_ENDPOINTS` 는 D.4.e 에서 이미 production + preview 등록 완료 (2026-05-11) —
   본 D.3.c sub-task 범위에서 분리.
 
+### 2026-05-14 — D.3.c ✅ Inngest runtime env + sync 종결 (BLOCKER 해제)
+
+- **결정 4** Vercel runtime env + Slim 앱 ↔ Inngest sync **완전 종결**. 4.6 베타 진입 BLOCKER
+  해제 — ADR-0029 §T2 정직성 토큰 4 ("신선한 가격 비교") 정직성 잠금 해제.
+- **Inngest workspace**: Arbitoria / Production env
+- **App ID**: `slim`, URL `https://slim.lu/api/inngest`, SDK **3.54.2** (Next.js / Vercel 플랫폼)
+- **Last sync**: **2026-05-14 22:48 KST** (Success)
+- **Functions 2 등록**:
+  - `daily-fetch-all` — cron `0 6 * * *` UTC + `fetchers/run.requested` 이벤트 트리거
+  - `follow-up-email` — cron + `follow-up-email/run.requested` 이벤트 트리거
+- **Manual invoke run**: **`01KRM42BW9NNZ4A7NP386H38KJ`** (Completed) — sync 직후 즉시 검증
+- **Fetcher 헬스 신선도**: **0.0% → 100.0% (8/8 활성 tariff)** (`https://slim.lu/admin` 헬스 카드)
+- **Snapshot latest**: 2026-05-11 18:40Z → **2026-05-14 20:50:30Z** (cron 첫 실행 결과 영구화)
+- **PLAN cross-ref**: PLAN §D.3.c [x] 마킹 (2026-05-14). D.3 부모는 `[ ]` 유지 (5 sub 중 2
+  완료 — D.3.c + D.3.d, D.3.a/b/e 잔여).
+- **회귀 트리거 #2** (Vercel runtime EXPECTED_DB_ENDPOINTS 미설정) 미발동.
+
 ## Context
 
 ### 본 ADR 이 풀어야 하는 모호함
@@ -152,6 +169,10 @@ ADR-0019 §References 에 본 ADR 추가 (M8 동형 작업). 정정 사실 인�
 
 **검증**: PLAN 1.5.5 본문에 부채 명시 (verifier 책임). 베타 직전 운영자 Vercel Settings →
 Environment Variables 에 3 항목 등록 + Pieter 임시 PR 검증.
+
+**4.6 베타 진입 BLOCKER cross-ref → 종결 2026-05-14**: D.3.c (INNGEST_EVENT_KEY +
+INNGEST_SIGNING_KEY Vercel env + Slim ↔ Inngest sync) 완전 종결. §History (2026-05-14 — D.3.c
+✅) + §Appendix D (Sync method 결정) 참조.
 
 ### 결정 5 — slim-prod 자산 정체 확정
 
@@ -457,3 +478,51 @@ ADR-0017 §결정 1 에서 *이미 완료*, 본 Appendix B 는 *학습 자료 �
 - ✅ `http://slim.lu` → `https://slim.lu` 자동 redirect (Vercel 기본 동작)
 - ✅ §Appendix C 6단계 통과 — PLAN §D.3.d [x] 마킹
 - §History (2026-05-14 — D.3.d ✅) 참조
+
+---
+
+## Appendix D — Sync method 결정 (D.3.c 종결 2026-05-14)
+
+### 결정
+
+**Manual sync via Inngest dashboard** (Vercel Integration 미사용) — Inngest 앱을 dashboard 에서
+수동으로 `https://slim.lu/api/inngest` URL 로 등록하고 sync 트리거.
+
+### 근거
+
+1. **OAuth 권한 부여 회피**: Vercel-Inngest 공식 Integration 은 OAuth 권한 (Vercel project 전체
+   read + env vars write) 을 요구. 솔로 운영자가 단일 cron 함수 sync 를 위해 광범위 권한 부여
+   거부 — ADR-0018 §결정 1 (자산 권한 최소 원칙) + 헌법 §8 #1 (최소 권한) 정합.
+2. **수동 invoke 즉시 검증 가능**: Inngest dashboard 의 "Send event" / "Invoke" 버튼으로 sync
+   직후 수동 실행 가능. 본 종결 시점에 `01KRM42BW9NNZ4A7NP386H38KJ` (Completed) 즉시 검증.
+3. **재배포 빈도 낮음**: 솔로 사이드 프로젝트 (주 1~2 deploy) → manual re-sync 부담 최소.
+
+### 절차 (운영자 5분 작업)
+
+1. Inngest dashboard (https://app.inngest.com) → Arbitoria workspace → Production env
+2. **Apps** → **Sync new app** → URL `https://slim.lu/api/inngest` 입력 → **Sync**
+3. SDK 자동 감지 (3.54.2) + Functions 자동 발견 (2건: `daily-fetch-all` + `follow-up-email`)
+4. **Manual invoke** 로 즉시 검증 (run completed 확인)
+5. 어드민 헬스 카드 (`https://slim.lu/admin`) 신선도 100% 확인
+
+### 재발 트리거 (manual re-sync 필요 시점)
+
+- **app 재배포 시**: Vercel production deploy 후 sync 끊김 *가능* (Inngest signing key 또는
+  endpoint 변경 없는 한 대부분 유지). 운영자가 어드민 헬스 카드 신선도 < 100% 발견 시 즉시
+  Inngest dashboard 에서 manual re-sync.
+- **INNGEST_SIGNING_KEY 회전 시**: env 변경 → Vercel redeploy → manual re-sync 필수.
+- **endpoint URL 변경 시** (예: slim.lu → 다른 도메인): Inngest app 재등록.
+
+### 검증
+
+- ✅ Last sync 2026-05-14 22:48 KST Success
+- ✅ Functions 2 정상 등록 (cron + 이벤트 트리거 양쪽 표시)
+- ✅ Manual invoke run `01KRM42BW9NNZ4A7NP386H38KJ` Completed
+- ✅ 어드민 신선도 0.0% → 100.0% (8/8 활성 tariff)
+- ✅ Snapshot latest 2026-05-14 20:50:30Z (cron 첫 실행 결과)
+
+### 회귀 트리거
+
+- **manual re-sync 누락으로 fetcher 신선도 < 50% 24h 이상 지속** → 본 결정 재검토 (Vercel
+  Integration OAuth 도입 vs 어드민 헬스 알림 추가).
+- **Inngest 가 Vercel Integration 외 sync 방식 deprecation 공지** → 본 결정 재검토.
