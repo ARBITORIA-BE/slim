@@ -48,9 +48,11 @@
 > 분리 + Hook jq fallback 통일. **Amendment 1 (2026-05-09)**: CI lint 단계
 > 제거 → D.1.d 신설.
 
-- [ ] **D.1** Vercel build gate 책임 분리 (ADR-0002 Decision 1 + Amendment 1)
-  — 코드 3건(a/b/d) 완료 + DoD #1 통과. 남은 건 운영자 수동 작업(D.1.c)
-  + Vercel preview / 음성테스트 PR 결과 확인(DoD #2·#3). 2026-05-11 상태.
+- [x] **D.1** Vercel build gate 책임 분리 (ADR-0002 Decision 1 + Amendment 1)
+  — 코드 3건(a/b/d) 완료 + DoD #1·#2 통과 (2026-05-14: Vercel `5KZoKk8AI`
+  Production Ready 34s 실측). DoD #3 (의도적 typecheck 깨는 PR 차단)은
+  D.1.c 와 묶여 **Team plan 전환 후 재검증 트리거** ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2).
+  D.1.c 는 deferred — Free org plan 제약, ruleset 정의는 보존됨.
   - [x] **D.1.a** `next.config.ts`에 `typescript.ignoreBuildErrors: true` +
     `eslint.ignoreDuringBuilds: true` 추가 — `next.config.ts:12-13`. `pnpm build`
     로그에 "Skipping validation of types" / "Skipping linting" 확인.
@@ -1403,7 +1405,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 7 | 4 | 0 | D.2·D.4·D.5·**D.7** 완료. D.1 코드 완료(잔여=운영자 브랜치 보호, **2026-05-14 ADR-0031 §T2 로 Free 플랜 제약 명시 → Team $4 전환 트리거 보존**), D.3 GATE-K 직전 일괄, D.5 (a/b/c 완료, 2026-05-13). **D.6 blocker 해제** — 좀비 dev process 환경 특이성, ADR-0030 회고 close. 운영자 V1·V3 통과 시 [x] 마킹. **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
+| 0.5 | 7 | 5 | 0 | **D.1·D.2·D.4·D.5·D.7** 완료. D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). D.3 GATE-K 직전 일괄. D.5 (a/b/c 완료, 2026-05-13). **D.6 blocker 해제** — 좀비 dev process 환경 특이성, ADR-0030 회고 close. 운영자 V1·V3 통과 시 [x] 마킹. **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 8 | 7 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C; 1.5.6.1 옵션 X 추정값 UI 완료, 2026-05-13) | 2026-05-13 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
@@ -1414,7 +1416,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **86** | **55** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-14 |
+| **합계** | **86** | **56** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-14 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
