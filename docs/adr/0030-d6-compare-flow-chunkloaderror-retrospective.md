@@ -4,6 +4,13 @@
 
 **Accepted** (2026-05-13 — 운영자 직접 결정, Pieter 단일 세션 검증). PLAN §0.5 **D.6** ([!] blocker, 2026-05-13 신설)을 close 처리하고 **4.6 베타 모집** 진입 차단 해제. 코드 변경 0건 / e2e spec 변경 0건 / `playwright.config.ts` 변경 0건.
 
+**운영자 환경 검증 완료 (2026-05-14)** — §Verification V1·V2·V3 3단 모두 통과:
+- V1 (운영자 `pnpm dev` 클린 기동): 통과 보고 (운영자 환경).
+- V2 (Claude env `pnpm test:e2e e2e/compare-flow.spec.ts`): 2회 누적 통과 — 2026-05-13 (2.2s+2.2s, 5.1s total) + 2026-05-14 (7.4s+7.1s, 14.5s total, 콘솔 에러 0). 좀비 dev process 없는 클린 환경에서 §T2 1차 트리거 미발생.
+- V3 (운영자 ≥2 브라우저 manual 5단계): 통과 보고 (운영자 환경).
+
+PLAN §D.6 [!] → [x] 마킹 완료 (PLAN.md L157, 2026-05-14). 본 ADR §Verification close 게이트 충족.
+
 > ADR 번호 메모: `docs/adr/` 현황 = 0001~0011, 0013, 0015~0023, 0025~0029 사용. **0012·0014 = 갭(끼워넣기 금지)**. **0024 = "가칭" 예약** (Neon-side Vercel Integration, GATE-K 트리거, 파일 미작성). 따라서 본 ADR 은 다음 빈 번호 **0030**. (작성 시점 `docs/adr/INDEX.md` + 파일 목록 재확인.)
 
 ## Context

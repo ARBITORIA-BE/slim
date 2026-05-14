@@ -154,11 +154,11 @@
   - 검증: [ADR-0025](docs/adr/0025-verifier-read-only-commit-boundary.md) §Verification
     — 다음 verifier 호출 시 (a) 커밋 안 함 (b) 불일치는 "❌ 차단 — 수정 필요" 로 인계
     (c) 게이트 발명 안 함.
-- [ ] **D.6** `e2e/compare-flow.spec.ts` 2건 클라이언트 예외 fix — ~~**4.6 베타
-  진입 blocker**~~ → blocker 해제 ([ADR-0030](docs/adr/0030-d6-compare-flow-chunkloaderror-retrospective.md), 2026-05-13). **운영자 V1·V3 통과 시 [x] 마킹** (§ADR-0030 Verification).
+- [x] **D.6** `e2e/compare-flow.spec.ts` 2건 클라이언트 예외 fix — ~~**4.6 베타
+  진입 blocker**~~ → blocker 해제 ([ADR-0030](docs/adr/0030-d6-compare-flow-chunkloaderror-retrospective.md), 2026-05-13). **2026-05-14 [x] 마킹** — V2 2회 누적 통과 (2026-05-13 + 2026-05-14, 본 세션 14.5s/2-of-2/콘솔에러 0) + 운영자 V1·V3 동일 세션 통과 보고. ADR-0030 §Status 검증 완료 날짜 갱신.
   2026-05-13 발견 (3.5.1.e 후속 색상 fix `e7c6f69` 정찰 중 builder
   `git stash` 로 *기존* 실패 확인 → preview 색상 변경과 무관, 그 이전부터 존재).
-  - **증상**: `pnpm test:e2e e2e/compare-flow.spec.ts` 2건 모두 *5단계 입력 →
+  - **증상**: `pnpm test:e2e` 의 `e2e/compare-flow.spec.ts` 2건 모두 *5단계 입력 →
     `/r/[shortId]` redirect* 단계 (preview 자동 submit) 에서 timeout 10s 초과.
     Playwright error context: "Application error: a client-side exception has
     occurred while loading localhost" — preview/page.tsx render 도중 클라이언트
@@ -1406,7 +1406,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 7 | 5 | 0 | **D.1·D.2·D.4·D.5·D.7** 완료. D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). D.3 GATE-K 직전 일괄. D.5 (a/b/c 완료, 2026-05-13). **D.6 blocker 해제** — 좀비 dev process 환경 특이성, ADR-0030 회고 close. 운영자 V1·V3 통과 시 [x] 마킹. **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
+| 0.5 | 7 | 6 | 0 | **D.1·D.2·D.4·D.5·D.6·D.7** 완료. D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). D.3 GATE-K 직전 일괄. D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 8 | 7 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C; 1.5.6.1 옵션 X 추정값 UI 완료, 2026-05-13) | 2026-05-13 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
@@ -1417,7 +1417,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **86** | **57** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-14 |
+| **합계** | **86** | **58** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-14 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
