@@ -1291,8 +1291,8 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 **목표:** 베타/런치 후 **6개월 평가**의 스타팅 포인트 마련. 페이즈 5 결정의
 근거 데이터 수집.
 
-- [ ] **4.5.1** 어드민 대시보드 v0 (`/admin`) — 일별 비교 수, 전환율, fetcher
-  헬스 (페이즈 6.1의 축소판)
+- [x] **4.5.1** 어드민 대시보드 v0 (`/admin`) — 일별 비교 수, 전환율, fetcher
+  헬스 (페이즈 6.1의 축소판). 2026-05-14 완료 (a/b/c/d 전부).
   - 인증: **환경변수 토큰 + middleware** (`ADMIN_TOKEN` + 쿠키 `admin_token`).
     솔로 운영자 1명 + €300 cap + Vercel 종속 회피 — NextAuth/OAuth 과잉, Vercel
     Password Protection 은 vendor lock-in. ADR 신설 없음 (PLAN 본문 직결).
@@ -1301,10 +1301,11 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
     - 전환율: `affiliate_click WHERE conversion_status='converted'` COUNT / 비교 수 COUNT (월별)
     - fetcher 헬스: `tariff_snapshot WHERE fetched_at > now() - 24h` 활성 tariff 비율
   - sub-task 분해:
-    - [ ] **4.5.1.a** 인증 middleware — `src/middleware.ts` 에 `/admin/*` 가드 (`ADMIN_TOKEN` env 비교, 미일치 → 404). DoD: 토큰 없으면 404, 토큰 일치 시 통과 + 쿠키 30일.
-    - [ ] **4.5.1.b** `/admin` 라우트 + SQL 3종 + 단순 테이블 UI (shadcn `Table`). DoD: 세 메트릭 모두 실데이터 렌더, `source` + `fetched_at` 표기 (헌법 P1).
-    - [ ] **4.5.1.c** 7일 추세 — CSS bar chart (차트 라이브러리 추가 X, Tailwind 단순). DoD: 일별 비교 수 7개 막대 + 호버 시 숫자.
-    - [ ] **4.5.1.d** 테스트 — 단위 (SQL 쿼리 + 토큰 가드) + E2E 1건 (토큰 없이 접근 → 404, 토큰 + 접근 → 200). DoD: `pnpm test` + `pnpm test:e2e` 통과.
+    - [x] **4.5.1.a** 인증 middleware — `src/middleware.ts` 에 `/admin/*` 가드 (`ADMIN_TOKEN` env 비교, 미일치 → 404). DoD: 토큰 없으면 404, 토큰 일치 시 통과 + 쿠키 30일. **2026-05-14 완료** — `src/middleware.ts` 신설, `constantTimeEqual` 은 `src/lib/constant-time-equal.ts` 분리(edge runtime 호환). 쿼리 `?token=` 첫 진입 → 쿠키 발급 + 쿼리 제거 redirect.
+    - [x] **4.5.1.b** `/admin` 라우트 + SQL 3종 + 단순 테이블 UI (shadcn `Table`). DoD: 세 메트릭 모두 실데이터 렌더, `source` + `fetched_at` 표기 (헌법 P1). **2026-05-14 완료** — `src/app/admin/page.tsx` + `src/db/queries/admin-metrics.ts` (3 SQL) + `src/components/ui/table.tsx` (shadcn Table) + `MetricSource` 컴포넌트로 `definitionSql` + `fetchedAt` 펼침 노출. 메트릭 단위 부분 실패 흡수(try/catch) — 운영 부분 장애 가시화.
+    - [x] **4.5.1.c** 7일 추세 — CSS bar chart (차트 라이브러리 추가 X, Tailwind 단순). DoD: 일별 비교 수 7개 막대 + 호버 시 숫자. **2026-05-14 완료** — `DailyTrendBars` 인라인 컴포넌트, group-hover 시 숫자 노출, max 정규화 + 0 카운트 minHeight 처리.
+    - [x] **4.5.1.d** 테스트 — 단위 (SQL 쿼리 + 토큰 가드) + E2E 1건 (토큰 없이 접근 → 404, 토큰 + 접근 → 200). DoD: `pnpm test` + `pnpm test:e2e` 통과. **2026-05-14 완료** — `constant-time-equal.test.ts` (4건) + `admin-metrics.test.ts` (6건, pure helpers `admin-metrics-helpers.ts` 분리) + `e2e/admin-guard.spec.ts` (4건, 404 음성 2 + 토큰 진입 + 쿠키 재진입). `pnpm test` 493/493 ✅ / `pnpm test:e2e admin-guard` 4/4 ✅.
+  - 운영자 follow-up: (1) `.env.local` / `.env.example` / `.env.local.example` 에 `ADMIN_TOKEN=<32+ char nanoid>` 추가 (2) Vercel production/preview env 에 동일 키 등록 — 권한 설정상 Claude 가 `.env*` 편집 불가, 운영자 수동.
 - [ ] **4.5.2** Sentry 알림 + Inngest 실패율 모니터
   - 코드 작업 ≈ 0 — 운영자 dashboard 설정 중심. Sentry init 은 페이즈 0/1 에서
     setup 됨 (production 활성 정찰 필요).
@@ -1412,7 +1413,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
 | 4 | 9 | 5 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c/d/e 완료) + 4.5 분해 (a~h, ADR-0028 + Day 90 cron 4.5.h 완료 2026-05-13 — 합계 +1) + ADR-0026/0027 (architect, 2026-05-13) | 2026-05-13 |
-| 4.5 | 3 | 0 | 0 | M10 ~ M11 + M16 평가 | 2026-05-09 |
+| 4.5 | 3 | 1 | 0 | M10 ~ M11 + M16 평가 (**4.5.1 완료 2026-05-14** — 어드민 v0 a/b/c/d 풀, `/admin` + 3 메트릭 + 7일 추세 + 단위 10 / E2E 4 통과; ADMIN_TOKEN 운영자 env 등록 follow-up) | 2026-05-14 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
