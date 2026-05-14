@@ -1196,6 +1196,10 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - [ ] **4.7.b** 1주 베이스라인 리뷰 — scribe (마크다운 1건 신설)
     - 산출물: `docs/retro/4.7-week1-review.md` (운영자 작성, 데이터는 PostHog
       대시보드 스크린샷 + 텍스트 요약 + 다음 1주 action items).
+    - **템플릿 잠금 단일 출처**: `docs/retro/4.7-week1-review.md.template`
+      (2026-05-15 신설) — §0 메타 + §1 트래픽 + §2 비교 완료율 + §3 피드백
+      카테고리 + §4 Top 3 마찰점 + §5 scope cut E 결정 + §6 다음 액션 + §7
+      헌법 정합 표. 4.6 배포 + 7일 트리거 시 cp + edit.
     - **측정 4항**: (1) 누적 방문자 (PostHog cookieless) (2) 비교 완료율 (entered
       `/compare` → reached `/r/`) (3) 피드백 카테고리 분포 — bug / UX / 요청
       / legal / 기타 (4) Top 3 마찰점 — 5단계 흐름 어디서 가장 많이 이탈
