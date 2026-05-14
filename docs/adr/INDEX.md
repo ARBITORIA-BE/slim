@@ -26,7 +26,7 @@
 | [ADR-0017](0017-db-mismatch-incident-postmortem.md) | DB 미스매치 사건 종결 보고 (silent-darkness + slim-prod hidden-recipe) | Accepted | 2026-05-10 |
 | [ADR-0018](0018-neon-multi-org-policy.md) | Neon 멀티 organization 정책 + 자동 자산 점검 룰 | Accepted | 2026-05-10 |
 | [ADR-0019](0019-arbitoria-three-platform-alignment.md) | ARBITORIA 3 플랫폼 (GitHub / Vercel / Neon) 정렬 | Accepted (+ Amendment A1/A2, Appendix A pending TVA) | 2026-05-10 |
-| [ADR-0020](0020-arbitoria-inventory-and-alignment-corrections.md) | ARBITORIA 인벤토리 명시 + ADR-0019 진단 사실 정정 | Accepted | 2026-05-10 |
+| [ADR-0020](0020-arbitoria-inventory-and-alignment-corrections.md) | ARBITORIA 인벤토리 명시 + ADR-0019 진단 사실 정정 — **§History 신설 2026-05-14** — D.3.d ✅ slim.lu live + D.3.c 🔶 부분 완료 (Inngest sync OAuth 대기, 4.6 BLOCKER) | Accepted (2026-05-10) + §History append (2026-05-14) | 2026-05-14 |
 | [ADR-0021](0021-phase-3-results-page-design.md) | 페이즈 3 결과 페이지 설계 — 3층 구조 / caveats UI / `/api/compare` 풀 구현 | Accepted (T9 옵션 D + T11 SC-H + SC-F + SC-G, 2026-05-10) + Amendment 1 (2026-05-11, T9 인쇄 뷰 페이즈 3 환원) | 2026-05-11 |
 | [ADR-0022](0022-database-environment-separation.md) | DB 환경 분리 정책 — production / preview / development 3 브랜치 + prod URL Console-only SoT | Accepted (2026-05-11 — D.4 완료, verify:db all-green, 커밋 4b7faab) | 2026-05-11 |
 | [ADR-0023](0023-lighthouse-axe-perf-harness.md) | Lighthouse / axe-core 자동화 — `pnpm harness:perf` 신설 + 로컬 advisory 게이트 (CI 머지 차단 X) | Accepted (2026-05-11 — GATE-P 승인: lighthouse devDep + CI 머지 차단 X) + **Amendment 1 (2026-05-12)** — first-load JS budget 확정 (per-route 2-tier) | 2026-05-11 |
@@ -189,7 +189,7 @@
 
 ### [ADR-0020: ARBITORIA 인벤토리 명시 + ADR-0019 진단 사실 정정](0020-arbitoria-inventory-and-alignment-corrections.md)
 
-**상태**: Accepted (2026-05-10)
+**상태**: Accepted (2026-05-10) + **§History append (2026-05-14)** — D.3.d ✅ slim.lu live (§Appendix C 6단계 통과 + HTTPS 200 + SSL 자동 발급 검증) + D.3.c 🔶 부분 완료 (INNGEST_EVENT_KEY/SIGNING_KEY Vercel env 등록 + redeploy `CMBoqXCxm` Ready, **Slim ↔ Inngest sync OAuth 미완료 → fetcher cron 미동작 → 어드민 헬스 신선도 0% → 4.6 BLOCKER**, ADR-0029 §T2 정직성 cross-ref). D.3 부모 [ ] 유지 (5 sub 중 1 완료).
 
 **요약**: ADR-0019 마이그레이션 M5 회신에서 새 사실 7개 발견 + ADR-0019 §진단 사실 표 정정 필요. 운영자 명시 "별도 정정 ADR 필요" — 본 ADR 신설. **7 식별자 fragmentation 명시** (운영자 M5 회신 표 그대로 §결정 1): GitHub org = `ARBITORIA-BE` (변형) / Neon org = `ARBITORIA` (깨끗) / Neon project = `Slim` / Neon DB alias = `slim-prod` (Vercel Marketplace 자동 생성, 1d ago) / Vercel team = `kimwonmin91-4132s-projects` (personal Hobby) / Vercel project = `slim` / 공식 도메인 = `slim.lu` (DNS 전파 완료 216.198.79.1) / 공식 브랜드 = `ARBITORIA`. **7개 결정**: (1) 인벤토리 표 단일 출처 명시. (2) ADR-0019 §진단 사실 본문 수정 X (P5 정합) + 정정 사실은 본 ADR §References 인용 — Vercel team 신설 결정은 GATE-K 시점 별도 ADR (가칭 ADR-0021) 이연. (3) Vercel App ARBITORIA-BE org 직접 설치 = GATE-K 직전 운영자 5분 follow-up (현 redirect 동작 정상). (4) Vercel env vars 3개 등록 시점 — `EXPECTED_DB_ENDPOINTS` PLAN 1.5.5 부채 + `INNGEST_EVENT_KEY/SIGNING_KEY` 페이즈 1.6 cron 실 가동 시 (GATE-K). (5) `slim-prod` 자산 정체 = Vercel Marketplace Neon Storage 자동 생성 (1d ago) — ADR-0017 §결정 1 lifecycle (1개월 보관, 2026-06-10 검토) 그대로 유지 + 본 ADR §Appendix B 명시화. (6) Neon-side Vercel Integration 도입 = 페이즈 4 베타 진입 시 별도 ADR (가칭 ADR-0024 — ADR-0022가 0022, ADR-0023 이 Lighthouse 하네스로 0023 을 소비). (7) slim.lu 도메인 Vercel Domains 검증 = 페이즈 2 또는 GATE-K 시점 §Appendix C 6 단계 운영자 실행. **거부 대안**: ADR-0019 본문 수정 (P5 위반) / 모든 정렬 작업 즉시 수행 (운영자 시간 + Vercel Pro 격상 비용 즉시 발동) / `slim-prod` 즉시 삭제 (ADR-0017 lifecycle 위반).
 

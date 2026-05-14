@@ -88,20 +88,32 @@
     차단 메시지 정상 출력
   - 검증: ADR-0002 §검증 방법 2
 - [ ] **D.3** ARBITORIA 정렬 follow-ups (ADR-0020 결정 3/4/6/7) — GATE-K
-  (페이즈 4 베타 진입) 직전 일괄 처리. 5 작업:
+  (페이즈 4 베타 진입) 직전 일괄 처리. 5 작업 → 잔여 4 (D.3.d 사전 완료,
+  2026-05-14):
   - **D.3.a** Vercel App을 ARBITORIA-BE org에 직접 설치 (현 redirect follow를
-    org 직접 권한으로 격상, 운영자 5분)
+    org 직접 권한으로 격상, 운영자 5분) — ⏳ 운영자 OAuth 대기
   - **D.3.b** Vercel team scope 결정 — personal `kimwonmin91-4132s-projects`
-    유지 vs ARBITORIA team 신설 (별도 ADR-0021 트리거, 비용 영향 검토)
+    유지 vs ARBITORIA team 신설 (별도 ADR-0021 트리거, 비용 영향 검토) —
+    ⏳ 미결정
   - **D.3.c** Vercel runtime env vars 등록 — production + preview 양쪽에
     EXPECTED_DB_ENDPOINTS / INNGEST_EVENT_KEY / INNGEST_SIGNING_KEY 3개 추가
-  - **D.3.d** `slim.lu` 도메인 Vercel Domains 검증 + SSL 발급 (ADR-0020
-    §Appendix C 6단계, 운영자 ~10분)
+    — 🔶 부분 완료 **[BLOCKER for 4.6]** — `INNGEST_EVENT_KEY` /
+    `INNGEST_SIGNING_KEY` Vercel env 등록 ✅ (2026-05-14, Sensitive,
+    production + preview) + production redeploy `CMBoqXCxm` Ready ✅,
+    `EXPECTED_DB_ENDPOINTS` 는 D.4.e 에서 이미 완료. **그러나 Slim 앱 ↔
+    Inngest sync (https://slim.lu/api/inngest 등록) 미완료 → cron 미동작 →
+    fetcher 신선도 0% (https://slim.lu/admin 어드민 헬스 카드 검증)**. 4.6
+    베타 카피 "신선한 가격 비교" 약속 (ADR-0029 §T2 정직성) 잠금. sync
+    완료 시 [x].
+  - [x] **D.3.d** `slim.lu` 도메인 Vercel Domains 검증 + SSL 발급 (ADR-0020
+    §Appendix C 6단계, 운영자 ~10분) — 2026-05-14 라이브 검증 (slim.lu
+    HTTPS 200, SSL 발급 확인, ADR-0020 §Appendix C 6단계 통과)
   - **D.3.e** Neon-side Vercel Integration 도입 검토 (PR마다 DB branch 자동
     생성 — 페이즈 4 베타에서 사용자 데이터 격리 가치 큼, 별도 ADR(가칭
     **ADR-0024**) 트리거 — ADR-0022가 0022를, ADR-0023이 Lighthouse 하네스로
     0023을 소비했으므로 0024로 재지정)
   - 결정 근거: [ADR-0020](docs/adr/0020-arbitoria-inventory-and-alignment-corrections.md)
+    §History (2026-05-14 D.3.d ✅ / D.3.c 🔶)
 - [x] **D.4** DB 환경 분리 정책 적용 (ADR-0022) — production / preview /
   development 3 Neon 브랜치 + prod URL Console-only SoT + 인라인 명령 강제
   — 2026-05-11 완료 (a~e 전부). DoD 4항 충족: ADR ✅ / development 브랜치 존재 +
@@ -1406,7 +1418,7 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 7 | 6 | 0 | **D.1·D.2·D.4·D.5·D.6·D.7** 완료. D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). D.3 GATE-K 직전 일괄. D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
+| 0.5 | 7 | 6 | 0 | **D.1·D.2·D.4·D.5·D.6·D.7** 완료. D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). **D.3 sub-task 진행도**: D.3.d ✅ slim.lu live (2026-05-14, ADR-0020 §Appendix C 6단계 통과). D.3.c 🔶 부분 완료 — INNGEST keys Vercel env 등록 + production redeploy `CMBoqXCxm` Ready, **Inngest sync OAuth 대기 → fetcher 신선도 0%, 4.6 베타 진입 BLOCKER**. D.3.a/b/e ⏳ GATE-K 일괄. D.3 부모는 5 sub 전부 [x] 후 마킹 (현재 1/5). D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 8 | 7 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C; 1.5.6.1 옵션 X 추정값 UI 완료, 2026-05-13) | 2026-05-13 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |

@@ -10,6 +10,36 @@
 
 본 ADR 은 **결정 + 인벤토리 + 후속 작업 명세** 만 담는다. 코드/설정 변경 0. 외부 의존성 0.
 
+## History
+
+§결정 본문 *수정 X* (P5 헌법 정합). 후속 진행 사실은 본 §History 에 *append-only* 로 기록한다.
+
+### 2026-05-14 — D.3.d ✅ slim.lu 도메인 라이브
+
+- **결정 7 (§Appendix C 6단계)** 완료 검증. `slim.lu` Vercel Domains 검증 + Let's Encrypt SSL
+  자동 발급. 라이브 `https://slim.lu` HTTP 200 OK + 유효 SSL 자물쇠 아이콘 + `http://slim.lu`
+  → `https://slim.lu` 자동 redirect.
+- **PLAN cross-ref**: PLAN §D.3.d [x] 마킹 (2026-05-14). D.3 부모는 `[ ]` 유지 (5 sub 중 1
+  완료, D.3.a/b/c/e 잔여).
+- **회귀 트리거 #4** (slim.lu DNS/SSL 실패) 미발동.
+
+### 2026-05-14 — D.3.c 🔶 INNGEST keys Vercel env 부분 완료 + 4.6 BLOCKER
+
+- **결정 4** 의 `INNGEST_EVENT_KEY` + `INNGEST_SIGNING_KEY` Vercel runtime env 등록 완료
+  (production + preview 양쪽, Sensitive 플래그). 운영자 직접 Vercel Settings → Environment
+  Variables 등록.
+- production redeploy `CMBoqXCxm` Ready 1m3s — env 반영 빌드 확인.
+- **그러나 미완료 부분**: Slim 앱 ↔ Inngest sync (`https://slim.lu/api/inngest` 엔드포인트를
+  Inngest dashboard 에 등록) **미완료** → cron 미동작 → fetcher 신선도 0% (운영자 어드민 헬스
+  카드 `https://slim.lu/admin` 검증).
+- **결과**: 4.6 베타 진입 **BLOCKER**. ADR-0029 §T2 정직성 토큰 4 ("신선한 가격 비교") 와
+  cross-ref — Inngest sync OAuth 미완료 상태에서 4.6 모집 카피 배포 시 신선도 약속 위반 →
+  헌법 P3 (투명성) 위반 + 정직성 잠금. **sync 완료 시까지 4.6 카피 배포 금지**.
+- **운영자 OAuth 대기**: Vercel Integrations → Inngest dashboard → app sync (단발 작업
+  ~5분). sync 완료 시 D.3.c [x] 마킹 + 본 §History 후속 항목 append.
+- `EXPECTED_DB_ENDPOINTS` 는 D.4.e 에서 이미 production + preview 등록 완료 (2026-05-11) —
+  본 D.3.c sub-task 범위에서 분리.
+
 ## Context
 
 ### 본 ADR 이 풀어야 하는 모호함
@@ -419,3 +449,11 @@ ADR-0017 §결정 1 에서 *이미 완료*, 본 Appendix B 는 *학습 자료 �
 
 - DNS 전파 실패 또는 SSL 발급 실패 → 본 ADR §회귀 트리거 #4 발동
 - 도메인 만료 또는 갱신 누락 → 운영자 분기 결정 (Vercel Domains 자동 갱신 vs 외부 호스팅)
+
+### 완료 검증: 2026-05-14
+
+- ✅ Vercel Domains 검증 ✅ 표시 (운영자 직접 확인)
+- ✅ `https://slim.lu` 200 OK + 유효 SSL (Let's Encrypt 자동 발급)
+- ✅ `http://slim.lu` → `https://slim.lu` 자동 redirect (Vercel 기본 동작)
+- ✅ §Appendix C 6단계 통과 — PLAN §D.3.d [x] 마킹
+- §History (2026-05-14 — D.3.d ✅) 참조
