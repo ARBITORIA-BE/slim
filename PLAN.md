@@ -116,7 +116,10 @@
   - **D.3.e** Neon-side Vercel Integration 도입 검토 (PR마다 DB branch 자동
     생성 — 페이즈 4 베타에서 사용자 데이터 격리 가치 큼, 별도 ADR(가칭
     **ADR-0024**) 트리거 — ADR-0022가 0022를, ADR-0023이 Lighthouse 하네스로
-    0023을 소비했으므로 0024로 재지정)
+    0023을 소비했으므로 0024로 재지정) — **2026-05-15 [ADR-0024](docs/adr/0024-neon-vercel-integration.md)
+    Proposed 등록 완료**. 채택 결정 대기 (옵션 A 도입 / B 보수 / C 조건부 —
+    architect 권고 = **옵션 C 조건부**, 4.6~4.8 옵션 B 유지 + 4.9 런치 직전
+    재평가, §Decision Architect 권고 참조).
   - 결정 근거: [ADR-0020](docs/adr/0020-arbitoria-inventory-and-alignment-corrections.md)
     §History (2026-05-14 D.3.d ✅ / D.3.c ✅) + §Appendix D (Sync method 결정)
 - [x] **D.4** DB 환경 분리 정책 적용 (ADR-0022) — production / preview /
