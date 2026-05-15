@@ -2,9 +2,11 @@
 
 ## Status
 
-**Proposed** (2026-05-15, Pieter 세션 — PLAN §D.3.e 분해 / 채택 결정 대기).
+**Accepted** (2026-05-15, Pieter 세션 architect — 옵션 C 조건부 잠금. PLAN §D.3.e 의사결정 게이트 마감).
 
-본 ADR Accepted 전이 트리거 = (a) 운영자(Kim Wonmin) 채택 결정 + (b) 옵션 A 도입 시 실제 Vercel Marketplace UI 에서 Neon Integration 설치 (OAuth, Claude 진행 불가 — D.3.c Inngest sync 와 동일 패턴) + (c) §Verification V1~V6 6단 게이트 통과. 옵션 B 보수 채택 시 본 ADR 은 `Rejected (option B, reason: see §Decision)` 로 close 하고 ADR-0022 3 브랜치 그대로 유지.
+채택 옵션 = **C (조건부 — 4.6~4.8 옵션 B 유지 + §Decision §재평가 트리거 4건 중 1건 발화 시 architect 재호출 → 옵션 A 격상 평가)**. 본 ADR 은 *결정 완료* 상태이며 옵션 A 도입 작업 sub-task 는 **현 시점 비활성** — §재평가 트리거 발화 시점에 신규 sub-task 분해.
+
+> 이전 상태: Proposed (2026-05-15 작성). 동일 세션에서 architect 가 비판적 재검토 + 트리거 구체화 후 Accepted 전이 (옵션 C 의 본질 = "결정 보류" 가 아닌 "조건부 결정 잠금").
 
 > **번호 재지정 사연**: PLAN §D.3.e + ADR-0020 §결정 6 가 본 ADR 을 *"가칭 ADR-0022"* 로 처음 예약했으나 ADR-0022(DB 환경 분리)가 0022 슬롯을 소비 → *"가칭 ADR-0023"* 재지정 → ADR-0023(Lighthouse/axe 하네스)이 0023 을 소비 → 본 ADR 이 **0024** 로 최종 안착. PLAN §D.3.e L116-119 본문에 이미 재지정 메모 명시.
 
@@ -106,7 +108,29 @@ PR 마다 자동 branch 생성 0. `preview` 단일 브랜치 공유. schema 변�
 4. **베타 데이터 보호의 *현시점 우선순위 낮음*** — 4.6 베타 사용자 데이터는 *production 단독*, PR/preview 환경에 가시화 0 (ADR-0022 §D1 격리). 옵션 A 도입은 *향후 schema 변경 PR 빈도 증가* 시점에 가치 발현.
 5. **D.3.c Inngest sync 학습 (2026-05-14)** — Vercel Marketplace UI 설치 = 운영자 OAuth 부담 1회 + 검증 비용. 4.6 베타 모집 직후 추가 OAuth 부담은 *모집 ROI 검증* 보다 우선순위 낮음.
 
-권고 채택 시 본 ADR §Status `Proposed → Proposed (재평가 보류, 4.9 진입 시점)` 로 유지. 운영자 옵션 A 채택 결정 시 §Migration Phase 1~5 진행.
+### 최종 결정 (2026-05-15, architect 잠금)
+
+**채택 = 옵션 C (조건부)**. 4.6~4.8 운영 기간 동안 **옵션 B (현 ADR-0022 3 브랜치)** 유지 + 아래 §재평가 트리거 4건 중 *1건이라도 발화* 시 architect 재호출하여 옵션 A 격상 평가.
+
+채택 사유 (3문장):
+1. 4.6 베타 100명 규모 + 솔로 운영자 컨텍스트에서 동시 open PR 발생률이 사실상 0 이므로 옵션 A 의 PR-단위 격리 ROI 가 *현시점* 마이너스 (Vercel Pro 격상 + Neon Launch 격상 + ADR-0022 §D3 Amendment 부담 합산 > schema 충돌 risk).
+2. 옵션 B 의 단순성 보존이 4.6 베타 진입 *카피 배포(4.6.c)* 의 즉시 가치보다 우선 — 본 결정은 4.6 베타 blocker 가 아님.
+3. 옵션 A 의 잠재 가치 (런치 시점 schema 변경 PR 빈도 증가 + 협업자 추가 + 베타 누적 사용자 격리 요구) 는 *현시점* 측정 불가 → 5개월 실측 데이터 수집 후 4.9 직전 재평가가 정합.
+
+### 재평가 트리거 (4건, 옵션 C 의 핵심 — 1건 발화 시 architect 재호출)
+
+옵션 C 가 "결정 미루기" 가 아닌 "조건부 결정 잠금" 임을 보장하기 위해 *구체적 metric/이벤트* 4건 명시. 트리거 발화 추적은 verifier 가 주간 harness (`pnpm harness:plan` 확장 후보, 본 ADR 후속) 로 자동화 가능.
+
+| # | 트리거 | 측정 방법 | 발화 임계값 |
+|---|---|---|---|
+| **T1** | **schema 변경 PR 누적 횟수** (drizzle 마이그레이션 추가 PR) | `git log --oneline drizzle/` 카운트 (본 ADR 채택일 2026-05-15 이후) | **누적 5건** 도달 시 발화 |
+| **T2** | **협업자 추가** (Pieter 외 GitHub collaborator 또는 Vercel team member) | GitHub repo collaborator 목록 + Vercel team membership | **1명이라도** 추가 시 즉시 발화 |
+| **T3** | **Neon Free tier 한도 압박** (branch 5개 또는 storage 0.5GB/branch) | Neon Console 사용량 페이지 (운영자 월 1회 점검) | **branch ≥4** 또는 **storage ≥80%** 도달 시 발화 |
+| **T4** | **Vercel Pro 격상** (ADR-0020 §회귀 트리거 #6) | Vercel dashboard billing | 격상 *결정 시점* 발화 (옵션 A 의 commercial-use 회피 트리거가 사라지므로 재평가 가치 증가) |
+
+각 트리거 발화 시 운영자 → Pieter 신호 → architect 재호출 → 본 ADR §History Amendment + 옵션 A 격상 검토. 4.9 진입 시점(M9, 추정 2026-09~10)이 자동 마감 deadline — 그때까지 어떤 트리거도 발화 안 했어도 architect 재평가 1회 강제.
+
+> 이전 권고 문장 ("§Status Proposed 유지") 은 옵션 C 의 의미를 *결정 보류* 로 흐릿하게 만들었음. 본 §최종 결정 + §재평가 트리거 가 옵션 C 를 *조건부 결정 잠금* 으로 명확화. §Status = Accepted 정합.
 
 ## Alternatives considered
 
@@ -195,13 +219,30 @@ ADR-0004 §결정 2 의 €300/mo cap 대비 **11.5%** 점유. 격상 후에도 
 - 옵션 A 즉시 채택 + Free tier 유지 — €0/mo
 - 옵션 A 채택 + Neon Launch 격상 — +€17.5/mo (Vercel Pro 격상은 본 ADR 무관, ADR-0020 #6 별도)
 - 옵션 B 유지 — €0/mo, 비용 영향 0
-- 옵션 C 보류 — €0/mo (현재), 4.9 시점 재평가
+- **옵션 C 채택 (본 ADR 잠금) — €0/mo 현재 + 트리거 발화 시 옵션 A 격상 검토 (max €37.5/mo USD ≈ €34.6 EUR, §Cost projection 합산)**
+
+### 즉시 영향 (옵션 C Accepted 직후, 4.6~4.8)
+
+- ADR-0022 §D1~D4 (production / preview / development 3 브랜치 + Console SoT + `EXPECTED_DB_ENDPOINTS` 정적 3 endpoint + 인라인 명령) **변동 0 보존**.
+- 운영자 추가 작업 0 — Vercel Marketplace UI 설치 작업 발생 안 함.
+- 4.6 베타 진입 카피 배포(4.6.c) **blocker 아님** — 본 ADR 결정 완료로 GATE-K (D.3.e) 닫힘 가능.
+- §Migration Phase 1~5 **스킵** (옵션 A 채택 시에만 실행 — 현재 비활성).
+- §Verification V1~V6 **스킵** (옵션 A 채택 시에만 적용).
+
+### 중기 영향 (4.6~4.9, 트리거 추적)
+
+- 재평가 트리거 T1~T4 monitoring 책임 분담:
+  - T1 (schema PR 횟수) — Pieter 가 PR 머지 시점에 카운트, PLAN.md 또는 별도 ledger 추적 후보.
+  - T2 (협업자 추가) — 운영자가 GitHub/Vercel 권한 부여 시 즉시 Pieter 신호.
+  - T3 (Neon Free 한도) — 운영자 월 1회 Neon Console 점검 (현재 branch 3/5, 60%).
+  - T4 (Vercel Pro 격상) — ADR-0020 §회귀 트리거 #6 발화 시 동시 발화.
+- 4.9 진입 시점(M9, 추정 2026-09~10) 자동 마감 deadline — 어떤 트리거도 발화 안 해도 architect 재호출 1회 강제.
 
 ### 운영 부담
 
 - 옵션 A 도입 후 운영자 워크플로: PR open → 자동 branch 생성 → preview 환경 검증 → PR close → 자동 cleanup. 운영자 추가 작업 0 (initial Integration UI 설치 1회 제외).
 - 옵션 A 도입 후 *충돌 시* 운영자 부담: Neon Console 에서 stuck branch 수동 cleanup (Free tier 5 한도 압박 시). 월 ~5분 추정.
-- 옵션 B/C: 운영자 부담 0.
+- **옵션 C 채택 (현재) — 운영자 부담 0 + 월 1회 Neon Console 점검 (T3 트리거 추적, ~2분).**
 
 ### 보안 (헌법 §8 #1 정합)
 
@@ -320,3 +361,4 @@ ADR-0004 §결정 2 의 €300/mo cap 대비 **11.5%** 점유. 격상 후에도 
 ## History
 
 - **2026-05-15 (Proposed)** — Pieter 세션, architect 호출로 작성. 옵션 A/B/C 검토 + WebSearch 4건 가격 확인 (Neon Free 5 branch / Vercel Hobby commercial-use 금지 / Vercel-Neon Integration €0) + 권고 옵션 C. 채택 결정 운영자 대기. PLAN §D.3.e 인라인 메모 갱신.
+- **2026-05-15 (Accepted, 옵션 C 잠금)** — 동일 세션 architect 비판적 재검토 후 §Decision §최종 결정 추가 + §재평가 트리거 T1~T4 명시 (schema PR 누적 5건 / 협업자 추가 / Neon Free 한도 압박 / Vercel Pro 격상) + 4.9 진입 자동 마감 deadline. §Consequences §즉시 영향 + §중기 영향 분리. 4.6 베타 진입 카피 배포(4.6.c) blocker **아님** 확정. PLAN §D.3.e `[x]` 마킹 + 본 ADR cross-ref 갱신.
