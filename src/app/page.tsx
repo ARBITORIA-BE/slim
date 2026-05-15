@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 /**
  * 루트 레이아웃의 title template(`%s · Slim`) 을 사용하지 않고
@@ -27,8 +26,12 @@ export default function Home() {
       <p className="text-fg-soft text-lg max-w-md text-center">
         비교는 쉽게, 절약은 두툼하게.
       </p>
-      <Button>지금 비교하기</Button>
-      <p className="text-muted text-sm mt-8">Phase 0 부트스트랩 완료 ✅</p>
+      <Link
+        href="/compare"
+        className="rounded-full bg-fg px-6 py-3 text-sm font-medium text-bg transition hover:bg-primary"
+      >
+        지금 비교하기
+      </Link>
     </main>
   );
 }
