@@ -79,7 +79,7 @@ export default function ComparePage() {
         </p>
       </header>
 
-      <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-4 md:auto-rows-fr md:grid-cols-2">
         {CATEGORIES.map(({ category, label, description, icon: Icon }) => (
           <li key={category}>
             <Link
@@ -87,14 +87,14 @@ export default function ComparePage() {
               className="block rounded-2xl outline-none ring-offset-bg focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={`${label} 비교 시작`}
             >
-              <Card className="h-full transition hover:border-primary/40 hover:bg-bg-warm/70">
+              <Card className="flex h-full flex-col justify-between transition hover:border-primary/40 hover:bg-bg-warm/70">
                 <CardHeader className="flex flex-row items-center gap-4 pb-3">
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Icon className="h-6 w-6" aria-hidden />
                   </span>
                   <div className="flex flex-col gap-1">
                     <CardTitle>{label}</CardTitle>
-                    <CardDescription>{description}</CardDescription>
+                    <CardDescription className="line-clamp-2 min-h-[2.5em]">{description}</CardDescription>
                   </div>
                 </CardHeader>
                 <p className="text-xs text-muted">평균 절약액 미리보기는 베타 후 노출 예정</p>
