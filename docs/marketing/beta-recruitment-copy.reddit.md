@@ -1,3 +1,7 @@
+> **DEPRECATED — Amendment 2 (2026-05-15)**: r/BENL banned 확인 (Reddit about.json 직접 조회 2026-05-15). 채널 2(Reddit) 제거, 베타 모집 3채널(Korean Society / salair / Twitter)로 운영. 베네룩스 현지인 도달은 4.8 PR 매체 트랙으로 이관 (ADR-0029 Amendment 2 옵션 C). 본 카피는 이력 보존 목적으로만 남김 — 배포 금지.
+
+---
+
 # Beta Recruitment Copy — Channel 2 (Reddit r/BENL)
 
 **길이:** 한국어 500~800자  

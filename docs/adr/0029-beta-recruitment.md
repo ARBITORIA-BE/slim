@@ -328,7 +328,7 @@ T1~T6 6개 결정.
 
 ### Verification (Amendment 1 적용 후)
 
-- [ ] r/BENL 커뮤니티 식별 + 정책 확인 (운영자)
+- [x] r/BENL 커뮤니티 식별 + 정책 확인 (운영자) — **Amendment 2 (2026-05-15)에서 종결: r/BENL banned (Reddit about.json 직접 조회). 채널 2 제거, 옵션 C 채택.**
 - [ ] 채널 2 텍스트 `docs/marketing/beta-recruitment-copy.reddit.md` 한국어 500~800자로 갱신
 - [ ] T2 토큰 4종 한국어 표현 일치 확인 (각 채널별)
 - [ ] T3 토큰 8종 + 한국어 동등 표현 0건 (grep 또는 manual)
@@ -346,4 +346,158 @@ T1~T6 6개 결정.
   - 본 ADR이 위 5개 결정(채널+정직+추적+신청+scope cut) *모두* 1 ADR로 잠금
 
 **정당성**: 운영자 의도적 결정 (2026-05-13 architect 권고 + 운영자 수용)
+
+---
+
+## Amendment 2 (2026-05-15): r/BENL banned — 채널 2 재결정
+
+### 상태
+
+**Accepted** (2026-05-15 — 운영자 직접 결정: 옵션 C 잠금 / architect 권고 수용).
+ADR-0029 본체 + Amendment 1 = "운영자 직접 결정" 게이트 ADR 이므로, 본
+Amendment 2 의 옵션 채택은 **운영자만** 잠근다. architect 는 권고까지만.
+
+### 트리거
+
+Amendment 1 §Verification 첫 항목 `[ ] r/BENL 커뮤니티 식별 + 정책 확인`
+(미완료 상태로 카피 배포 직전까지 잔존) 을 2026-05-15 검증 중 결함 확인.
+
+### 전제 정정 (사실 오류 → 정정)
+
+- **source**: Reddit `about.json` 공개 API 직접 조회, 2026-05-15.
+- **raw 결과**:
+
+  | 서브레딧 | 상태 | 구독자 | lang |
+  |---|---|---|---|
+  | **r/BENL** | **banned** (`{"reason":"banned","error":404}`) | — | — |
+  | r/belgium | 정상 | 396,860 | en |
+  | r/Netherlands | 정상 | 493,342 | en |
+  | r/BeNeLux | 정상 (소규모) | 2,088 | en |
+  | r/Belgium2 | 정상 | 65,672 | en |
+  | r/koreanbelgium | 존재하지 않음 | — | — |
+
+- **정정 1 — Amendment 1 §근거 3 의 "r/BENL = 한국어권 베네룩스
+  커뮤니티" 는 사실 오류.** r/BENL 은 Reddit 에서 banned 된 정지
+  서브레딧 → 게시 물리적으로 불가 (0% 작동). Amendment 1 이 r/belgium →
+  r/BENL 로 바꾼 핵심 논거(모국어 정직성 authenticity 최대화)는 채널 2
+  에 한해 **성립 자체가 불가능**.
+- **정정 2 — 한국어권 베네룩스 Reddit 커뮤니티는 존재하지 않음.**
+  베네룩스 실존 서브레딧은 전부 `lang=en` (영어). r/koreanbelgium 같은
+  한국어권 베네룩스 서브레딧 부재.
+- **정정 3 — 운영자가 처음 제기한 모순("4채널을 한국어로 하면서 타겟이
+  베네룩스 현지인이면 모순")은 단순 트레이드오프가 아니라 채널 2 한정
+  *실행 불가 결함* 으로 확정.** 채널 1/3/4 (Korean Society / salair /
+  Twitter) 는 한국어 단일 정합 유지 — 결함은 채널 2 에 격리됨.
+
+### 옵션 비교 (A / B / C)
+
+| 축 | A — 한국인 시드 명시화 | B — 현지인 확장 (영어 채널 부활) | C — 혼합/단계적 |
+|---|---|---|---|
+| **개요** | 베타 타겟 = "베네룩스 거주 한국인 시드" 명시. 채널 2 **제거**, 3채널(Korean Society + salair + Twitter)로 축소. 한국어 단일 유지. | 채널 2 = r/belgium 또는 r/Belgium2 (영어, 대형)로 교체 + 영어 카피 신설. | 4.6 = 한국인 시드 3채널(채널 2 제거). Reddit·현지인 도달은 4.8 PR 매체 트랙으로 명시 이관. |
+| **도달** | 한국인 시드만 (TAM 좁음, 의도적). r/BENL 환상 0. | 베네룩스 현지인 영어권 (TAM 넓음). | A 와 동일 (4.6) + 4.8 에서 De Tijd/Trends 경유 NL/FR 현지인 도달. |
+| **솔로 부하** | 최저 — 카피 3건 유지, 신규 0. | 최고 — 비원어민 영어 카피 신설·운영, r/belgium self-promo 정책 상시 enforcement 대응. | 낮음 — 4.6 부하 = A 와 동일. 4.8 트랙 부하는 4.8 ADR 로 이연 (지금 부담 0). |
+| **€300 cap** | 영향 0 (채널 감소 = 운영비 ↓). | 압박 — 영어 카피 작성·검수·다국어 분기 조기 발생 (ADR-0029 §대안 b 거부 사유 재현). | 영향 0 (4.6). 4.8 PR 비용은 별도 ADR 게이트. |
+| **정직성 토큰 영향** | T2/T3 변화 0 — 한국어 단일 + authenticity 논거 100% 보존. | T2 토큰 4종을 비원어민 영어로 표현 → Amendment 1 §근거 3 이 명시한 "번역 감소·신뢰 오염" 재발. authenticity ↓. | T2/T3 변화 0 (4.6 한국어 단일). 4.8 다국어 분기 시 별도 검증. |
+| **ADR 정합** | ADR-0016 SC-E (페이즈 4 한국어 단일) + ADR-0009 (좁고 깊은 포지셔닝) + ADR-0029 §대안 d (단일채널 거부 — 3채널이라 충족) 정합. | ADR-0029 §대안 b (UTM/영어 확장) 와 Amendment 1 §근거 3 을 동시에 역행. ADR-0016 SC-E 위반. | ADR-0029 §"잃는 것" + Amendment 1 §"잃는 것"("4.7 영어권 요청 시 다국어 early signal") 이 이미 절반 예고한 방향과 정합. ADR-0016 SC-E 보존(4.6 한정). |
+| **솔로+€300 적합도** | 최상 | 최하 | 상 (부하 이연으로 4.6 즉시 진입 가능) |
+
+### architect 권고
+
+**옵션 C 채택 권고.**
+
+근거 (공식 문서/ADR 인용):
+1. **ADR-0029 §"잃는 것" + Amendment 1 §"잃는 것"** 이 이미
+   "4.7 에서 영어권 사용자 요청 발생 시 다국어 분기 early signal 수집"
+   을 명문화 — C 는 이 예고된 경로의 *형식화* 이지 새 방향이 아님.
+   ADR 연속성 측면에서 A 보다 정합.
+2. **ADR-0016 §Status (T10 SC-E, Accepted 2026-05-10)** — "페이즈 4
+   까지 한국어 단일" 운영. C 는 4.6 한정 한국어 단일을 100% 보존하면서
+   현지인 도달을 4.8 로 이연 → SC-E 위반 0.
+3. **ADR-0009 (fetcher 2공급사, 좁고 깊은 포지셔닝)** — 현 시점 비교
+   깊이가 2공급사라 광범위 현지인 모집은 기대-실제 갭(헌장 P3 / T3)
+   리스크. C 는 4.6 을 정성 시드로 한정해 이 리스크를 회피.
+4. **헌장 §3 P3 (투명성은 운영자의 짐) + ADR-0004 €300 cap** — C 는
+   4.6 즉시 진입을 가능케 하면서 현지인 도달 부담을 4.8 ADR 게이트로
+   넘김 → 솔로 8h/주 + €300 cap 에 정합.
+5. **A 와의 차이**: A 도 솔로 적합도 최상이나, "현지인 확장 경로"를
+   ADR 에 명시하지 않아 추후 재논의 비용 발생. C 는 4.8 이관을 ADR
+   에 못박아 미래 결정 비용을 지금 0으로 만든다. A 는 차선
+   (운영자가 4.8 이관조차 원치 않으면 A 가 정답).
+
+> B 는 비권고: ADR-0029 §대안 (b) 가 이미 거부한 방향 + Amendment 1
+> §근거 3 (모국어 authenticity) 와 정면 충돌 + €300 cap 압박. 영어권
+> 현지인 도달이 전략 필수가 되면 4.8 PR 트랙이 De Tijd/Trends 경유로
+> 더 비용효율적 (영어 카피 신설 0).
+
+### 채택 시 영향 (옵션 C 기준 — 운영자 승인 시)
+
+#### 카피 4파일
+
+| 파일 | 처리 | 사유 |
+|---|---|---|
+| `beta-recruitment-copy.kr.md` | **유지** | 채널 1 Korean Society, 영향 0 |
+| `beta-recruitment-copy.reddit.md` | **폐기 (deprecate)** | 채널 2 제거. 파일 삭제 대신 상단에 "DEPRECATED — Amendment 2 (2026-05-15): r/BENL banned, 채널 2 제거. 4.8 PR 트랙으로 현지인 도달 이관." 헤더 1블록 추가 (이력 보존, scribe 작업) |
+| `beta-recruitment-copy.salair.md` | **유지** | 채널 3, 영향 0 |
+| `beta-recruitment-copy.tw.md` | **유지** | 채널 4, 영향 0 |
+| 신설 | **0건** | 영어 카피 신설 없음 (옵션 B 였다면 신설 필요했음) |
+
+#### PLAN §4.6 before/after diff (운영자 승인 시 이렇게 바뀐다 — 본 Amendment 가 직접 마킹하지 않음)
+
+- **채널 목록 (라인 1122~1123)**
+  - before: `한인 커뮤니티(Korean Society BE/NL/LU), Reddit r/BENL (Amendment 1 이후), salair-plus.com 링크 (운영자 기존 자산), 한국어 트위터/스레드`
+  - after: `한인 커뮤니티(Korean Society BE/NL/LU), salair-plus.com 링크 (운영자 기존 자산), 한국어 트위터/스레드 — **3채널** (Amendment 2: r/BENL banned 확인, Reddit 채널 제거, 현지인 도달은 4.8 PR 트랙 이관)`
+- **카피 4초안 (라인 1130~1135)**
+  - before: `(2) Reddit r/BENL 한국어 500~800자 — humble 톤 + 자기 홍보 규칙은 운영자 직접 확인 (Amendment 1).`
+  - after: `(2) ~~Reddit r/BENL~~ — **Amendment 2 (2026-05-15) 폐기: r/BENL banned (Reddit about.json 2026-05-15). 채널 2 제거, 3채널 운영.**`
+  - "모집 카피 4 초안" → "모집 카피 **3** 초안" 로 수치 정정
+- **4.6.c (라인 1180~1181)**
+  - before: `운영자 4 채널 배포 — Korean Society / r/BENL / salair-plus.com banner / Twitter.`
+  - after: `운영자 **3** 채널 배포 — Korean Society / salair-plus.com banner / Twitter. (Amendment 2: r/BENL 제거)`
+  - DoD: `link live 확인 + Referrer 헤더 PostHog 활성` 은 유지 (채널 수만 4→3)
+- **DoD 부모 (라인 1184~1185)**
+  - before: `(4) 운영자 4.6.c 배포 + slim.lu 방문 가능`
+  - after: `(4) 운영자 4.6.c **3채널** 배포 + slim.lu 방문 가능`
+- **`/verify-plan` 합계**: 4.6 은 단일 sub-task 라운드(라인 1128), 채널
+  수 정정은 본문 텍스트 변경이라 **체크박스 합계 변화 0**. 4.6.a/b 는
+  이미 ✅ (Amendment 1 산출물) — 마킹 변경 없음. 4.6.c/d 미완료 [ ]
+  유지. harness:plan itemRe 최상위 매치이므로 합계 비대상.
+
+#### INDEX.md (운영자 승인 후에만)
+
+- 본 Amendment 2 는 **Proposed** 이므로 INDEX.md 수정 **하지 않음**.
+- 운영자 승인(Accepted 전환) 시 ADR-0029 행 status 셀에 추가:
+  `**Amendment 2 (2026-05-15)** — r/BENL banned 확인 (Reddit about.json) → 채널 2 제거, 3채널 운영, 현지인 도달 4.8 PR 트랙 이관. 옵션 C 채택.`
+
+### Amendment 1 대비 무엇이 바뀌는가
+
+| 항목 | Amendment 1 (2026-05-14) | Amendment 2 (2026-05-15, 옵션 C) |
+|---|---|---|
+| 채널 수 | 4 (Reddit = r/BENL) | **3** (Reddit 제거) |
+| Reddit 채널 2 | r/belgium → r/BENL 변경 | **r/BENL banned 확인 → 채널 폐기** |
+| 한국어 단일 정책 | 4채널 한국어 통합 | **유지** (3채널, 변화 0) |
+| 베타 타겟 | 암묵 (한국어권) | **명시: 베네룩스 거주 한국인 시드** |
+| 현지인 도달 | 4.7 영어권 요청 시 early signal | **4.8 PR 매체 트랙으로 명시 이관** |
+| T2/T3 토큰 | 변화 0 | 변화 0 (Amendment 1 그대로) |
+| `reddit.md` 카피 | 신설 | **DEPRECATED 헤더 추가 (이력 보존)** |
+| 정직성 논거 | r/BENL = 한국어 모국어 authenticity | **사실 오류로 철회 (r/BENL banned)** |
+
+### Verification (Amendment 2 적용 후 — 운영자 승인 시)
+
+- [x] 운영자: 본 Amendment 2 §architect 권고 검토 + 옵션 A/B/C 1개 잠금 결정
+- [x] (승인 시) ADR-0029 §Amendment 2 §상태 Proposed → Accepted 전환 (운영자 + 날짜)
+- [x] (승인 시) INDEX.md ADR-0029 행 Amendment 2 표기 추가 (scribe)
+- [x] (승인 시) PLAN §4.6 채널 목록·4초안·4.6.c·DoD 텍스트 정정 (위 diff, builder/scribe)
+- [x] (승인 시) `beta-recruitment-copy.reddit.md` 상단 DEPRECATED 헤더 추가 (scribe)
+- [x] (승인 시) Amendment 1 §Verification 첫 항목 `[ ] r/BENL 커뮤니티 식별` → 본 Amendment 2 가 종결 처리 cross-ref 1줄
+- [ ] harness:plan 정합 (채널 수 텍스트 변경 후 합계 불변 재확인)
+
+### References (Amendment 2 추가)
+
+- **Reddit `about.json` API** (2026-05-15 직접 조회) — r/BENL banned 사실 source
+- **ADR-0016 §Status (T10 SC-E)** — 페이즈 4 한국어 단일 (옵션 C 정합 근거 2)
+- **ADR-0009** — fetcher 2공급사, 좁고 깊은 포지셔닝 (옵션 C 정합 근거 3)
+- **ADR-0029 §대안 (b)** — UTM/영어 확장 거부 (옵션 B 비권고 근거)
+- **ADR-0029 Amendment 1 §근거 3 + §"잃는 것"** — 모국어 authenticity / 4.7 영어권 early signal (정정 1 + 옵션 C 정합 근거 1)
+- **헌장 §3 P3 / §8 #1 (추적 0·PII 0)** — UTM 0 정책 불변, B 의 영어 확장이 cap 압박
+- **ADR-0004 €300 cap** — 옵션 C 솔로 적합도 근거 4
 

@@ -1119,17 +1119,15 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - [x] **4.5.h** Day 90 행 삭제 cron — ADR-0028 §T5 잔존 조건 1 이행. `follow_up_email` 행 중 `pii_anonymized_at ≤ (now - 90d)` 조건 만족 시 **행 삭제** (또는 영구 익명 통계로 분리 — §T5 의 두 옵션 중 *행 삭제* 가 보수적, legal 권고). **ADR-0026 §T6 의 기존 익명화 Inngest job (ADR-0008 §cron) 에 step 추가** — 신규 job 0 (€300 cap — Inngest run 수 절약, §T6 정신 일관). 동일 cron 안에서 `comparison_request` PII 일반화 + `affiliate_click` FK SET NULL + `follow_up_email` Day 90 행 삭제가 *순차 step* 으로 실행. ADR amendment 불요 — ADR-0028 §T5 본문이 이미 "행 자체 삭제 또는 영구 익명 통계" 명시. **단** ADR-0026 §T6 cross-ref 1줄 (scribe 작업 — "`follow_up_email` Day 90 행 삭제도 본 cron 에 step 추가, ADR-0028 §T5 참조"). DoD: cron step 추가 + 통합 테스트 (90일 경계 시각 mock) + 회귀 0 + harness:plan 정합. Resend DPA (잔존 조건 2) 는 운영자 외부 트랙 (베타 직전 / M16).
     - ✅ 완료 (2026-05-13): `scripts/harness/price-snapshot.ts` export `deleteAnonymizedFollowUpEmails(dbClient)` + `main()` 호출 + Vitest 가드. SQL: `pii_anonymized_at IS NOT NULL AND pii_anonymized_at <= NOW() - INTERVAL '90 days'` (발송 전 행 IS NULL 보호). `src/inngest/follow-up-email.integration.test.ts` 통합 테스트 3 케이스 추가 (A: 100d DELETE / B: 89d 유지 / C: NULL 유지). typecheck/lint/test 456 passed (453+3) / harness:plan 52 정합 / harness:data 통과. ADR-0026 §T6 cross-ref 1줄 추가 (scribe). 커밋 `168106f`. **4.5 라운드 마감** (a~h 완료). Resend DPA 외부 트랙 (외부 감사 항목 8).
 - [ ] **4.6** **베타 모집** — Antwerpen / Brussels / Luxembourg 시티에서 100명
-  - 채널: 한인 커뮤니티(Korean Society BE/NL/LU), Reddit r/BENL (Amendment 1 이후), salair-plus.com
-    링크 (운영자 기존 자산), 한국어 트위터/스레드
+  - 채널: 한인 커뮤니티(Korean Society BE/NL/LU), salair-plus.com 링크 (운영자 기존 자산), 한국어 트위터/스레드 — **3채널** (Amendment 2 2026-05-15: r/BENL banned 확인, Reddit 채널 제거, 현지인 도달은 4.8 PR 트랙 이관)
   - **모집 카피의 정직성 (헌법 P3 + ADR-0009)**: "현재 BE 시장 ≥ 75% 점유 2개
     공급사(Proximus + Telenet)를 깊이 비교 중. Orange BE는 다음 페이즈에서
     추가." 솔로 신생 사이트의 *비교 좁은 폭 + 깊은 신뢰* 포지셔닝과 일관.
   - **scope cut 옵션 E**: 50명으로 축소 가능 (피드백 신호엔 충분)
   - **4.6 = 단일 sub-task 라운드** (운영자 트랙 + 코드 게이트 없음, 분해 시
     verifier 의미 약함). 본 항목 안에 카피 4개 + 결정 5개 일괄 명시.
-  - **모집 카피 4 초안** (scribe 본문 작성): (1) Korean Society BE/NL/LU
-    한국어 500~800자 — 정직 톤, ADR-0009 한계 명시. (2) Reddit r/BENL
-    한국어 500~800자 — humble 톤 + 자기 홍보 규칙은 운영자 직접 확인 (Amendment 1). (3) salair-plus.com
+  - **모집 카피 3 초안** (scribe 본문 작성): (1) Korean Society BE/NL/LU
+    한국어 500~800자 — 정직 톤, ADR-0009 한계 명시. (2) ~~Reddit r/BENL~~ — **Amendment 2 (2026-05-15) 폐기: r/BENL banned (Reddit about.json 2026-05-15). 채널 2 제거, 3채널 운영.** (3) salair-plus.com
     한국어 banner/footer 1~2줄 + slim.lu 링크 — 운영자 직접 편집. (4) 한국어
     트위터/스레드 280자 / 500자 — (1) 의 짧은 버전. **Amendment 1 (2026-05-14)**: 
     모든 4 채널 한국어 단일 + r/belgium → r/BENL 변경 (ADR-0016 SC-E 정합).
@@ -1177,11 +1175,11 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - ✅ 채널 3 (salair-plus.com): `beta-recruitment-copy.salair.md` (1~2줄, T2·T3 검증, 토큰 3·4 footer 구조 명시)
     - ✅ 채널 4 (Twitter): `beta-recruitment-copy.tw.md` (280자 + 500자, T2·T3 검증)
     - 모든 파일에 T2·T3 체크리스트 인라인 명시
-  - [ ] **4.6.c** 운영자 4 채널 배포 — Korean Society / r/BENL / salair-plus.com banner / Twitter. 
+  - [ ] **4.6.c** 운영자 **3** 채널 배포 — Korean Society / salair-plus.com banner / Twitter. (Amendment 2: r/BENL 제거)
     - DoD: link live 확인 + Referrer 헤더 PostHog 활성
   - [ ] **4.6.d** 3주 baseline scope cut E 평가 — 누적 방문자 ≤50명 시 50명 마감 + 4.7 진입.
     - 운영자 트랙 (1주 = 4.7 병렬 시작, 3주 경계 평가)
-  - DoD (4.6 부모): (1) 4.6.a/b ✅ 완료 (2) ADR-0029 채택 (3) D.3.a/c/d 완료 (4) 운영자 4.6.c 배포 +
+  - DoD (4.6 부모): (1) 4.6.a/b ✅ 완료 (2) ADR-0029 채택 (3) D.3.a/c/d 완료 (4) 운영자 4.6.c **3채널** 배포 +
     slim.lu 방문 가능 (5) PostHog cookieless 방문자 수 집계 활성 (6) 4.7 진입 신호 1주차 = 피드백 0건 이상 수신 → 4.7 [ ] 진입.
 - [ ] **4.7** 피드백 1주 + 반영 — 4.6 배포 + 1주 트리거. 2~4주 운영 후
   종료 → 4.8 트리거. ADR-0029 Amendment 1 단일 출처 유지 (신설 ADR 불요).
