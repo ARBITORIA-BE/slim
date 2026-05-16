@@ -182,12 +182,15 @@ describe('currentProviderSchema (ADR-0016 §T5, 선택적 + 스킵 동등)', () 
   });
 });
 
-describe('tariffCategorySchema (ADR-0005 §T6 정합)', () => {
-  it('4 카테고리 enum 통과', () => {
+describe('tariffCategorySchema (ADR-0005 §T6 정합 — Amendment 1: 3값)', () => {
+  it('3 카테고리 enum 통과', () => {
     expect(tariffCategorySchema.safeParse('mobile').success).toBe(true);
     expect(tariffCategorySchema.safeParse('internet_fixed').success).toBe(true);
     expect(tariffCategorySchema.safeParse('bundle_internet_tv').success).toBe(true);
-    expect(tariffCategorySchema.safeParse('landline').success).toBe(true);
+  });
+
+  it('landline 제거됨 — 범주 외로 거부 (ADR-0005 §Amendment 1, D-1)', () => {
+    expect(tariffCategorySchema.safeParse('landline').success).toBe(false);
   });
 
   it('범주 외 거부', () => {

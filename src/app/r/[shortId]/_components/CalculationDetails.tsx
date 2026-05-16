@@ -72,11 +72,11 @@ const HOUSEHOLD_LABELS: Record<HouseholdTypeInput, string> = {
   family_3_plus: '가족 (3인 이상)',
 };
 
+// ADR-0005 §Amendment 1 (2026-05-16): landline 제거 → 3값
 const CATEGORY_LABELS: Record<TariffCategoryInput, string> = {
   mobile: '모바일',
   internet_fixed: '인터넷',
   bundle_internet_tv: '인터넷 + TV',
-  landline: '유선 전화',
 };
 
 function formatEuro(cents: number): string {
@@ -133,9 +133,7 @@ function UsageList({
       items.push({ label: '4K TV', value: profile.tv_4k_needed ? '필요' : '불필요' });
     }
   }
-  if (category === 'landline') {
-    if (profile.calls_be_minutes_needed !== undefined) items.push({ label: '벨기에 통화', value: `${profile.calls_be_minutes_needed} 분 / 월` });
-  }
+  // ADR-0005 §Amendment 1 (2026-05-16): landline 분기 제거 (D-1 흔적 제거)
 
   if (items.length === 0) {
     return <p className="text-sm text-fg-soft">사용량 정보 없음 (가구 형태 추정값 사용).</p>;

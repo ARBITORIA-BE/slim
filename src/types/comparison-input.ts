@@ -16,13 +16,12 @@
 
 import { z } from 'zod';
 
-// ─── 카테고리 (ADR-0005 §T6 enum 4값) ────────────────────────────────────
+// ─── 카테고리 (ADR-0005 §T6 enum 3값 — Amendment 1, 2026-05-16) ──────────
 
 export const TARIFF_CATEGORIES = [
   'mobile',
   'internet_fixed',
   'bundle_internet_tv',
-  'landline',
 ] as const;
 
 export const tariffCategorySchema = z.enum(TARIFF_CATEGORIES);

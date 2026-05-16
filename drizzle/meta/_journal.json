@@ -50,6 +50,13 @@
       "when": 1778666624540,
       "tag": "0006_graceful_proteus",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778926000808,
+      "tag": "0007_loose_justin_hammer",
+      "breakpoints": true
     }
   ]
 }

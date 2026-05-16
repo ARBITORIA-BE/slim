@@ -99,11 +99,8 @@ function formatSubtitle(
       const tv = attrs['tv_channels'];
       if (typeof tv === 'number') parts.push(`TV ${tv}채널`);
     }
-  } else if (category === 'landline') {
-    const m = attrs['calls_be_included_minutes'];
-    if (m === 'unlimited') parts.push('BE 통화 무제한');
-    else if (typeof m === 'number') parts.push(`BE 통화 ${m}분`);
   }
+  // ADR-0005 §Amendment 1 (2026-05-16): landline 분기 제거 (D-1 흔적 제거)
   return parts.join(' · ');
 }
 

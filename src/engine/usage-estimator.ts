@@ -14,7 +14,9 @@
  *   - mobile: 회선당 평균 (가구 형태와 회선 수는 직교)
  *   - internet_fixed: 가구 동시 디바이스 + 스트리밍 강도
  *   - bundle_internet_tv: internet_fixed + TV 시청
- *   - landline: 통화 시간만 (베네룩스는 모바일 우선이라 보수적 추정)
+ *
+ * `landline` 제거 (ADR-0005 §Amendment 1, 2026-05-16): 베타 미시작, 데이터 0건.
+ * exhaustive switch + `never` 체크로 격상 (P4 타입 안전 강화 — ADR-0010 §Amendment 1).
  *
  * **검증 4 (ADR-0021)**: 베타 사용자 청구서 5건 수집 후 본 매핑 정확도 ≤ 60%
  * 시 Amendment 1 트리거. 페이즈 5 OCR (별도 ADR-OCR) 진입 시 inputAttributes
@@ -47,10 +49,6 @@ interface BundleProfile extends InternetProfile {
   tv_4k_needed: boolean;
 }
 
-interface LandlineProfile {
-  calls_be_minutes_needed: number;
-}
-
 // **수치 근거**: BIPT 2024 평균 사용량 보고서 + 베네룩스 시장 관찰값 (2026-05-10).
 // 정확한 값은 ADR-0021 §검증 4 후 Amendment.
 
@@ -70,12 +68,6 @@ const BUNDLE_DEFAULTS: Record<HouseholdTypeInput, BundleProfile> = {
   single: { ...INTERNET_DEFAULTS.single, tv_channels_needed: 50, tv_4k_needed: false },
   couple: { ...INTERNET_DEFAULTS.couple, tv_channels_needed: 80, tv_4k_needed: true },
   family_3_plus: { ...INTERNET_DEFAULTS.family_3_plus, tv_channels_needed: 100, tv_4k_needed: true },
-};
-
-const LANDLINE_DEFAULTS: Record<HouseholdTypeInput, LandlineProfile> = {
-  single: { calls_be_minutes_needed: 30 },
-  couple: { calls_be_minutes_needed: 60 },
-  family_3_plus: { calls_be_minutes_needed: 120 },
 };
 
 // ─── 핵심 함수 ────────────────────────────────────────────────────────────
@@ -100,47 +92,45 @@ export function deriveUsageProfile(
   // householdType 부재 시 single 로 fallback (가장 보수적 — 작은 가구).
   const ht: HouseholdTypeInput = householdType ?? 'single';
 
-  // 카테고리별 기본 프로파일을 base 로, inputAttributes 명시값으로 덮어쓰기.
+  // exhaustive switch — 카테고리 추가 시 컴파일러가 누락 분기를 잡는다 (P4, ADR-0010 §Amendment 1).
   // 명시값 우선 — 사용자가 직접 입력한 정보를 최우선 (P1).
-  if (category === 'mobile') {
-    const base = MOBILE_DEFAULTS[ht];
-    return {
-      householdType: ht,
-      data_gb_used: pickNumber(inputAttributes, 'data_gb_used', base.data_gb_used),
-      voice_minutes_used: pickNumber(inputAttributes, 'voice_minutes_used', base.voice_minutes_used),
-      sms_count: pickNumber(inputAttributes, 'sms_count', base.sms_count),
-      eu_roaming_needed: pickBoolean(inputAttributes, 'eu_roaming_needed', base.eu_roaming_needed),
-    };
+  switch (category) {
+    case 'mobile': {
+      const base = MOBILE_DEFAULTS[ht];
+      return {
+        householdType: ht,
+        data_gb_used: pickNumber(inputAttributes, 'data_gb_used', base.data_gb_used),
+        voice_minutes_used: pickNumber(inputAttributes, 'voice_minutes_used', base.voice_minutes_used),
+        sms_count: pickNumber(inputAttributes, 'sms_count', base.sms_count),
+        eu_roaming_needed: pickBoolean(inputAttributes, 'eu_roaming_needed', base.eu_roaming_needed),
+      };
+    }
+    case 'internet_fixed': {
+      const base = INTERNET_DEFAULTS[ht];
+      return {
+        householdType: ht,
+        download_mbps_needed: pickNumber(inputAttributes, 'download_mbps_needed', base.download_mbps_needed),
+        household_devices: pickNumber(inputAttributes, 'household_devices', base.household_devices),
+        streaming_4k: pickBoolean(inputAttributes, 'streaming_4k', base.streaming_4k),
+      };
+    }
+    case 'bundle_internet_tv': {
+      const base = BUNDLE_DEFAULTS[ht];
+      return {
+        householdType: ht,
+        download_mbps_needed: pickNumber(inputAttributes, 'download_mbps_needed', base.download_mbps_needed),
+        household_devices: pickNumber(inputAttributes, 'household_devices', base.household_devices),
+        streaming_4k: pickBoolean(inputAttributes, 'streaming_4k', base.streaming_4k),
+        tv_channels_needed: pickNumber(inputAttributes, 'tv_channels_needed', base.tv_channels_needed),
+        tv_4k_needed: pickBoolean(inputAttributes, 'tv_4k_needed', base.tv_4k_needed),
+      };
+    }
+    default: {
+      // never 체크 — 이 분기에 도달하면 컴파일 에러 (카테고리 추가 시 위에 case 추가 필수).
+      const _exhaustive: never = category;
+      throw new Error(`deriveUsageProfile: 알 수 없는 카테고리 "${String(_exhaustive)}"`);
+    }
   }
-
-  if (category === 'internet_fixed') {
-    const base = INTERNET_DEFAULTS[ht];
-    return {
-      householdType: ht,
-      download_mbps_needed: pickNumber(inputAttributes, 'download_mbps_needed', base.download_mbps_needed),
-      household_devices: pickNumber(inputAttributes, 'household_devices', base.household_devices),
-      streaming_4k: pickBoolean(inputAttributes, 'streaming_4k', base.streaming_4k),
-    };
-  }
-
-  if (category === 'bundle_internet_tv') {
-    const base = BUNDLE_DEFAULTS[ht];
-    return {
-      householdType: ht,
-      download_mbps_needed: pickNumber(inputAttributes, 'download_mbps_needed', base.download_mbps_needed),
-      household_devices: pickNumber(inputAttributes, 'household_devices', base.household_devices),
-      streaming_4k: pickBoolean(inputAttributes, 'streaming_4k', base.streaming_4k),
-      tv_channels_needed: pickNumber(inputAttributes, 'tv_channels_needed', base.tv_channels_needed),
-      tv_4k_needed: pickBoolean(inputAttributes, 'tv_4k_needed', base.tv_4k_needed),
-    };
-  }
-
-  // landline
-  const base = LANDLINE_DEFAULTS[ht];
-  return {
-    householdType: ht,
-    calls_be_minutes_needed: pickNumber(inputAttributes, 'calls_be_minutes_needed', base.calls_be_minutes_needed),
-  };
 }
 
 // ─── 내부 helper — 타입 안전 picker ────────────────────────────────────────

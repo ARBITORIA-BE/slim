@@ -133,10 +133,6 @@ export const comparisonRequest = pgTable(
      *     tv_channels_needed: number,
      *     tv_4k_needed: boolean
      *   }
-     *   landline: {
-     *     calls_be_minutes_needed: number,
-     *     international_zones: string[]
-     *   }
      *
      * **GDPR 정책 (T4)**: 90일 후 1.5.2 cron이 NULL로 갱신 (사용량 = quasi-
      * identifier 의 일부).

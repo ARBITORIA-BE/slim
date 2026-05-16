@@ -1,15 +1,16 @@
 /**
  * /compare — 카테고리 선택 (ADR-0016 §T2).
  *
- * RSC. 4 카드 (mobile/internet_fixed/bundle_internet_tv/landline) 동일 시각
+ * RSC. 3 카드 (mobile/internet_fixed/bundle_internet_tv) 동일 시각
  * 무게 — 다크 패턴 0 (헌법 §8 #3 "추천" 라벨 / 색상 강조 0).
+ * landline 제거: ADR-0005 §Amendment 1 (2026-05-16), D-1 흔적 제거.
  *
  * 평균 절약액 미리보기는 페이즈 4 베타 후 노출 (ADR-0011 §T2 항목 5 동형 — 0
  * 데이터 정직 표시).
  */
 
 import type { Metadata } from 'next';
-import { Phone, Smartphone, Tv, Wifi, type LucideIcon } from 'lucide-react';
+import { Smartphone, Tv, Wifi, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +18,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 export const metadata: Metadata = {
   title: '요금제 비교 시작',
   description:
-    '모바일, 인터넷, 인터넷+TV, 유선전화 — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.',
+    '모바일, 인터넷, 인터넷+TV — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.',
   alternates: {
     canonical: '/compare',
   },
@@ -49,12 +50,6 @@ const CATEGORIES: CategoryMeta[] = [
     label: '인터넷 + TV',
     description: '월 €60~€100, 번들 약정',
     icon: Tv,
-  },
-  {
-    category: 'landline',
-    label: '유선 전화',
-    description: '월 €5~€15, 통신 번들에 포함되는 경우 多',
-    icon: Phone,
   },
 ];
 

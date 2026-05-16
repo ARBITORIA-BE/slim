@@ -87,7 +87,7 @@ export interface TariffSnapshotInput {
   readonly tariffSlug: string;
   /** 표시용 요금제 이름 (예: "Mobile Smart 70 GB"). */
   readonly tariffName: string;
-  /** ADR-0005 §T6 enum 4값 (mobile/internet_fixed/bundle_internet_tv/landline). */
+  /** ADR-0005 §T6 enum 3값 (mobile/internet_fixed/bundle_internet_tv — Amendment 1, 2026-05-16). */
   readonly category: TariffCategory;
 
   // ─── 가격 (cents) — ADR-0005 §T2 + ADR-0006 §T2 평탄화 5컬럼 ───

@@ -1,0 +1,1510 @@
+{
+  "id": "91fa00ad-3d01-4736-9185-406594807941",
+  "prevId": "b0e7d041-e9d9-450b-a8dd-b28f0c88ad4e",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.provider": {
+      "name": "provider",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "country": {
+          "name": "country",
+          "type": "country",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "legal_name": {
+          "name": "legal_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vat_id": {
+          "name": "vat_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vat_id_verified_at": {
+          "name": "vat_id_verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "affiliate_status": {
+          "name": "affiliate_status",
+          "type": "affiliate_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'none'"
+        },
+        "excluded_reason": {
+          "name": "excluded_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "provider_slug_unique": {
+          "name": "provider_slug_unique",
+          "columns": [
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "provider_vat_id_unique": {
+          "name": "provider_vat_id_unique",
+          "columns": [
+            {
+              "expression": "vat_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "provider_name_country_unique": {
+          "name": "provider_name_country_unique",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "country",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "provider_affiliate_status_idx": {
+          "name": "provider_affiliate_status_idx",
+          "columns": [
+            {
+              "expression": "affiliate_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tariff": {
+      "name": "tariff",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "tariff_category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "currency",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'EUR'"
+        },
+        "monthly_price_cents": {
+          "name": "monthly_price_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activation_fee_cents": {
+          "name": "activation_fee_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "modem_rental_cents": {
+          "name": "modem_rental_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commitment_months": {
+          "name": "commitment_months",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "early_termination_fee_cents": {
+          "name": "early_termination_fee_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "promo_price_cents": {
+          "name": "promo_price_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "promo_months": {
+          "name": "promo_months",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "promo_description": {
+          "name": "promo_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attributes": {
+          "name": "attributes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "tariff_provider_slug_unique": {
+          "name": "tariff_provider_slug_unique",
+          "columns": [
+            {
+              "expression": "provider_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tariff_category_active_idx": {
+          "name": "tariff_category_active_idx",
+          "columns": [
+            {
+              "expression": "category",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "is_active",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tariff_provider_idx": {
+          "name": "tariff_provider_idx",
+          "columns": [
+            {
+              "expression": "provider_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tariff_last_seen_idx": {
+          "name": "tariff_last_seen_idx",
+          "columns": [
+            {
+              "expression": "last_seen_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "tariff_provider_id_provider_id_fk": {
+          "name": "tariff_provider_id_provider_id_fk",
+          "tableFrom": "tariff",
+          "tableTo": "provider",
+          "columnsFrom": [
+            "provider_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tariff_snapshot": {
+      "name": "tariff_snapshot",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "tariff_id": {
+          "name": "tariff_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monthly_price_cents": {
+          "name": "monthly_price_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activation_fee_cents": {
+          "name": "activation_fee_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "modem_rental_cents": {
+          "name": "modem_rental_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "promo_price_cents": {
+          "name": "promo_price_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "promo_months": {
+          "name": "promo_months",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_payload": {
+          "name": "price_payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "raw_payload": {
+          "name": "raw_payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "confidence",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'high'"
+        },
+        "confidence_reason": {
+          "name": "confidence_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_anomaly": {
+          "name": "is_anomaly",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "anomaly_reason": {
+          "name": "anomaly_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "tariff_snapshot_tariff_fetched_idx": {
+          "name": "tariff_snapshot_tariff_fetched_idx",
+          "columns": [
+            {
+              "expression": "tariff_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fetched_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tariff_snapshot_anomaly_idx": {
+          "name": "tariff_snapshot_anomaly_idx",
+          "columns": [
+            {
+              "expression": "is_anomaly",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tariff_snapshot_fetched_at_idx": {
+          "name": "tariff_snapshot_fetched_at_idx",
+          "columns": [
+            {
+              "expression": "fetched_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "tariff_snapshot_tariff_id_tariff_id_fk": {
+          "name": "tariff_snapshot_tariff_id_tariff_id_fk",
+          "tableFrom": "tariff_snapshot",
+          "tableTo": "tariff",
+          "columnsFrom": [
+            "tariff_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.comparison_request": {
+      "name": "comparison_request",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_account_id": {
+          "name": "user_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "tariff_category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "postal_code": {
+          "name": "postal_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "household_type": {
+          "name": "household_type",
+          "type": "household_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "current_provider_id": {
+          "name": "current_provider_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "input_attributes": {
+          "name": "input_attributes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "pii_anonymized_at": {
+          "name": "pii_anonymized_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "comparison_request_category_postal_idx": {
+          "name": "comparison_request_category_postal_idx",
+          "columns": [
+            {
+              "expression": "category",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "postal_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparison_request_created_at_idx": {
+          "name": "comparison_request_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparison_request_user_account_idx": {
+          "name": "comparison_request_user_account_idx",
+          "columns": [
+            {
+              "expression": "user_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparison_request_pii_anonymized_idx": {
+          "name": "comparison_request_pii_anonymized_idx",
+          "columns": [
+            {
+              "expression": "pii_anonymized_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "comparison_request_current_provider_id_provider_id_fk": {
+          "name": "comparison_request_current_provider_id_provider_id_fk",
+          "tableFrom": "comparison_request",
+          "tableTo": "provider",
+          "columnsFrom": [
+            "current_provider_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.comparison_result": {
+      "name": "comparison_result",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "short_id": {
+          "name": "short_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "top_monthly_saving_cents": {
+          "name": "top_monthly_saving_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "top_yearly_saving_cents": {
+          "name": "top_yearly_saving_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "top_tariff_snapshot_id": {
+          "name": "top_tariff_snapshot_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked_inputs": {
+          "name": "locked_inputs",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "engine_version": {
+          "name": "engine_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "pii_anonymized_at": {
+          "name": "pii_anonymized_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "comparison_result_short_id_unique": {
+          "name": "comparison_result_short_id_unique",
+          "columns": [
+            {
+              "expression": "short_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparison_result_request_idx": {
+          "name": "comparison_result_request_idx",
+          "columns": [
+            {
+              "expression": "request_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparison_result_created_at_idx": {
+          "name": "comparison_result_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparison_result_pii_anonymized_idx": {
+          "name": "comparison_result_pii_anonymized_idx",
+          "columns": [
+            {
+              "expression": "pii_anonymized_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "comparison_result_request_id_comparison_request_id_fk": {
+          "name": "comparison_result_request_id_comparison_request_id_fk",
+          "tableFrom": "comparison_result",
+          "tableTo": "comparison_request",
+          "columnsFrom": [
+            "request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "comparison_result_top_tariff_snapshot_id_tariff_snapshot_id_fk": {
+          "name": "comparison_result_top_tariff_snapshot_id_tariff_snapshot_id_fk",
+          "tableFrom": "comparison_result",
+          "tableTo": "tariff_snapshot",
+          "columnsFrom": [
+            "top_tariff_snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.comparison_result_item": {
+      "name": "comparison_result_item",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "result_id": {
+          "name": "result_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rank": {
+          "name": "rank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tariff_snapshot_id": {
+          "name": "tariff_snapshot_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monthly_saving_cents": {
+          "name": "monthly_saving_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "yearly_saving_cents": {
+          "name": "yearly_saving_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monthly_avg_12_cents": {
+          "name": "monthly_avg_12_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "monthly_avg_24_cents": {
+          "name": "monthly_avg_24_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "monthly_saving_24_cents": {
+          "name": "monthly_saving_24_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "caveats": {
+          "name": "caveats",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "comparison_result_item_result_rank_idx": {
+          "name": "comparison_result_item_result_rank_idx",
+          "columns": [
+            {
+              "expression": "result_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "rank",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparison_result_item_snapshot_idx": {
+          "name": "comparison_result_item_snapshot_idx",
+          "columns": [
+            {
+              "expression": "tariff_snapshot_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "comparison_result_item_result_id_comparison_result_id_fk": {
+          "name": "comparison_result_item_result_id_comparison_result_id_fk",
+          "tableFrom": "comparison_result_item",
+          "tableTo": "comparison_result",
+          "columnsFrom": [
+            "result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "comparison_result_item_tariff_snapshot_id_tariff_snapshot_id_fk": {
+          "name": "comparison_result_item_tariff_snapshot_id_tariff_snapshot_id_fk",
+          "tableFrom": "comparison_result_item",
+          "tableTo": "tariff_snapshot",
+          "columnsFrom": [
+            "tariff_snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.affiliate_click": {
+      "name": "affiliate_click",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "click_token": {
+          "name": "click_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result_id": {
+          "name": "result_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "result_item_id": {
+          "name": "result_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tariff_snapshot_id": {
+          "name": "tariff_snapshot_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consent_given_at": {
+          "name": "consent_given_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ref_param": {
+          "name": "ref_param",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "commission_amount_cents": {
+          "name": "commission_amount_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commission_currency": {
+          "name": "commission_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'EUR'"
+        },
+        "commission_source": {
+          "name": "commission_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commission_fetched_at": {
+          "name": "commission_fetched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "conversion_status": {
+          "name": "conversion_status",
+          "type": "affiliate_conversion_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "converted_at": {
+          "name": "converted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payout_batch_id": {
+          "name": "payout_batch_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pii_anonymized_at": {
+          "name": "pii_anonymized_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "affiliate_click_token_unique": {
+          "name": "affiliate_click_token_unique",
+          "columns": [
+            {
+              "expression": "click_token",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "affiliate_click_provider_idx": {
+          "name": "affiliate_click_provider_idx",
+          "columns": [
+            {
+              "expression": "provider_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "affiliate_click_result_idx": {
+          "name": "affiliate_click_result_idx",
+          "columns": [
+            {
+              "expression": "result_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "affiliate_click_conversion_status_idx": {
+          "name": "affiliate_click_conversion_status_idx",
+          "columns": [
+            {
+              "expression": "conversion_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "affiliate_click_pii_anonymized_idx": {
+          "name": "affiliate_click_pii_anonymized_idx",
+          "columns": [
+            {
+              "expression": "pii_anonymized_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "affiliate_click_result_id_comparison_result_id_fk": {
+          "name": "affiliate_click_result_id_comparison_result_id_fk",
+          "tableFrom": "affiliate_click",
+          "tableTo": "comparison_result",
+          "columnsFrom": [
+            "result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "affiliate_click_result_item_id_comparison_result_item_id_fk": {
+          "name": "affiliate_click_result_item_id_comparison_result_item_id_fk",
+          "tableFrom": "affiliate_click",
+          "tableTo": "comparison_result_item",
+          "columnsFrom": [
+            "result_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "affiliate_click_provider_id_provider_id_fk": {
+          "name": "affiliate_click_provider_id_provider_id_fk",
+          "tableFrom": "affiliate_click",
+          "tableTo": "provider",
+          "columnsFrom": [
+            "provider_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "affiliate_click_tariff_snapshot_id_tariff_snapshot_id_fk": {
+          "name": "affiliate_click_tariff_snapshot_id_tariff_snapshot_id_fk",
+          "tableFrom": "affiliate_click",
+          "tableTo": "tariff_snapshot",
+          "columnsFrom": [
+            "tariff_snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "affiliate_click_click_token_unique": {
+          "name": "affiliate_click_click_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "click_token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.follow_up_email": {
+      "name": "follow_up_email",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "affiliate_click_id": {
+          "name": "affiliate_click_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consent_given_at": {
+          "name": "consent_given_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scheduled_send_at": {
+          "name": "scheduled_send_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unsubscribed_at": {
+          "name": "unsubscribed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unsubscribe_token": {
+          "name": "unsubscribe_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pii_anonymized_at": {
+          "name": "pii_anonymized_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "follow_up_email_unsubscribe_token_unique": {
+          "name": "follow_up_email_unsubscribe_token_unique",
+          "columns": [
+            {
+              "expression": "unsubscribe_token",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "follow_up_email_schedule_idx": {
+          "name": "follow_up_email_schedule_idx",
+          "columns": [
+            {
+              "expression": "scheduled_send_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sent_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "follow_up_email_affiliate_click_id_affiliate_click_id_fk": {
+          "name": "follow_up_email_affiliate_click_id_affiliate_click_id_fk",
+          "tableFrom": "follow_up_email",
+          "tableTo": "affiliate_click",
+          "columnsFrom": [
+            "affiliate_click_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "follow_up_email_unsubscribe_token_unique": {
+          "name": "follow_up_email_unsubscribe_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "unsubscribe_token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.affiliate_status": {
+      "name": "affiliate_status",
+      "schema": "public",
+      "values": [
+        "none",
+        "pending",
+        "active_b2b_intra_eu",
+        "active_b2b_domestic_be",
+        "paused",
+        "terminated"
+      ]
+    },
+    "public.country": {
+      "name": "country",
+      "schema": "public",
+      "values": [
+        "BE",
+        "NL",
+        "LU"
+      ]
+    },
+    "public.currency": {
+      "name": "currency",
+      "schema": "public",
+      "values": [
+        "EUR"
+      ]
+    },
+    "public.tariff_category": {
+      "name": "tariff_category",
+      "schema": "public",
+      "values": [
+        "mobile",
+        "internet_fixed",
+        "bundle_internet_tv"
+      ]
+    },
+    "public.confidence": {
+      "name": "confidence",
+      "schema": "public",
+      "values": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "public.household_type": {
+      "name": "household_type",
+      "schema": "public",
+      "values": [
+        "single",
+        "couple",
+        "family_3_plus"
+      ]
+    },
+    "public.affiliate_conversion_status": {
+      "name": "affiliate_conversion_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "converted",
+        "rejected",
+        "expired"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

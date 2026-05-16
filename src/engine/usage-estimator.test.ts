@@ -3,10 +3,12 @@
  *
  * 검증:
  *   1. householdType 부재 시 single fallback
- *   2. 카테고리별 기본 프로파일 정확도 (4 카테고리 × 3 householdType)
+ *   2. 카테고리별 기본 프로파일 정확도 (3 카테고리 × 3 householdType)
  *   3. inputAttributes 명시값이 기본 프로파일을 덮어쓰는지
  *   4. 잘못된 inputAttributes (음수 / 문자열) 시 기본값 fallback
  *   5. UsageProfile.householdType 필드 정확 전달
+ *
+ * landline 카테고리 테스트 제거 (ADR-0005 §Amendment 1, 2026-05-16): D-1 흔적 제거.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -83,14 +85,6 @@ describe('deriveUsageProfile (ADR-0021 §T3 §5)', () => {
       const profile = deriveUsageProfile('bundle_internet_tv', 'single', {});
       expect(profile.tv_channels_needed).toBe(50);
       expect(profile.tv_4k_needed).toBe(false);
-    });
-  });
-
-  describe('landline 카테고리', () => {
-    it('가구 형태별 통화 시간 차등', () => {
-      expect(deriveUsageProfile('landline', 'single', {}).calls_be_minutes_needed).toBe(30);
-      expect(deriveUsageProfile('landline', 'couple', {}).calls_be_minutes_needed).toBe(60);
-      expect(deriveUsageProfile('landline', 'family_3_plus', {}).calls_be_minutes_needed).toBe(120);
     });
   });
 

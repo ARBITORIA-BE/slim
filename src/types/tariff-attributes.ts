@@ -90,25 +90,6 @@ export const bundleInternetTvAttributesSchema = internetFixedAttributesSchema
     mobile_lines_included: z.number().nonnegative(),
   });
 
-/**
- * 유선 전화 요금제 attributes.
- *
- * 왜 international_zones가 string[]인가?
- *   공급사마다 "EU 6개국", "Zone 1 (BE/NL/LU/FR/DE/UK)" 같이 다르게 표기한다.
- *   enum화하면 포함 여부가 공급사 마케팅 문구에 의존 → 거짓 안전감.
- *   텍스트 배열로 두고 결과 페이지에서 그대로 노출하는 것이 P3 정직.
- */
-export const landlineAttributesSchema = z.object({
-  category: z.literal('landline'),
-  /** BE 국내 통화 포함 분. 'unlimited' = 무제한. */
-  calls_be_included_minutes: z.union([
-    z.number().nonnegative(),
-    z.literal('unlimited'),
-  ]),
-  /** 국제 통화 포함 구역 목록. 빈 배열 = 국제 없음. */
-  international_zones: z.array(z.string()),
-});
-
 // ─── Discriminated union ───────────────────────────────────────────────────
 
 /**
@@ -119,18 +100,17 @@ export const landlineAttributesSchema = z.object({
  *   parseTariffAttributes가 category 하나만으로 올바른 스키마를 선택하도록.
  *   switch문이 exhaustive 체크를 컴파일러가 보장 → 새 카테고리 추가 시 자동 에러.
  */
+// ADR-0005 §Amendment 1 (2026-05-16): landline 제거 → 3값 union
 export const tariffAttributesSchema = z.discriminatedUnion('category', [
   mobileAttributesSchema,
   internetFixedAttributesSchema,
   bundleInternetTvAttributesSchema,
-  landlineAttributesSchema,
 ]);
 
 export type TariffAttributes = z.infer<typeof tariffAttributesSchema>;
 export type MobileAttributes = z.infer<typeof mobileAttributesSchema>;
 export type InternetFixedAttributes = z.infer<typeof internetFixedAttributesSchema>;
 export type BundleInternetTvAttributes = z.infer<typeof bundleInternetTvAttributesSchema>;
-export type LandlineAttributes = z.infer<typeof landlineAttributesSchema>;
 
 // ─── Parse helper (cron persist step에서 사용) ────────────────────────────
 

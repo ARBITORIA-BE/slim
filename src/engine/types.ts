@@ -73,7 +73,9 @@ export interface TariffSnapshotLike {
  *   mobile          → data_gb_used / voice_minutes_used / sms_count
  *   internet_fixed  → download_mbps_needed / streaming_4k
  *   bundle_internet_tv → ..internet_fixed + tv_4k_needed
- *   landline        → calls_be_minutes_needed
+ *
+ * landline 제거 (ADR-0005 §Amendment 1, 2026-05-16): D-1 흔적 제거.
+ * calls_be_minutes_needed / international_zones 필드 제거.
  */
 export interface UsageProfile {
   /** PLAN 2.3 가구 형태 — caveat 1건은 안 만들지만 향후 추정 fallback 입력. */
@@ -93,8 +95,4 @@ export interface UsageProfile {
   // bundle_internet_tv
   readonly tv_channels_needed?: number;
   readonly tv_4k_needed?: boolean;
-
-  // landline
-  readonly calls_be_minutes_needed?: number;
-  readonly international_zones?: readonly string[];
 }

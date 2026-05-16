@@ -12,7 +12,7 @@
  *   T3. `commitment_months` INT (0 = 약정없음) + `early_termination_fee_cents` NULL
  *   T4. 프로모는 평탄화 (`promo_price_cents`, `promo_months`) — 별도 테이블 YAGNI
  *   T5. `tariff` = 마스터 (현재 판매 중 여부). 시계열은 1.3 `tariff_snapshot`이 담당
- *   T6. `tariff_category` enum — `mobile`, `internet_fixed`, `bundle_internet_tv`, `landline`
+ *   T6. `tariff_category` enum — `mobile`, `internet_fixed`, `bundle_internet_tv` (3값, ADR-0005 §Amendment 1)
  */
 
 import { relations } from 'drizzle-orm';
@@ -40,16 +40,15 @@ import { provider } from './provider';
  * - `mobile`: 모바일 요금제 (음성/SMS/데이터). Proximus, Orange BE, Telenet 등.
  * - `internet_fixed`: 가정용 고정 인터넷 (속도/데이터). Telenet, VOO, Proximus.
  * - `bundle_internet_tv`: 인터넷+TV 묶음. Telenet ONE, Proximus Flex 등.
- * - `landline`: 유선 전화 단일 (드물지만 시니어 대상으로 존재).
  *
- * 페이즈 5에서 `energy_electricity`, `energy_gas`, `mortgage`, `insurance_*`
- * 추가 예정. 추가는 항상 ADR + `ALTER TYPE ADD VALUE` 마이그레이션으로.
+ * `landline` 제거 (ADR-0005 §Amendment 1, 2026-05-16): 베타 미시작, 데이터 0건,
+ * 흔적 제거(D-1). 페이즈 5에서 `energy_electricity`, `energy_gas`, `mortgage`,
+ * `insurance_*` 추가 예정. 추가는 항상 ADR + `ALTER TYPE ADD VALUE` 마이그레이션으로.
  */
 export const tariffCategoryEnum = pgEnum('tariff_category', [
   'mobile',
   'internet_fixed',
   'bundle_internet_tv',
-  'landline',
 ]);
 
 /**
@@ -72,7 +71,7 @@ export const tariff = pgTable(
       .notNull()
       .references(() => provider.id, { onDelete: 'restrict' }),
 
-    /** 요금제 카테고리. 페이즈 1은 4값(통신). */
+    /** 요금제 카테고리. 페이즈 1은 3값(통신, ADR-0005 §Amendment 1). */
     category: tariffCategoryEnum('category').notNull(),
 
     /** 표시용 요금제 이름 (예: "Mobile Smart", "ONE up"). */
@@ -166,8 +165,6 @@ export const tariff = pgTable(
      *   bundle_internet_tv: { ...internet_fixed 키 } + { tv_channels: number,
      *                     tv_4k_included: boolean, dvr_hours: number | null,
      *                     mobile_lines_included: number }
-     *   landline: { calls_be_included_minutes: number | 'unlimited',
-     *               international_zones: string[] }
      *
      * 모든 카테고리 공통 (선택):
      *   { lang_pages_supported: ('nl-BE'|'fr-BE'|'en')[], target_segments: string[],

@@ -197,7 +197,8 @@ function formatRelativeTime(date: Date): string {
  *   - mobile: 평균 커플 (PLAN 1.12 케이스 1) — 약정 없는 Proximus Smart 70GB
  *   - internet_fixed: VDSL→케이블 (PLAN 1.12 케이스 4) — Telenet 12개월 약정
  *   - bundle_internet_tv: Telenet ONE up 24개월 번들
- *   - landline: 활성화 비용 있는 기본 케이스
+ *
+ * landline 제거 (ADR-0005 §Amendment 1, 2026-05-16): D-1 흔적 제거.
  *
  * 왜 TariffSnapshotLike 의 id/providerSlug/isAnomaly를 포함하는가?
  *   deriveCaveats()는 TariffSnapshotLike를 받는다. 이 필드들은 caveats 생성에
@@ -293,44 +294,20 @@ function getCaveatsPreview(): Record<string, string[]> {
     },
   });
 
-  // 유선전화 대표 시나리오: 활성화 비용 있는 기본 케이스
-  const landlineCaveats = deriveCaveats({
-    candidate: {
-      id: 'preview-example-landline',
-      providerSlug: 'example-be',
-      tariffSlug: 'example-landline',
-      category: 'landline',
-      monthlyPriceCents: 1500,
-      activationFeeCents: 1000,
-      modemRentalCents: null,
-      promoPriceCents: null,
-      promoMonths: null,
-      commitmentMonths: 0,
-      earlyTerminationFeeCents: null,
-      confidence: 'low',
-      confidenceReason: 'stub fetcher',
-      isAnomaly: false,
-      attributes: {},
-    },
-    currentTariff: null,
-    usageProfile: {},
-  });
-
   return {
     mobile: mobileCaveats.slice(0, 5), // ADR-0011: 5건 미만
     internet_fixed: internetCaveats.slice(0, 5),
     bundle_internet_tv: bundleCaveats.slice(0, 5),
-    landline: landlineCaveats.slice(0, 5),
   };
 }
 
 // ─── 카테고리 한국어 라벨 ────────────────────────────────────────────────
 
+// ADR-0005 §Amendment 1 (2026-05-16): landline 제거 → 3값
 const CATEGORY_LABELS: Record<string, string> = {
   mobile: '모바일',
   internet_fixed: '고정 인터넷',
   bundle_internet_tv: '인터넷+TV 번들',
-  landline: '유선전화',
 };
 
 // ─── 페이지 컴포넌트 ──────────────────────────────────────────────────────
@@ -523,7 +500,6 @@ export default async function DataSourcesPage() {
               'mobile',
               'internet_fixed',
               'bundle_internet_tv',
-              'landline',
             ] as const
           ).map((cat) => {
             const preview = caveatsPreview[cat] ?? [];
