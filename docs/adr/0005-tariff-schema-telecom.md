@@ -2,9 +2,14 @@
 
 ## Status
 
-Proposed (2026-05-09) — PLAN 항목 **1.2** 데이터 레이어 두 번째 테이블. verifier
-가 typecheck/lint/test/migration-sql/harness:plan/harness:data 통과 확인 후
-Accepted로 격상한다.
+**Accepted (2026-05-16)** — verifier typecheck/lint/test/migration-sql/
+harness:plan/harness:data 통과 (페이즈 1~3 구현으로 검증 완료) + 운영자 D-1
+승인. **Amendment 1 (2026-05-16)** — `tariff_category` 4값→3값 (`landline`
+제거). 본 문서 끝 §Amendment 1 참조.
+
+격상 이력:
+- Proposed (2026-05-09) — PLAN 항목 **1.2** 데이터 레이어 두 번째 테이블.
+- Accepted (2026-05-16) — 페이즈 1~3 구현 검증 + 운영자 D-1.
 
 ## Context
 
@@ -157,6 +162,11 @@ PLAN 1.2 원안의 `valid_from/valid_to`는 **제거**.
 
 ### T6 — `tariff_category` enum = `mobile`, `internet_fixed`, `bundle_internet_tv`, `landline`
 
+> **→ Amendment 1 (2026-05-16) 참조**: `landline` 제거 → 3값
+> (`mobile`, `internet_fixed`, `bundle_internet_tv`). 아래 원 결정은
+> 이력 보존용. enum 값 *제거 정책* 은 §Amendment 1 에서 신설 (본 ADR
+> §⚠️ "ALTER TYPE DROP VALUE 미지원" 공백 해소).
+
 페이즈 1은 4값. 페이즈 5에서 `energy_electricity`, `energy_gas`, `mortgage`,
 `insurance_auto`, `insurance_home` 등 추가 — *항상 ADR + `ALTER TYPE ADD
 VALUE`*. enum 변경 정책은 ADR-0001과 동일.
@@ -299,3 +309,100 @@ tariff_category`, `CREATE TYPE currency`, `CREATE TABLE tariff`, FK 4개 인덱�
   - [pgEnum + relations](https://orm.drizzle.team/docs/sql-schema-declaration)
   - [bigint mode 'number'](https://orm.drizzle.team/docs/column-types/pg#bigint)
 - PostgreSQL 16 — [JSONB 인덱싱](https://www.postgresql.org/docs/16/datatype-json.html), [`ALTER TYPE ADD VALUE`](https://www.postgresql.org/docs/16/sql-altertype.html)
+
+---
+
+## Amendment 1 (2026-05-16) — `tariff_category` 4값 → 3값 (`landline` 제거) + enum 값 제거 정책 신설
+
+### 상태
+
+**Accepted (2026-05-16)** — 운영자 잠금 결정 **D-1 = 흔적 제거** 승인.
+[ADR-0033](0033-i18n-next-intl-introduction.md) 통합 분석의 산출물.
+
+### 맥락
+
+ADR-0005 §T6 은 `landline` 을 "시니어 대상 드물게 존재" 가정으로 4번째
+enum 값에 넣었다. 페이즈 1.8 fetcher 2개 (Proximus + Telenet, ADR-0009) +
+페이즈 2~3 실제 구현에서 **landline 행이 단 한 번도 시드/픽스처/실데이터로
+삽입된 적 없음** (레포 전수 확인):
+
+- enum label 정의: `drizzle/0001_mighty_husk.sql:2` + `src/db/schema/tariff.ts`
+  + `src/db/schema/comparison_request.ts`
+- Drizzle 스냅샷 미러: `drizzle/meta/0001~0006_snapshot.json`
+- 코드 분기: `src/types/comparison-input.ts`, `tariff-attributes.ts`,
+  `engine/usage-estimator.ts`, fetcher, UI (총 15 파일 — ADR-0033 §builder
+  인계 트랙 1)
+- **seed / fixture / 실데이터 landline 행 = 0건. 베타 미시작 → 손실 0.**
+- **P3 위반 아님** — landline 은 사용자에게 *제공된 적 없는* 카테고리.
+  "비교에서 제외된 공급사 이름 공개" (헌법 P3) 와 무관 (카테고리 자체가
+  베타 콘텐츠에 진입한 적 없음).
+
+### 결정
+
+`tariff_category` enum = **`mobile`, `internet_fixed`, `bundle_internet_tv`**
+(3값). `landline` label 제거 + landline 행 삭제 (D-1 흔적 제거).
+
+### enum 값 제거 정책 (§T6 / §⚠️ 공백 해소 — 신설)
+
+원 ADR §⚠️ "잃는 것" 은 *"`ALTER TYPE DROP VALUE` 미지원, 추가 결정은
+ADR로"* 만 명시했고 **제거 절차는 공백**이었다 (§T6 은 ADD VALUE 만 다룸).
+본 Amendment 가 이를 메운다:
+
+- **PostgreSQL 은 enum label DROP 을 미지원** ([`ALTER TYPE`](https://www.postgresql.org/docs/16/sql-altertype.html)
+  — `DROP VALUE` 없음). 따라서 단순 ALTER 불가.
+- **채택 경로 = Drizzle enum 재생성** — `src/db/schema/tariff.ts` 의
+  `pgEnum('tariff_category', [...])` 배열에서 `'landline'` 제거 →
+  `pnpm db:generate` → 생성 SQL 시각 검토 (verifier) → `pnpm db:push`.
+  Drizzle 의 enum 변경 마이그레이션은 *새 type 생성 + 컬럼 ALTER + old
+  type DROP* 패턴을 생성 (생성 SQL 반드시 시각 검토 — ADR-0001 절차).
+- **landline 행 삭제 (D-1)** — enum 재생성 전 `DELETE FROM tariff WHERE
+  category = 'landline'` + `comparison_request` 동일. **현재 행 0건
+  확인됨**이나, 마이그레이션 SQL 에 방어적 DELETE 포함 (idempotent).
+- **공유 enum 동시 영향 주의** — `tariff_category` 는 `tariff.category`
+  **+ `comparison_request.category`** 두 컬럼이 공유 (ADR-0007 §T2,
+  `src/db/schema/comparison_request.ts` 가 enum 재사용). enum 재생성
+  마이그레이션은 *양 컬럼을 동시에* ALTER 해야 함 — 한쪽만 처리 시
+  type 의존성 오류. 생성 SQL 에서 두 컬럼 ALTER + old type DROP 순서
+  확인 (verifier 시각 검토 필수 항목).
+
+### builder 인계 노트 (트랙 1 — landline 제거, ~15 파일)
+
+- **`src/engine/usage-estimator.ts:138`** — 현재 `// landline` 주석 +
+  fallthrough (앞 3 분기가 아니면 *잔여 = landline 가정*, L138-143).
+  landline 제거 시 이 가정이 깨짐 → **exhaustive switch + `never` 체크
+  권고** (분기 누락 시 컴파일 에러로 잡힘 — P4). builder 가 `mobile /
+  internet_fixed / bundle_internet_tv` 3 분기 명시 + `default: const _x:
+  never = category` 패턴.
+- **`src/app/compare/page.tsx:61-67`** — `TARIFF_CATEGORIES` enum vs
+  `CATEGORIES` 카드 배열 정합성 자가 점검 (`throw new Error` 안전망).
+  enum 과 카드 배열에서 landline 을 **양쪽 동시 제거** 시 정합 유지.
+  한쪽만 빼면 이 throw 가 빌드/렌더 차단 → **안전망 정상 작동** (의도된
+  실패 — builder 가 양쪽 동시 수정으로 통과).
+- 영향 파일 (Grep 전수, 15): `src/app/compare/page.tsx`,
+  `src/app/compare/[category]/page.tsx`, `src/app/data-sources/page.tsx`,
+  `src/app/sitemap.ts`, `src/app/r/[shortId]/_components/ComparisonTable.tsx`,
+  `src/app/r/[shortId]/_components/CalculationDetails.tsx`,
+  `src/engine/usage-estimator.ts` (+ `.test.ts`), `src/engine/types.ts`,
+  `src/types/comparison-input.ts` (+ `.test.ts`), `src/types/tariff-attributes.ts`,
+  `src/fetchers/types.ts`, `src/db/schema/tariff.ts`,
+  `src/db/schema/comparison_request.ts` + 마이그레이션 (drizzle 재생성).
+
+### 결과
+
+- ✅ enum 3값으로 단순화 — 베타에 진입한 적 없는 dead 카테고리 제거.
+  usage-estimator fallthrough 가 exhaustive 로 격상 (P4 강화).
+- ✅ enum 값 *제거 정책* 문서화 — 페이즈 5 카테고리 정리 시 재사용 가능.
+- ⚠️ enum 재생성 마이그레이션 = 공유 컬럼 2개 동시 ALTER (verifier 시각
+  검토 부담 1회). down 마이그레이션은 ADD VALUE 로 복원 가능 (label
+  순서만 주의).
+
+### 검증
+
+- `pnpm db:generate` → 생성 SQL 에 (a) landline DELETE (방어적)
+  (b) 새 enum type (3값) (c) `tariff.category` + `comparison_request.category`
+  동시 ALTER (d) old type DROP — verifier 시각 검토.
+- `pnpm typecheck` — usage-estimator exhaustive `never` 체크 통과
+  (landline 분기 제거 후 컴파일 0 에러).
+- `pnpm test` — `usage-estimator.test.ts` / `comparison-input.test.ts`
+  landline 케이스 제거 후 0 실패.
+- `pnpm dev` → `/compare` 3 카드 렌더 (page.tsx:61-67 자가 점검 throw 0).

@@ -308,8 +308,8 @@ pnpm test` + 위 DoD 모두 충족.
 - [x] **1.1** `provider` 테이블 (공급사 마스터)
   - 필드: `id`, `country` (BE/NL/LU), `name`, `legal_name`, `vat_id`, `website`, `affiliate_status`
 - [x] **1.2** `tariff` 테이블 (요금제) — **통신 BE 가정** (ADR-0005)
-  - 필드: `provider_id`, `category` (mobile/internet_fixed/bundle_internet_tv/landline), `name`, `slug`, `currency` (EUR), `monthly_price_cents` (BIGINT), `activation_fee_cents`, `modem_rental_cents`, `commitment_months` (0=없음), `early_termination_fee_cents`, `promo_price_cents`, `promo_months`, `promo_description`, `attributes` (JSONB; 카테고리별 변동 속성 — Zod 검증), `is_active`, `last_seen_at`, `source_url`
-  - 결정 근거: [ADR-0005](docs/adr/0005-tariff-schema-telecom.md) — 단일 테이블 + JSONB attributes (T1), BIGINT cents (T2), 시계열은 1.3 단독 (T5)
+  - 필드: `provider_id`, `category` (mobile/internet_fixed/bundle_internet_tv — **landline 제거, ADR-0005 Amd 1, 2026-05-16**), `name`, `slug`, `currency` (EUR), `monthly_price_cents` (BIGINT), `activation_fee_cents`, `modem_rental_cents`, `commitment_months` (0=없음), `early_termination_fee_cents`, `promo_price_cents`, `promo_months`, `promo_description`, `attributes` (JSONB; 카테고리별 변동 속성 — Zod 검증), `is_active`, `last_seen_at`, `source_url`
+  - 결정 근거: [ADR-0005](docs/adr/0005-tariff-schema-telecom.md) — 단일 테이블 + JSONB attributes (T1), BIGINT cents (T2), 시계열은 1.3 단독 (T5), **Amendment 1 (2026-05-16): `tariff_category` 4→3값 landline 제거 + enum 값 제거 정책 신설 (D-1 흔적 제거, 행 0건 확인) — 구현 = 4.5.i**
 - [x] **1.3** `tariff_snapshot` 테이블 (가격 시계열) — **마스터/스냅샷 분리** (ADR-0006)
   - 필드: `id`, `tariff_id` (FK CASCADE), `fetched_at` (NOT NULL), `source_url` (NOT NULL), `monthly_price_cents` (BIGINT, NOT NULL), `activation_fee_cents` (default 0), `modem_rental_cents`, `promo_price_cents`, `promo_months`, `price_payload` (jsonb 미러), `raw_payload` (jsonb 정규화 only), `confidence` enum (high/medium/low) + `confidence_reason`, `is_anomaly` boolean + `anomaly_reason`, `created_at`
   - 인덱스: `(tariff_id, fetched_at DESC)` (T7 비교 엔진 hot path) · `(is_anomaly)` · `(fetched_at DESC)`
@@ -599,9 +599,12 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 > 모두 적용.
 
 - [x] **2.1** 카테고리 선택 화면 (랜딩에서 진입) — ADR-0016 §T2: `/compare`
-  별도 페이지 + 4 카드 (mobile/internet_fixed/bundle_internet_tv/landline) +
-  카드별 클릭 시 `/compare/[category]/postal` 이동. 검증: e2e 시연 통과
-  (`e2e/compare-flow.spec.ts`, 4 카드 동등 무게 + 다크 패턴 0).
+  별도 페이지 + **3 카드 (mobile/internet_fixed/bundle_internet_tv — landline
+  제거, ADR-0016 Amd 1 + ADR-0005 Amd 1, 2026-05-16)** + 카드별 클릭 시
+  `/compare/[category]/postal` 이동. 검증: e2e 시연 통과
+  (`e2e/compare-flow.spec.ts`, **3 카드 동등 무게** + 다크 패턴 0; spec 은
+  모바일 카드 클릭만 단언 = 카드 개수 단언 코드 없음 → spec 코드 변경 0,
+  `page.tsx:61-67` 자가 점검 양쪽 동시 제거로 통과 — 4.5.i 구현).
 - [x] **2.2** 단계 1: 우편번호 (**SC-B 적용** — 페이즈 2 1차 BE 만, NL/LU
   페이즈 3 진입 직전 추가) — ADR-0016 §T3: Zod regex `^[1-9][0-9]{3}$` +
   즉시 피드백 + BE 외 형식 시 정직 안내 ("페이즈 3 진입 전 추가 예정"). 검증:
@@ -1118,6 +1121,8 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - ✅ 완료 (2026-05-13): `src/inngest/follow-up-email.integration.test.ts` 신설 (8 케이스: pending→sent 상태 전이 + provider JOIN 검증 + unsubscribed_at/sent_at/scheduled_send_at idempotency + Resend retry 패턴 + mock store 체인). `e2e/follow-up-email-flow.spec.ts` 신설 (2 E2E 케이스: POST /api/compare → 인터스티셜 form submit → redirect + unsubscribe 페이지 이동/구조). typecheck/lint/test 453 passed (445+8) / test:e2e 45 passed + 7 skipped (43+2) / harness:plan 51 정합 / harness:data 통과. 커밋 `c95fafa`. 다음 4.5.h (Day 90 cron) 완료 시 4.5 부모 [x] + 합계 +1.
   - [x] **4.5.h** Day 90 행 삭제 cron — ADR-0028 §T5 잔존 조건 1 이행. `follow_up_email` 행 중 `pii_anonymized_at ≤ (now - 90d)` 조건 만족 시 **행 삭제** (또는 영구 익명 통계로 분리 — §T5 의 두 옵션 중 *행 삭제* 가 보수적, legal 권고). **ADR-0026 §T6 의 기존 익명화 Inngest job (ADR-0008 §cron) 에 step 추가** — 신규 job 0 (€300 cap — Inngest run 수 절약, §T6 정신 일관). 동일 cron 안에서 `comparison_request` PII 일반화 + `affiliate_click` FK SET NULL + `follow_up_email` Day 90 행 삭제가 *순차 step* 으로 실행. ADR amendment 불요 — ADR-0028 §T5 본문이 이미 "행 자체 삭제 또는 영구 익명 통계" 명시. **단** ADR-0026 §T6 cross-ref 1줄 (scribe 작업 — "`follow_up_email` Day 90 행 삭제도 본 cron 에 step 추가, ADR-0028 §T5 참조"). DoD: cron step 추가 + 통합 테스트 (90일 경계 시각 mock) + 회귀 0 + harness:plan 정합. Resend DPA (잔존 조건 2) 는 운영자 외부 트랙 (베타 직전 / M16).
     - ✅ 완료 (2026-05-13): `scripts/harness/price-snapshot.ts` export `deleteAnonymizedFollowUpEmails(dbClient)` + `main()` 호출 + Vitest 가드. SQL: `pii_anonymized_at IS NOT NULL AND pii_anonymized_at <= NOW() - INTERVAL '90 days'` (발송 전 행 IS NULL 보호). `src/inngest/follow-up-email.integration.test.ts` 통합 테스트 3 케이스 추가 (A: 100d DELETE / B: 89d 유지 / C: NULL 유지). typecheck/lint/test 456 passed (453+3) / harness:plan 52 정합 / harness:data 통과. ADR-0026 §T6 cross-ref 1줄 추가 (scribe). 커밋 `168106f`. **4.5 라운드 마감** (a~h 완료). Resend DPA 외부 트랙 (외부 감사 항목 8).
+  - [ ] **4.5.i** landline 흔적 제거 (트랙 1) — **D-1 = 흔적 제거** (ADR-0005 Amd 1 / ADR-0010 Amd 1 / ADR-0016 Amd 1). `tariff_category` enum 4→3값 (`landline` label 제거) + landline 행 삭제 (방어적 DELETE — 레포 전수 확인 결과 시드/픽스처/실데이터 0건, 베타 미시작 → 손실 0, P3 위반 아님). **builder 트랙 1 (~15 파일)**: enum 정의 (`src/db/schema/tariff.ts`, `comparison_request.ts`) + 코드 분기 (`comparison-input.ts`/`.test.ts`, `tariff-attributes.ts`, `engine/usage-estimator.ts`/`.test.ts`, `engine/types.ts`, `fetchers/types.ts`) + UI (`compare/page.tsx`, `compare/[category]/page.tsx`, `data-sources/page.tsx`, `sitemap.ts`, `r/[shortId]/_components/ComparisonTable.tsx`, `CalculationDetails.tsx`) + Drizzle enum 재생성 마이그레이션. **주의**: (a) `usage-estimator.ts:138` fallthrough(잔여=landline 가정) → exhaustive switch + `never` 체크로 격상 (P4 강화). (b) `compare/page.tsx:61-67` 자가 점검 throw = 안전망 정상 — enum/카드 배열 **양쪽 동시** 제거 시 통과 (한쪽만 빼면 의도된 빌드 차단). (c) 공유 enum 마이그레이션 = `tariff.category` + `comparison_request.category` **동시 ALTER** + old type DROP (verifier SQL 시각 검토 필수). **landline DB 정책 = 흔적 제거 (D-1)** — 보존 아님. **4.6 비-blocker** (베타 콘텐츠 무관). DoD: enum 3값 + landline 행 0 + usage-estimator `never` 통과 + typecheck/lint/test 0 + `pnpm db:generate` SQL 시각 검토 + `/compare` 3 카드 렌더 + harness:plan/data 정합.
+  - [ ] **4.5.j** next-intl 인프라 배선 + ko 키화 (트랙 2) — **D-2 = 시나리오 γ** (ADR-0033 신설). next-intl 인프라 배선 (ADR-0033 §T1 `app/[locale]/...` 세그먼트 라우팅 + middleware + `src/i18n/routing.ts`/`request.ts` + 기존 라우트 `src/app/[locale]/` 마이그레이션 — URL 구조 보존, e2e URL 단언 locale prefix 정합) + `messages/ko.json` 키화 (ADR-0033 §T5 우선순위 1~3: caveats.ts 8규칙 → compare 5단계 → `/r/[shortId]`). **베타 = ko 단일 콘텐츠** 그대로 (ADR-0029 한국어 단일 잠금 100% 보존 — 콘텐츠 변경 0, **4.6 비-blocker**). **nl/fr/en 콘텐츠 backfill + ko 제거 + hreflang/sitemap 활성 = 4.9 런치 게이트** (본 4.5.j 범위 외 — DeepL Free + 수동 검수, ADR-0033 §T3). **legal 트랙 분리** — `legal.*` 네임스페이스는 legal 에이전트 검수 게이트 별도 (ADR-0033 §T4, 4.9 런치 + legal 에이전트). DeepL Free 분량은 ko 키화 후 측정 (ADR-0033 §Verification #5, €300 cap 영향 0 추정). DoD: `src/i18n/*` + `middleware.ts` + `next.config.ts` next-intl plugin + 라우트 `[locale]` 이동 + `messages/ko.json` 키 누락 0 (1~3 우선순위) + nl/fr/en fallback 동작 (γ — 미번역 허용) + typecheck/lint/test 0 + `pnpm test:e2e` locale prefix 정합 + harness:plan 정합 + DeepL 분량 측정 기록.
 - [ ] **4.6** **베타 모집** — Antwerpen / Brussels / Luxembourg 시티에서 100명
   - 채널: 한인 커뮤니티(Korean Society BE/NL/LU), salair-plus.com 링크 (운영자 기존 자산), 한국어 트위터/스레드 — **3채널** (Amendment 2 2026-05-15: r/BENL banned 확인, Reddit 채널 제거, 현지인 도달은 4.8 PR 트랙 이관)
   - **모집 카피의 정직성 (헌법 P3 + ADR-0009)**: "현재 BE 시장 ≥ 75% 점유 2개
@@ -1462,11 +1467,11 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
 | 4 | 9 | 5 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c/d/e 완료) + 4.5 분해 (a~h, ADR-0028 + Day 90 cron 4.5.h 완료 2026-05-13 — 합계 +1) + ADR-0026/0027 (architect, 2026-05-13) + **4.7 재분해 a~d (architect 2026-05-14 — 5건 → 4건 단순화, 옵션 B 부모 [ ] 유지 → 합계 불변)** | 2026-05-14 |
-| 4.5 | 3 | 1 | 0 | M10 ~ M11 + M16 평가 (**4.5.1 완료 2026-05-14** — 어드민 v0 a/b/c/d 풀, `/admin` + 3 메트릭 + 7일 추세 + 단위 10 / E2E 4 통과; ADMIN_TOKEN 운영자 env 등록 follow-up) | 2026-05-14 |
+| 4.5 | 3 | 1 | 0 | M10 ~ M11 + M16 평가 (**4.5.1 완료 2026-05-14** — 어드민 v0 a/b/c/d 풀, `/admin` + 3 메트릭 + 7일 추세 + 단위 10 / E2E 4 통과; ADMIN_TOKEN 운영자 env 등록 follow-up). **4.5.i/4.5.j 신규 sub-task 2건 (architect 2026-05-16 — D-1 landline 흔적 제거 트랙 1 + D-2 시나리오 γ next-intl 배선 트랙 2, ADR-0033 신설 + ADR-0005/0010/0016 Amd 1). sub-task = 2칸 들여쓰기 → plan-tracker itemRe 비매치 → 합계 표 숫자 불변 (자동 카운트 정합, summary-total-mismatch 회피). 4.6 비-blocker** | 2026-05-16 |
 | 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **86** | **58** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-14 |
+| **합계** | **86** | **58** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-16 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
@@ -1493,6 +1498,13 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
   가능한 구조" 만 (ADR-0016 §T1 URL 자체가 단계 식별자) — **적용됨 (2026-05-10)**.
 - **옵션 SC-E**: i18n 한국어 단일 → 페이즈 4 베타 직전 일괄 도입 (next-intl
   + 4 locale 한/nl/fr/en) — **적용됨 (ADR-0016 §T10 SC-E, 2026-05-10)**.
+  **Amendment (2026-05-16)**: SC-E **발동 + 시점 앞당김** (폐기 아님 —
+  ADR-0016 §회귀 트리거 7번 발동). 시나리오 γ = next-intl 인프라 배선 +
+  `messages/ko.json` 키화는 **4.6 베타 진입 전** (4.5.j), nl/fr/en 콘텐츠
+  backfill + ko 제거 + hreflang 활성 = **4.9 런치 게이트**. 베타 = ko 단일
+  콘텐츠 (ADR-0029 한국어 단일 잠금 100% 보존). 4 locale 명세 + 라우팅 =
+  [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) 신설 (ADR-0016
+  Amd 1 동반).
 - **옵션 SC-F**: 3.2 비교 표 정렬/필터 → URL params + RSC 재렌더 (Zustand/Jotai
   client state 거부, dep 0) — **적용됨 (ADR-0021 §T4, 2026-05-10)**.
 - **옵션 SC-G**: 3.6 영구 링크 동적 OG 이미지 → 페이즈 4 진입 시 별도 ADR-OG.

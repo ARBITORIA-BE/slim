@@ -9,9 +9,15 @@
 - builder 가 §다음 단계 명세대로 10~12 신설 파일 진입
 - RHF + `@hookform/resolvers` 2 dep 추가 (운영자 명시 승인 — GATE-C amend)
 
+**Amendment 1 (2026-05-16)** — (a) §T1/§T2 카테고리 4→3 (`landline` 제거,
+D-1) (b) §T10 SC-E 발동 + 시점 앞당김 (시나리오 γ) (c) ADR-0029 cross-ref
+(d) e2e/PLAN 단언 갱신. 본 문서 끝 §Amendment 1 참조.
+
 **격상 이력**:
 - Proposed (2026-05-10) — T1~T10 10 결정 + SC-A/B/C/D + 신규 SC-E
 - Accepted (2026-05-10) — 운영자 GATE-J 통과, T9 옵션 A + T10 SC-E
+- Amendment 1 (2026-05-16) — landline 제거 + SC-E 발동/앞당김 (운영자
+  D-1·D-2, ADR-0033 신설)
 
 본 ADR 은 **결정 + 인계 명세** 만 담는다. 옵션 A 채택의 직접 후속 = RHF +
 resolvers 2 dep 추가 (next-intl / shadcn/ui 등 페이즈 0 dep는 변동 0). shadcn
@@ -121,6 +127,11 @@ App Router URL 구조:
 `[category]` = `mobile` / `internet_fixed` / `bundle_internet_tv` / `landline`
 (ADR-0005 §T6 enum 4값). 잘못된 category → 404.
 
+> **→ Amendment 1 (2026-05-16) 참조**: `landline` 제거 → 3값
+> (ADR-0005 §Amendment 1, D-1). `[category]` enum = `mobile` /
+> `internet_fixed` / `bundle_internet_tv`. URL 구조 보존 (locale prefix
+> 는 ADR-0033 §T1 별도).
+
 **근거 (학습자 모드 + Next.js App Router 친화):**
 - App Router 의 *파일 시스템 = 라우트* 패턴이 가장 단순 → 운영자 6개월 후
   디버깅 시 폴더 구조만 보면 단계 흐름 파악 가능.
@@ -151,6 +162,14 @@ App Router URL 구조:
   결정 — 페이즈 2 진입 시점 builder 가 *최소* 랜딩 placeholder 작성)
 - 페이즈 1 시점 `/data-sources` 에서도 "비교 시작" CTA → `/compare` 이동 (헤더
   네비게이션 — 본 ADR 결정 외, 페이즈 2 builder 자유도)
+
+> **→ Amendment 1 (2026-05-16) 참조**: "4 카드" → **3 카드** (유선 전화
+> 카드 제거 — D-1). 동등 시각 무게 원칙 유지 (3 카드 모두 동일 무게,
+> "추천" 라벨/색상 강조 0). PLAN §2.1 검증 설명 텍스트 "4 카드 동등
+> 무게" → "3 카드 동등 무게" (e2e `compare-flow.spec.ts` 는 모바일 카드
+> 클릭만 단언 — spec 코드 변경 0, 카드 *개수* 단언이 없음. 단 page.tsx
+> 의 `TARIFF_CATEGORIES` ↔ `CATEGORIES` 정합 자가 점검은 양쪽 동시
+> landline 제거로 통과 — ADR-0005 §Amendment 1 builder 노트).
 
 **페이지 구성** (`/compare` = `src/app/compare/page.tsx`, RSC):
 - 헤더: "어떤 요금제를 비교하시겠어요?" (한국어 단일 — T10)
@@ -490,6 +509,14 @@ slim:compare:[category]:state    # v1
 ADR 권장 = A.
 
 ### T10 — i18n 정책 = SC-E 신설 (페이즈 2 한국어 단일) 권장
+
+> **→ Amendment 1 (2026-05-16) 참조**: SC-E **발동 + 시점 앞당김**
+> (폐기 아님 — §회귀 트리거 7번 발동). "페이즈 4 베타 직전 일괄 도입"
+> → **시나리오 γ**: next-intl 인프라 배선 + `messages/ko.json` 키화 =
+> 4.6 베타 진입 전 / nl·fr·en 콘텐츠 backfill + ko 제거 + hreflang 활성
+> = 4.9 런치 게이트. 베타 = ko 단일 콘텐츠 (ADR-0029 한국어 단일 잠금
+> 100% 보존). 4 locale + 라우팅 명세 = [ADR-0033](0033-i18n-next-intl-introduction.md)
+> §T1·§T2 신설.
 
 **옵션** (ADR-0011 §T5 가 페이즈 2 진입 시점 결정 미룸):
 
@@ -867,3 +894,80 @@ src/app/r/[shortId]/page.tsx          # placeholder (페이즈 3 진입 전, T7)
 - GATE-K = 페이즈 4 베타 진입 게이트 (ADR-0020 §결정 7 slim.lu / §결정 4
   Vercel env vars / §결정 3 GitHub App 직접 설치 정합)
 - GATE-L = M16 평가 게이트 (ADR-0003 §결정 2)
+
+---
+
+## Amendment 1 (2026-05-16) — landline 제거 (§T1/§T2) + SC-E 발동·시점 앞당김 (§T10)
+
+### 상태
+
+**Accepted (2026-05-16)** — 운영자 잠금 결정 **D-1 (landline 흔적 제거)**
++ **D-2 (시나리오 γ)** 승인. [ADR-0033](0033-i18n-next-intl-introduction.md)
+통합 분석 산출물.
+
+### (a) §T1 / §T2 — 카테고리 4 → 3 (`landline` 제거)
+
+- §T1 `[category]` enum = `mobile` / `internet_fixed` /
+  `bundle_internet_tv` (4→3, ADR-0005 §Amendment 1, D-1). URL 라우팅
+  *구조* 보존 — `/compare/[category]/[step]` 그대로. (locale prefix 는
+  ADR-0033 §T1 별도 트랙.)
+- §T2 "4 카테고리 카드" → **3 카드** (유선 전화 카드 제거).
+  **동등 시각 무게 원칙 유지** — 3 카드 모두 동일 무게, "추천" 라벨/
+  색상 강조 0 (헌법 §8 #3 다크 패턴 0 — 원 §T2 근거 불변).
+
+### (b) §T10 — SC-E 발동 + 시점 앞당김 (시나리오 γ)
+
+- ADR-0016 §회귀 트리거 **7번** ("i18n 일괄 도입 (페이즈 4 베타 직전)
+  → SC-E 발동 → §T10 4 locale 명세 + `app/[locale]/...` 라우팅 결정")
+  **발동**.
+- SC-E = **폐기 아님**. "페이즈 4 베타 직전 일괄 도입" → **시점 앞당김
+  + 분리** (시나리오 γ):
+  - **4.6 베타 진입 전**: next-intl 인프라 배선 (ADR-0033 §T1 라우팅
+    마이그레이션 + middleware) + `messages/ko.json` 키화 (ADR-0033 §T5
+    1~3 우선순위).
+  - **베타 (4.6)**: ko 단일 콘텐츠 운영 (ADR-0029 한국어 단일 정합 —
+    4.6 비-blocker, 콘텐츠 변경 0).
+  - **4.9 런치 게이트**: nl/fr/en 콘텐츠 backfill + `messages/ko.json`
+    제거 + hreflang/sitemap 활성 + `legal.*` legal 에이전트 검수.
+- 4 locale 명세 (`nl-BE/nl-NL/fr-BE/fr-LU/en`) + `app/[locale]/...`
+  라우팅 결정 = [ADR-0033](0033-i18n-next-intl-introduction.md)
+  §T1·§T2 신설 (본 §T10 이 그 명세를 위임).
+
+### (c) ADR-0029 cross-ref
+
+시나리오 γ 는 ko 를 *next-intl locale 목록에 넣지 않고 베타 콘텐츠
+언어로만* 운영한다 (ADR-0033 §T2). 따라서 [ADR-0029](0029-beta-recruitment.md)
+Amendment 1/2 의 **한국어 단일 베타 모집 잠금 (r/BENL banned → 3채널
+한국어)** 을 **100% 보존** — ADR-0029 Amendment 불요 (D-3, cross-ref만).
+
+### (d) e2e / PLAN 단언 갱신 (builder 인계)
+
+- **e2e `compare-flow.spec.ts`** — 현재 spec 은 *모바일 카드 클릭만*
+  단언 (`getByRole('link', { name: '모바일 비교 시작' })`). 카드
+  *개수* 단언 코드 **없음** → spec 코드 변경 0. 단 `/compare` 진입
+  렌더가 landline 제거 후 `page.tsx:61-67` 자가 점검 throw 0 이어야
+  통과 (양쪽 동시 제거 — ADR-0005 §Amendment 1 builder 노트).
+- **PLAN §2.1 검증 설명 텍스트** — "4 카드 동등 무게" → "3 카드 동등
+  무게" (PLAN.md L604 부근, ADR-0016 Amd 1 cross-ref). PLAN P-2 외과적
+  Edit.
+- 라우팅 마이그레이션 (ADR-0033 §T1) 채택 시 e2e URL 단언에 locale
+  prefix 정합 = ADR-0033 §Migration builder 인계 (본 Amendment 외 —
+  ADR-0033 트랙).
+
+### 결과
+
+- ✅ §T2 "4 카드" dead 카테고리 제거 → 3 카드 동등 무게 (다크 패턴 0
+  원칙 불변).
+- ✅ SC-E 발동 명문화 — 발동 트리거 7번 + 시점 앞당김 (회귀 표면적
+  분산, 일정 리스크 ↓).
+- ✅ ADR-0029 한국어 베타 잠금 보존 (γ — cross-ref, D-3).
+- ⚠️ 라우팅 마이그레이션 (ADR-0033 §T1) = e2e URL 단언 갱신 부채
+  (ADR-0033 트랙으로 흡수).
+
+### 검증
+
+- `pnpm test:e2e` — `compare-flow.spec.ts` 모바일 카드 클릭 통과
+  (3 카드 렌더 + 자가 점검 throw 0).
+- `pnpm harness:plan` — PLAN §2.1 "3 카드" + ADR-0016 Amd 1 cross-ref
+  literal 매칭.
+- ADR-0033 §Verification 게이트와 통합 (4.5.i / 4.5.j DoD).

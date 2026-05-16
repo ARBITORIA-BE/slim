@@ -2,9 +2,15 @@
 
 ## Status
 
-Proposed (2026-05-09) — PLAN 항목 **1.11** + **1.12** 동시 결정. **scope cut
-옵션 B (12 → 6 케이스)** 동시 채택. verifier가
-typecheck/lint/test/harness:plan/harness:data 통과 확인 후 Accepted로 격상한다.
+**Accepted (2026-05-16)** — verifier typecheck/lint/test/harness:plan/
+harness:data 통과 (페이즈 1~3 구현 검증 완료) + 운영자 D-1~D-4 승인.
+**scope cut 옵션 B (12 → 6 케이스)** 채택. **Amendment 1 (2026-05-16)** —
+§T6 caveats i18n 키화 예약 발동 (L233-234) + usage-estimator landline 분기
+제거. 본 문서 끝 §Amendment 1 참조.
+
+격상 이력:
+- Proposed (2026-05-09) — PLAN **1.11** + **1.12** 동시 결정.
+- Accepted (2026-05-16) — 페이즈 1~3 구현 검증 + 운영자 D-1~D-4.
 
 ## Context
 
@@ -233,6 +239,13 @@ function combineConfidence(
 대해 호출. 각 caveat은 i18n key 가 아닌 *nl-BE 단일 문자열* (페이즈 1~4 시점).
 페이즈 2 i18n 도입 시 키화 — ADR Amendment.
 
+> **→ Amendment 1 (2026-05-16) 참조**: 위 "페이즈 2 i18n 도입 시 키화 —
+> ADR Amendment" 명시 예약이 **발동**됨 ([ADR-0033](0033-i18n-next-intl-introduction.md)
+> 시나리오 γ). caveats 키화 = T5 우선순위 **1순위**. 실제 구현 caveat
+> 문자열은 nl-BE 가 아닌 한국어 단일 (ADR-0016 SC-E 채택 결과) — 키화
+> 대상 동일. 아래 §T6 규칙표는 *키화 후에도 규칙 로직 불변* (텍스트→키
+> 치환만).
+
 **자동 caveat 생성 규칙 (페이즈 1, T6):**
 
 | 조건 | caveat 텍스트 (nl-BE 우선) |
@@ -445,3 +458,69 @@ M16 평가 게이트에서 사용자 피드백 (베타 100명) 으로 검증.
     Rule 1 — fileRe literal 매칭 (백틱 src 경로)
   - [`scripts/harness/data-fidelity.ts`](../../scripts/harness/data-fidelity.ts)
     Rule 1/2/4 — 본 ADR 영향 없음
+
+---
+
+## Amendment 1 (2026-05-16) — §T6 caveats i18n 키화 예약 발동 + usage-estimator landline 분기 제거
+
+### 상태
+
+**Accepted (2026-05-16)** — 운영자 잠금 결정 **D-2 (시나리오 γ)** + **D-1
+(landline 흔적 제거)** 승인. [ADR-0033](0033-i18n-next-intl-introduction.md)
+통합 분석 산출물.
+
+### 맥락
+
+§T6 본문 (원 ADR L233-234) 이 *명시 예약*: "각 caveat 은 i18n key 가
+아닌 단일 문자열 ... 페이즈 2 i18n 도입 시 키화 — ADR Amendment." 본
+Amendment 가 그 예약을 발동한다. 동시에 D-1 (landline 제거,
+[ADR-0005 §Amendment 1](0005-tariff-schema-telecom.md)) 가
+`src/engine/usage-estimator.ts` 의 landline 분기를 제거시킨다.
+
+### 결정 1 — caveats.ts 키화 = ADR-0033 §T5 우선순위 1순위
+
+- `deriveCaveats()` (구현 위치 `src/engine/caveats.ts`) 의 caveat 문자열
+  **8 규칙** (§T6 규칙표) 을 next-intl 메시지 키로 치환. 키화 = ADR-0033
+  §T5 의 **1순위** (가격 관련 텍스트 = 정확성 리스크 최상 — DeepL 번역
+  후 수동 검수 최우선, ADR-0033 §T3).
+- **규칙 로직 불변** — §T6 규칙표의 조건/임계값/생성 분기는 *변경 0*.
+  caveat 문자열만 `t('caveats.commitment24', { ... })` 형태로 치환.
+  보간 변수 (N, X, M, normal, used, limit, speed, level, reason) 는
+  next-intl ICU message arg 로 매핑.
+- **engineVersion 영향 0** — §"Engine version 정책" 의 버전 변경 트리거는
+  "caveat 규칙 추가/제거 (텍스트 미세 수정 제외)". *텍스트→키 치환* 은
+  미세 수정 범주 → `ENGINE_VERSION` 상수 갱신 **불요** (영구 링크 재현성
+  보존 — P1).
+
+### 결정 2 — usage-estimator landline 분기 제거 (D-1, exhaustive 처리)
+
+- `src/engine/usage-estimator.ts:138` 의 `// landline` fallthrough
+  (앞 3 분기 미일치 시 *잔여 = landline 가정*, L138-143) 제거.
+- **exhaustive switch + `never` 체크로 격상** (ADR-0005 §Amendment 1
+  builder 인계 노트와 동일 명세) — `mobile / internet_fixed /
+  bundle_internet_tv` 3 분기 명시 + `default` 에서 `const _exhaustive:
+  never = category` (분기 누락 시 컴파일 에러 — P4).
+- **deriveCaveats 영향 = 0 (확인됨)** — §T6 규칙표 9개 조건 전수 확인:
+  `mobile` (3개) / `internet_fixed` (1개) / 약정·활성화·프로모·confidence
+  (카테고리 무관 6개). **landline 전용 caveat 규칙 없음** → landline
+  제거가 `deriveCaveats()` 로직에 미치는 영향 0. usage-estimator
+  반환 타입에서 landline 프로파일 분기만 사라짐 (caveat 생성 무관).
+
+### 결과
+
+- ✅ caveats 키화 = ADR-0033 시나리오 γ 의 4.6 전 작업 1순위 (회귀
+  표면적 분산).
+- ✅ usage-estimator exhaustive `never` (P4 강화) — landline 제거 후
+  컴파일 안전망.
+- ✅ deriveCaveats 영향 0 확인 — 6 케이스 단위 테스트 (§T7) 회귀 없음
+  (landline 케이스 없음 — 케이스 1~6 전부 mobile/internet_fixed/null).
+- ⚠️ caveats 키화 시 보간 변수 ICU 매핑 정확성 = 수동 검수 필수
+  (ADR-0033 §T3 — 가격 텍스트 오역 = P1 위반).
+
+### 검증
+
+- `pnpm typecheck` — usage-estimator `never` 체크 0 에러.
+- `pnpm test` — §T7 6 케이스 + 추가 3건 strict equality 통과 (caveat
+  *키* 검증으로 단언 변경 시 키 + ICU arg 동등성 확인 — builder/verifier).
+- `pnpm dev` → caveat 노출 시 ko 메시지 정합 (γ 베타 = ko 단일).
+- ADR-0033 §Verification 게이트와 통합 (4.5.j DoD).
