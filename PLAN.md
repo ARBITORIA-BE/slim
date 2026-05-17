@@ -1333,6 +1333,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       배선 키 없이 선행, Phase B 번역 산출만 키 대기). 미결 0. ── **비-DoD**: `legal.*` ❌(4.5.j.3) / `ko.json` 삭제
       ❌(ADR-0034 §미결 보류) / hreflang·sitemap ❌(4.6/3.5.3) / ko URL
       세그먼트화 ❌(§T2, §A2.7 G1-b 거부).
+      ✅ Phase A 완료 (2026-05-17): typecheck 0 / lint 0 / test 523 passed / harness:plan 88 / harness:data 통과 / G1-a 배선 확인(getRequestConfig 실제 ko 로드) + constantTimeEqual 재사용 + 무쿠키 정적 렌더 회귀 0 / nl-fr base 키셋 누락 0 + delta 병합 정합 / isKoGateTarget 항상 false + handleKoGate env 미설정 pass-through 정합 + middleware 테스트 401→200 갱신 / nl/fr/en placeholder 값만 + Phase B 경계 보존 / 회귀 0 (routing/ko/nl-BE/layout 무변경) / .env 운영자 트랙 (Phase B blocker 아님) + scripts 운영자 안내 포함.
     - [ ] **4.5.j.3** **legal.* 네임스페이스 legal 검수** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T4 + Amendment 2).
       `legal.*` 네임스페이스 (GDPR 동의/디스클로저/약관 텍스트) 는 일반 UI
       트랙과 분리 — **legal 에이전트 검수 게이트** (오역 = 규제 리스크).

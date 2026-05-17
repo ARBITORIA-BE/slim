@@ -1,3 +1,259 @@
 {
-  "_comment": "en — 4.9 런치 게이트 번역 대상 (DeepL + 수동 검수, ADR-0033 §T3). 베타(γ) 시점: 빈 골격, fallback 동작."
+  "_comment": "en — 독립 전체키 (ADR-0033 §T3 + §A2.7 G3). fallback 체인 최종 = en (region→base→en→키그대로). Phase A: 키 골격만 (ko.json 키셋 기준, 값=placeholder). Phase B (DeepL): ko→en 번역 값 채움.",
+  "caveats": {
+    "commitment": "[en] {months}개월 약정 — 조기 해지 시 위약금 발생",
+    "activationFee": "[en] 활성화 비용 {amount} 별도 (1회성)",
+    "promoEnds": "[en] 프로모 가격은 첫 {months}개월만 — 이후 {price}/월",
+    "dataOverage": "[en] 월 {usedGb}GB 사용 → 본 요금제 {planGb}GB 초과. 한도 초과 비용은 표시되지 않습니다.",
+    "noEuRoaming": "[en] EU 로밍 미포함",
+    "speed4kInsufficient": "[en] 4K 스트리밍에 권장 100 Mbps 미만 (본 요금제 {mbps} Mbps)",
+    "confidenceMedium": "[en] 비교 데이터 신뢰도: medium ({reason})",
+    "confidenceMediumDefaultReason": "[en] 셀렉터 fragile 또는 파싱 경고",
+    "currentTariffConfidence": "[en] 현재 요금제 데이터 신뢰도: {confidence}",
+    "stubEstimate": "[en] 추정값 — 실 데이터 페이즈 5 이후"
+  },
+  "compare": {
+    "pageTitle": "[en] 요금제 비교 시작",
+    "pageDescription": "[en] 모바일, 인터넷, 인터넷+TV — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.",
+    "heading": "[en] 어떤 요금제를 비교하시겠어요?",
+    "stepBadge": "[en] 5단계 · 5분",
+    "supportNote": "[en] 현재 벨기에(BE) 통신 비교를 지원합니다. 네덜란드(NL) / 룩셈부르크(LU)는 페이즈 3에서 추가 예정입니다.",
+    "savingsPreviewPending": "[en] 평균 절약액 미리보기는 베타 후 노출 예정",
+    "termsNotice": "[en] 시작 시 본 사이트의",
+    "termsLink": "[en] 이용 약관",
+    "termsNoticeEnd": "[en] 에 동의한 것으로 간주됩니다 (GDPR Art. 6(1)(b) 계약 본질).",
+    "categories": {
+      "mobile": {
+        "label": "[en] 모바일",
+        "description": "[en] 월 €15~€35, 한 회선당"
+      },
+      "internet_fixed": {
+        "label": "[en] 인터넷",
+        "description": "[en] 월 €35~€70, 가정용 광/케이블"
+      },
+      "bundle_internet_tv": {
+        "label": "[en] 인터넷 + TV",
+        "description": "[en] 월 €60~€100, 번들 약정"
+      }
+    },
+    "ariaStart": "[en] {label} 비교 시작",
+    "layout": {
+      "previous": "[en] 이전",
+      "previousAriaLabel": "[en] 이전 단계로",
+      "cancel": "[en] 취소",
+      "steps": {
+        "postal": "[en] 우편번호",
+        "household": "[en] 가구 형태",
+        "current-provider": "[en] 현재 공급사",
+        "bill": "[en] 청구서",
+        "preview": "[en] 결과 미리보기"
+      }
+    },
+    "postal": {
+      "title": "[en] 우편번호 입력",
+      "heading": "[en] 어디 사세요?",
+      "supportNote": "[en] 국가를 선택한 후 우편번호를 입력하세요. 현재 벨기에(BE) 통신 비교를 지원합니다. 네덜란드(NL) / 룩셈부르크(LU)는 페이즈 5 공급사 추가 시점까지 비교 후보가 없을 수 있습니다.",
+      "countryLabel": "[en] 국가",
+      "countryAriaLabel": "[en] 국가 선택",
+      "postalCodeLabel": "[en] 우편번호",
+      "nextButton": "[en] 다음 — 가구 형태",
+      "countries": {
+        "BE": {
+          "label": "[en] 벨기에 (BE)",
+          "placeholder": "[en] 예: 1000",
+          "description": "[en] 벨기에 우편번호는 1000~9999 사이의 4자리 숫자입니다."
+        },
+        "NL": {
+          "label": "[en] 네덜란드 (NL)",
+          "placeholder": "[en] 예: 1011 또는 1011 AB",
+          "description": "[en] 네덜란드 우편번호는 4자리 숫자 (PC4) 또는 4자리+공백+대문자 2자 (PC6) 입니다. 비교 후보는 페이즈 5에서 추가됩니다."
+        },
+        "LU": {
+          "label": "[en] 룩셈부르크 (LU)",
+          "placeholder": "[en] 예: 1000",
+          "description": "[en] 룩셈부르크 우편번호는 1000~9999 사이의 4자리 숫자입니다. 비교 후보는 페이즈 5에서 추가됩니다."
+        }
+      }
+    },
+    "household": {
+      "heading": "[en] 어떻게 사세요?",
+      "supportNote": "[en] 가구 형태를 선택하면 평균 사용량으로 추정합니다. 정확한 사용량은 페이즈 3에서 청구서 OCR로 자동 입력 예정입니다.",
+      "nextButton": "[en] 다음 — 현재 공급사",
+      "options": {
+        "single": {
+          "label": "[en] 혼자",
+          "description": "[en] 1인 가구"
+        },
+        "couple": {
+          "label": "[en] 커플",
+          "description": "[en] 2인 가구"
+        },
+        "family_3_plus": {
+          "label": "[en] 가족",
+          "description": "[en] 3인 이상 가구"
+        }
+      }
+    },
+    "currentProvider": {
+      "heading": "[en] 지금 어디 쓰세요?",
+      "supportNote": "[en] 현재 공급사 선택은 비교 정확도를 높이지만 필수는 아닙니다. 모르거나 신규 가입이라면 스킵해도 됩니다.",
+      "zeroProvidersFallback": "[en] 공급사 목록을 불러오지 못했어요. 신규 가입자로 진행하시겠어요? 비교 결과는 시장 전체 후보로 계산됩니다.",
+      "skipAsNew": "[en] 신규 가입자로 진행 (스킵)"
+    },
+    "bill": {
+      "heading": "[en] 청구서를 업로드해 정확한 사용량을 자동 입력하시겠어요?",
+      "supportNote": "[en] 현재 베타 진행 중 — 청구서 OCR은 페이즈 3 결과 페이지 직후 추가됩니다. 지금은 가구 형태 기반 추정값으로 비교합니다.",
+      "skipButton": "[en] 청구서 없이 진행 — 결과 미리보기로"
+    },
+    "preview": {
+      "heading": "[en] 결과를 준비 중입니다",
+      "supportNote": "[en] 입력하신 정보를 바탕으로 비교 결과 영구 링크를 생성하고 있습니다. 완료 후 자동으로 결과 페이지로 이동합니다.",
+      "submittingMessage": "[en] 비교 엔진 호출 중… (보통 1초 미만)",
+      "errorTitle": "[en] 결과 생성 실패",
+      "inputIncomplete": "[en] 입력이 완전하지 않습니다. 우편번호 또는 가구 형태 단계로 돌아가세요.",
+      "networkError": "[en] 네트워크 오류가 발생했습니다. 다시 시도해 주세요.",
+      "serverError": "[en] 서버 오류 ({status})",
+      "retry": "[en] 다시 시도",
+      "goToStart": "[en] 처음으로"
+    }
+  },
+  "result": {
+    "pageTitle": "[en] 비교 결과 | Slim",
+    "pageDescription": "[en] 베네룩스 통신 요금제 비교 결과 — Slim",
+    "heading": "[en] 비교 결과",
+    "permanentId": "[en] 영구 ID:",
+    "anonymizedNote": "[en] 이 비교의 입력 가정은 90일 보관 정책으로 일반화되었습니다 — 비교 결과 자체는 그대로 보존됩니다 (ADR-0007 §T9).",
+    "linkLabel": "[en] 결과 링크",
+    "noCandidatesHeading": "[en] 비교 후보가 없습니다",
+    "noCandidatesBody": "[en] 이 카테고리/지역의 비교 가능 공급사가 현재 0건입니다. NL/LU 공급사 fetcher 추가는 페이즈 5에서 평가 후 진행 예정입니다 (ADR-0009 §결정 1).",
+    "dataSourcesLink": "[en] 데이터 출처 페이지에서 상세 보기 →",
+    "newCompare": "[en] 새로 비교 시작",
+    "goHome": "[en] 홈으로 돌아가기",
+    "affiliateFooter": "[en] 어필리에이트 수수료 관련:",
+    "affiliateFooterEnd": "[en] (페이즈 6.9 공개 예정). 비교 결과 순위는 알고리즘 기반이며 수수료에 영향받지 않습니다.",
+    "conclusionCard": {
+      "rankLabel": "[en] 1위 추천",
+      "monthlyCostLabel": "[en] 월 비용 (12개월 평균)",
+      "monthlyCostUnit": "[en] / 월",
+      "savingsLabel": "[en] 예상 절약",
+      "ctaButton": "[en] 변경하기",
+      "ctaDisabledTitle": "[en] 비교 후보 없음",
+      "caveatsHeading": "[en] 주의사항",
+      "verdicts": {
+        "newSubscriber": "[en] 신규 가입자에게 가장 저렴한 요금제입니다.",
+        "positiveSaving": "[en] 월 {amount} 절약 가능합니다.",
+        "zero": "[en] 현재 요금제와 동일한 수준입니다.",
+        "negative": "[en] 현재 요금제보다 저렴한 후보를 찾지 못했습니다 — 유지 권장."
+      },
+      "confidenceLabels": {
+        "high": "[en] 신뢰도 높음",
+        "medium": "[en] 신뢰도 보통 — 데이터 출처 검토 필요",
+        "low": "[en] 신뢰도 낮음 — 비교 엔진 자동 제외 대상"
+      },
+      "confidenceAriaPrefix": "[en] 신뢰도:"
+    },
+    "comparisonHeading": "[en] 비교 표",
+    "table": {
+      "ariaLabel": "[en] 요금제 비교 표",
+      "mobileAriaLabel": "[en] 요금제 비교 (모바일)",
+      "emptyMessage": "[en] 해당 조건에 맞는 비교 결과가 없습니다. 위 필터를 조정해 보세요.",
+      "columns": {
+        "rank": "#",
+        "provider": "[en] 공급사 / 요금제",
+        "monthlyCost": "[en] 월 비용",
+        "commitment": "[en] 약정",
+        "saving": "[en] 절약",
+        "confidence": "[en] 신뢰도",
+        "source": "[en] 원본"
+      },
+      "sourceLink": "[en] 원본 보기",
+      "sourceLinkNewTab": "[en] (새 창에서 열림)",
+      "sourceChecked": "[en] 마지막 확인:",
+      "commitmentNone": "[en] 없음",
+      "commitmentMonths": "[en] {months}개월",
+      "monthlyCostUnit": "[en] / 월",
+      "savingMonthly": "[en] / 월",
+      "savingYearly": "[en] 연 {amount}",
+      "savingZero": "[en] 동일",
+      "confidenceLabels": {
+        "high": "[en] 높음",
+        "medium": "[en] 보통",
+        "low": "[en] 낮음"
+      },
+      "confidenceAriaPrefix": "[en] 신뢰도 "
+    },
+    "calculationDetails": {
+      "summary": "[en] 계산 근거 보기 — 사용한 가정 + 산식 + 주의사항 트리거 + 엔진 버전",
+      "anonymizedWarning": "[en] 이 결과는 저장 후 90일이 지나 원본 입력(우편번호·사용량 등)이 보관 정책으로 부재합니다. 비교 결과 자체는 그대로 보존되며, 아래 가정은 가구 형태 기반으로 재구성한 값입니다 (ADR-0007 §T9).",
+      "assumptions": {
+        "heading": "[en] 사용한 가정",
+        "categoryLabel": "[en] 카테고리",
+        "householdLabel": "[en] 가구 형태",
+        "usageSourceLabel": "[en] 사용량 출처",
+        "usageSourceDirect": "[en] 사용자 직접 입력",
+        "usageSourceEstimated": "[en] 가구 형태 기반 추정 ({version})",
+        "usageSourceAnonymized": "[en] 원본 입력 부재 (90일 보관 정책) — 가구 형태 기반 추정 재구성 ({version})",
+        "householdUnknown": "[en] 미입력 (single 추정)"
+      },
+      "householdLabels": {
+        "single": "[en] 혼자 (1인 가구)",
+        "couple": "[en] 커플 (2인 가구)",
+        "family_3_plus": "[en] 가족 (3인 이상)"
+      },
+      "categoryLabels": {
+        "mobile": "[en] 모바일",
+        "internet_fixed": "[en] 인터넷",
+        "bundle_internet_tv": "[en] 인터넷 + TV"
+      },
+      "usageHeading": "[en] 사용량 수치",
+      "usageEmpty": "[en] 사용량 정보 없음 (가구 형태 추정값 사용).",
+      "usageLabels": {
+        "dataGb": "[en] 데이터 사용",
+        "dataGbUnit": "[en] GB / 월",
+        "voiceMinutes": "[en] 통화",
+        "voiceMinutesUnit": "[en] 분 / 월",
+        "sms": "[en] SMS",
+        "smsUnit": "[en] 건 / 월",
+        "euRoaming": "[en] EU 로밍",
+        "euRoamingNeeded": "[en] 필요",
+        "euRoamingNotNeeded": "[en] 불필요",
+        "downloadMbps": "[en] 필요 다운로드 속도",
+        "downloadMbpsUnit": "[en] Mbps",
+        "devices": "[en] 동시 디바이스",
+        "devicesUnit": "[en] 대",
+        "streaming4k": "[en] 4K 스트리밍",
+        "streaming4kNeeded": "[en] 필요",
+        "streaming4kNotNeeded": "[en] 불필요",
+        "tvChannels": "[en] TV 채널 수",
+        "tvChannelsUnit": "[en] 개",
+        "tv4k": "[en] 4K TV",
+        "tv4kNeeded": "[en] 필요",
+        "tv4kNotNeeded": "[en] 불필요"
+      },
+      "formulaHeading": "[en] 적용 산식",
+      "formulaLabels": {
+        "monthly12": "[en] 12개월 평균",
+        "monthly12Unit": "[en] / 월",
+        "monthly24": "[en] 24개월 평균",
+        "monthly24Unit": "[en] / 월",
+        "activationAmortize": "[en] 활성화비 amortize",
+        "activationAmortizeUnit": "[en] / 월 (12개월 분배)"
+      },
+      "caveatsHeading": "[en] 주의사항",
+      "triggerHeading": "[en] 주의사항 트리거 조건",
+      "triggerNote": "[en] 저장된 요금제 데이터와 사용량 가정으로 각 규칙을 재평가했습니다 (ADR-0010 §T6).",
+      "engineHeading": "[en] 엔진 버전",
+      "engineNote": "[en] 영구 링크는 본 버전으로 재현됩니다 (ADR-0010 §T7 + ADR-0007 §T9)."
+    }
+  },
+  "legal": {
+    "affiliateDisclosure": {
+      "pageTitle": "[en] 제휴 수수료 공개"
+    }
+  },
+  "home": {
+    "headline": "[en] Slim.",
+    "tagline": "[en] 비교는 쉽게, 절약은 두툼하게.",
+    "ctaButton": "[en] 지금 비교하기"
+  }
 }

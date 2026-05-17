@@ -22,15 +22,14 @@
  *   2. 쿼리 `?token=ADMIN_TOKEN` → 쿠키 발급 후 쿼리 제거 redirect.
  *   3. 그 외 / ADMIN_TOKEN 미설정 → 404 (fail-closed).
  *
- * ko 게이트 정책 (PLAN 4.5.j.1 — ADR-0033 §A2.5 D1):
- *   1. 쿠키 `ko_gate_token` = KO_GATE_TOKEN env → 통과.
- *   2. 쿼리 `?ko_token=KO_GATE_TOKEN` → 쿠키 발급 후 쿼리 제거 redirect.
- *   3. KO_GATE_TOKEN 미설정 → 게이트 비활성 (pass-through, 공개 서빙).
- *      (2026-05-17 P0 인시던트 핫픽스 — ADR-0033 §A2.5 D1 에서 일탈,
- *       4.5.j.2 에서 재조정. 상세 = handleKoGate 본문 주석.)
- *   4. 토큰 등록 + 불일치 → 401 (게이트 활성 시에만 차단).
- *   게이트 대상 = locale prefix 없는 모든 경로 (nl-BE defaultLocale 슬롯 = ko 콘텐츠).
- *   게이트 비대상 = /nl-NL/* /fr-BE/* /fr-LU/* /en/* (공개 locale prefix).
+ * ko 게이트 정책 (PLAN 4.5.j.1 → 4.5.j.2 Phase A — ADR-0033 §A2.5 + §A2.7):
+ *   [4.5.j.1] handleKoGate: KO_GATE_TOKEN 쿠키/쿼리 검증 (admin 동형).
+ *   [4.5.j.2] isKoGateTarget 해제: nl-BE 무프리픽스 경로를 게이트 비대상으로 전환.
+ *     isKoGateTarget 이 항상 false → handleKoGate 호출 안 됨 → intl 직접 위임.
+ *     handleKoGate env 미설정 pass-through (핫픽스 10dee59) 와 수렴 = 정상 상태.
+ *     ko 보호 1차선 = request.ts G1-a 오버레이 쿠키 (constantTimeEqual).
+ *   게이트 대상 = 없음 (게이트 해제, Phase A 이후).
+ *   게이트 비대상 = 전체 (공개 locale prefix + nl-BE 무프리픽스 모두).
  *   prefix 집합은 routing.locales에서 defaultLocale 제외 4개로 도출 — 하드코딩 금지.
  */
 
@@ -85,20 +84,11 @@ const KO_GATE_COOKIE_NAME = 'ko_gate_token';
 // admin 과 동일 30일 — 운영자가 자주 재인증할 필요 없도록.
 const KO_GATE_MAX_AGE = 60 * 60 * 24 * 30;
 
-/**
- * 공개 locale prefix 집합.
- * routing.locales에서 defaultLocale 을 제외한 4개를 도출한다.
- * 하드코딩 금지 — routing.ts 가 단일 출처 (ADR-0033 §A2.5 D2).
- *
- * 왜 이렇게 도출하는가:
- *   routing.ts 의 localePrefix='as-needed' 때문에
- *   defaultLocale(nl-BE) 만 prefix 없이 노출된다.
- *   나머지 locale 은 /nl-NL/ /fr-BE/ /fr-LU/ /en/ prefix 를 가진다.
- *   이 4개 prefix 경로 = 공개 영역 (ko 게이트 비대상).
- */
-const PUBLIC_LOCALE_PREFIXES: readonly string[] = routing.locales
-  .filter((locale) => locale !== routing.defaultLocale)
-  .map((locale) => `/${locale}`);
+// [Phase A] PUBLIC_LOCALE_PREFIXES 는 4.5.j.2 게이트 해제로 isKoGateTarget 이
+// 항상 false 를 반환하므로 현재 미사용 → 선언 제거.
+// Phase B(번역 완료) 이후 게이트 로직 복원 시 아래 형태로 재구성:
+//   routing.locales.filter(l => l !== routing.defaultLocale).map(l => `/${l}`)
+// 단일 출처 = routing.ts (ADR-0033 §A2.5 D2)
 
 function koGateDeny(): NextResponse {
   // 401 — "Unauthorized" (존재 노출 없이 접근 차단).
@@ -158,15 +148,26 @@ function handleKoGate(req: NextRequest): NextResponse | null {
 /**
  * 주어진 경로가 ko 게이트 대상인지 판정.
  *
- * 판정 로직 (ADR-0033 §A2.5 D2):
- *   PUBLIC_LOCALE_PREFIXES(/nl-NL, /fr-BE, /fr-LU, /en) 중 어느 것으로도
- *   시작하지 않으면 → nl-BE defaultLocale 슬롯 = ko 게이트 대상.
- *   /admin/* 은 admin 가드가 선처리하므로 여기까지 오지 않음.
+ * [4.5.j.2 Phase A — 게이트 해제 (ADR-0033 §A2.7 A3 + §A2.3 필수 스위치)]
+ *   nl-BE 무프리픽스 경로를 게이트 비대상으로 전환한다.
+ *   이 함수는 항상 false 를 반환 → 모든 경로가 게이트 비대상 → intl 직접 위임.
+ *
+ * 왜 이렇게 바꾸는가 (학습자 'why' 코멘트):
+ *   4.5.j.1 에서 nl-BE 무프리픽스(루트 `/`, `/compare/*` 등)를 게이트 대상으로
+ *   지정한 이유는 "nl-BE 슬롯 = ko 복제본" 이라 ko 콘텐츠가 공개되지 않도록
+ *   막기 위해서였다.
+ *   4.5.j.2 에서 (a) 이 해제 + (b) nl-BE 슬롯 ko→실nl 교체 +
+ *   (c) G1-a ko 오버레이 도입을 동시에 적용한다 (ADR-0033 §A2.3 원자 스위치).
+ *   해제 후 무프리픽스 = 실 nl 공개 → pass-through 가 정상·안전
+ *   (handleKoGate env 미설정 pass-through 핫픽스 10dee59 와 수렴).
+ *   ko 보호는 이제 미들웨어 게이트가 아닌 request.ts G1-a 오버레이 쿠키가 담당.
+ *
+ * Phase B 이후 이 함수는 삭제되거나 PUBLIC_LOCALE_PREFIXES 로직으로
+ * 대체될 수 있으나, Phase A 에서는 "무조건 false" 가 명세 정합.
  */
-function isKoGateTarget(pathname: string): boolean {
-  return !PUBLIC_LOCALE_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
+function isKoGateTarget(_pathname: string): boolean {
+  // 4.5.j.2 게이트 해제: nl-BE 무프리픽스 경로 포함 전체 = 게이트 비대상
+  return false;
 }
 
 // ─── next-intl middleware 인스턴스 ────────────────────────────────────────────
