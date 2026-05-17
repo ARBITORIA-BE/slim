@@ -121,13 +121,21 @@ ADR-0003 (PLAN 리얼리즘 패스, Accepted 2026-05-09) 은 운영자 현실(�
 - **KO 의 운명 (단 하나의 미결 — 운영자 명시 보류)**: 런칭/개발 완료 후
   KO 삭제 vs hidden 유지는 **그때 결정**. 본 ADR 은 이것만 미결로 남긴다
   (다음 단계 결정).
-- **다음 단계 결정 (architect/builder 구현 상세 — 본 ADR 범위 밖, 잠금값
-  아님)**: 현 `src/i18n/routing.ts` 는 ko 를 `locales` 배열에 *넣지 않고*
-  defaultLocale(`nl-BE`) 슬롯에 `messages/ko.json` 을 채우는 구조다 (ADR-0033
-  §T2). basic-auth 게이트가 *어느 경로/세그먼트* 를 보호하는지 (예:
-  쿼리/쿠키 진입 후 ko 메시지 노출 vs 전용 prefix) 의 정확 설계는 D2/D3
-  적용 후 builder 진입 시 결정 — 본 ADR 은 *구현 = middleware basic-auth +
-  env 1개* 까지만 잠그고, 라우팅 세그먼트 매핑은 임의 결정하지 않는다.
+- **다음 단계 결정 (구현 상세 — 본 ADR 범위 밖) — 세그먼트 매핑 잠금
+  완료 (2026-05-17, architect, [ADR-0033](0033-i18n-next-intl-introduction.md)
+  §Amendment 2)**: 현 `src/i18n/routing.ts` 는 ko 를 `locales` 배열에
+  *넣지 않고* defaultLocale(`nl-BE`) 슬롯에 `messages/ko.json` 을 채우는
+  구조다 (ADR-0033 §T2). 본 ADR Accepted 시점엔 "basic-auth 게이트가 어느
+  경로/세그먼트를 보호하는지 = builder 진입 시 결정 / 임의 결정 안 함"
+  으로 명시 보류했다. **이 보류는 D1 진입 전 architect 가 ADR-0033
+  §Amendment 2 §A2.2 에서 설계 결정으로 잠금 완료**: 옵션 (a) ko prefix
+  추가 = ❌ (§T2 `locales` 변경 0 잠금 위반) / 옵션 (b) **채택** = nl-BE
+  슬롯(ko 복제) 무변경 + middleware basic-auth 가 *locale prefix 없는 경로
+  전체* 가드 (§T1/§T2 무변경, 회귀 0) / 옵션 (c) 별도 도메인 = ❌ (env
+  1개/새 SaaS 0 잠금 초과 — 단 운영자 검증 UX 선호는 ADR-0033 §A2.4
+  운영자 확인 항목). 구현 DoD = ADR-0033 §A2.5 (PLAN 4.5.j.1 본문 반영).
+  본 ADR 의 D1 잠금값(`locales` 변경 0 / middleware basic-auth / env 1개 /
+  기존 `/admin` 동형)은 옵션 (b) 가 100% 정합 — 잠금값 변경 0.
 - **ADR-0033 SC-E 와의 관계**: ADR-0033 §T2 + ADR-0016 §T10 SC-E 의 *운영
   모델* 이 바뀐다. ADR-0033 §T1 라우팅 골격(`app/[locale]/`)은 **보존** —
   마이그레이션 회귀 0. 바뀌는 것은 (a) 베타가 ko 단일이 아니라 EN/FR/NL

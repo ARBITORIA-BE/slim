@@ -377,3 +377,211 @@ prefix 노출. 최종 `localePrefix` 값은 builder 가 next-intl 문서 기준
   - [Google — Localized versions / hreflang](https://developers.google.com/search/docs/specialty/international/localized-versions)
   - [DeepL — API Pro/Free plans](https://www.deepl.com/pro-api)
   - [DeepL — Supported languages](https://developers.deepl.com/docs/resources/supported-languages)
+
+## Amendment 2 (2026-05-17) — γ → 4 locale 공개 + ko basic-auth 게이트 + **세그먼트 매핑 잠금** ([ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D1)
+
+> 본 절은 §Status Amendment 2 블록의 **본문 확정판**이다. ADR-0034 D1
+> §다음 단계 결정이 "라우팅 세그먼트 매핑은 임의 결정 안 함 — builder
+> 진입 시 결정" 으로 *명시 보류* 했던 것을 architect 가 본 절에서 **설계
+> 결정으로 잠근다** (PLAN 4.5.j.1 진입 전제 — ADR-0034 §References /
+> ADR-0016 §Amendment 2 가 본 절을 단일 출처로 가리킨다).
+
+### A2.1 — 운영 모델 변경 (Amendment 2 §Status 요약의 확정)
+
+- 공개 = `en` / `fr-BE` / `fr-LU` / `nl-BE` / `nl-NL` (§T2 `locales` 배열
+  **변경 0** — CLAUDE.md §5 그대로). ko 는 `locales` 비포함 (§T2 원칙 *유지*).
+- ko = 운영자 전용 hidden. 구현 = `src/middleware.ts` basic-auth + env
+  1개 (§A2.2). "베타 콘텐츠 언어" → "운영자 전용 게이트 콘텐츠" 로
+  *운영 모델만* 변경 — §T1 라우팅 골격 무변경 (회귀 0, 핵심 자산 보존).
+- §T3 (DeepL) / §T4 (`legal.*` 게이트) / §T5 (키화 우선순위) = *유지,
+  시점만 당김* (4.9 런치 게이트 → 완성 동시 = PLAN 4.5.j.2 / 4.5.j.3).
+
+### A2.2 — KO 게이트 라우팅 세그먼트 매핑 — **옵션 비교 + 잠금 결정**
+
+현 `src/i18n/routing.ts` 사실 (architect 레포 직접 확인 2026-05-17):
+- `locales = ['nl-BE','nl-NL','fr-BE','fr-LU','en']`, `defaultLocale='nl-BE'`,
+  `localePrefix='as-needed'` → **nl-BE = 무프리픽스 = 루트 `/` 가 nl-BE 슬롯**.
+- `messages/nl-BE.json` = **ko 복제본 확정** (파일 L2 `_comment`: "베타(γ)
+  동안 defaultLocale(nl-BE) 메시지 = ko 내용 … 4.9 런치 시 실 nl-BE
+  번역으로 교체") + 본문 한국어 (`messages/ko.json` 과 키·값 동일,
+  259줄). nl-NL/fr-BE/fr-LU/en = 빈/stub fallback (§request.ts 빈 객체).
+
+이 구조에서 "ko 게이트" 의 의미를 3 옵션으로 표면화한다.
+
+#### 옵션 (a) — ko 전용 prefix `/ko/*` 를 `locales` 에 추가 + basic-auth 가 `/ko` 가드
+
+- **방식**: `locales` 에 `'ko'` 추가, `localePrefix` 조정, `/ko/...` 진입을
+  middleware basic-auth 로 가드.
+- ⚠️ **§T2 원칙 정면 위반** — ADR-0034 D1 이 "§T2 원칙 *유지*, `locales`
+  배열 변경 0" 을 명시 잠금. ko 를 `locales` 에 넣으면 `generateStaticParams`
+  (layout.tsx L49-51) 가 `/ko` 정적 생성 + `routing.locales.includes` 검증
+  통과 → **hreflang/sitemap 누출 위험** (ADR-0034 §회귀 #2 + §T2 근거 "ko
+  URL 색인 = P3 혼선"). basic-auth 가 콘텐츠는 막아도 URL 존재 자체가
+  sitemap 곱집합/`alternates.languages` 에 샐 표면 신설.
+- ❌ **거부** — ADR-0034 D1 운영자 잠금 ("`locales` 배열 변경 0") 위반.
+  architect 단독으로 헌장 잠금값을 깰 수 없음 (CLAUDE.md §2/§4).
+
+#### 옵션 (b) — nl-BE 슬롯 = ko 콘텐츠 유지 + basic-auth 가 nl-BE 무프리픽스(`/` 및 모든 비prefix 경로) 가드 — **채택**
+
+- **방식**: `routing.ts` / `request.ts` / `layout.tsx` / `messages/*` =
+  **무변경**. 현 구조(nl-BE 슬롯 = ko 복제)를 *그대로 유지*. `middleware.ts`
+  에 ko 게이트를 추가하되, **게이트가 보호하는 대상 = "locale prefix 가
+  없는 모든 경로" (= nl-BE defaultLocale = 현재 ko 콘텐츠를 서빙하는 경로)**.
+  즉 `/`, `/compare/...`, `/r/...`, `/data-sources` 등 prefix 없는 URL
+  전체가 basic-auth 뒤로. `/nl-NL/...` `/fr-BE/...` `/fr-LU/...` `/en/...`
+  (명시적 공개 locale prefix) 는 **게이트 없이 공개**.
+- **근거**:
+  - §T1 라우팅 골격 **무변경** — ADR-0034 D1 "§T1 보존, 회귀 0" + 본 ADR
+    §Status "라우팅 골격 보존(핵심 자산)" 정합. 라우트 파일 이동/추가 0.
+  - §T2 원칙 **무위반** — `locales` 배열 변경 0, ko 는 여전히 locale 아님,
+    hreflang/sitemap 에 ko 비등장 (sitemap 곱집합은 `routing.locales` 만
+    순회 — §T1 / sitemap.ts. ko 누출 표면 신설 0).
+  - 4.5.j.2 순서 정합 (§A2.3) — nl-BE 슬롯이 4.5.j.2 에서 실 nl 콘텐츠로
+    backfill 되면, **그 시점에 게이트 대상을 nl-BE → 제거** 하는 단일
+    스위치 (게이트 해제 = env 미설정 시 fail-open 이 아니라, 4.5.j.2 가
+    명시적으로 게이트 매처에서 nl-BE 경로 해제) 로 공개 전환. 라우팅
+    재마이그레이션 0.
+  - 기존 `/admin` 가드와 **동일 단일점** (`src/middleware.ts`) — 새 인증
+    라이브러리 0, 새 SaaS 0, `constantTimeEqual` (edge-safe, 기존 유틸)
+    재사용. ADR-0034 D1 "구현 = middleware basic-auth + env 1개" 잠금 정합.
+- ⚠️ **잃는 것 (정직하게 — P3)**:
+  - 4.5.j.2 (nl/fr/en backfill) **이전**: prefix 없는 모든 경로 = ko
+    콘텐츠 = 게이트 뒤 → **공개 진입점이 `/nl-NL` `/fr-BE` `/fr-LU` `/en`
+    4 prefix 뿐**. 루트 `/` 가 게이트 뒤이므로 비운영자가 도메인 루트
+    접근 시 401/404 (fail-closed). 즉 **4.5.j.1 시점의 공개 사이트는
+    nl-NL/fr-BE/fr-LU/en stub fallback 만 노출** — 콘텐츠 미번역(빈 객체
+    fallback, §request.ts) 이라 사실상 빈 화면. 이는 **버그가 아니라
+    설계된 순서 결과**: 4.5.j.1 = *게이트만*, 실 공개 콘텐츠 = 4.5.j.2
+    책임 (§A2.3 경계). organic SEO(ADR-0034 D5)는 4.5.j.2 완료 후 발동
+    이므로 색인 손실 0 (D5 는 D1→D3→D4→D5 순차의 *마지막* — ADR-0034
+    §대안 E).
+  - defaultLocale 무프리픽스 경로가 게이트 뒤이므로, **4.5.j.2 가
+    nl-BE 슬롯을 실 nl 로 채울 때 "게이트 대상에서 nl-BE 무프리픽스
+    경로 해제" 가 4.5.j.2 DoD 의 명시 항목이어야 함** (§A2.3 에 박음 —
+    이 해제를 누락하면 실 nl 콘텐츠가 영구히 게이트 뒤에 갇힘 = 회귀).
+- ✅ **채택** — §T1/§T2 무변경 + ADR-0034 D1 잠금값(locales 0, middleware
+  basic-auth, env 1개) 100% 정합 + 4.5.j.2 단일 스위치 전환. 3 옵션 중
+  유일하게 운영자 잠금값을 깨지 않음.
+
+#### 옵션 (c) — preview/operator 도메인 분리 (별도 배포 타깃 / Vercel preview)
+
+- **방식**: ko = Vercel preview 배포 또는 별도 서브도메인 (예:
+  `ko.slim.internal`), 프로덕션 도메인엔 ko 부재.
+- ⚠️ ADR-0034 D1 "구현 = middleware basic-auth + env 1개 / 새 SaaS 0 /
+  새 인증 라이브러리 0" 잠금 **초과** — 별도 배포 타깃 = 새 인프라 표면
+  (Vercel preview protection 설정 / DNS / €300 cap §회귀). 운영자가
+  "기존 `/admin` 가드 패턴 동형, env 1개" 로 *명시 좁힘*.
+- ⚠️ 운영자 검증 워크플로 마찰 — 운영자가 ko 로 검증하려면 별도
+  도메인/preview URL 컨텍스트 전환 (운영자 원문 "편집자 모드처럼" =
+  *같은 사이트 안에서* 토글 뉘앙스에 더 가까움 — 단 이는 architect
+  해석, 운영자 확정 사항 아님 → §A2.4 운영자 확인 항목).
+- ❌ **거부 (architect)** — ADR-0034 D1 구현 잠금값 초과. 단 "운영자가
+  검증을 별도 도메인에서 하길 원하는가" 는 architect 가 단정 불가 →
+  §A2.4 운영자 확인 대기 항목으로 분리 (잠금값 아님, 옵션 (b) 가 기본).
+
+#### 잠금 결정 (architect)
+
+**옵션 (b) 채택**: ko 게이트 = `src/middleware.ts` 에서 **locale prefix 가
+없는 경로(= nl-BE defaultLocale = 현 ko 콘텐츠 서빙 경로) 전체를 basic-auth
+가드**. 명시 공개 locale prefix (`/nl-NL` `/fr-BE` `/fr-LU` `/en`) +
+`/api/*` (matcher 기 제외) 는 게이트 비대상. `routing.ts` / `request.ts` /
+`layout.tsx` / `messages/*` = **무변경**. ADR-0034 D1 잠금값(`locales` 변경
+0 / middleware basic-auth / env 1개 / 기존 `/admin` 동형) 100% 정합.
+
+### A2.3 — nl-BE 슬롯 전환 정합 (4.5.j.1 ↔ 4.5.j.2 경계)
+
+- **사실 (P3 정직)**: 현 `messages/nl-BE.json` = ko 복제본 (architect 확인 —
+  파일 `_comment` + 본문 한국어). 4.5.j.1 시점에 nl-BE 슬롯이 서빙하는
+  것은 **실 nl 이 아니라 ko 텍스트**. 따라서:
+- **4.5.j.1 (게이트) 책임 경계**: 4.5.j.1 은 **게이트 추가만**. nl-BE
+  슬롯의 ko 내용을 실 nl 로 바꾸지 않음. 옵션 (b) 로 nl-BE 무프리픽스
+  경로 = 게이트 뒤 → ko 복제본이 비운영자에게 노출될 표면 자체가 0
+  (게이트가 막음) → "ko 복제본이 nl-BE 인 척 공개되는 P3 위반" 이 4.5.j.1
+  에서 *구조적으로 차단*. γ "미번역 fallback 허용" 정신 유지 — 공개
+  4 prefix 는 stub fallback(빈 객체) 그대로, 게이트 뒤 nl-BE 는 ko 그대로.
+- **4.5.j.2 (backfill) 책임 경계 + 필수 스위치**: 4.5.j.2 가
+  `messages/nl-BE.json` 을 실 nl 콘텐츠로 교체할 때, **DoD 에 "middleware
+  게이트 매처에서 nl-BE 무프리픽스 경로 해제 (= 루트 `/` 등 공개 전환)"
+  를 명시 포함**. 이 해제 없이 nl-BE 만 backfill 하면 실 nl 콘텐츠가
+  영구히 게이트 뒤 → 회귀 (ADR-0034 §회귀 #2 의 역방향: 게이트 누수가
+  아니라 *공개 콘텐츠 미공개*). 본 ADR 이 4.5.j.2 DoD 에 이 스위치를
+  박는다 (PLAN 4.5.j.2 본문 amend — architect 본 턴).
+- **순서 정합 (ADR-0034 §대안 E D1→D3→D4→D5)**: 4.5.j.1(게이트) →
+  4.5.j.2(backfill+스위치) → 4.5.j.3(legal). organic SEO(D5)는 D1~D4
+  *이후* 이므로, 4.5.j.1 시점 공개 콘텐츠 부재(빈 fallback)는 SEO 색인
+  손실 0 (색인 발동 = D5, 그때는 4.5.j.2 완료 상태).
+
+### A2.4 — 운영자 확인 항목 → ✅ 확정 (2026-05-17, 운영자 Kim Wonmin 직접)
+
+> **확정 (2026-05-17)**: 운영자가 아래 2 항목 모두 architect 기본값으로
+> 명시 확정. **① = 옵션 (b) 같은 도메인 basic-auth** (별도 도메인 거부 →
+> ADR-0034 D1 Amendment 트리거 **불발화**, 잠금값 envelope 내). **② = 단일
+> 토큰 쿠키/쿼리** (`KO_GATE_TOKEN`, 기존 `/admin` 동형). 두 항목 모두
+> 잠금값 — §A2.5 DoD 그대로 builder 진행. 미결 0.
+
+다음은 architect 가 *기본값을 옵션 (b) 로 두되* 운영자 확정이 필요했던
+항목 (위 블록에서 ✅ 확정 — 이력 보존):
+
+1. **운영자 검증 UX 선호** — ko 검증을 (b) "같은 도메인, 무프리픽스
+   경로를 basic-auth 통과 후 열람" 으로 할지, (c) "별도 preview/서브도메인"
+   으로 할지. 운영자 원문 "편집자 모드처럼" 의 해석은 architect 가 (b)
+   로 추정(명시 추정)했으나, 운영자가 (c) 를 원하면 ADR-0034 D1 구현
+   잠금값(env 1개/새 SaaS 0) 재조정 필요 → **운영자 확인 시 ADR-0034 D1
+   Amendment 트리거** (본 ADR 아님). 미회신 시 **(b) 진행** (4.5.j.1
+   blocker 아님 — 기본값 명확).
+2. **basic-auth 자격증명 형식** — env 비밀 1개의 형식 (단일 토큰 =
+   기존 `ADMIN_TOKEN` 패턴 동형 `KO_GATE_TOKEN` vs HTTP Basic
+   `user:pass`). architect 권고 = **기존 `/admin` 동형 단일 토큰
+   쿠키/쿼리** (코드 재사용 최대, `constantTimeEqual` 그대로, 학습
+   부담 0 — FOUNDER 학습자 모드). 운영자 명시 거부 없으면 이 권고로
+   builder 진행 (잠금값 — §A2.5 DoD 에 반영). 자격증명 *값* 은 운영자가
+   `.env` 에 등록 (builder 가 값 생성 X — 기존 `RESEND_API_KEY` 패턴).
+
+### A2.5 — PLAN 4.5.j.1 DoD 구체화 (builder 즉시 구현 가능 수준)
+
+본 ADR §A2.2 잠금 + §A2.4 권고 기준, 4.5.j.1 DoD (PLAN 본문 amend —
+architect 본 턴):
+
+- **D1.** `src/middleware.ts` 에 ko 게이트 추가 — 기존 `handleAdmin`
+  패턴 동형 `handleKoGate(req)`: env `KO_GATE_TOKEN` (단일 토큰, env
+  비밀 1개) 미설정 시 fail-closed (게이트 대상 경로 404/401), 쿠키
+  `ko_gate_token` == env → 통과, 쿼리 `?ko_token=` == env → 쿠키 발급
+  후 쿼리 제거 redirect (기존 admin 쿼리→쿠키 패턴 동형). `constantTimeEqual`
+  재사용 (edge-safe — 신규 crypto 0).
+- **D2.** 게이트 대상 = **locale prefix 없는 경로 전체** (`/`,
+  `/compare/...`, `/r/...`, `/data-sources`, `/legal/...` 등 — nl-BE
+  defaultLocale 슬롯). 비대상 = `/nl-NL/*` `/fr-BE/*` `/fr-LU/*` `/en/*`
+  (명시 공개 prefix) + `/api/*` (matcher 기 제외) + `/admin/*` (기존
+  admin 가드가 선처리 — 실행 순서: admin → ko 게이트 → intl). 판정
+  로직 = `req.nextUrl.pathname` 이 공개 4 prefix 중 하나로 시작하지
+  않으면 게이트 대상 (builder: `routing.locales` 중 defaultLocale 제외
+  4개로 prefix 집합 도출 — 하드코딩 금지, routing.ts 단일 출처 재사용).
+- **D3.** `routing.ts` / `request.ts` / `src/app/[locale]/layout.tsx`
+  / `messages/*` = **무변경** (회귀 0 — §T1/§T2 보존 검증).
+- **D4.** env 1개 (`KO_GATE_TOKEN`) — `.env.example` +
+  `.env.local.example` placeholder 추가 + 운영자 등록 메모 (builder 가
+  값 생성 X — 운영자 `.env` 등록, 기존 `ADMIN_TOKEN`/`RESEND_API_KEY`
+  패턴 동형).
+- **D5.** **게이트 누수 0 검증** (ADR-0034 §회귀 #2): 단위/통합 테스트 —
+  (i) env 미설정 → 게이트 대상 경로 fail-closed (ii) 무토큰 `/`,
+  `/compare` → 차단 (iii) 유효 토큰 쿠키 → 통과 (iv) 공개 prefix
+  (`/en` 등) → 게이트 없이 통과 (v) `/api/*` 게이트 비대상 (vi) 잘못된
+  토큰 → 차단 (constant-time). 기존 admin 가드 테스트 패턴 재사용.
+- **D6.** typecheck 0 / lint 0 / test 0 (회귀 0 — 기존 e2e locale
+  prefix 단언 무영향: 공개 prefix 경로는 게이트 비대상) / `pnpm
+  harness:plan` 정합 (88/58 불변 — 본 amend 는 본문만, 항목 수 0) /
+  `pnpm harness:data` 통과.
+- **비-DoD (명시 경계)**: nl-BE 슬롯 ko→실nl 교체 ❌ (4.5.j.2) /
+  hreflang·sitemap 활성 ❌ (4.5.j.2 / PLAN 4.6 / 3.5.3) / DeepL 번역
+  ❌ (4.5.j.2) / legal.* 검수 ❌ (4.5.j.3).
+
+### A2.6 — §SCOPE 표 + §Verification #6 재정의
+
+- §SCOPE 표 "4.9 런치 게이트" 행 = **무효** (ADR-0034 D1: 완성 동시로
+  당김). 대체 = PLAN 4.5.j.1(게이트) / 4.5.j.2(backfill+nl-BE 스위치) /
+  4.5.j.3(legal) 3 sub-task. ko 제거(§T2 "런치 시 messages/ko.json
+  제거")는 ADR-0034 "KO 운명 미결(런칭 후 삭제 vs hidden 유지) — 운영자
+  명시 보류" 로 *보류* (4.5.j.* 범위 밖, ADR-0034 단일 미결).
+- §Verification #6 ("4.9 런치 게이트") = 위 3 sub-task DoD 로 분해
+  (§A2.5 + PLAN 4.5.j.2/.3 본문). #1~#5 (typecheck/e2e/harness/ko 키
+  누락/DeepL 측정) = 유지.

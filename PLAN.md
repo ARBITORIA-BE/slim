@@ -1195,24 +1195,54 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - ✅ 완료 (2026-05-16): typecheck 0 에러 / lint 0 에러 / test 493 passed (30 files, 회귀 0) / harness:plan 86항목 정합 / harness:data 통과 / SQL 0007 (DELETE+ALTER+DROP+CREATE+ALTER) 4항목 충족 / tariff_category enum 3값 (mobile/internet_fixed/bundle_internet_tv) / compare/page.tsx CATEGORIES 3카드 + 자가 점검 통과 / 기능코드 landline 0건 + 회귀 테스트 ('landline' reject) 통과.
   - [x] **4.5.j** next-intl 인프라 배선 + ko 키화 (트랙 2) — **D-2 = 시나리오 γ** (ADR-0033 신설). next-intl 인프라 배선 (ADR-0033 §T1 `app/[locale]/...` 세그먼트 라우팅 + middleware + `src/i18n/routing.ts`/`request.ts` + 기존 라우트 `src/app/[locale]/` 마이그레이션 — URL 구조 보존, e2e URL 단언 locale prefix 정합) + `messages/ko.json` 키화 (ADR-0033 §T5 우선순위 1~3: caveats.ts 8규칙 → compare 5단계 → `/r/[shortId]`). **베타 = ko 단일 콘텐츠** 그대로 (ADR-0029 한국어 단일 잠금 100% 보존 — 콘텐츠 변경 0, **4.6 비-blocker**). **nl/fr/en 콘텐츠 backfill + ko 제거 + hreflang/sitemap 활성 = 4.9 런치 게이트** (본 4.5.j 범위 외 — DeepL Free + 수동 검수, ADR-0033 §T3). **legal 트랙 분리** — `legal.*` 네임스페이스는 legal 에이전트 검수 게이트 별도 (ADR-0033 §T4, 4.9 런치 + legal 에이전트). DeepL Free 분량은 ko 키화 후 측정 (ADR-0033 §Verification #5, €300 cap 영향 0 추정). DoD: `src/i18n/*` + `middleware.ts` + `next.config.ts` next-intl plugin + 라우트 `[locale]` 이동 + `messages/ko.json` 키 누락 0 (1~3 우선순위) + nl/fr/en fallback 동작 (γ — 미번역 허용) + typecheck/lint/test 0 + `pnpm test:e2e` locale prefix 정합 + harness:plan 정합 + DeepL 분량 측정 기록.
     - ✅ 완료 (2026-05-16): typecheck 0 / lint 0 / test 498 passed (e2e 49/7 skipped) / harness:plan 86항목 정합 / harness:data 통과 / i18n routing + middleware 통합 + ko 키화 1~3 우선순위 완료 / γ 정합성 보존 (ko 단일 무변경) / e2e spec 2개 완화 정당성 판정 ✅ (result-page 공백 케이스 분리=라우트 미매핑 명확화 / compare-flow preview 단언 제거=race condition 흡수, 본질 보존) / ko 8633자 / DeepL cap 영향 0.
-    - [ ] **4.5.j.1** **KO basic-auth 게이트** (트랙 D1 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D1,
+    - [x] **4.5.j.1** **KO basic-auth 게이트** (트랙 D1 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D1,
       [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) Amendment 2,
       [ADR-0016](docs/adr/0016-phase-2-input-flow-design.md) Amendment 2).
-      `src/middleware.ts` basic-auth 확장 (운영자 ID/PW, env 비밀 1개 — 기존
-      `/admin` 가드 패턴 동형, 새 인증 라이브러리 0 / 새 SaaS 0). ko =
-      운영자 전용 hidden (공개 `locales` 비포함 — ADR-0033 §T2 유지). **다음
-      단계 결정 (잠금값 아님)**: 현 `src/i18n/routing.ts` 는 ko 를 nl-BE
-      슬롯에 매핑 — basic-auth 가 보호하는 정확한 경로/세그먼트 매핑은 builder
-      진입 시 결정 (ADR-0034 D1 §다음 단계 결정). DoD: middleware basic-auth
-      확장 + env 1개 운영자 등록 메모 + 비운영자 ko 접근 차단 (게이트 누수 0
-      = ADR-0034 §회귀 #2) + typecheck/lint/test 0 + harness:plan/data 정합.
-    - [ ] **4.5.j.2** **nl/fr/en 콘텐츠 backfill** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T3 + Amendment 2).
+      **세그먼트 매핑 잠금 완료** (architect 2026-05-17, ADR-0033 §A2.2 옵션
+      (b)): ko 게이트 = `src/middleware.ts` 에서 **locale prefix 없는 경로
+      전체** (= nl-BE defaultLocale 슬롯 = 현 ko 복제 콘텐츠 서빙 경로:
+      `/`, `/compare/...`, `/r/...`, `/data-sources`, `/legal/...`) 를
+      basic-auth 가드. 비대상 = `/nl-NL/*` `/fr-BE/*` `/fr-LU/*` `/en/*`
+      (명시 공개 prefix) + `/api/*` (matcher 기 제외) + `/admin/*` (기존
+      admin 가드 선처리). `routing.ts`/`request.ts`/`[locale]/layout.tsx`/
+      `messages/*` = **무변경** (§T1/§T2 보존, 회귀 0 — `locales` 변경 0).
+      옵션 (a) ko prefix 추가 = ❌ (§T2 잠금 위반, hreflang/sitemap 누출),
+      옵션 (c) 별도 도메인 = ❌ (env 1개/새 SaaS 0 초과) → ADR-0033 §A2.2.
+      구현 = 기존 `handleAdmin` 동형 `handleKoGate` (env `KO_GATE_TOKEN`
+      단일 토큰, 쿠키 `ko_gate_token` / 쿼리 `?ko_token=` → 쿠키 발급
+      redirect, `constantTimeEqual` 재사용 — edge-safe, 신규 crypto 0,
+      fail-closed). 실행 순서 = admin → ko 게이트 → intl. **nl-BE 슬롯
+      ko→실nl 교체·hreflang/sitemap·DeepL·legal.* = 비-DoD (4.5.j.2/.3
+      경계, ADR-0033 §A2.3)**. **운영자 확인 대기 (잠금값 아님 — 미회신
+      시 옵션 (b) 진행, blocker 아님)**: ① ko 검증 UX = 같은 도메인 게이트
+      통과 (b) vs 별도 preview (c) — (c) 선택 시 ADR-0034 D1 Amendment
+      트리거 ② basic-auth 형식 = 단일 토큰 쿠키/쿼리 (architect 권고,
+      ADR-0033 §A2.4). DoD: (D1) `handleKoGate` 추가 (D2) 게이트 대상 =
+      비prefix 경로, 공개 4 prefix 집합은 routing.ts 단일 출처에서 도출
+      (하드코딩 금지) (D3) routing/request/layout/messages 무변경 검증
+      (D4) `KO_GATE_TOKEN` `.env.example`+`.env.local.example` placeholder
+      + 운영자 등록 메모 (builder 값 생성 X) (D5) 게이트 누수 0 테스트 6
+      케이스 (env 미설정 fail-closed / 무토큰 `/`·`/compare` 차단 / 유효
+      쿠키 통과 / 공개 prefix 통과 / `/api/*` 비대상 / 잘못된 토큰
+      constant-time 차단 — ADR-0034 §회귀 #2) (D6) typecheck/lint/test 0
+      (e2e locale prefix 단언 무영향 — 공개 prefix 게이트 비대상) +
+      harness:plan(88/58 불변) + harness:data 정합.
+      ✅ 완료 (2026-05-17): `src/middleware.ts` handleKoGate 동형 추가 + PUBLIC_LOCALE_PREFIXES routing.locales 단일출처 도출 / `src/middleware.ko-gate.test.ts` 신설 (9 케이스: env-missing fail-closed/무토큰 2차단/유효쿠키 통과/공개prefix 3×통과/api matcher제외/잘못된토큰 차단) / `.env.example`+`.env.local.example` KO_GATE_TOKEN placeholder + 주석. typecheck 0 / lint 0 / test 507 passed (ko-gate +9) / harness:plan 88정합 / harness:data 통과 / 무변경 검증 routing/request/layout/messages 0건. 다음 4.5.j.2 (nl/fr/en backfill).
+    - [ ] **4.5.j.2** **nl/fr/en 콘텐츠 backfill** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T3 + Amendment 2 §A2.3).
       `messages/{nl-BE,nl-NL,fr-BE,fr-LU,en}.json` 콘텐츠 backfill (DeepL Free
       + 수동 검수, nl/fr base + region delta fallback — DeepL 분량 절약).
+      현 `messages/nl-BE.json` = **ko 복제본** (파일 `_comment` + 본문 한국어
+      — architect 확인 2026-05-17) → 실 nl 콘텐츠로 교체가 본 항목 핵심.
       **시점 = 4.9 런치 게이트 → 완성 동시로 당겨짐** (ADR-0033 Amendment 2).
-      DoD: 5 locale 콘텐츠 키 누락 0 (ko 키화 1~3 우선순위 기준) + DeepL 분량
-      측정 기록 (€300 cap 영향, ADR-0033 §Verification #5) + nl/fr fallback
-      동작 + typecheck/lint/test 0 + harness:plan/data 정합.
+      **필수 스위치 (누락 시 회귀 — ADR-0033 §A2.3)**: nl-BE 슬롯을 실 nl
+      로 교체할 때 `src/middleware.ts` ko 게이트 매처에서 **nl-BE 무프리픽스
+      경로 해제** (= 루트 `/` 등 공개 전환) 를 *동일 항목에서* 수행. 이
+      해제 없이 nl-BE 만 backfill 하면 실 nl 콘텐츠가 영구히 게이트 뒤 =
+      회귀 (게이트 누수의 역방향: 공개 콘텐츠 미공개). DoD: 5 locale
+      콘텐츠 키 누락 0 (ko 키화 1~3 우선순위 기준) + **nl-BE 무프리픽스
+      게이트 해제 (4.5.j.1 게이트와 정합 — 공개 prefix 4개는 그대로)** +
+      DeepL 분량 측정 기록 (€300 cap 영향, ADR-0033 §Verification #5) +
+      nl/fr fallback 동작 + typecheck/lint/test 0 + harness:plan/data 정합.
     - [ ] **4.5.j.3** **legal.* 네임스페이스 legal 검수** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T4 + Amendment 2).
       `legal.*` 네임스페이스 (GDPR 동의/디스클로저/약관 텍스트) 는 일반 UI
       트랙과 분리 — **legal 에이전트 검수 게이트** (오역 = 규제 리스크).

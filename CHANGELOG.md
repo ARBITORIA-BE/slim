@@ -20,7 +20,7 @@
     - `pnpm lint` 0 error ✅
     - `pnpm harness:plan` 88/58/0 정합 (합계 88, 완료 58, 차단 0) ✅
     - `pnpm harness:data` 통과 ✅
-    - `pnpm test` — Windows Vitest 워커 풀 크래시로 **통과 미확정**. 이번 변경은 문서/PLAN만(소스 로직 0건)이라 회귀 가능성 낮으나 "통과"로 단정하지 않음. 깨끗한 환경/CI 재실행 필요.
+    - `pnpm test` — 정정: 크래시가 아니라 **`pnpm test` = watch 모드 (비종료)**, non-watch 명령 = `pnpm test:run` (`vitest run`). ADR-0034 번들 커밋(`99f9ce5`) 직전 `pnpm test:run` 실행 = **31 files / 498 passed** → 회귀 0 확인 (커밋 시점에 이미 확정이었음).
   - **미결 1건 (ADR-0034 §D1)**: KO 로케일의 런칭/개발 완료 후 운명(삭제 vs hidden 유지)은 의도적으로 미잠금 — 그 시점 운영자 결정.
   - **운영자 액션**: 본 변경 미커밋(요청 시 커밋). legal 4-provider robots/TOS 검토는 PLAN 1.5.6/1.5.8/1.5.9/4.5.j.3 진입 시 트리거(본 작업에서 미호출).
 
@@ -35,6 +35,16 @@
   - 신규 commit 규칙 (헌장 보강): noreply email 강제 + GitHub "Block command line pushes that expose my email" ON 으로 평문 gmail/work email 박힘 차단.
 
 ### Added
+
+- Phase 4 — **4.5.j.1 KO 기본 인증 게이트** (ADR-0034 D1, ADR-0033 Amendment 2 §A2.1~A2.6):
+  - **목표**: `ko` 로케일(운영자 전용 hidden) 무프리픽스 경로 보호 — `src/middleware.ts` 단일-토큰 same-domain basic-auth (별도 도메인 거부 옵션 포함, 다른 옵션 미채택).
+  - **구현**:
+    - `src/middleware.ts` — 신규 `handleKoGate(req)` + `isKoGateTarget(pathname)` 함수 + `PUBLIC_LOCALE_PREFIXES` 재사용 (routing.ts 단일출처, hardcoding 0). 실행 순서 = admin → ko 게이트 → intl. env 미설정 시 fail-closed (401), 유효 쿠키 `ko_gate_token`==env 통과, 쿼리 `?ko_token=` 파라미터 → 쿠키 발급 redirect. `constantTimeEqual` 기존 재사용. 비대상 = 공개 prefix 4개(`/nl-NL/*` `/fr-BE/*` `/fr-LU/*` `/en/*`) + `/api/*` + `/admin/*`.
+    - `.env.example` + `.env.local.example` — `KO_GATE_TOKEN` placeholder 추가 (builder 값 생성 X, 기존 `ADMIN_TOKEN`/`RESEND_API_KEY` 패턴 동형).
+    - `src/middleware.ko-gate.test.ts` (신규) — 9 케이스: env미설정 fail-closed / 무토큰 `/`·`/compare` 401 차단 / 유효쿠키 200 통과 / 공개prefix `/en`·`/nl-NL/compare/internet`·`/fr-BE` 게이트 스킵 200 / `/api/` matcher 제외 / 잘못된토큰 constant-time 차단. DoD D5 6필수 + sub 3 검증.
+    - **무변경**: `src/i18n/routing.ts` / `src/i18n/request.ts` / `src/app/[locale]/layout.tsx` / `messages/*` (회귀 0, DoD D3).
+  - **검증**: `pnpm typecheck` 0 / `pnpm lint` 0 / `pnpm test:run` **507 passed (32 files)** (498+9 신규) / `pnpm harness:plan` 88 정합(4.5.j.1 카운트 제외=들여쓰기) / `pnpm harness:data` 통과. DoD D1~D6 6/6 PASS.
+  - ⚠️ **회귀 결합 주의**: 4.5.j.2 nl·fr·en 콘텐츠 backfill 시 게이트 매처에서 nl-BE 무프리픽스 경로 동시 해제 필수 (안 하면 실 nl 영구 차단).
 
 - Phase 4 — **1.5.6.1 "추정값" UI 배너 + caveat 규칙 9 구현** (ADR-0013 Amendment 1 §Implementation guide):
   - **배경**: 스텁 fetcher(`method='stub'`) 대상 ADR-0013 옵션 X(베타 동안 "추정값" 정직성 표기) 구현. 4.6 베타 배포 의존성 — 헌법 P1(정보 우선) + P3(투명성) + ADR-0029 §T2(정직성) 일관.

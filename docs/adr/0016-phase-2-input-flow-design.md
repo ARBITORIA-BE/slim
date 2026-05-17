@@ -983,3 +983,41 @@ Amendment 1/2 의 **한국어 단일 베타 모집 잠금 (r/BENL banned → 3�
 - `pnpm harness:plan` — PLAN §2.1 "3 카드" + ADR-0016 Amd 1 cross-ref
   literal 매칭.
 - ADR-0033 §Verification 게이트와 통합 (4.5.i / 4.5.j DoD).
+
+## Amendment 2 (2026-05-17) — §T10 SC-E 운영 모델 = EN/FR/NL 공개 + ko basic-auth 게이트 ([ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D1)
+
+### 상태
+
+**Accepted (2026-05-17)** — 운영자 잠금 ([ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md)
+D1). 본 절은 §Status Amendment 2 블록의 본문 확정판.
+
+### (a) §T10 SC-E 운영 모델 변경 — §T1~§T9 보존
+
+- 변경 전 (Amendment 1): "페이즈 4 까지 한국어 단일, nl/fr/en 은 4.9
+  런치 게이트 backfill".
+- 변경 후 (D1 잠금): **공개 = EN/FR/NL (ADR-0033 §T2 `locales` 그대로,
+  변경 0) / ko = 운영자 전용 hidden, 구현 = `src/middleware.ts`
+  basic-auth + env 1개 (기존 `/admin` 가드 동형) / nl·fr·en backfill 이
+  4.9 런치 게이트 → 완성 동시로 당겨짐**.
+- **§T1~§T9 (REST 라우팅 / 5단계 입력 플로우 UI / RHF / shadcn) = 무관,
+  보존 (회귀 0)**. SC-E 는 *폐기 아닌 재정의* (운영 모델만).
+
+### (b) ko 게이트 라우팅 세그먼트 매핑 = ADR-0033 §Amendment 2 가 단일 출처
+
+- ko 게이트의 정확한 경로/세그먼트 매핑 (어느 경로를 basic-auth 가
+  보호하는가) 의 잠금 결정은 **[ADR-0033](0033-i18n-next-intl-introduction.md)
+  §Amendment 2 (§A2.2 옵션 비교 + 잠금 / §A2.5 DoD)** 가 단일 출처다.
+  본 ADR (페이즈 2 입력 플로우) 은 §T1 라우팅 *구조* 만 소유 — i18n
+  세그먼트/locale 라우팅은 ADR-0033 §T1 소유 (Amendment 1 (b) 위임
+  연장). 중복 기술 금지 (P5 단일 출처).
+
+### 결과
+
+- ✅ SC-E 재정의 명문화 (ADR-0034 D1 잠금 형식 기록).
+- ✅ §T1~§T9 보존 — 페이즈 2 입력 플로우 회귀 0.
+- 🔁 ko 게이트 구현 세그먼트 매핑 = ADR-0033 §Amendment 2 위임 (단일 출처).
+
+### 검증
+
+- ADR-0033 §Amendment 2 §A2.5 D1~D6 (PLAN 4.5.j.1 DoD) 와 통합.
+- `pnpm harness:plan` 정합 (PLAN 항목 수 불변 — 본 amend 본문만).
