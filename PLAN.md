@@ -1228,21 +1228,111 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       (e2e locale prefix 단언 무영향 — 공개 prefix 게이트 비대상) +
       harness:plan(88/58 불변) + harness:data 정합.
       ✅ 완료 (2026-05-17): `src/middleware.ts` handleKoGate 동형 추가 + PUBLIC_LOCALE_PREFIXES routing.locales 단일출처 도출 / `src/middleware.ko-gate.test.ts` 신설 (9 케이스: env-missing fail-closed/무토큰 2차단/유효쿠키 통과/공개prefix 3×통과/api matcher제외/잘못된토큰 차단) / `.env.example`+`.env.local.example` KO_GATE_TOKEN placeholder + 주석. typecheck 0 / lint 0 / test 507 passed (ko-gate +9) / harness:plan 88정합 / harness:data 통과 / 무변경 검증 routing/request/layout/messages 0건. 다음 4.5.j.2 (nl/fr/en backfill).
-    - [ ] **4.5.j.2** **nl/fr/en 콘텐츠 backfill** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T3 + Amendment 2 §A2.3).
-      `messages/{nl-BE,nl-NL,fr-BE,fr-LU,en}.json` 콘텐츠 backfill (DeepL Free
-      + 수동 검수, nl/fr base + region delta fallback — DeepL 분량 절약).
-      현 `messages/nl-BE.json` = **ko 복제본** (파일 `_comment` + 본문 한국어
-      — architect 확인 2026-05-17) → 실 nl 콘텐츠로 교체가 본 항목 핵심.
-      **시점 = 4.9 런치 게이트 → 완성 동시로 당겨짐** (ADR-0033 Amendment 2).
-      **필수 스위치 (누락 시 회귀 — ADR-0033 §A2.3)**: nl-BE 슬롯을 실 nl
-      로 교체할 때 `src/middleware.ts` ko 게이트 매처에서 **nl-BE 무프리픽스
-      경로 해제** (= 루트 `/` 등 공개 전환) 를 *동일 항목에서* 수행. 이
-      해제 없이 nl-BE 만 backfill 하면 실 nl 콘텐츠가 영구히 게이트 뒤 =
-      회귀 (게이트 누수의 역방향: 공개 콘텐츠 미공개). DoD: 5 locale
-      콘텐츠 키 누락 0 (ko 키화 1~3 우선순위 기준) + **nl-BE 무프리픽스
-      게이트 해제 (4.5.j.1 게이트와 정합 — 공개 prefix 4개는 그대로)** +
-      DeepL 분량 측정 기록 (€300 cap 영향, ADR-0033 §Verification #5) +
-      nl/fr fallback 동작 + typecheck/lint/test 0 + harness:plan/data 정합.
+    - [ ] **4.5.j.2** **nl/fr/en 콘텐츠 backfill** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T3 + Amendment 2 §A2.3 + **§A2.7 잠금 G1/G2/G3**).
+      `messages/{nl,fr,nl-BE,nl-NL,fr-BE,fr-LU,en}.json` 콘텐츠 backfill
+      (DeepL Free + 수동 검수, **nl/fr base + region delta** fallback —
+      ADR-0033 §A2.7 G3 잠금). 현 `messages/nl-BE.json` = **ko 복제본**
+      (파일 `_comment` + 본문 한국어 — architect 확인 2026-05-17), 정본 =
+      `messages/ko.json` (259줄, ADR-0033 §A2.7 G2-ii). nl-NL/fr-BE/fr-LU/
+      en = `_comment` stub. `src/i18n/request.ts` = 현 **단일 import + 빈
+      객체 fallback** → §A2.7 G3 의 **base+delta 얕은 병합 구조로 전환**
+      이 본 항목 코어 (현재 `getMessageFallback`/`nl`·`fr` base 부재).
+      **시점 = 완성 동시** (ADR-0034 D1, ADR-0033 Amendment 2).
+      ── **G1 잠금 (ADR-0033 §A2.7, G1=G1-a ✅ 운영자 확정 2026-05-17)
+      — ko 검증 접근 보존**: nl-BE 무프리픽스 게이트 해제 시 운영자 ko
+      접근 0 → 회귀. `src/i18n/request.ts` 에 **G1-a ko 오버레이** 추가:
+      요청 쿠키 `ko_gate_token` 이 `KO_GATE_TOKEN` env 와
+      `constantTimeEqual` 일치 시 해석 locale 무관 `messages/ko.json`
+      로드 (URL/hreflang/sitemap=nl-BE 그대로, 메시지만 ko 스왑). 게이트
+      토큰 *재사용* (새 env 0). 무쿠키/불일치 → 공개 locale 그대로 (정적
+      렌더 회귀 0). **필수 스위치 — 원자 동시 (누락 시 회귀 — §A2.3
+      역방향)**: 한 항목에서 (a) `src/middleware.ts` ko 게이트 매처에서
+      **nl-BE 무프리픽스 경로 해제** (= 루트 `/` 공개 전환, 핫픽스
+      `10dee59` pass-through 와 정합 — ADR-0033 §A2.5-Amd3) + (b) nl-BE
+      슬롯 ko→실nl 교체 + (c) G1-a ko 오버레이 도입을 **동시** 적용
+      (셋 중 하나만 하면 회귀: (a)만=ko 접근 0, (c)만=공개 콘텐츠 미공개,
+      (a)+(c) 무 (b)=실 nl 부재). ── **P0 인시던트 정합 (ADR-0033
+      §A2.5-Amd3)**: 핫픽스(`10dee59`)로 `handleKoGate` = env 미설정 시
+      pass-through (게이트 비활성). 본 항목 (a) 스위치 적용 시점부터
+      무프리픽스 = 실 nl 공개 = pass-through 가 **정상·안전** (ko 노출
+      위험 0 — ko 는 (c) G1-a 오버레이 쿠키 뒤). 즉 핫픽스 = 4.5.j.2
+      완료 시 *설계상 올바른 종착 상태로 수렴* (일탈 아님 — 과도기
+      정합). **과도기 부채 (P3 정직)**: 4.5.j.2 완료 *전* 무프리픽스 =
+      ko 복제 공개 (env 미등록 현 prod) — ADR-0034 D1 "ko hidden" 의도
+      과도기 불일치, 운영자 의식 수용 (다운 회피). ADR-0034 §회귀 #2
+      "게이트 누수→즉시 재설계" = **본 4.5.j.2 원자 스위치가 그 재설계**
+      (G1-a 오버레이 = 항구 해소).
+      ── **G2 잠금 (§A2.7, Q2 ✅ 운영자 확정 2026-05-17)**: 번역 =
+      운영자 발급 `DEEPL_API_KEY`(Free, builder 값 생성 X — RESEND/
+      KO_GATE 패턴) + 일회성 스크립트 (`scripts/i18n/` 하위, src/**
+      아님 = 런타임 코드 0). 소스 = `messages/ko.json` → DeepL
+      ko→{nl,fr,en} (ko 소스 미지원 시 2-hop ko→en→nl/fr, builder
+      리서치). **Q2 검수 모델 (운영자 의식 P1/P3 부채 수용 — ADR-0034
+      패턴)**: (1) **`caveats.*` 1순위 수동 검수** (가격/절약 오역 =
+      사용자 직접 손해) 운영자 검수 1회 통과 = DoD; (2) **나머지
+      네임스페이스 = DeepL raw 기계번역 *공개* + organic 피드백 사후
+      점진 보정** (솔로·한국 모국어 nl/fr 전수 검수 불가 현실 — 오역
+      은닉보다 raw 노출 + 빠른 보정이 P3 정합); (3) **`legal.*` =
+      4.5.j.3 별도** (§T4 legal 에이전트, 본 항목 산출 X — GDPR/약관
+      오역 = 규제 리스크).
+      ── **G3 잠금 (§A2.7)**: `messages/nl.json`(nl base 전체키 1회) +
+      `messages/fr.json`(fr base) + `en.json`(독립 전체키). `{nl-BE,nl-NL,
+      fr-BE,fr-LU}.json` = override-only delta (차이 없으면 `{}`+
+      `_comment`). fallback = region→base(nl|fr)→en→키그대로(γ 허용),
+      request.ts 얕은 병합(region 우선). DeepL 절약 ≈ 40% 추정 (실측
+      = §Verification #5).
+      ── **실행 = 2 Phase (운영자 결정 2026-05-17 — 코드 배선 먼저)**:
+      **Phase A (코드 배선, DeepL 키 불요 — 지금 진행)** = (A1)
+      `src/i18n/request.ts` 를 단일 import → **base+delta 얕은 병합
+      구조로 전환**: 해석 locale 의 region 파일 + base(nl|fr) + en 을
+      얕은 병합(region 우선, 키 충돌 시 region 승) 후 반환 + en 미스 =
+      키 그대로(γ 허용). (A2) **G1-a ko 오버레이**: `request.ts` 에서
+      `next/headers` `cookies()` 로 `ko_gate_token` 읽어 `KO_GATE_TOKEN`
+      env 와 `constantTimeEqual`(재사용 — 신규 crypto 0, edge-safe)
+      일치 시 *해석 locale 무관* `messages/ko.json` 로드. 무쿠키/불일치
+      → 위 base+delta 병합 그대로 (무쿠키 정적 렌더 회귀 0 = 쿠키
+      보유 요청만 동적, 공개 정적 경로 불변). (A3) `src/middleware.ts`
+      **nl-BE 무프리픽스 게이트 해제** = `isKoGateTarget` 조정 (무프리픽스
+      경로 = 게이트 비대상화) — 핫픽스 pass-through(`10dee59`)와 정합
+      (env 미설정 = 비활성 그대로, 매처에서 무프리픽스 제거 = 명시 공개).
+      (A4) `messages/` 파일 구조 생성: `nl.json`/`fr.json` base + `{nl-BE,
+      nl-NL,fr-BE,fr-LU}.json` delta(빈 `{}`+`_comment` 허용) + `en.json`
+      독립 — **구조·키 골격만, DeepL 번역 값은 Phase B**. (A5)
+      `scripts/i18n/` 번역 스크립트 + `measure-chars.mjs` 골격(실행은
+      Phase B). **Phase B (번역 산출, DeepL 키 대기 — 소프트 blocker)**
+      = 운영자 `DEEPL_API_KEY` 등록 후 스크립트 실행 → base 3 + delta
+      값 채움 + caveats.* 운영자 검수 1회. **A↔B 경계 = builder 인계
+      명시: Phase A 는 키 없이 완주 가능 (배선/구조/테스트), Phase B
+      진입만 키 블로킹.**
+      ── **DoD (Phase A 완료 기준 — 별도 표기 없으면 Phase A)**: (1)
+      [Phase A] base 3 + delta 4 + en **파일·키 골격** 존재 + [Phase B]
+      콘텐츠 키 누락 0 (ko 정본 1~3 우선순위 기준; nl-BE delta 는 nl
+      base 대비 차이만) (2) [Phase A] **nl-BE 무프리픽스 게이트 해제**
+      + **G1-a ko 오버레이** 동시 — 해제 후 무쿠키 `/` = (Phase A) base
+      병합 fallback / (Phase B) 실 nl 공개 / `?ko_token=`(또는 쿠키) →
+      ko 스왑 / 공개 prefix 4개(`/nl-NL` `/fr-BE` `/fr-LU` `/en`) 불변 /
+      검색 봇(무쿠키) ko 누출 0 (3) [Phase A] ko 오버레이 쿠키 분기가
+      공개(무쿠키) 정적 렌더 회귀 0 + G1 누수 0 테스트 (유효 쿠키→ko /
+      무쿠키→nl / 잘못된 토큰→nl, constant-time — ADR-0033 §A2.5-Amd3
+      회귀 검증) (4) [Phase B] DeepL 분량 측정 기록 — 명령 = `node
+      scripts/i18n/measure-chars.mjs` (또는 동등), 기록 위치 = ADR-0033
+      §Verification #5 (ko 정본 총자수 + nl/fr/en base 합, €300 cap
+      영향 — Free 500K 대비) (5) [Phase A] nl/fr region→base→en fallback
+      동작 (`pnpm dev` 수동 + 단위) (6) [Phase A] `pnpm typecheck`/`pnpm
+      lint`/**`pnpm test:run`** 0 (*`pnpm test` 아님* — vitest watch
+      함정) + `pnpm test:e2e` locale prefix 단언 무영향 (7) [Phase A]
+      `pnpm harness:plan` 88/58 불변 (본 항목 4칸 들여쓰기 = `^- \[`
+      앵커 itemRe 비매치 = 카운트 비대상, 본문만 수정·항목 수 0;
+      `expectedTotal=items.length` 는 들여쓰기 0 항목만 카운트 — 정적
+      입증) + `pnpm harness:data` 정합. ── **운영자 확정 ✅
+      (2026-05-17, ADR-0033 §A2.7)**: ①(G1) **G1-a 확정** — 같은 도메인
+      쿠키 오버레이, 새 env 0, **비-blocker** (§A2.4 토큰 확정의 읽기측
+      재사용) ②(Q2) **확정** — caveats.* 1순위 수동 검수 / 나머지 DeepL
+      raw 공개 + 사후 보정 (P1/P3 부채 의식 수용) / legal.* = 4.5.j.3
+      ③(G2) `DEEPL_API_KEY` 운영자 발급 = **소프트 blocker** (Phase A
+      배선 키 없이 선행, Phase B 번역 산출만 키 대기). 미결 0. ── **비-DoD**: `legal.*` ❌(4.5.j.3) / `ko.json` 삭제
+      ❌(ADR-0034 §미결 보류) / hreflang·sitemap ❌(4.6/3.5.3) / ko URL
+      세그먼트화 ❌(§T2, §A2.7 G1-b 거부).
     - [ ] **4.5.j.3** **legal.* 네임스페이스 legal 검수** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T4 + Amendment 2).
       `legal.*` 네임스페이스 (GDPR 동의/디스클로저/약관 텍스트) 는 일반 UI
       트랙과 분리 — **legal 에이전트 검수 게이트** (오역 = 규제 리스크).

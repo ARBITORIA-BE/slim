@@ -27,6 +27,11 @@ fallback) / §T4 (`legal.*` 별도 legal 검수 게이트) / §T5 (키화 우선
   D-3 cross-ref만 / D-4 4.5.i·4.5.j / D-5 architect §T1 위임)
 - Amendment 2 (2026-05-17) — γ → 4 locale 공개 + ko basic-auth 게이트
   (ADR-0034 D1, §T1 보존 / §T2 운영 모델 변경 / §T3~T5 시점 당김)
+- **Amendment 3 (2026-05-17, P0 인시던트 후 architect)** — §A2.5 D1
+  "env 미설정 fail-closed" → **pass-through** 정식 재조정 (핫픽스
+  `10dee59` 설계 정본 승인 — §A2.5-Amd3). §A2.7 G1=G1-a / Q2 운영자
+  ✅ 확정 (2026-05-17) + §A2.7-R1 cross-ref. 코드 변경 0 (핫픽스 기
+  반영, 본 amend 는 설계 정합·정당화). 새 ADR 신설 0 (P5).
 
 본 ADR 은 **ADR-0016 §T10 SC-E + §회귀 트리거 7번 (i18n 일괄 도입)** 의 발동
 산출물이다. SC-E 는 **폐기가 아니라 발동 + 시점 앞당김** — 직전 분석 결론 그대로.
@@ -544,10 +549,11 @@ architect 본 턴):
 
 - **D1.** `src/middleware.ts` 에 ko 게이트 추가 — 기존 `handleAdmin`
   패턴 동형 `handleKoGate(req)`: env `KO_GATE_TOKEN` (단일 토큰, env
-  비밀 1개) 미설정 시 fail-closed (게이트 대상 경로 404/401), 쿠키
-  `ko_gate_token` == env → 통과, 쿼리 `?ko_token=` == env → 쿠키 발급
-  후 쿼리 제거 redirect (기존 admin 쿼리→쿠키 패턴 동형). `constantTimeEqual`
-  재사용 (edge-safe — 신규 crypto 0).
+  비밀 1개) 미설정 시 ~~fail-closed (게이트 대상 경로 404/401)~~ **→
+  Amendment 3 (2026-05-17) 으로 pass-through 재조정 — 아래 §A2.5-Amd3
+  참조**, 쿠키 `ko_gate_token` == env → 통과, 쿼리 `?ko_token=` == env
+  → 쿠키 발급 후 쿼리 제거 redirect (기존 admin 쿼리→쿠키 패턴 동형).
+  `constantTimeEqual` 재사용 (edge-safe — 신규 crypto 0).
 - **D2.** 게이트 대상 = **locale prefix 없는 경로 전체** (`/`,
   `/compare/...`, `/r/...`, `/data-sources`, `/legal/...` 등 — nl-BE
   defaultLocale 슬롯). 비대상 = `/nl-NL/*` `/fr-BE/*` `/fr-LU/*` `/en/*`
@@ -563,7 +569,10 @@ architect 본 턴):
   값 생성 X — 운영자 `.env` 등록, 기존 `ADMIN_TOKEN`/`RESEND_API_KEY`
   패턴 동형).
 - **D5.** **게이트 누수 0 검증** (ADR-0034 §회귀 #2): 단위/통합 테스트 —
-  (i) env 미설정 → 게이트 대상 경로 fail-closed (ii) 무토큰 `/`,
+  (i) env 미설정 → ~~게이트 대상 경로 fail-closed~~ **pass-through
+  (게이트 비활성, 200 — Amendment 3 §A2.5-Amd3 재조정, 핫픽스
+  `10dee59` 정본; `src/middleware.ko-gate.test.ts` 케이스 (i) 동기화
+  완료)** (ii) 무토큰 `/`,
   `/compare` → 차단 (iii) 유효 토큰 쿠키 → 통과 (iv) 공개 prefix
   (`/en` 등) → 게이트 없이 통과 (v) `/api/*` 게이트 비대상 (vi) 잘못된
   토큰 → 차단 (constant-time). 기존 admin 가드 테스트 패턴 재사용.
@@ -575,6 +584,86 @@ architect 본 턴):
   hreflang·sitemap 활성 ❌ (4.5.j.2 / PLAN 4.6 / 3.5.3) / DeepL 번역
   ❌ (4.5.j.2) / legal.* 검수 ❌ (4.5.j.3).
 
+#### A2.5-Amd3 — D1 "env 미설정 fail-closed" 정식 재조정 (Amendment 3, 2026-05-17, P0 인시던트 후 architect)
+
+> **상태**: 채택 (2026-05-17). 본 절은 P0 인시던트 핫픽스(`10dee59`)를
+> ADR §A2.5 D1 과 정합화하는 *정식 재조정* 이다. 새 ADR 신설 0 (P5 —
+> 기존 §A2 amend). 코드 변경 0 (핫픽스가 이미 코드에 반영됨 — 본 절은
+> 그 코드를 설계 정본으로 *승인·정당화*).
+
+**무엇이 일어났는가 (P3 — 숨기지 않음)**: 4.5.j.1(`f232cce`) 가
+4.5.j.2 와 분리 단독 배포 + Vercel production `KO_GATE_TOKEN` 미등록
+→ `handleKoGate` 의 D1 "env 미설정 fail-closed" 가 발동 → 게이트 대상
+= 무프리픽스 경로 전체 = **공개 사이트 표면 전부**(`/`,`/compare`,
+`/r`,`/data-sources`,`/legal`) 401 → slim.lu 다운 (curl/MCP 확인:
+`/`→401, `/en`→200). 핫픽스(`10dee59`) = `handleKoGate`: env 미설정
+시 `koGateDeny()`(401) → `return null`(pass-through, 게이트 비활성).
+
+**fail-closed 가 위험했던 *유일한* 이유 (정직한 논리 전개)**:
+fail-closed 자체가 나쁜 게 아니다. 위험의 근원은 **D1→D2 전이 갭**
+에 게이트 대상(무프리픽스 슬롯)이 *실 공개 콘텐츠가 아니라 ko 복제
+(`nl-BE.json`=ko)* 였다는 점, 그리고 4.5.j.1 이 4.5.j.2 와 분리
+단독 배포돼 그 갭이 *프로덕션에 노출* 됐다는 점이다. 즉 "env 미설정
+→ 전체 차단" 이 곧 "공개 사이트 전체 차단" 으로 직결되는 구조는
+**4.5.j.1 단독 배포 시점에 한정된 과도기 위험** 이었다.
+
+**4.5.j.2 완료 시 pass-through 가 *설계상 올바른 정상 상태* 인 이유**:
+PLAN 4.5.j.2 "필수 스위치" 가 이미 **원자성** 을 요구한다 — (a) ko
+게이트의 nl-BE 무프리픽스 경로 *해제* + (b) `nl-BE.json` ko→실 nl
+*교체* + (c) G1-a ko 오버레이 쿠키 도입 = **동일 항목에서 동시**
+적용. 이 셋이 원자적으로 적용되면 그 시점부터:
+
+- 무프리픽스 경로 = **실 공개 nl 콘텐츠** (ko 아님). 따라서 게이트
+  비활성(pass-through) = "실 nl 을 공개" = **정상·안전** (ADR-0034
+  D1 "EN/FR/NL 공개" 정합).
+- ko 는 더 이상 무프리픽스 슬롯 콘텐츠가 아니라 **G1-a 오버레이
+  쿠키 뒤** (`constantTimeEqual(cookie, KO_GATE_TOKEN)` 일치 시에만
+  메시지 스왑). 쿠키·토큰 없는 요청(검색 봇 포함) = 실 nl. → env
+  미설정 = pass-through 라도 **ko 노출 위험 0** (ko 는 환경변수
+  fail-closed 가 아니라 *오버레이 비밀 일치* 로 보호 — §A2.7 G1-a).
+
+즉 핫픽스의 pass-through 는 일탈이 아니라 **4.5.j.2 완료 시 설계가
+수렴하는 올바른 종착 상태** 다. 핫픽스는 D1→D2 전이의 *과도기
+정합* — 4.5.j.2 가 셋을 원자 적용하는 순간 pass-through 의미가
+"공개 사이트 차단" 에서 "실 nl 공개 + ko 는 오버레이 뒤" 로 자동
+전환된다 (코드 추가 변경 0 — 의미만 전환).
+
+**재조정 결정 (Amendment 3)**:
+- D1 "env 미설정 → fail-closed" → **"env 미설정 → pass-through
+  (게이트 비활성, intl 위임 = 공개 서빙)"** 로 정정. `handleKoGate`
+  본문 = 코드 정본 (핫픽스 `10dee59` 그대로 승인).
+- ko 보호의 책임 이동: ~~"env fail-closed 가 ko 를 막는다"~~ →
+  **"§A2.7 G1-a 오버레이가 ko 를 막는다 (오버레이 비밀 일치 없으면
+  ko 스왑 0)"**. env 는 *게이트 활성 스위치* 일 뿐 ko 보호 1차
+  방어선 아님. 보호 1차선 = (4.5.j.2 전) 무프리픽스 게이트 그
+  자체가 토큰 등록 시 활성 / (4.5.j.2 후) G1-a 오버레이.
+
+**과도기 리스크 (P3 — 정직 표기, 운영자 수용 부채)**:
+- 4.5.j.2 **완료 전** 까지 무프리픽스 경로 = ko 복제 콘텐츠가
+  pass-through 로 *공개* 됨 (env 미등록 상태 = 현 프로덕션).
+  이는 ADR-0034 D1 "ko = 운영자 전용 hidden" *의도* 와 **과도기
+  불일치** — 핫픽스가 "사이트 다운" 과 "ko 과도기 노출" 중 후자를
+  택한 운영자 결정의 결과 (둘 다 부채, 다운이 더 큰 손해 → 운영자
+  의식적 수용, ADR-0034 §"잃는 것" 패턴과 동류).
+- **ADR-0034 §회귀 #2 와의 관계**: §회귀 #2 = "KO 게이트 누수
+  (비운영자 ko 콘텐츠 접근 1건) → 게이트 구현 즉시 재설계". 현
+  과도기 노출은 *문자적으로* 이 트리거에 해당하나, (i) 노출
+  콘텐츠 = ko 복제(개발 중 텍스트, 신뢰 손상 표면은 ADR-0034
+  §"⚠️ KO 게이트 보안 표면" 이 이미 인지) (ii) 운영자가 "다운 회피"
+  로 의식 수용 (iii) 4.5.j.2 원자 스위치가 *재설계 그 자체* (게이트
+  누수의 항구적 해소 = G1-a 오버레이) — 즉 §회귀 #2 의 "즉시
+  재설계" 요구는 **4.5.j.2 가 그 재설계** 라는 형태로 충족된다.
+  4.5.j.2 는 비-blocker 아닌 **과도기 부채 청산 경로** 로 격상
+  (운영자 인지 — 별도 ADR-0034 Amendment 불요: 본 §A2.5-Amd3 +
+  §A2.7 R1 cross-ref 로 정합 기록).
+
+**§A2.7 G1 cross-ref**: 본 재조정의 "ko 보호 = G1-a 오버레이" 는
+§A2.7 G1-a "게이트 토큰 재사용 + ko URL/hreflang/sitemap 누출 0 +
+무쿠키 정적 렌더 회귀 0" 와 동일 비밀·동일 비교(`constantTimeEqual`)
+이므로 누수 표면 증가 0 (§A2.7 G1-a "게이트 누수 평가" 와 정합).
+4.5.j.2 DoD (3) "잘못된 토큰→nl, constant-time" 가 본 재조정의
+검증 항목.
+
 ### A2.6 — §SCOPE 표 + §Verification #6 재정의
 
 - §SCOPE 표 "4.9 런치 게이트" 행 = **무효** (ADR-0034 D1: 완성 동시로
@@ -585,3 +674,259 @@ architect 본 턴):
 - §Verification #6 ("4.9 런치 게이트") = 위 3 sub-task DoD 로 분해
   (§A2.5 + PLAN 4.5.j.2/.3 본문). #1~#5 (typecheck/e2e/harness/ko 키
   누락/DeepL 측정) = 유지.
+
+### A2.7 — PLAN 4.5.j.2 (nl/fr/en backfill) 설계 잠금 — G1/G2/G3 (architect 2026-05-17)
+
+> 본 절은 PLAN 4.5.j.2 진입 전 설계 잠금이다. §A2.3 이 4.5.j.2 책임
+> 경계 + "nl-BE 무프리픽스 게이트 해제 필수 스위치" 를 박았으나, 그
+> 스위치를 실행하면 **운영자가 ko 를 볼 유일 경로(nl-BE 무프리픽스
+> 슬롯)가 소실**되는 설계 공백(G1)이 드러난다. §A2.7 이 이를 포함한
+> G1/G2/G3 를 잠근다. **ADR-0034 §미결("KO 운명: 런칭 후 삭제 vs
+> hidden 유지 — 운영자 명시 보류") 침범 0**: §A2.7 은 "개발 중 ko
+> 검증 *접근 메커니즘*" 만 잠그며, "런칭 후 ko 삭제/유지" 는 건드리지
+> 않는다 (그 미결은 4.5.j.* 범위 밖 — ADR-0034 D1 단일 미결 보존).
+
+#### 현 상태 사실 (architect 레포 직접 확인 2026-05-17)
+
+- `messages/ko.json` = 한국어 본문 (별도 파일, 259줄, `_comment` 없음).
+- `messages/nl-BE.json` = `ko.json` **키·값 동일 복제 + L2 `_comment`**
+  (베타 동안 nl-BE 슬롯 = ko 내용 — §A2.2). 즉 ko 정본 = `ko.json`,
+  nl-BE = 그 복제.
+- `messages/{nl-NL,fr-BE,fr-LU,en}.json` = `_comment` 1줄 stub (본문 0).
+- `src/i18n/request.ts` 현 구현 = **단일 파일 dynamic import + 빈 객체
+  fallback**. `getMessageFallback` 미구현, `nl`/`fr` **base 파일 부재**,
+  next-intl 메시지 병합(base+delta) **미배선**. 즉 §T3 의 "nl base +
+  region delta fallback 체인" 은 *현재 코드에 존재하지 않음* — 4.5.j.2
+  가 이 fallback 을 새로 배선해야 함 (G3 가 그 레이아웃을 잠금).
+- ko 게이트(`src/middleware.ts` `handleKoGate`/`isKoGateTarget`) =
+  locale prefix 없는 경로 전체 가드. ko 노출 유일 경로 = 이 게이트 뒤
+  무프리픽스 슬롯 (= nl-BE defaultLocale).
+
+#### G1 — nl-BE 게이트 해제 후 운영자 ko 검증 접근 메커니즘 [잠금]
+
+**문제**: §A2.3 필수 스위치(nl-BE 무프리픽스 게이트 해제)를 실행하면
+루트 `/` 등 무프리픽스 슬롯이 실 nl 콘텐츠로 *공개* 된다. 그런데 ko 는
+`routing.locales` 비포함(§T2)이고, ko 를 서빙하던 유일 경로가 바로 그
+무프리픽스 슬롯이었다. → **해제 즉시 운영자가 ko 를 볼 방법 0**. 이는
+ADR-0034 §"얻는 것" 의 "KO 검증 워크플로 보존 (운영자가 한국어로
+검증하며 개발 지속 — 운영자 원문 핵심 요구) — D1 게이트가 구조적으로
+보장" 을 정면 위반.
+
+**옵션 비교** (잠금값 envelope = ADR-0034 D1: `locales` 변경 0 /
+middleware basic-auth / env 1개 / 새 SaaS 0 / 새 인증 라이브러리 0):
+
+- **옵션 (G1-a) — ko 오버레이 쿠키/쿼리: `request.ts` 가 게이트 쿠키
+  보유 시 *어느 locale 위에서나* 메시지를 ko 로 스왑** — **채택**.
+  - 방식: 4.5.j.1 이 이미 발급하는 `ko_gate_token` 쿠키(KO_GATE_TOKEN
+    == env)를 `request.ts` 에서 재사용. 쿠키 유효 시 `locale` 값과
+    무관하게 `messages/ko.json` 을 로드(메시지만 ko 스왑, URL/locale
+    세그먼트/hreflang 은 그대로 nl-BE 등). 쿼리 `?ko_view=<token>` →
+    쿠키 발급(handleKoGate 가 이미 `?ko_token=` 처리 — **쿼리 파라미터
+    추가 없이 기존 `?ko_token=` 재사용 가능**, builder 가 단일 진입점
+    유지). next-intl `getRequestConfig` 는 요청 쿠키 접근 가능
+    (`next/headers` `cookies()`), 새 env 0 / 새 라이브러리 0.
+  - ✅ 얻는 것: (i) 게이트 해제 후에도 운영자가 *공개 사이트 위에서*
+    쿠키 한 번으로 ko 검증 — "편집자 모드처럼" (운영자 원문) 정합.
+    (ii) `locales` 변경 0, ko URL/hreflang/sitemap 누출 0 (ko 는
+    URL 세그먼트가 아니라 *메시지 소스 스왑* — §T2 "ko=콘텐츠, locale
+    아님" 원칙 강화). (iii) 새 env/SaaS 0 (게이트 토큰 재사용).
+    (iv) 솔로 구현 부담 = `request.ts` 분기 1곳 + 테스트 (게이트
+    인프라 4.5.j.1 완성품 재사용).
+  - ⚠️ 잃는 것 (P3 정직): (i) `request.ts` 가 쿠키 의존 → next-intl
+    static rendering(`setRequestLocale`/`generateStaticParams`) 와의
+    상호작용 검토 필요. ko 스왑은 *쿠키 보유 요청만* 동적 — 일반 공개
+    요청은 정적 경로 불변(쿠키 없음 → 스왑 없음). builder DoD 에
+    "쿠키 분기가 공개(무쿠키) 정적 렌더 회귀 0" 검증 박음. (ii) ko
+    오버레이는 *메시지만* — URL/lang 속성은 nl-BE. 운영자가 "ko URL"
+    을 기대하면 불일치이나, 운영자 요구 = "ko 텍스트로 검증" 이지
+    "ko URL" 아님 (ADR-0034 §미결이 ko 를 locale 로 안 만드는 것 확정).
+  - 게이트 누수 평가 (ADR-0034 §회귀 #2): ko 스왑 트리거 =
+    `constantTimeEqual(cookie, KO_GATE_TOKEN)` — 4.5.j.1 게이트와
+    *동일 비밀·동일 비교*. 쿠키 없거나 토큰 불일치 → 스왑 0 (공개
+    locale 그대로). 누수 표면 = 4.5.j.1 게이트와 동일 등급(증가 0).
+  - SEO 색인 누출 평가: 검색 봇은 게이트 쿠키 미보유 → 항상 공개
+    locale 메시지. ko 는 sitemap/hreflang/`generateStaticParams`
+    (routing.locales 순회) 어디에도 안 나타남 — 색인 누출 0.
+
+- **옵션 (G1-b) — ko 전용 게이트 prefix 신설** (`/ko/*` 또는 내부
+  경로). ❌ **거부** — §A2.2 옵션 (a) 거부 사유 그대로 재발: ko 를
+  경로 세그먼트로 만들면 `generateStaticParams`/sitemap 곱집합/
+  hreflang 누출 표면 신설. 4.5.j.1 에서 이미 거부된 형태(§A2.2 (a)).
+  §T2 "ko=locale 아님" 잠금 위반 위험. ADR-0034 D1 `locales` 변경 0
+  envelope 도 압박.
+
+- **옵션 (G1-c) — operator preview 빌드 / env 분기** (별도 배포 타깃
+  또는 `KO_PREVIEW=1` 빌드). ❌ **거부** — §A2.2 옵션 (c) 거부 사유
+  재발: 별도 배포 타깃 = 새 인프라 표면(Vercel preview/DNS, €300 cap).
+  ADR-0034 D1 "middleware basic-auth + env 1개" envelope 초과. 운영자가
+  §A2.4 에서 "같은 도메인 게이트(옵션 b)" 명시 확정 → preview 분리는
+  운영자 확정 방향과도 불일치.
+
+**잠금 결정 (architect)**: **옵션 (G1-a) 채택** — `src/i18n/request.ts`
+에서 요청 쿠키 `ko_gate_token` 이 `KO_GATE_TOKEN` env 와
+`constantTimeEqual` 일치 시, 해석된 `locale` 과 무관하게
+`messages/ko.json` 을 메시지 소스로 로드(ko 오버레이). 쿠키 없거나
+불일치 → 기존 locale 메시지 그대로(공개 경로 회귀 0). 게이트 토큰
+재사용(새 env 0) + ko URL/hreflang/sitemap 누출 0 + ADR-0034 D1
+envelope 100% 정합. **이는 ADR-0034 §미결("KO 운명") 과 무관** —
+런칭 후 ko 삭제/유지 결정이 아니라 *개발 중 ko 검증 접근 메커니즘*.
+
+> **운영자 확정 (2026-05-17)**: G1 = **G1-a** 명시 잠금. 같은
+> 도메인 쿠키 오버레이, `ko_gate_token`==`KO_GATE_TOKEN` 시 locale
+> 무관 `ko.json` 로드, URL/hreflang/sitemap = nl-BE 유지, **새 env
+> 0** (게이트 토큰 재사용). §A2.4 ① "같은 도메인 게이트(b)" 확정의
+> 읽기측 재사용 — envelope·운영자 의도 100% 정합. 미결 0.
+
+#### A2.7-R1 — §A2.5-Amd3 (D1 pass-through 재조정) cross-ref [정합]
+
+§A2.5-Amd3 가 D1 "env 미설정 fail-closed" → pass-through 로 정식
+재조정했다. 그 재조정의 **ko 보호 책임 이동 종착점이 본 G1-a**:
+
+- §A2.5-Amd3 결론 = "env 는 게이트 활성 스위치일 뿐 ko 보호 1차
+  방어선 아님. 4.5.j.2 완료 후 ko 보호 1차선 = **G1-a 오버레이**".
+- 그 정당성의 핵심 = "4.5.j.2 가 (a)게이트 해제 + (b)nl-BE ko→실nl
+  + (c)G1-a 오버레이 도입을 **원자 동시** 적용 → 그 순간부터
+  무프리픽스 = 실 nl 공개(pass-through 정상) + ko = G1-a 쿠키 뒤".
+- 본 G1-a "게이트 누수 평가" (ko 스왑 트리거 =
+  `constantTimeEqual(cookie, KO_GATE_TOKEN)`, 쿠키/토큰 없으면 스왑
+  0, 누수 표면 = 4.5.j.1 게이트와 동일 등급·증가 0) 가 §A2.5-Amd3
+  의 "pass-through 라도 ko 노출 위험 0" 주장의 **기술 근거**.
+- 4.5.j.2 DoD (3) "유효 쿠키→ko / 무쿠키→nl / 잘못된 토큰→nl
+  (constant-time)" = §A2.5-Amd3 재조정의 회귀 검증 항목 (단일
+  출처 — DoD 중복 신설 0).
+
+→ §A2.5-Amd3 ↔ §A2.7 G1-a 는 동일 메커니즘의 양면 (전자=middleware
+env 의미 전환, 후자=request.ts 메시지 스왑). 내부 모순 0.
+
+#### G2 — DeepL 실행 모델 [잠금]
+
+- **(i) 번역 실행 주체** = **운영자 발급 DeepL API Free 키 + 일회성
+  스크립트** (잠금). 패턴 = 기존 `RESEND_API_KEY`/`KO_GATE_TOKEN` 동형
+  — **builder 가 키 값 생성 X**, 운영자가 DeepL 계정에서 발급 후 `.env`
+  (`DEEPL_API_KEY`) 등록. builder 는 `.env.example`+`.env.local.example`
+  placeholder + 운영자 등록 메모만. 번역 스크립트(`scripts/i18n/` 하위
+  일회성, src/** 아님 — 런타임 코드 0)는 ko 정본을 읽어 DeepL 호출 →
+  대상 JSON 생성. 키-바이-키 수동/운영자 수동 번역은 ❌ (259줄 × 4
+  언어 = 솔로 시간 sink, §T3 "DeepL 1차" 정신 위반).
+- **(ii) 번역 소스** = **`messages/ko.json` (한국어 정본)** → DeepL
+  ko→{nl,fr,en}. nl-BE.json(ko 복제)이 아니라 ko.json 을 정본으로
+  지정 (`_comment` 노이즈 없는 순수 정본). DeepL ko 소스 언어 지원
+  확인 = builder 가 §References [DeepL Languages] 재확인 (ko 미지원
+  시 fallback = 운영자 보류 항목, 아래 §A2.x 운영자 확인 #3).
+- **(iii) 수동 검수 주체 리스크 — P3 정직 표면화**: §T3 가 "오역 =
+  사용자 손해, 검수 우선순위 최상" 을 요구하나, 운영자 = **한국어
+  모국어, nl/fr 숙련도 미지, en 가능 추정** (founder_profile —
+  베네룩스 거주이나 언어 숙련도 미확인). 한국 모국어 솔로 창업자가
+  nl/fr/en 3언어 전수 검수는 **현실적으로 불가능에 가깝다** (숨기지
+  않음). 완화 전략 (잠금):
+  - **우선순위 검수**: `caveats.*` (가격 관련 — 오역 시 사용자 직접
+    손해, §T3 "검수 우선순위 최상") + 가격/숫자 표시 네임스페이스를
+    **검수 1순위**. 나머지 UI 텍스트는 DeepL raw 허용하되 4.5.j.2
+    DoD 에 "caveats.* 는 운영자 검수 체크 1회 통과" 박음.
+  - `legal.*` 검수는 **4.5.j.3 별도 트랙(§T4, legal 에이전트)** — G2
+    범위 **밖** (명시 경계). 4.5.j.2 는 `legal.*` 번역 산출 X.
+  - en 검수 = 운영자 가능 추정(영어). nl/fr 비-caveats 텍스트는
+    DeepL raw + organic 사용자 피드백 사후 보정(ADR-0034 §"잃는 것"
+    의 "제품 결함 사용자 먼저 발견" 리스크 일부 — 이미 ADR-0034 가
+    수용한 부채, §A2.7 이 새로 만드는 부채 아님).
+
+> **운영자 확정 (2026-05-17) — Q2 잠금**: 운영자가 아래를 *의식적*
+> 으로 명시 수용 (ADR-0034 의 "운영자 의식적 부채 수용" 패턴 동류):
+> 1. **`caveats.*` 1순위 수동 검수** — 가격/절약 관련 (오역 = 사용자
+>    직접 손해, §T3 "검수 우선순위 최상"). 운영자 검수 체크 1회 통과
+>    = 4.5.j.2 DoD 항목 (1순위 = 그 외 네임스페이스보다 우선).
+> 2. **나머지 네임스페이스 = DeepL raw 기계번역 *공개* + 사후 점진
+>    보정** — caveats 외 일반 UI 텍스트는 DeepL 산출물을 검수 없이
+>    공개하고 organic 사용자 피드백으로 점진 교정. **P1(정보 우선)/
+>    P3(투명성) 부채를 운영자가 의식 수용** — 솔로·한국 모국어
+>    창업자의 nl/fr 전수 검수 불가 현실(§A2.7 G2-iii) 을 숨기지
+>    않고 *raw 공개* 로 정직 처리 (오역 은닉보다 raw 노출 + 빠른
+>    보정이 P3 정합 — "투명성은 운영자의 짐" 원칙: 결함을 가리지
+>    않음). 이 부채는 ADR-0034 §"잃는 것"("제품 결함 사용자 먼저
+>    발견")이 이미 수용 — §A2.7 이 *새로 만드는* 부채 아님.
+> 3. **`legal.*` = 4.5.j.3 별도 (§T4)** — Q2 범위 밖 (GDPR/약관
+>    오역 = 규제 리스크 → legal 에이전트 검수 게이트, 4.5.j.2 산출
+>    X). 본 §A2.7 G2 와 경계 명확.
+>
+> **blocker 판정**: Q2 자체 = 비-blocker (운영자 확정 완료). 단
+> DeepL 키(`DEEPL_API_KEY`) = **소프트 blocker** (배선 선행 가능,
+> 번역 *산출* 만 키 대기 — §A2.7 운영자 확인 #2 와 동일).
+
+#### G3 — nl/fr base + region delta 파일 구조 [잠금]
+
+§T3 결정("nl-BE↔nl-NL 은 nl base 공유, fr-BE↔fr-LU 는 fr base 공유,
+override only delta, en 독립")의 구체 파일 레이아웃:
+
+- **base 파일 신설**: `messages/nl.json` (nl base — 전체 키 번역 1회)
+  + `messages/fr.json` (fr base). `en.json` = 독립 전체 키.
+- **region delta 파일** = `messages/{nl-BE,nl-NL,fr-BE,fr-LU}.json` =
+  **override only** (통화/우편번호/지역 표현 등 base 와 다른 키만).
+  베타(γ) 시점 delta 가 비어도 무방 (base fallback). **현
+  `nl-BE.json`(ko 복제) → backfill 시 nl 실콘텐츠 *delta* 로 축소**
+  (전체 키가 아니라 nl base 와 다른 키만; 차이 없으면 빈 `{}`+`_comment`).
+- **fallback 체인** (§T3): `{region}` 미스 → `{base}`(nl|fr) 미스 →
+  `en`. en 미스 → next-intl 기본(키 그대로 노출 — γ 미번역 허용).
+  구현 = `src/i18n/request.ts` 에서 region 파일 + base 파일 + en 을
+  **얕은 병합**(region 우선) 후 반환. `getMessageFallback` 단독으로는
+  파일 병합 불가 → request.ts 가 병합 책임 (G3 핵심 — 현 단일 import
+  구조에서 *병합 구조로 전환* 이 4.5.j.2 코어 작업).
+- **DeepL 분량 절약 근거**: base 1회 번역(nl 1 + fr 1 + en 1 = 3회)
+  + region delta(대부분 빈/소수 키). naive 전량 = 5 locale × 전체 키.
+  base+delta = 3 × 전체 키 + ε(delta). **절약 ≈ (5−3)/5 = 40% 추정**
+  (정확 수치 = §Verification #5 키화 후 실측 — builder 가 측정).
+- **§Verification #5 분량 측정 — builder DoD 명시**: ko 정본 총 문자
+  수 + DeepL 호출 분량(nl/fr/en base 합)을 측정. 측정 명령/기록 위치
+  = PLAN 4.5.j.2 DoD 에 박음 (아래). 추정 아님 — 실측 후 본 ADR
+  §Verification #5 에 기록 (builder→scribe).
+
+#### G1/G2/G3 운영자 확인 항목 → ✅ 확정 (2026-05-17, 운영자 Kim Wonmin 직접)
+
+> **확정 (2026-05-17)**: 운영자가 G1 / Q2(G2 검수 모델) 를
+> architect 기본값으로 명시 잠금. **G1 = G1-a** (같은 도메인 쿠키
+> 오버레이, 새 env 0). **Q2 = caveats.* 1순위 수동 검수 + 나머지
+> DeepL raw 공개 + 사후 보정 (P1/P3 부채 의식 수용) / legal.* =
+> 4.5.j.3 분리**. 잠금값 — 4.5.j.2 DoD 그대로 builder 진행. 미결 0
+> (잔여 = `DEEPL_API_KEY` 운영자 발급 = 소프트 blocker, 번역 산출
+> 한정 — 배선 비블로킹). **ADR-0034 §미결("KO 운명") 침범 0** —
+> 아래는 *개발 중 메커니즘* 확정일 뿐, 런칭 후 ko 삭제/유지 무관.
+
+다음은 architect 가 *기본값을 두되* 운영자 확정이 필요했던 항목
+(위 블록에서 ✅ 확정 — 이력 보존):
+
+1. **(G1) ko 오버레이 UX** — "게이트 해제 후 ko 검증 = 공개 사이트
+   위에서 `?ko_token=` 쿠키로 메시지만 ko 스왑(URL=nl-BE, 텍스트=ko)"
+   이 운영자 "편집자 모드처럼" 요구에 부합. **✅ 확정: 옵션 (G1-a)**
+   — §A2.4 ① "같은 도메인 게이트(b)" 확정 토큰의 *읽기 측 재사용*,
+   envelope·운영자 의도 100% 정합. 운영자가 "ko URL 자체" 가 아니라
+   "ko 텍스트 검증" 을 요구함을 명시 확정 (G1-b 재검토 불요). **
+   blocker: 아니오** (확정 완료).
+2. **(G2-i/ii) DeepL 키 발급 + ko 소스** — 운영자가 DeepL API Free
+   계정 생성 + `DEEPL_API_KEY` 발급(무료 티어, 카드 불요). **✅ 확정:
+   운영자 발급 + 일회성 스크립트** (builder 값 생성 X — RESEND/
+   KO_GATE 패턴). **blocker: 예 (소프트)** — 키 없으면 번역 *산출*
+   단계 진입 불가. **코드 배선(Phase A: G1-a 오버레이 + G3 병합
+   구조)은 키 없이 선행** (builder 진행). 번역 산출(Phase B)만 키
+   대기. **운영자 액션 필요 (블로킹 구간 = Phase B 한정).**
+3. **(G2-ii) DeepL ko→nl/fr/en 지원 확인** — DeepL ko 를 *소스
+   언어* 로 지원하는지 (지원 시 ko 직역; 미지원 시 ko→en→nl/fr
+   2-hop). **✅ 확정: builder 리서치 사항** (§References [DeepL
+   Languages] 재확인, 2-hop fallback 존재). **blocker: 아니오** —
+   기술 확인, 운영자 확인 불요.
+
+4. **(Q2) 검수 모델** — caveats.* 1순위 수동 검수 / 나머지 DeepL
+   raw 공개 + 사후 보정 / legal.* = 4.5.j.3 분리. **✅ 확정** (위
+   §A2.7 G2 "운영자 확정 (2026-05-17) — Q2 잠금" 블록 참조 — P1/P3
+   부채 운영자 의식 수용, ADR-0034 패턴). **blocker: 아니오** (확정
+   완료; DeepL 키만 소프트 blocker = #2 와 동일 구간).
+
+#### A2.7 비-DoD (명시 경계)
+
+- `legal.*` 번역/검수 ❌ → 4.5.j.3 (§T4, legal 에이전트).
+- ko 제거(`messages/ko.json` 삭제) ❌ → ADR-0034 §미결(운영자 보류).
+- hreflang/sitemap 활성 ❌ → PLAN 4.6 / 3.5.3 (D5).
+- ko URL 세그먼트화 ❌ → §T2 잠금 (G1-b 거부).
+
+**ADR-0034 §미결 침범 0 확인**: §A2.7 전체는 "개발 중 ko *검증 접근
+메커니즘*(G1)" + "번역 실행/구조(G2/G3)" 만 잠근다. "런칭/개발 완료
+후 ko 삭제 vs hidden 유지"(ADR-0034 D1 단일 미결, 운영자 명시 보류)는
+1mm 도 건드리지 않음 — 본 ADR §A2.6 의 "ko 제거 = 보류" 와 일관.
