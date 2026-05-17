@@ -2,7 +2,9 @@
  * ko 게이트 단위 테스트 (PLAN 4.5.j.1 DoD D5).
  *
  * ADR-0033 §A2.5 D5 — 게이트 누수 0 검증 6 케이스:
- *   (i)   env 미설정 → 게이트 대상 경로 fail-closed
+ *   (i)   env 미설정 → 게이트 비활성 (pass-through, 200) — 2026-05-17 P0
+ *         핫픽스로 fail-closed → pass-through 전환 (ADR-0033 §A2.5 D1 일탈,
+ *         4.5.j.2 재조정). 사유 = middleware.ts handleKoGate 본문 주석.
  *   (ii)  무토큰 / 잘못된 토큰 → 차단
  *   (iii) 유효 토큰 쿠키 → 통과 (200 응답)
  *   (iv)  공개 prefix 경로 (/en, /nl-NL 등) → 게이트 없이 통과
@@ -134,20 +136,23 @@ afterEach(() => {
 
 describe('ko 게이트 — PLAN 4.5.j.1 D5 6 케이스', () => {
   /**
-   * 케이스 (i): env 미설정 → 게이트 대상 경로 fail-closed.
+   * 케이스 (i): env 미설정 → 게이트 비활성 (pass-through, 200).
    *
-   * 왜 이게 중요한가: KO_GATE_TOKEN 을 설정하지 않은 채
-   * 배포하면 의도치 않게 ko 콘텐츠가 공개될 수 있다.
-   * fail-closed = env 없으면 무조건 막힘 → 사고 방지.
+   * 2026-05-17 P0 인시던트 핫픽스로 fail-closed → pass-through 전환.
+   * 왜: 게이트 대상 = 무프리픽스 경로 전체 = 공개 사이트 표면 전부.
+   * fail-closed 면 KO_GATE_TOKEN 미등록 시 slim.lu 루트 전체 401 = 다운
+   * (실제 발생). 토큰을 명시 등록했을 때만 보호 활성 = 운영자 의도 기반.
+   * ⚠️ ADR-0033 §A2.5 D1 에서 의도적 일탈 — 4.5.j.2 에서 정식 재조정.
    */
-  it('(i) env KO_GATE_TOKEN 미설정 → 루트 / 접근 시 401 fail-closed', async () => {
+  it('(i) env KO_GATE_TOKEN 미설정 → 루트 / 게이트 비활성 pass-through (200)', async () => {
     vi.stubEnv('KO_GATE_TOKEN', '');
 
     const req = makeFakeRequest({ pathname: '/' });
     // @ts-expect-error — duck-typed fake request, 타입 안전보다 동작 검증 우선
     const res = middleware(req);
 
-    expect(res.status).toBe(401);
+    // pass-through = intlMiddleware 위임 = mock 이 'intl-pass' 200 반환
+    expect(res.status).toBe(200);
   });
 
   /**

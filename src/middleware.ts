@@ -25,7 +25,10 @@
  * ko 게이트 정책 (PLAN 4.5.j.1 — ADR-0033 §A2.5 D1):
  *   1. 쿠키 `ko_gate_token` = KO_GATE_TOKEN env → 통과.
  *   2. 쿼리 `?ko_token=KO_GATE_TOKEN` → 쿠키 발급 후 쿼리 제거 redirect.
- *   3. 그 외 / KO_GATE_TOKEN 미설정 → 401 (fail-closed).
+ *   3. KO_GATE_TOKEN 미설정 → 게이트 비활성 (pass-through, 공개 서빙).
+ *      (2026-05-17 P0 인시던트 핫픽스 — ADR-0033 §A2.5 D1 에서 일탈,
+ *       4.5.j.2 에서 재조정. 상세 = handleKoGate 본문 주석.)
+ *   4. 토큰 등록 + 불일치 → 401 (게이트 활성 시에만 차단).
  *   게이트 대상 = locale prefix 없는 모든 경로 (nl-BE defaultLocale 슬롯 = ko 콘텐츠).
  *   게이트 비대상 = /nl-NL/* /fr-BE/* /fr-LU/* /en/* (공개 locale prefix).
  *   prefix 집합은 routing.locales에서 defaultLocale 제외 4개로 도출 — 하드코딩 금지.
@@ -117,9 +120,15 @@ function koGateDeny(): NextResponse {
  */
 function handleKoGate(req: NextRequest): NextResponse | null {
   const expected = process.env.KO_GATE_TOKEN;
-  // env 미설정 = fail-closed (운영자가 토큰을 등록하지 않으면 접근 불가).
-  // 이유: 빈 env 로 공개 서빙되는 사고 방지 — 보안 기본값은 항상 닫힘.
-  if (!expected) return koGateDeny();
+  // env 미설정 = 게이트 비활성 (pass-through). 왜 fail-closed 가 아닌가:
+  //   게이트 대상 = 무프리픽스 경로 전체 = 현재 공개 사이트 표면 전부
+  //   (nl-BE 슬롯). 따라서 KO_GATE_TOKEN 미등록 시 fail-closed 면
+  //   slim.lu 공개 루트 전체가 401 = 사이트 다운 (2026-05-17 P0 인시던트
+  //   실제 발생 — 4.5.j.1 단독 배포 + Vercel prod 토큰 미등록).
+  //   토큰을 명시 등록(= 게이트 켜겠다는 의도)했을 때만 보호 활성.
+  //   ⚠️ ADR-0033 §A2.5 D1 "env 미설정 fail-closed" 에서 의도적 일탈 —
+  //   4.5.j.2(게이트+nl 실콘텐츠+해제 동시)에서 정식 재조정 (architect amend).
+  if (!expected) return null; // 게이트 비활성 — intl 에 위임 (공개 서빙)
 
   const cookieToken = req.cookies.get(KO_GATE_COOKIE_NAME)?.value;
   if (cookieToken && constantTimeEqual(cookieToken, expected)) {
