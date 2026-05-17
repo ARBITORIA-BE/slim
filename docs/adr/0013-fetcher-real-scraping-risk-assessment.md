@@ -20,6 +20,15 @@ Orange BE/Voo, ADR-0034 D3 §legal 선행조건, PLAN 1.5.6 진입 시 호출)"*
 A §조건 C) — 본 Amendment 가 숨기지 않음. 옵션 X 자동 비활성은 본 Amendment
 1 §트리거 조건 (`rawPayload.stub === false`) 에 *이미 설계됨* — 추가 코드 0.
 
+**Appendix B (2026-05-17, legal 에이전트)** — **4-provider robots.txt + TOS
+일괄 검토 완료 (D3 선행조건)**. Proximus/Telenet/Orange BE/Voo 모두 공개 가격
+페이지 robots.txt Disallow 없음. Voo TOS 텍스트 추출 완료 — 자동 수집 명시
+금지 없음. Proximus/Telenet/Orange BE GTC PDF 미확인 잔존 (운영자 수동 열람
+병행 트랙 — Appendix B §B.8). 판정: **1.5.6/1.5.8/1.5.9 모두 조건부 진입
+가능** (🟡 — 차단 아님). Orange BE 소비자 TOS PDF 수동 열람이 1.5.8 진입의
+우선순위 높은 선행조건. 외부 변호사 즉시 감사 불필요 (Appendix B §B.7
+조건 A/B/C/D 미충족). 상세: [Appendix B](#appendix-b----4-provider-robotstxt--tos-검토-d3-선행조건-2026-05-17).
+
 **격상 이력**:
 - Proposed (2026-05-09) — 7 평가 + Appendix A legal 1차 검토
 - Accepted 옵션 C (2026-05-10) — 운영자 결정, GATE-F 통과
@@ -747,3 +756,470 @@ HIGH 격상 요건인 "명시 금지 강도 중간 이상 발견"은 충족되�
 #### Implementation guide 구현 완료
 
 **구현 완료 (2026-05-13, 커밋 `a0b876c`)**: BetaEstimatedBanner.tsx RSC 신설 (amber warning bg, role="status") + .test.tsx 7 케이스. deriveCaveats 규칙 9 추가 ("추정값 — 실 데이터 페이즈 5 이후") + caveats.test.ts 10 케이스. comparison.ts SQL COALESCE isStub propagation. page.tsx 조건부 노출. typecheck/lint/test 477 passed / harness:plan 54 정합 / harness:data 통과. **4.6 베타 배포 의존성 해소**.
+
+---
+
+## Appendix B — 4-provider robots.txt + TOS 검토 (D3 선행조건, 2026-05-17)
+
+**검토 목적**: ADR-0034 D3 §legal 선행조건 + PLAN 1.5.6/1.5.8/1.5.9 선행조건 해소.
+Proximus/Telenet/Orange BE/Voo 4개 벨기에 통신사 공개 가격 페이지 스크래핑에 대한
+1차 법무 검토. **실행 주체: legal 에이전트 (1차 검토)**, 외부 변호사 아님.
+
+**검토일**: 2026-05-17 (UTC)
+
+**데이터 수집 방식**: WebFetch(robots.txt 직접 fetch) + WebFetch(TOS/법적정보 HTML 페이지)
++ WebSearch(TOS/GTC 키워드 검색). 모든 주장에 source_url + fetched_at 명시 (헌법 P1).
+
+**검토 범위**: 공개 요금제/가격 페이지 스크래핑 목적 (1일 1회 fetch, PII 0, 공개 데이터).
+GDPR = 적용 없음 (개인정보 0). 검토 대상 = robots.txt + 웹사이트 이용약관(TOS/GTC의
+웹사이트 이용 조항). 가입자 서비스 약관(인터넷 서비스 AUP 등)은 스코프 다름.
+
+---
+
+### B.1 Proximus — 재확인 (Appendix A 갱신)
+
+**robots.txt**
+
+- source_url: `https://www.proximus.be/robots.txt`
+- fetched_at: 2026-05-17T UTC (WebFetch 직접 확인)
+- 전문 (변경 없음 — Appendix A 2026-05-09 버전과 동일):
+
+```
+User-agent: *
+Sitemap: http://www.proximus.be/sitemap.xml
+Disallow: /cgi-bin/
+Disallow: /web/
+Disallow: /GSA/
+Disallow: /home/gallery/content/
+Disallow: /private/gallery/content/
+Disallow: /companies/gallery/content/
+Disallow: /dam/cdn/sites/iportal/documents/pdfs/
+Disallow: /dam/*/cdn/sites/iportal/documents/pdfs/
+Disallow: /dms/cdn/sites/iportal/documents/pdfs/
+Disallow: /dms/*/cdn/sites/iportal/documents/pdfs/
+Disallow: /epp/
+Disallow: /dam/cdn/sites/support/documents
+Disallow: /dam/*/cdn/sites/support/documents
+Disallow: /dms/cdn/sites/support/documents
+Disallow: /dms/*/cdn/sites/support/documents
+Disallow: /en/id_km-*
+Disallow: /fr/id_km-*
+Disallow: /nl/id_km-*
+Disallow: /formbuilder/
+Disallow: /logout
+Disallow: /api/
+Disallow: /rest/
+Disallow: /media/main/$
+Disallow: /media/smartphones/$
+```
+
+- Crawl-delay: **없음**
+- 가격 페이지 경로 (`/en/personal/products/mobile/...`, `/en/personal/products/internet/...`):
+  **명시 Disallow 없음**. Sitemap 등록 (크롤러 친화).
+- Appendix A 대비 변경: `/web/` → `/web/`, `/api/` → `/api/` (동일). `/GSA/` 추가 확인.
+  변경 사항 없음 — Appendix A 결론 유지.
+
+**TOS/GTC**
+
+- Appendix A 결론 유지: Proximus 법적정보 HTML 페이지에서 자동 접근 명시 금지 조항
+  부재. General Terms PDF (GTC) 4종 모두 WebFetch 텍스트 추출 실패 (FlateDecode 압축).
+- 수동 열람 요청 조건(Appendix A §조건 A) = 운영자 병행 트랙 (본 Appendix B 완료 후
+  30분 작업).
+
+**판정**: 🟡 조건부 (조건 = B.5 공통 조건 + 운영자 GTC 수동 열람 선행)
+
+---
+
+### B.2 Telenet — 재확인 (Appendix A 갱신)
+
+**robots.txt**
+
+- source_url: `https://www2.telenet.be/robots.txt`
+- fetched_at: 2026-05-17T UTC (WebFetch 직접 확인)
+- 전문:
+
+```
+User-Agent: *
+Allow: /
+Disallow: */jcr:content/*
+Disallow: */etc/*
+Allow: /etc/*.js
+Allow: /etc/*.css
+
+Sitemap: https://www2.telenet.be/sitemap.xml
+Sitemap: https://www2.telenet.be/residential/sitemap.xml
+Sitemap: https://www2.telenet.be/business/sitemap.xml
+Sitemap: https://www2.telenet.be/corporate/sitemap.xml
+```
+
+- Crawl-delay: **없음**
+- 가격 페이지 경로 (`/residential/en/products/...`): 최상단 `Allow: /` + 명시 Disallow
+  없음. Sitemap 4개 등록 (residential 포함). **가장 관대한 robots.txt**.
+- Appendix A 대비 변경 없음.
+
+**TOS/GTC**
+
+- Appendix A 결론 유지:
+  - HTML `juridische-informatie` 페이지에서 발견된 조항 (약한 강도):
+    1. 지적재산권 보호 조항: "teksten, tekeningen, foto's, films, beelden, gegevens,
+       databanken...beschermd door intellectuele rechten" — 저장·재배포 금지. 단
+       *자동 접근 방법 자체* 직접 금지 아님.
+    2. 일반 금지 사용 조항: "verboden de website te gebruiken op een manier die schade
+       berokkent, vervormt, onderbreekt..." — 일 1회 요금제 fetch는 이 기준 초과 가능성
+       매우 낮음.
+  - Telenet Algemene voorwaarden PDF (2025-03-23 최신판): 텍스트 추출 실패. 확인 불가.
+- 수동 열람 요청 조건 = 운영자 병행 트랙.
+
+**판정**: 🟡 조건부 (조건 = B.5 공통 조건 + 운영자 GTC 수동 열람 선행)
+
+---
+
+### B.3 Orange BE — 신규 검토 (ADR-0013 미검토 → 완료)
+
+**robots.txt**
+
+- source_url: `https://www.orange.be/robots.txt`
+- fetched_at: 2026-05-17T UTC (WebFetch 직접 확인)
+- 전문 (핵심 발췌 — Drupal 기반 표준 robots.txt):
+
+```
+User-agent: *
+Allow: /core/*.css$
+Allow: /core/*.js$
+[... CSS/JS/images Allow 패턴 ...]
+Disallow: /core/
+Disallow: /profiles/
+Disallow: /README.txt
+Disallow: /web.config
+Disallow: /admin/
+Disallow: /comment/reply/
+Disallow: /filter/tips
+Disallow: /node/add/
+Disallow: /search/
+Disallow: /user/register/
+Disallow: /user/password/
+Disallow: /user/login/
+Disallow: /user/logout/
+Disallow: /index.php/admin/
+[... /index.php/* 미러 ...]
+Disallow: /*brand=
+Disallow: /*category_product_type=
+Disallow: /*connectivity=
+Disallow: /*filter_color=
+Disallow: /*filter_special_offer=
+Disallow: /*memory=
+Disallow: /*sp=
+Disallow: /*internet=
+Disallow: /*mobile=
+Disallow: /*option=
+Disallow: /*promocode=
+Disallow: /*tp=
+Disallow: /*filters
+Disallow: /*topic
+Disallow: /*m&tvm=
+Disallow: /*option-
+Disallow: /nl/opties-en-diensten/gsm-en-smartphone/online-instellen/*
+Disallow: /fr/options-et-services/gsm-et-smartphone/configuration-en-ligne/*
+```
+
+- Crawl-delay: **없음**
+- Sitemap: **명시 없음** (Drupal 기본 robots.txt — Sitemap 항목 미포함)
+
+**가격 페이지 경로 Disallow 분석 (핵심)**:
+
+| 차단 경로 | 우리 스크래핑 대상 경로 | 충돌 여부 |
+|---|---|---|
+| `/admin/` | `/fr/produits-et-services/internet-chez-vous` | **없음** |
+| `/*internet=` (쿼리 파라미터) | 경로 자체 (`/fr/produits-et-services/internet`) | **없음** (`/*internet=`은 `?internet=` 쿼리 파라미터만 — 경로 아님) |
+| `/*mobile=` | 동일 | **없음** |
+| `/*filters` | 동일 | **없음** |
+| `/fr/.../configuration-en-ligne/*` | 가격 페이지 (`/fr/produits-et-services/mobile`) | **없음** |
+
+확인된 공개 가격 페이지 (WebFetch 직접 확인, 2026-05-17):
+- `https://www.orange.be/fr/produits-et-services/mobile` — 공개, 가격 표시, 인증 없음
+- `https://www.orange.be/fr/produits-et-services/internet-chez-vous` — 공개, 가격 표시
+  (Start €43/월, Zen €53/월, Giga €62/월 등)
+
+**결론**: 공개 가격 페이지 경로는 Disallow 대상이 **아님**. 쿼리 파라미터 `?internet=`,
+`?mobile=` 사용 시 차단되므로 경로 직접 fetch 방식 유지 필요.
+
+**TOS/GTC — Orange BE 법적정보 검토**
+
+1. **corporate.orange.be/en/legal-information** (source_url, fetched_at 2026-05-17):
+   - HTML 구조만 노출. 실제 약관 링크가 FR/NL 별도 페이지로 분리됨. 직접 클로즈 텍스트
+     추출 불가.
+
+2. **orange-business.com/en/legal-information** (source_url, fetched_at 2026-05-17):
+   Orange 그룹 공통 법적정보 페이지. 확인된 조항 (영문 원문):
+
+   **지적재산권 조항**:
+   > "Orange informs users of this site that most of the information and data contained
+   > herein are protected by legal provisions relating to intellectual property rights."
+
+   **무단 재현 금지 조항**:
+   > "Any representation, reproduction, use, adaptation, or modification in whole or in
+   > part, as well as any exploitation, even partial, of this information and data is
+   > prohibited without...prior permission of Orange."
+
+   **개인 사용 제한 조항**:
+   > "The use of this site is reserved for the user's strictly personal use. Any
+   > reproduction or representation...for any other purpose...is prohibited without
+   > express...permission of Orange."
+
+   - **자동 접근/스크래핑 명시 금지**: 확인되지 않음 (직접 언급 없음).
+   - "strictly personal use" 조항: 상업적 비교 사이트의 자동 가격 수집이 이 조항의
+     "personal use" 위반 가능성이 있음. 단 이 조항은 orange.com 그룹 차원 (비즈니스
+     포털)이며 orange.be 소비자 사이트의 동일 적용 여부는 별도 확인 필요.
+   - 웹사이트 TOS가 아닌 **이용 조건(Conditions Générales d'Abonnement)**을 검토해야
+     하나, orange.be 소비자 약관 PDF는 텍스트 추출 불가 상태.
+
+3. **주요 관찰**: Orange BE robots.txt가 Drupal 표준 템플릿임 — 비교 목적 스크래핑
+   경로를 명시 차단하지 않는다. 단 "strictly personal use" 조항이 그룹 차원 TOS에
+   존재하며 orange.be 소비자 사이트 TOS PDF 미확인 상태가 법적 불확실성의 핵심.
+
+**판정**: 🟡 조건부 (강도 = Proximus/Telenet보다 약간 높음 — "strictly personal use"
+조항 그룹 TOS 존재 확인 + orange.be 소비자 TOS PDF 미확인 = 조건 B.5 + 추가 조건 명시)
+
+---
+
+### B.4 Voo — 신규 검토 (ADR-0013 미검토 → 완료)
+
+**robots.txt**
+
+- source_url: `https://www.voo.be/robots.txt`
+- fetched_at: 2026-05-17T UTC (WebFetch 직접 확인)
+- 전문:
+
+```
+User-agent: *
+
+Sitemap: https://www.voo.be/sitemap.xml
+```
+
+- Crawl-delay: **없음**
+- Disallow: **단 하나도 없음**
+- Sitemap 등록: 있음
+
+**결론**: 4개 provider 중 **가장 관대한 robots.txt**. 어떤 경로도 Disallow 없음.
+`voo.be/fr/internet`, `voo.be/fr/tarifs/internet` 등 가격 페이지 경로 차단 전무.
+
+확인된 공개 가격 페이지 (WebFetch 직접 확인, 2026-05-17):
+- `https://www.voo.be/fr/internet` — 공개 접근 확인 (NET Super Relax 200Mbps,
+  NET Giga Max 1Gbps 플랜 표시). 실제 가격은 동적 로딩 (`/fr/tarifs/internet`에 별도 로드).
+- 주의: 가격 그리드가 JavaScript 동적 렌더링 가능성 → Cheerio 단순 fetch로 추출
+  불가 시 fetcher 구현 복잡도 ↑ (단 이는 법적 리스크 아닌 기술 리스크).
+
+**TOS/GTC — Voo 법적정보 검토**
+
+1. **voo.be/fr/conditions-generales** (source_url, fetched_at 2026-05-17):
+   - 서비스 약관 (2024년 11월 1일 발효 버전) 텍스트 추출 성공.
+   - **자동 접근/스크래핑 명시 금지**: **없음**. 확인 완료.
+   - 지적재산권 조항 (Art. 16.1): 방송 프로그램 콘텐츠 보호 조항 — 요금제 가격 데이터에
+     직접 적용 불가.
+   - 일반 사용 제한 (Art. 17.2): "서비스 및 콘텐츠는 배타적으로 사적·개인적 사용 목적"
+     — 가입자의 VOO 인터넷 *사용* 정책이며 웹사이트 방문자의 데이터 수집에 적용되는
+     조항이 아님.
+   - 데이터베이스 보호: 특정 조항 없음.
+   - 가격 정보: Art. 7.1에서 "Details of its current pricing...can be found [here]" —
+     공개 가격 정보이며 추출 금지 조항 없음.
+
+2. **voo.be/fr/vie-privee** (Privacy Policy, source_url, fetched_at 2026-05-17):
+   - 자동 접근/스크래핑 조항: 없음.
+   - 웹사이트 IP 보호: "Copyright © 2025 VOO. Tous droits réservés." 일반 저작권 표시만.
+   - 데이터베이스 보호: 없음.
+
+3. **voo.be/fr/mentions-legales** (법적 고지): HTTP 404 — 별도 법적 고지 페이지 없음.
+
+**결론**: Voo TOS/GTC에서 웹사이트 자동 접근 또는 가격 데이터 추출을 **명시 금지하는
+조항을 발견하지 못했음** (텍스트 추출 성공, 키워드 검색 완료). Voo는 4개 provider 중
+TOS 법적 리스크가 가장 낮음.
+
+**판정**: 🟡 조건부 (조건 = B.5 공통 조건. GTC 수동 열람 추가 권고 수준이나 필수는 아님
+— TOS HTML 텍스트 추출 성공하여 키워드 검색 완료)
+
+---
+
+### B.5 4-provider 종합 판정 표
+
+| Provider | robots.txt 가격 페이지 차단 | TOS 자동 수집 명시 금지 | 평가 점수 (1=낮은리스크) | 판정 |
+|---|---|---|---|---|
+| **Proximus** | 없음 (Appendix A 재확인) | 확인 불가 (GTC PDF 추출 실패) | **2.0** | 🟡 조건부 |
+| **Telenet** | 없음 (Allow: / 관대) | 약한 강도 (지적재산권 + 일반금지 조항, GTC PDF 미확인) | **2.5** | 🟡 조건부 |
+| **Orange BE** | 없음 (쿼리 파라미터만 차단, 경로 차단 없음) | 미확인 (그룹 TOS "strictly personal use" 확인, orange.be 소비자 TOS PDF 미확인) | **2.5** | 🟡 조건부 |
+| **Voo** | 없음 (Disallow 전무 — 가장 관대) | 없음 (TOS 텍스트 추출 성공, 키워드 검색 완료) | **1.5** | 🟡 조건부 |
+
+**공통 조건 (B.5 공통)**:
+1. 일 1회 이하 fetch (서버 부담 최소화 — Telenet "schade berokkent" 조항 위반 가능성 배제)
+2. 정직한 User-Agent 명시 (Slim/1.0 + 도메인 referrer — P3 정합)
+3. 요금제 경로 직접 fetch (쿼리 파라미터 `?internet=`, `?mobile=` 등 사용 금지 — Orange
+   BE robots.txt 쿼리 파라미터 차단 준수)
+4. Robots.txt 변경 모니터링 (월 1회 자동 확인 권장)
+5. 결과 페이지 `/legal/affiliate-disclosure` 에 스크래핑 출처 + 가격 기준일 표기 (P3)
+6. HTTP 403/429/챌린지 발생 시 즉시 비활성 + ADR-0013 Amendment 트리거 (ADR-0034
+   §회귀 #1 — 이미 설계됨)
+
+**Orange BE 추가 조건**:
+- orange.be 소비자 약관 PDF (GTC — 운영자 수동 열람 필수, B.6 체크리스트 참조)
+- "strictly personal use" 조항이 orange.be 소비자 TOS에도 동일하게 존재하는지 확인
+  (현재 확인 경로: orange-business.com 그룹 포털만 — 소비자 포털 별도 확인 필요)
+
+---
+
+### B.6 법적 리스크 프레임워크 — 3층 분석
+
+#### EU Database Directive (96/9/EC) — Sui Generis 권리
+
+공개 요금제 가격 데이터에 대한 sui generis 데이터베이스 권리 주장 가능성:
+
+- **조건**: 데이터베이스 구축에 "상당한 투자(substantial investment)" 필요. Proximus/
+  Telenet/Orange BE/Voo의 요금제 가격표는 기획 비용이 있으나 "데이터베이스 구축" 목적의
+  독립 투자로 보기 어려움 — 핵심 사업 활동의 파생물.
+- **CJEU Football Dataco (C-604/10, 2012)**: 창작적 선택 없는 단순 데이터 수집은 DB
+  directive 범위 축소. 가격표는 창작적 선택 최소 → DB 저작권 적용 어려움.
+- **Innoweb (C-202/12, 2013)**: 전체 데이터베이스 병렬 추출(spin-off)은 sui generis
+  위반. **Slim의 패턴은 1일 1회 공개 페이지에서 현재 가격만 추출** — 전체 DB 추출이
+  아님. "Re-utilization of a substantial part" 기준 미달 가능성 높음.
+- **리스크 수준**: **낮음** — 1일 1회 비교 목적 가격 추출은 sui generis 침해의 "상당
+  부분 추출" 요건 충족 어려움. 단 4 provider × 일 1회 × 장기 축적 시 재판단 필요.
+
+#### CJEU Ryanair v PR Aviation (C-30/14, 2015) — 계약 제한 가능성
+
+- **판결 요지**: 가격비교 사이트의 스크래핑은 TOS(이용약관)에 의해 계약적으로 제한 가능.
+  DB directive가 적용되지 않는 경우에도 계약으로 금지 가능.
+- **Slim의 노출**: ADR-0013 Appendix A §조건 C 이미 명시 — organic 사용자 = 상업 운영
+  신호 = CJEU Ryanair 판례 적용 가능성 ↑. Ryanair v PR Aviation 맥락에서 핵심은
+  **TOS에 스크래핑 금지 조항이 명시되어 있는가**.
+- **4 provider 현황**:
+  - Proximus: GTC PDF 미확인 → 명시 금지 존재 여부 불확실
+  - Telenet: 약한 강도 일반 조항만 (명시 금지 아님)
+  - Orange BE: "strictly personal use" 그룹 TOS 확인 (소비자 TOS PDF 미확인) → **중간
+    강도** — Ryanair 판례의 계약 제한 근거로 원용될 가능성 존재
+  - Voo: 명시 금지 없음 (TOS 텍스트 추출 완료)
+
+- **Orange BE의 "strictly personal use" 조항 리스크**: 이 조항이 소비자 TOS에 동일하게
+  존재한다면 Ryanair v PR Aviation 논리로 상업적 비교 사이트의 자동 가격 수집이 계약
+  위반 주장의 근거가 될 수 있음. **이것이 본 검토의 핵심 미결 리스크**.
+
+#### 벨기에 불공정경쟁 — Code de droit économique (CDE)
+
+- CDE Art. VI.99: 비교 사이트 순위 기준 공개 의무 (헌법 P3 + ADR 설계로 이미 대응).
+- 스크래핑 자체에 대한 불공정경쟁 적용: 벨기에 법체계에서 TOS 위반 스크래핑을 불공정경쟁
+  으로 추가 주장하는 사례 있음. 단 TOS 명시 금지 조항 없는 경우 근거 약함.
+- **Slim의 현황**: CDE 대응 (순위 공개 P3)은 이미 설계됨. 스크래핑 금지 TOS 조항
+  미확인 상태에서 불공정경쟁 리스크는 낮음.
+
+---
+
+### B.7 외부 변호사 감사 필요 항목 분리
+
+#### 1차 legal 에이전트로 Clear 되는 항목
+
+- Proximus robots.txt: 가격 페이지 차단 없음 → 진행 가능
+- Telenet robots.txt: `Allow: /` 관대 → 진행 가능
+- Orange BE robots.txt: 가격 경로 Disallow 없음 → 진행 가능 (쿼리 파라미터 주의)
+- Voo robots.txt: Disallow 전무 → 진행 가능
+- Voo TOS: 자동 수집 명시 금지 없음 (텍스트 추출 완료) → 진행 가능
+- Telenet TOS HTML: 약한 강도 조항만, 직접 명시 없음 → 조건부 진행 가능
+- EU Sui Generis DB 권리: 1일 1회 비교 목적 = 낮은 리스크 → 자체 판단 가능
+
+#### 외부 변호사 감사가 필요한 항목 (ADR-0004 §결정 3 §조건 B/C 트리거)
+
+현재 시점: **외부 변호사 즉시 감사 불필요** — 아래 조건 중 하나 충족 시 ADR-0004
+§결정 3 재평가:
+
+1. **조건 A (운영자 수동 열람 트리거)**: 운영자가 GTC PDF를 직접 열람하여 Proximus/
+   Telenet/Orange BE의 GTC에서 "automated", "geautomatiseerde", "automatisé",
+   "scrapen", "robot" 키워드로 **중간 강도 이상** 명시 금지 조항 발견 시 → 즉시
+   legal 에이전트 재호출 + 외부 변호사 감사 검토 ($800/1주, ADR-0004)
+2. **조건 B (Ryanair 리스크 구체화)**: Orange BE 소비자 TOS PDF에서 "strictly
+   personal use" 수준 이상의 자동화 접근 금지 조항이 발견될 경우 → CJEU Ryanair
+   v PR Aviation 적용 가능성 = 외부 변호사 필수
+3. **조건 C (상업 운영 신호 확인)**: 어필리에이트 수수료 발생(수익 창출) 시점 →
+   상업적 스크래핑으로 Ryanair 리스크 ↑ → 베타 직전 €800 1회 감사 권장 (ADR-0013
+   Appendix A §조건 C 동일)
+4. **조건 D (법적 접촉 발생)**: 4개 provider 중 1개라도 cease & desist 또는 법적
+   접촉 발생 시 → 외부 변호사 즉시 (ADR-0034 §회귀 #5 동일)
+
+---
+
+### B.8 운영자 GTC 수동 열람 체크리스트
+
+ADR-0013 Appendix A §조건 A 의 운영자 트랙. Appendix B legal 검토 통과 후 병행 작업
+(약 45분). **순서대로 실행하고 결과를 Appendix B Amendment로 기록**.
+
+#### Proximus GTC 수동 열람
+
+1. `https://www.proximus.be/en/id_cr_warnland/personal/orphans/legal-information.html`
+   접속 → 하단 "General Terms and Conditions" 링크 클릭 → PDF 다운로드
+2. 대안: Google 검색 `proximus.be GTC 2025 general terms conditions pdf download`
+3. PDF Ctrl+F 검색 키워드 순서:
+   - 영어: "automated", "scraping", "crawling", "robot", "bot", "systematic", "harvest"
+   - 네덜란드어: "geautomatiseerde", "systematische", "robot", "schrapen", "verkennen"
+   - 프랑스어: "automatisé", "extraction", "robot", "systématique"
+4. 발견 시: 조항 번호 + 원문 기록 → legal 에이전트 재호출
+5. 미발견 시: Appendix B Amendment에 "GTC 수동 열람 완료, 자동 접근 명시 금지 없음" 기록
+
+#### Telenet Algemene voorwaarden 수동 열람
+
+1. `https://www2.telenet.be/nl/klantenservice/wat-zijn-de-algemene-voorwaarden-van-telenet/`
+   접속 → 2025년 3월 최신판 PDF 다운로드
+2. 대안: Telenet 웹사이트 검색 "algemene voorwaarden 2025"
+3. PDF Ctrl+F 검색 키워드:
+   - 네덜란드어: "geautomatiseerde", "systematische toegang", "robot", "schrapen",
+     "automatisch", "scrapen"
+   - 추가: "website gebruik", "verboden gebruik"
+4. 발견 시: 조항 번호 + 원문 기록 → legal 에이전트 재호출
+5. 미발견 시: Appendix B Amendment에 기록
+
+#### Orange BE 소비자 TOS PDF 수동 열람 (우선순위 높음)
+
+1. `https://www.orange.be/fr/conditions-generales` 접속 →
+   "Conditions générales de vente" 또는 "Conditions générales – Abonnements" PDF 다운로드
+2. 대안: Google 검색 `orange.be "conditions générales" résidentiels 2024 2025 pdf`
+3. PDF Ctrl+F 검색 키워드:
+   - 프랑스어: "utilisation strictement personnelle", "automatisé", "robot", "scraping",
+     "extraction automatique", "utilisation commerciale"
+   - 네덜란드어: "strikt persoonlijk gebruik", "geautomatiseerde", "robot"
+   - 특별 주의: "strictly personal use" 또는 "utilisation strictement personnelle"
+     조항 — 상업적 비교 사이트 적용 여부 판단 핵심
+4. **이 항목은 Orange BE fetcher (1.5.8) 진입 전 필수** (조건 B 트리거 — B.7 참조)
+5. 발견 시: 조항 강도 판정 (약함/중간/강함) + 즉시 legal 에이전트 재호출
+
+#### Voo GTC PDF 수동 열람 (낮은 우선순위 — TOS HTML 이미 검토됨)
+
+1. `https://www.voo.be/fr/conditions-generales` HTML 버전이 이미 검토됨 (자동 수집
+   금지 없음 확인). PDF 별도 버전 존재 시에만 추가 확인.
+2. 검색 키워드: "automatisé", "robot", "extraction", "scraping"
+3. Voo는 이미 낮은 리스크 판정 — 수동 열람 우선순위 최하위.
+
+---
+
+### B.9 D3 선행조건 진입 가부 — 요약 판정
+
+**전제**: 본 Appendix B = ADR-0034 D3 §legal 선행조건의 1차 검토.
+
+| PLAN 항목 | 대상 Provider | 판정 | 조건 |
+|---|---|---|---|
+| **1.5.6** (Proximus + Telenet 실 스크래핑) | Proximus, Telenet | 🟡 **조건부 진입 가능** | B.5 공통 조건 + 운영자 Proximus/Telenet GTC 수동 열람 선행 (B.8) |
+| **1.5.8** (Orange BE fetcher) | Orange BE | 🟡 **조건부 진입 가능** | B.5 공통 조건 + 운영자 Orange BE 소비자 TOS PDF 수동 열람 필수 선행 (B.8 — 우선순위 높음) + "strictly personal use" 조항 소비자 TOS 미존재 확인 |
+| **1.5.9** (Voo fetcher) | Voo | 🟡 **조건부 진입 가능** | B.5 공통 조건 (TOS 검토 완료, GTC PDF 수동 열람은 선택적) |
+
+**최종 판정 근거**:
+- 4개 provider 모두 robots.txt 기준 공개 가격 페이지를 Disallow하지 않음.
+- 4개 provider 모두 TOS/GTC에서 자동 접근을 **명시적·직접적으로 금지하는 조항을
+  확인하지 못함** (Orange BE 그룹 "strictly personal use" 조항은 간접적 리스크이며
+  소비자 TOS PDF 미확인 상태).
+- Voo는 TOS HTML 추출 완료 — 금지 조항 없음. 4개 중 가장 낮은 리스크.
+- 즉시 외부 변호사 감사 불필요. 단 Orange BE 소비자 TOS PDF 미확인은 잔여 불확실성.
+
+**차단 조건 (이 중 하나 충족 시 코드 머지 금지)**:
+- 운영자 GTC 수동 열람에서 "중간 강도 이상" 자동 접근 금지 조항 발견
+- Orange BE 소비자 TOS에서 "strictly personal use" 조항이 확인되고 비교 사이트 적용
+  가능 판단이 legal 에이전트 1차 재검토에서 "중간 강도 이상"으로 격상될 경우
+- ADR-0034 §회귀 #5 조건 (cease & desist)
+
+---
+
+**Appendix B 작성: legal 에이전트 (2026-05-17)**
+**다음 단계**: 운영자 B.8 GTC 수동 열람 병행 트랙 → 결과 Appendix B Amendment로 기록.
+1.5.6 fetcher 코드: 본 Appendix B 통과 + 운영자 GTC 수동 열람 완료 후 builder 진입.

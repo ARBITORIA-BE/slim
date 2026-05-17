@@ -529,6 +529,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     A, ~30분 운영자 트랙). **본 선행조건 PLAN 항목 진입 시 legal 에이전트
     호출** (ADR-0034 적용 턴에서는 호출 안 함 — 운영자 명시). 검토 통과 전
     실 fetch 코드 머지 금지.
+    **[legal 1차 검토 완료 (2026-05-17, [ADR-0013 Appendix B](docs/adr/0013-fetcher-real-scraping-risk-assessment.md))]**: 4 provider 모두 robots.txt 가격 페이지 Disallow 없음. Voo TOS 명시 금지 없음 (텍스트 추출 완료). Proximus/Telenet/Orange BE GTC PDF 미확인 — 운영자 수동 열람 병행 트랙 (B.8 체크리스트). **판정: 조건부 진입 가능 (🟡)** — 외부 변호사 즉시 불필요. Orange BE 소비자 TOS PDF 수동 열람이 1.5.8 진입의 우선순위 높은 선행조건.
   - **자동 정직성 배너 (추가 작업 0)**: 실 데이터 전환 시 1.5.6.1 옵션 X
     배너 + caveat 규칙 9 가 `rawPayload.stub === false` 조건으로 *자동
     비활성* — ADR-0013 Amendment 1 §트리거 + 1.5.6.1 §재진입 트리거에 *이미
