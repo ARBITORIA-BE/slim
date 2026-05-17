@@ -2,7 +2,19 @@
 
 ## Status
 
-**Accepted** (2026-05-13 — 운영자 직접 결정 / architect 권고).
+> **⚠️ DEPRECATED (2026-05-17, [ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D5)**
+> — 한국인 시드 3채널 베타 모집 모델 *자체 폐기*. T1~T6 + Amendment 1/2
+> **전부 무효**. supersede 아닌 **deprecate** — 모집 모델 자체가 사라짐
+> (운영자 전략 피벗: "마케팅은 내가 알아서 할거야 구글 seo serch consol 해서
+> 사람 모을거야"). 신규 모델 = 사이트 완성 후 운영자 직접 Google SEO /
+> Search Console organic 모집 (ADR-0034 D5, 헌법 §8 #1 정합 = Search Console
+> = 자기 사이트 색인 메트릭, 사용자 데이터 외부 전송 아님). 카피 4파일
+> (`docs/marketing/beta-recruitment-copy.{kr,reddit,salair,tw}.md`) 각 상단
+> DEPRECATED 헤더 (이력 보존 — 삭제 X). **본문은 이력 보존을 위해
+> 삭제하지 않는다** — 아래 원문은 *역사적 기록*.
+
+~~**Accepted** (2026-05-13 — 운영자 직접 결정 / architect 권고).~~ (DEPRECATED
+2026-05-17 — ADR-0034 D5, 위 헤더 참조.)
 
 ---
 

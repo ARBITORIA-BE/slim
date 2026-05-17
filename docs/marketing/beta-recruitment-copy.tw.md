@@ -1,3 +1,9 @@
+> **⚠️ DEPRECATED (2026-05-17, ADR-0034 D5)** — 베타 모집 모델 전면 폐기
+> (ADR-0029 DEPRECATED). 신규 = 사이트 완성 후 organic Google SEO/Search
+> Console (운영자 직접). 본 카피 *배포 금지* — 이력 보존 목적으로만 남김.
+
+---
+
 # Beta Recruitment Copy — Channel 4 (Twitter/Threads)
 
 **길이:** 280자 (트윗) 또는 500자 (스레드 1번째)  

@@ -6,13 +6,32 @@
 은 architect 결정 (D-5 위임) — 본문에 근거 + trade-off 명문화. §T2~T5 는 D-2
 (시나리오 γ) + CLAUDE.md §5 locale 정합.
 
+**Amendment 2 (2026-05-17, [ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D1)**
+— **시나리오 γ → 4 locale 공개 + ko basic-auth 게이트**. §T1 라우팅 골격
+(`app/[locale]/` + `src/middleware.ts` + `src/i18n/routing.ts|request.ts`)
+**보존 — 회귀 0 (핵심 자산)**. §T2 변경: ~~"ko = 베타 콘텐츠 언어, 4.9
+backfill"~~ → **ko = 운영자 전용 hidden (basic-auth 게이트, ADR-0034 D1
+구현 = middleware basic-auth + env 1개) / nl·fr·en 콘텐츠 backfill 이
+*4.9 런치 게이트 → 완성 동시* 로 당겨짐**. §T3 (DeepL Free + base
+fallback) / §T4 (`legal.*` 별도 legal 검수 게이트) / §T5 (키화 우선순위)
+는 **유지 — 시점만 당김** (4.9 게이트 → PLAN 4.5.j.2/4.5.j.3). §SCOPE 표
++ §Verification #6 (4.9 게이트) 재정의. 본 문서 끝 §Amendment 2 참조 (해당
+절 없으면 본 Status 블록이 단일 출처). **다음 단계 결정 (구현 상세 — 잠금값
+아님)**: 현 `src/i18n/routing.ts` 는 ko 를 `locales` 비포함 + nl-BE 슬롯에
+`messages/ko.json` 매핑 구조 — basic-auth 게이트가 보호하는 정확한 경로/
+세그먼트 매핑은 builder 진입 시 결정 (ADR-0034 D1 §다음 단계 결정 참조).
+
 **격상 이력**:
 - Proposed (2026-05-16) — landline 제거 + i18n 당김 통합 분석 (architect)
 - Accepted (2026-05-16) — 운영자 결정 잠금 (D-1 흔적 제거 / D-2 시나리오 γ /
   D-3 cross-ref만 / D-4 4.5.i·4.5.j / D-5 architect §T1 위임)
+- Amendment 2 (2026-05-17) — γ → 4 locale 공개 + ko basic-auth 게이트
+  (ADR-0034 D1, §T1 보존 / §T2 운영 모델 변경 / §T3~T5 시점 당김)
 
 본 ADR 은 **ADR-0016 §T10 SC-E + §회귀 트리거 7번 (i18n 일괄 도입)** 의 발동
 산출물이다. SC-E 는 **폐기가 아니라 발동 + 시점 앞당김** — 직전 분석 결론 그대로.
+(Amendment 2 이후: ko 운영 모델만 "베타 콘텐츠" → "운영자 basic-auth 게이트"
+변경, 라우팅 골격 §T1 은 무변경.)
 
 ## Context
 

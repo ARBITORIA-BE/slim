@@ -7,9 +7,23 @@ ADR §분기 권장 그대로 옵션 C 채택. 1.5.6은 페이즈 5/6 재평가 
 ([!]) 마킹. 그동안 method='stub' 유지 + 베타는 §평가 6 옵션 X (스텁 +
 "추정값")로 진행 가능.
 
+**Amendment 1 (2026-05-17, [ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D3)**
+— **옵션 C → 진입 (차단 해제)**. 운영자 전략 피벗으로 PLAN 1.5.6 `[!]` →
+`[ ]`. **MEDIUM 2.75/5.0 분류 근거는 여전히 유효** (법적 불확실 = Proximus/
+Telenet GTC PDF 추출 실패 Appendix A 잔존 + 솔로 시간 비용 3.5/5 셀렉터
+디버깅 sink) — 운영자 *의식적 수용* (Deferred/HIGH 재분류 아님, 근거 무효화
+아님). 옵션 C 권장 → **"옵션 B 유사 진입 + 24h 신선도 모니터링 게이트 복원
++ GTC PDF 수동 열람 선행 (Appendix A §조건 A, 운영자 트랙) + Orange BE/Voo
+robots.txt+TOS 신규 평가 (legal 4-provider 일괄 트리거 — Proximus/Telenet/
+Orange BE/Voo, ADR-0034 D3 §legal 선행조건, PLAN 1.5.6 진입 시 호출)"** 로
+대체. CJEU Ryanair 판례 적용 가능성 ↑ (organic 사용자 = 상업 신호, Appendix
+A §조건 C) — 본 Amendment 가 숨기지 않음. 옵션 X 자동 비활성은 본 Amendment
+1 §트리거 조건 (`rawPayload.stub === false`) 에 *이미 설계됨* — 추가 코드 0.
+
 **격상 이력**:
 - Proposed (2026-05-09) — 7 평가 + Appendix A legal 1차 검토
 - Accepted 옵션 C (2026-05-10) — 운영자 결정, GATE-F 통과
+- Amendment 1 (2026-05-17) — 옵션 C → 진입 (ADR-0034 D3, 운영자 의식 수용)
 
 본 ADR은 **결정 + 권장만** 한다. 실 fetcher 코드 변경 X, fetcher 메타 변경 X,
 새 의존성 X. 옵션 C 채택의 직접 후속 = PLAN 1.5.6 status 갱신 + 본문 인용

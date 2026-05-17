@@ -6,6 +6,17 @@
 
 **Amended: 2026-05-12 — Amendment 1 (first-load JS budget per-route 2-tier) — §T4 의 "첫 측정 후 확정" 예약 슬롯을 충족.**
 
+**Amendment 2 (2026-05-17, [ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D1/D5)**
+— **§T4 임계값 정책 유지** (LCP ≤ 2.5s hard / first-load JS per-route 2-tier
+— 변경 0). 단 ADR-0034 가 4 공개 locale 라우팅 (next-intl middleware +
+locale별 메시지 번들) + 4 fetcher (서버측 — 클라 번들 무관) 를 도입 → §T3
+측정 페이지 셋에 **locale prefix 반영** (예: `/`, `/en`, `/fr-BE`, `/nl-NL`
++ `/compare`, `/compare/[category]/postal`, `/r/[shortId]`) + **베이스라인
+재측정** 필요 (next-intl middleware + locale 번들의 first-load JS / LCP
+영향 측정). 임계값 자체 변경 0 — *측정 범위만* amend. ko = basic-auth
+게이트 뒤 (공개 perf 측정 대상 아님). 베이스라인 재측정 트리거 = PLAN
+hreflang 활성 (D5) 항목 진입 시.
+
 > 원래 상태: *Proposed (운영자 승인 대기 — GATE-P)*.
 
 > 번호 충돌 해소 메모: PLAN §D.3.e + ADR-0020 §결정 6 + ADR-0022 §작성 메모가 *Neon-side Vercel Integration* ADR 을 "가칭 ADR-0023" 으로 느슨하게 예약("가칭" = tentative)해 뒀다. 그 항목은 페이즈 4 베타 진입(GATE-K) 시점의 *미작성* 트리거이고, 본 ADR(Lighthouse/axe 하네스)은 페이즈 3.5에서 *지금 실제로 작성*된다. **본 ADR이 0023을 소비**하고, Neon Vercel Integration ADR 은 다음 번호 **(가칭 ADR-0024)** 로 재지정한다. PLAN §D.3.e 의 "가칭 ADR-0023" 참조를 "가칭 ADR-0024" 로 갱신한다 (본 follow-up 에서 함께 처리).

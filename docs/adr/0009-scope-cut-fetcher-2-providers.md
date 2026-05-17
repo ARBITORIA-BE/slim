@@ -2,11 +2,22 @@
 
 ## Status
 
-Accepted (2026-05-09) — **운영자 직접 결정** (Kim Wonmin, kim.wonmin91@gmail.com).
+> **⚠️ DEPRECATED (2026-05-17, [ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D4)**
+> — 본 ADR 의 핵심 결정 1 ("2 공급사 Proximus+Telenet, Orange BE 페이즈 5
+> 이연, 좁고 깊은 포지셔닝")이 ADR-0034 D4 로 **전면 무효**: Proximus /
+> Telenet / **Orange BE** / **Voo** 4 fetcher (순서 = Orange BE 먼저 → Voo
+> 차순). §결정 2 (페이즈 1 일정 단축) / §검증 (M16 게이트) 도 ADR-0034 D2
+> 로 무의미. amend 아닌 **deprecate** — "좁고 깊은 2 공급사" 정책 자체 폐기
+> (amend 는 결정 1 잔존 오해 소지). **본문은 이력 보존을 위해 삭제하지
+> 않는다** — Telecompaper Q1 2025 점유율 사실(Proximus 43 / Telenet 32 /
+> Orange BE 22.5%)은 ADR-0034 D4 가 그대로 인용. 아래 원문은 *역사적 기록*.
+
+~~Accepted (2026-05-09)~~ — **운영자 직접 결정** (Kim Wonmin, kim.wonmin91@gmail.com).
 ADR-0003 §결정 6의 scope cut 옵션 **A** ("1.8 fetcher 3개 → 2개")를 명시적으로
 채택. 본 ADR은 그 결정을 *기록*하고 *근거를 정리*한다. 인터페이스 결정
 ([ADR-0008](0008-fetcher-interface-and-cron.md))은 그대로 유지 — 본 ADR은
-*갯수*만 변경한다.
+*갯수*만 변경한다. (DEPRECATED 2026-05-17 — ADR-0034 D4 가 4 공급사로 전면
+무효, 위 헤더 참조.)
 
 ## Context
 

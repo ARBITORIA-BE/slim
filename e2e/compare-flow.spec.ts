@@ -60,9 +60,11 @@ test('5단계 입력 → /r/[shortId] 도달 (mobile + 1000 + single + skip + bi
   await expect(page).toHaveURL(/\/compare\/mobile\/bill/);
 
   // ─── 5. 청구서 없이 진행 ────────────────────────────────────────────
+  // preview 단계는 자동 제출로 인해 매우 짧게 존재하다 /r/[shortId] 로 이동한다.
+  // Playwright 가 preview URL 을 캐치하기 전에 이미 result 로 이동할 수 있으므로
+  // preview URL 단언 없이 바로 result URL 을 기다린다.
   await page.screenshot({ path: `${SHOT_DIR}/05-bill.png`, fullPage: true });
   await page.getByRole('button', { name: /청구서 없이 진행/ }).click();
-  await expect(page).toHaveURL(/\/compare\/mobile\/preview/);
 
   // ─── 6. preview 자동 제출 → /r/[shortId] ─────────────────────────────
   await page.waitForURL(/\/r\/[A-Za-z0-9_-]{12}$/, { timeout: 10_000 });

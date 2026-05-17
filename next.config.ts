@@ -1,4 +1,9 @@
+import createNextIntlPlugin from 'next-intl/plugin';
 import type { NextConfig } from 'next';
+
+// ADR-0033 §T1: next-intl plugin 배선.
+// request.ts 경로 명시 — next-intl이 getRequestConfig를 찾는 기준점.
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 // ADR-0002: 검증 권한은 로컬 stop-gate + GitHub Actions가 소유.
 // Vercel은 순수 빌드 머신.
@@ -13,4 +18,4 @@ const config: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
 };
 
-export default config;
+export default withNextIntl(config);

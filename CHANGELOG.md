@@ -11,6 +11,19 @@
 
 ### Changed
 
+- **2026-05-17 — 전략 전면 피벗 (ADR-0034 Accepted)** — 베타 모집 게이트 제거 → 사이트 완성 우선 + organic Google SEO 런치:
+  - **결정**: ADR-0034 Proposed → Accepted (2026-05-17, 운영자 직접 결정). 베타 모집(ADR-0029) 폐기 → 다국어(EN/FR/NL 공개, KO `src/middleware.ts` basic-auth 운영자 전용) + 실 스크래핑(stub '추정값' 폐기) + 4 공급사(Proximus/Telenet/Orange BE/Voo, 실 fetcher 4개) 동시 빌드. 적용 순서 = 순차 D1→D3→D4→D5. €300 cap 유지(ADR-0004 트리거 발화 시 재평가).
+  - **블래스트 반경**: ADR-0003/0004/0013/0016/0023/0033 각 §Amendment 발행(신규 파일 0 — 기존 ADR에 섹션 후속). ADR-0009/0029 DEPRECATED 선언(상단 헤더, 본문 이력 보존). `docs/marketing/beta-recruitment-copy.{kr,reddit,salair,tw}.md` 4파일에 DEPRECATED 헤더(배포 금지). `docs/adr/INDEX.md` 현황표 갱신.
+  - **PLAN 전면 재구조화** (메타 합계 86→88 +2, 완료 58 불변, 차단 2→0): 페이즈4 = 어트리뷰션+완성. 페이즈5 = 통신 BE만 무조건부(M16 4-신호 평가 게이트 삭제). 1.5.6 `[!]`→`[ ]` 차단 해제(실 스크래핑). 신규 1.5.8 Orange BE fetcher / 1.5.9 Voo fetcher / 3.5.4 hreflang+Search Console 소유권검증. 구 5.0 Orange BE 항목 제거(1.5.8로 이동). i18n 트랙 4.5.j(✅ 유지) + 신규 sub 3개: 4.5.j.1 KO basic-auth 게이트 / 4.5.j.2 nl·fr·en 콘텐츠 backfill / 4.5.j.3 legal.* 네임스페이스 legal 검수. 합계 증분 = 신규 +3, 구 5.0 −1 = 순 +2.
+  - **검증 (게이트)**:
+    - `pnpm typecheck` 0 error ✅
+    - `pnpm lint` 0 error ✅
+    - `pnpm harness:plan` 88/58/0 정합 (합계 88, 완료 58, 차단 0) ✅
+    - `pnpm harness:data` 통과 ✅
+    - `pnpm test` — Windows Vitest 워커 풀 크래시로 **통과 미확정**. 이번 변경은 문서/PLAN만(소스 로직 0건)이라 회귀 가능성 낮으나 "통과"로 단정하지 않음. 깨끗한 환경/CI 재실행 필요.
+  - **미결 1건 (ADR-0034 §D1)**: KO 로케일의 런칭/개발 완료 후 운명(삭제 vs hidden 유지)은 의도적으로 미잠금 — 그 시점 운영자 결정.
+  - **운영자 액션**: 본 변경 미커밋(요청 시 커밋). legal 4-provider robots/TOS 검토는 PLAN 1.5.6/1.5.8/1.5.9/4.5.j.3 진입 시 트리거(본 작업에서 미호출).
+
 - **2026-05-14 — Fresh-start 완성: Git history 정체성 통합** ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md)):
   - **이유**: 음성 PR #1 (`test/build-gate-negative → main`) 검증 중 Vercel access control 이 git author 권한으로 차단된 것이 도화선 — 운영자가 ARBITORIA-BE org 신설 후에도 옛 history(`HanSap` 27건 + `kimwonmin91-4132` 100건 + 평문 `kim.wonmin91@gmail.com`)가 따라온 fresh-start 침해 + Free org plan ruleset 한계 + 인프라 정보 노출 3 사안 동시 발견.
   - **무엇을 했나**: `git-filter-repo 2.47.0` (`python -m git_filter_repo --mailmap .git/mailmap.txt --force`) 로 128 commit 의 author/committer 라인을 `Arbitoria <261937864+Arbitoria@users.noreply.github.com>` 단일로 통합. `bootstrap <bootstrap@slim.eu>` 1건은 Drizzle initial migration 등 시스템 흔적 보존. 태그 `pre-arbitoria-migration` 도 함께 rewrite (annotated tag `ba863cd...`, target commit `07af4d6...`).

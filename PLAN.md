@@ -514,28 +514,37 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   *참고 (ADR-0020 §결정 4)*: Vercel runtime의 `EXPECTED_DB_ENDPOINTS`는 미등록
   상태 — 페이즈 4 베타 진입 (GATE-K) 직전 D.3에서 등록 예정. 현 stop-gate는
   로컬에서만 동작.
-- [!] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
+- [ ] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
   교체). PLAN 1.8 스텁 fetcher의 후속 부채.
-  - **차단 사유 (2026-05-10)**: [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)
-    분기 결과 = **MEDIUM (2.75/5.0) → 옵션 C 채택**. 1.5.6을 페이즈 5/6
-    재평가 시점까지 보류. 그동안 method='stub' 유지 + 베타(페이즈 4)는
-    ADR-0013 §평가 6 옵션 X (스텁 + "추정값")로 진행. 솔로 시간 비용(3.5)이
-    가장 큰 점수였고, Proximus/Telenet General Terms PDF 텍스트 추출 실패로
-    잔여 법적 불확실성 존재. 페이즈 5 진입 시 1.5.6 + Orange BE(5.0) +
-    1.5.1(N=3 fetcher 공통화)을 통합 평가하는 게 시간 효율 ↑.
-  - **재진입 트리거 (ADR-0013 §검증 3)**: M16 평가 게이트 통과 시 별도 ADR
-    신설 + GTC PDF 수동 열람 (운영자 권고 후속, ~30분 — Appendix A §외부 변호사 권장)
-    + Daisycon/Awin 어필리에이트 피드 vs 자체 스크래핑 재비교.
-  - **차단 동안 유지 산출물**: 본 항목 본문에 정의된 fetcher 파일들의 `// 실
-    fetch 준비 코드` 주석 블록은 그대로 보존 — 페이즈 5 진입 시 주석 해제 +
-    Cheerio 추가만으로 진입 가능 (인터페이스 동결).
-  - 원래 DoD (재진입 시 적용): 실 Neon DB에 `tariff_snapshot` 행 2 fetcher
-    × N tariff 누적 확인. confidence='low' 비율 < 20% (스텁 100%에서 격상).
+  - **차단 해제 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D3 + [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Amendment)**:
+    `[!]` → `[ ]`. 운영자 전략 피벗 — 옵션 C → **진입**. ADR-0013 MEDIUM
+    2.75/5.0 *분류 근거는 여전히 유효* (Proximus/Telenet GTC PDF 추출 실패
+    잔존 법적 불확실 + 솔로 시간 비용 3.5/5 셀렉터 디버깅 sink) — 운영자
+    *의식적 수용* (Deferred/HIGH 재분류 아님). 옵션 C → "옵션 B 유사 진입
+    + 24h 신선도 모니터링 게이트 복원 + GTC PDF 수동 열람 선행 + Orange BE/
+    Voo robots/TOS 신규 평가" 로 amend.
+  - **🔒 선행조건 (D4 진입 전 필수 — ADR-0034 D3 §legal 선행조건)**: `legal`
+    에이전트 **4-provider (Proximus/Telenet/Orange BE/Voo) robots.txt + TOS
+    일괄 검토** 트리거 + 운영자 **GTC PDF 수동 열람** 병행 (Appendix A §조건
+    A, ~30분 운영자 트랙). **본 선행조건 PLAN 항목 진입 시 legal 에이전트
+    호출** (ADR-0034 적용 턴에서는 호출 안 함 — 운영자 명시). 검토 통과 전
+    실 fetch 코드 머지 금지.
+  - **자동 정직성 배너 (추가 작업 0)**: 실 데이터 전환 시 1.5.6.1 옵션 X
+    배너 + caveat 규칙 9 가 `rawPayload.stub === false` 조건으로 *자동
+    비활성* — ADR-0013 Amendment 1 §트리거 + 1.5.6.1 §재진입 트리거에 *이미
+    설계됨* (추가 코드 0 — cross-ref 만).
+  - **유지 산출물**: 본 항목 본문에 정의된 fetcher 파일들의 `// 실 fetch
+    준비 코드` 주석 블록은 그대로 보존 — 주석 해제 + Cheerio 추가만으로 진입
+    (인터페이스 ADR-0008 동결).
+  - DoD: legal 4-provider 검토 통과 + GTC 수동 열람 완료 + 실 Neon DB에
+    `tariff_snapshot` 행 Proximus/Telenet 2 fetcher × N tariff 누적 확인 +
+    24h 신선도 모니터링 게이트 복원 동작 + confidence='low' 비율 < 20% (스텁
+    100%에서 격상) + typecheck/lint/test 0 + harness:plan/data 정합.
 - [x] **1.5.6.1** **옵션 X "추정값" UI 표시** (페이즈 4.6 베타 배포 의존성 —
   ADR-0013 §평가 6 옵션 X + Amendment 1 예정). 1.5.6 본문은 차단 유지(옵션 C);
   본 sub-task 는 *비차단* — 베타 동안 스텁 데이터의 P1/P3 정직성 보강.
   - **결정 영역 (architect 잠금 2026-05-13)**:
-    - **표시 위치 = 2개**: (1) 결과 페이지 헤더 *베타 정직성 배너* (`src/app/r/[shortId]/page.tsx` 상단,
+    - **표시 위치 = 2개**: (1) 결과 페이지 헤더 *베타 정직성 배너* (`src/app/[locale]/r/[shortId]/page.tsx` 상단,
       `<ResultConclusionCard />` 위) + (2) `deriveCaveats` 9번째 규칙 (`src/engine/caveats.ts`).
       결과 카드 셀별/결론 카드 내부 인라인 배지는 *과잉* — 카드별 반복 시각
       noise. 헤더 배너 = *눈에 띄는* 정직성 1회, caveat = *영구* + 기존 8 규칙
@@ -549,11 +558,11 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       스크래핑은 페이즈 5 이후 격상 예정." + ADR-0013 §평가 6 옵션 X 링크.
       caveat 가이드 — 8번째 규칙 동형 톤 ("이 가격은 추정값 — 실 데이터는 페이즈
       5 이후"). ADR-0029 §T2 정직성 잠금 토큰 ("솔로 신생 사이트") 톤 일관.
-  - DoD: (1) typecheck/lint/test 0 에러 (2) `src/app/r/[shortId]/page.tsx` 상단
+  - DoD: (1) typecheck/lint/test 0 에러 (2) `src/app/[locale]/r/[shortId]/page.tsx` 상단
     `BetaEstimatedBanner` 컴포넌트 1개 노출 — 결과 페이지의 *모든* rank=1 row 가
     `rawPayload.stub === true` 일 때 표시 (3) `deriveCaveats` 9번째 규칙 — stub
     트리거 시 caveat 1줄 추가, 단위 테스트 1건 (`src/engine/caveats.test.ts`)
-    (4) 배너 컴포넌트 단위 테스트 + 결과 페이지 통합 테스트 (`src/app/r/[shortId]/_lib/compare-view.test.ts`
+    (4) 배너 컴포넌트 단위 테스트 + 결과 페이지 통합 테스트 (`src/app/[locale]/r/[shortId]/_lib/compare-view.test.ts`
     또는 신설) (5) ADR-0013 Amendment 1 본문 (scribe) 인용 + cross-ref
     (6) i18n: 한국어 단일 (ADR-0016 SC-E 정합).
   - **4.6 베타 배포 의존성**: 본 sub-task 가 4.6 배포 *전* 또는 *동시* 완료 필수.
@@ -564,6 +573,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     데이터 전환 → 본 sub-task 산출물의 트리거 조건이 자동 *비활성* (rawPayload.stub
     === false 시 배너/caveat 미노출). 추가 변경 없이 점진적 전환 흡수.
     - ✅ 완료 (2026-05-13): BetaEstimatedBanner.tsx RSC 신설 (47줄, amber warning bg, role=status) + .test.tsx (7 케이스). deriveCaveats 규칙 9 추가 ("추정값 — 실 데이터 페이즈 5 이후") + caveats.test.ts (10 케이스). comparison.ts SQL COALESCE isStub propagation. page.tsx 조건부 노출 (allItems.some(item => item.isStub)). 4.1.e/d / 4.3.* / 4.5.* 회귀 X. typecheck/lint/test 477 passed (456+21) / harness:plan 54 정합 / harness:data 통과. 커밋 `a0b876c`. **4.6 베타 배포 의존성 해소**.
+  - **cross-ref (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D3)**: 1.5.6 실 데이터 전환 시 본 sub-task 산출물의 트리거(`rawPayload.stub === false`)가 배너/caveat 을 *자동 비활성* — 설계가 이미 이 전환을 예견 (추가 작업 0). 본 항목 본문/DoD 변경 0.
 - [x] **1.5.7** Bash 보안 패턴 자동 차단 hook (운영 안전 부채). 사고 근거:
   2026-05-10 — Pieter가 echo + 백틱 substitution + `>>` 리다이렉트로 마크다운
   파일을 갱신하려다 보안 경고("Newline followed by # inside a quoted argument")
@@ -583,6 +593,32 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   multiline+# / single-quoted `$()` 안전 통과 / rm -rf /).
   세 번째 헌법 항목 ("escape 안 된 큰따옴표 끼어듦")은 false positive 비율
   과다로 자동 탐지 보류, hook 내 주석에 후속 휴리스틱 진입점 명시.
+
+- [ ] **1.5.8** **Orange BE fetcher 신설** (트랙 D4 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4,
+  [ADR-0009](docs/adr/0009-scope-cut-fetcher-2-providers.md) DEPRECATED 대체).
+  Orange BE = BE 통신 시장 점유율 22.5% *검증됨* (Telecompaper Q1 2025) → D4
+  순서 **1순위** (Voo 보다 먼저). `src/fetchers/orange-be.ts` +
+  `src/fetchers/orange-be.test.ts` 신설 (ADR-0008 인터페이스 그대로 — 변경 0,
+  registry 배열 +1).
+  - **🔒 선행조건**: 1.5.6 §선행조건 (legal 4-provider robots/TOS 일괄 검토
+    + GTC 수동 열람) 통과 후 진입. Orange BE robots.txt + TOS 는 ADR-0013 이
+    *미검토* → legal 4-provider 트리거에 포함 (PLAN 항목 진입 시 호출).
+  - DoD: legal Orange BE robots/TOS 통과 + `src/fetchers/orange-be.ts` 실
+    fetch + `src/fetchers/orange-be.test.ts` 단위 1 + registry 등록 + 실 Neon
+    DB `tariff_snapshot` Orange BE N tariff 누적 + confidence='low' < 20% +
+    typecheck/lint/test 0 + harness:plan/data 정합.
+- [ ] **1.5.9** **Voo fetcher 신설** (트랙 D4 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4).
+  Voo = D4 순서 **2순위** (Orange BE 다음). 점유율 *미검증* → fetcher 신설
+  진입 시 **WebSearch 리서치** 로 점유율/시장 위치 검증 후 진행 (ADR-0034 D4).
+  `src/fetchers/voo.ts` + `src/fetchers/voo.test.ts` 신설 (ADR-0008
+  인터페이스 그대로 — 변경 0, registry 배열 +1).
+  - **🔒 선행조건**: 1.5.6 §선행조건 (legal 4-provider robots/TOS + GTC 수동)
+    + Voo 점유율 WebSearch 리서치 완료. Voo robots.txt + TOS = ADR-0013
+    *미검토* → legal 4-provider 트리거에 포함.
+  - DoD: WebSearch Voo 점유율 기록 + legal Voo robots/TOS 통과 +
+    `src/fetchers/voo.ts` 실 fetch + `src/fetchers/voo.test.ts` 단위 1 +
+    registry 등록 + 실 Neon DB `tariff_snapshot` Voo N tariff 누적 +
+    confidence='low' < 20% + typecheck/lint/test 0 + harness:plan/data 정합.
 
 **Phase 1.5 검증:** verifier — typecheck/lint/test 0 에러 + 신설 runbook 존재.
 
@@ -713,44 +749,44 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 
 - [x] **3.1** **1층 — 결론 카드** (스크롤 없이 보임) — ADR-0021 §T2: 1위 추천
   + 연간 절약액 + "변경하기" CTA placeholder (페이즈 4 어트리뷰션 활성).
-  - 신설: `src/app/r/[shortId]/_components/ResultConclusionCard.tsx` (1위 공급사 + 요금제명 + 절약액 4 상태 분기 + 신뢰도 배지 + caveats list + CTA disabled placeholder + 다크 패턴 회피).
-  - 후보 0건 시 fallback 인라인 안내 (ADR-0011 §T2 항목 5 동형) — `src/app/r/[shortId]/page.tsx` 안.
+  - 신설: `src/app/[locale]/r/[shortId]/_components/ResultConclusionCard.tsx` (1위 공급사 + 요금제명 + 절약액 4 상태 분기 + 신뢰도 배지 + caveats list + CTA disabled placeholder + 다크 패턴 회피).
+  - 후보 0건 시 fallback 인라인 안내 (ADR-0011 §T2 항목 5 동형) — `src/app/[locale]/r/[shortId]/page.tsx` 안.
   - 신뢰도 배지: confidence != 'high' 시만 노출 (T5 매트릭스 결론 카드 컬럼).
   - 후속: caveats i18n 매트릭스(T5) 위치별 차등은 페이즈 4 SC-E i18n ADR.
 - [x] **3.2** **2층 — 비교 표** (다나와 스타일 정보 밀도) — ADR-0021 §T2 + §T4:
   상위 5개 6 컬럼 + URL params 정렬/필터 (**SC-F 적용**, RSC 재렌더, dep 0).
   모바일은 카드 stack.
-  - 신설: `src/app/r/[shortId]/_components/ComparisonTable.tsx` (desktop native table + mobile card stack, 6 컬럼 = 순위/공급사·요금제/월비용/약정/절약/신뢰도, 카테고리별 보조 텍스트, 프로모·활성화비 inline).
-  - 신설: `src/app/r/[shortId]/_components/ComparisonControls.tsx` (3 sort `<a>` 라디오 + 2 filter 토글 `<a>` — dep 0 + RSC 재렌더).
-  - 신설: `src/app/r/[shortId]/_lib/compare-view.ts` (순수 parseSearchParams + applyView + buildSortHref/buildFilterToggleHref).
-  - 신설: `src/app/r/[shortId]/_lib/compare-view.test.ts` (18 단위 테스트 — 파싱 + URL 직렬화 + 정렬/필터/limit/tie-break/순수성).
+  - 신설: `src/app/[locale]/r/[shortId]/_components/ComparisonTable.tsx` (desktop native table + mobile card stack, 6 컬럼 = 순위/공급사·요금제/월비용/약정/절약/신뢰도, 카테고리별 보조 텍스트, 프로모·활성화비 inline).
+  - 신설: `src/app/[locale]/r/[shortId]/_components/ComparisonControls.tsx` (3 sort `<a>` 라디오 + 2 filter 토글 `<a>` — dep 0 + RSC 재렌더).
+  - 신설: `src/app/[locale]/r/[shortId]/_lib/compare-view.ts` (순수 parseSearchParams + applyView + buildSortHref/buildFilterToggleHref).
+  - 신설: `src/app/[locale]/r/[shortId]/_lib/compare-view.test.ts` (18 단위 테스트 — 파싱 + URL 직렬화 + 정렬/필터/limit/tie-break/순수성).
   - `getResultItems(resultId)` Drizzle 쿼리 추가 (4단 JOIN).
   - 필터: commitment_none + data_unlimited (라운드 b 범위). promo_exclude (display-only) 는 후속 라운드 또는 SC-E i18n 동반.
 - [x] **3.3** **3층 — 원본 링크** — ADR-0021 §T2: 각 행 우측 외부 링크
   (rel="nofollow noopener") + "마지막 확인: X시간 전" (`tariff_snapshot.fetched_at`).
-  - `src/app/r/[shortId]/_components/ComparisonTable.tsx` — 7번째 컬럼 "원본" (desktop) + 모바일 카드 footer. `SourceLink` 내부 컴포넌트.
-  - `src/app/r/[shortId]/_lib/stale.ts` — `formatRelativeTime` 순수 함수 + `src/app/r/[shortId]/_lib/stale.test.ts` 7 단위 테스트.
+  - `src/app/[locale]/r/[shortId]/_components/ComparisonTable.tsx` — 7번째 컬럼 "원본" (desktop) + 모바일 카드 footer. `SourceLink` 내부 컴포넌트.
+  - `src/app/[locale]/r/[shortId]/_lib/stale.ts` — `formatRelativeTime` 순수 함수 + `src/app/[locale]/r/[shortId]/_lib/stale.test.ts` 7 단위 테스트.
   - `rel="nofollow noopener"` + `target="_blank"` + sr-only "새 창에서 열림" 안내.
 - [x] **3.4** **제외된 공급사 섹션** — ADR-0021 §T6: `provider.excluded_reason`
   직접 표시 + /data-sources 동형 + Orange BE "페이즈 5 평가 후 추가 예정" 안내
   (ADR-0009 §결정 1).
-  - 신설: `src/app/r/[shortId]/_components/ExcludedProvidersSection.tsx` — 헌법 P3 동형 표면화. 0건 시 섹션 자체 비노출.
+  - 신설: `src/app/[locale]/r/[shortId]/_components/ExcludedProvidersSection.tsx` — 헌법 P3 동형 표면화. 0건 시 섹션 자체 비노출.
   - `src/db/queries/providers.ts` 확장 — `getExcludedProviders(country)` helper. `/data-sources` 와 공유 가능 형태.
   - Orange BE 는 마스터 데이터(`provider.excluded_reason = '페이즈 5 평가 후 추가 예정'`) 로 자연 포함 — 특수 분기 0.
 - [x] **3.5** **계산 근거 펼치기** — ADR-0021 §T7: HTML `<details>` 펼치기 +
   `src/engine/usage-estimator.ts` 기본 프로파일 + breakdown.monthlyAvg12/24Cents +
   engineVersion + caveats 트리거 표기. JS 0 native a11y.
-  - 신설: `src/app/r/[shortId]/_lib/caveat-triggers.ts` — 순수 deriveCaveatTriggers. deriveCaveats 규칙 1~7 을 저장된 스냅샷 데이터(commitment/activation/promo/data_gb/eu_roaming/download_mbps/confidence) + usageProfile 로 거울 평가 → 트리거/미트리거 근거 행. 규칙 8(현재 요금제 신뢰도)은 별도 컬럼 미저장 — flat caveats 리스트로 위임.
-  - 신설: `src/app/r/[shortId]/_lib/caveat-triggers.test.ts` — 26 단위 테스트 (각 규칙 경계 triggered/미triggered + 카테고리별 행 포함/제외 + 입력 변형 X + 결정성).
-  - `src/app/r/[shortId]/_components/CalculationDetails.tsx` 확장 — "주의사항 트리거 조건" 섹션(triggerRows prop, 트리거 dot 표기) + inputsAbsent prop (90일 보관 정책 입력 부재 시 "사용한 가정"이 재구성값임 정직 표기 — ADR-0007 §T9).
-  - `src/app/r/[shortId]/page.tsx` — rank=1 item(getResultItems 결과) + view.usageProfile 로 deriveCaveatTriggers 호출 → CalculationDetails 에 triggerRows + inputsAbsent(=piiAnonymizedAt 존재) 전달.
+  - 신설: `src/app/[locale]/r/[shortId]/_lib/caveat-triggers.ts` — 순수 deriveCaveatTriggers. deriveCaveats 규칙 1~7 을 저장된 스냅샷 데이터(commitment/activation/promo/data_gb/eu_roaming/download_mbps/confidence) + usageProfile 로 거울 평가 → 트리거/미트리거 근거 행. 규칙 8(현재 요금제 신뢰도)은 별도 컬럼 미저장 — flat caveats 리스트로 위임.
+  - 신설: `src/app/[locale]/r/[shortId]/_lib/caveat-triggers.test.ts` — 26 단위 테스트 (각 규칙 경계 triggered/미triggered + 카테고리별 행 포함/제외 + 입력 변형 X + 결정성).
+  - `src/app/[locale]/r/[shortId]/_components/CalculationDetails.tsx` 확장 — "주의사항 트리거 조건" 섹션(triggerRows prop, 트리거 dot 표기) + inputsAbsent prop (90일 보관 정책 입력 부재 시 "사용한 가정"이 재구성값임 정직 표기 — ADR-0007 §T9).
+  - `src/app/[locale]/r/[shortId]/page.tsx` — rank=1 item(getResultItems 결과) + view.usageProfile 로 deriveCaveatTriggers 호출 → CalculationDetails 에 triggerRows + inputsAbsent(=piiAnonymizedAt 존재) 전달.
   - <details>/<summary> native·breakdown·engineVersion 골격은 sub-task 1-3 그대로 (라운드 d 는 caveats 트리거 + 90일 케이스만).
 - [x] **3.6** **공유 가능한 영구 링크** (`/r/[id]`) — ADR-0021 §T1 + §T8:
   `/r/[shortId]` 풀 페이지 격상 (페이즈 2 placeholder 호환) + RSC + ISR 1h +
   `notFound()` 잘못된 shortId 404 + noindex + canonical (**SC-G 적용**: 동적 OG는
   페이즈 4 별도 ADR-OG, 페이즈 3 1차 = static OG).
-  - `src/app/r/[shortId]/page.tsx` — placeholder 헤더 제거 + `export const revalidate = 3600` ISR + ResultConclusionCard 통합 + 영구 ID + 90일 익명화 배너 (T9) + 새로 비교/홈 CTA 두 개.
-  - `src/app/r/[shortId]/not-found.tsx` — 한국어 안내(sub-task 4, 형식 미달/DB 미존재 공통).
+  - `src/app/[locale]/r/[shortId]/page.tsx` — placeholder 헤더 제거 + `export const revalidate = 3600` ISR + ResultConclusionCard 통합 + 영구 ID + 90일 익명화 배너 (T9) + 새로 비교/홈 CTA 두 개.
+  - `src/app/[locale]/r/[shortId]/not-found.tsx` — 한국어 안내(sub-task 4, 형식 미달/DB 미존재 공통).
   - 메타: noindex + canonical + textOG (sub-task 3 진행, og:image 미설정 — 페이즈 4 ADR-OG).
 - [x] **3.7** **인쇄 친화 뷰** (`@media print`) — **ADR-0021 §T9 Amendment 1
   (2026-05-11) — 페이즈 3 환원** (옵션 D 철회). `/r/[shortId]` 인쇄/PDF 사본이
@@ -839,9 +875,12 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   `/compare/[category]/{postal,household,current-provider,bill,preview}` 입력 폼
   단계 — 색인 가치 낮음 + sessionStorage 상태 의존)를 명확히 제외하는 **최소선**.
   **범위 밖**: 동적 `og:image` (ADR-0021 §T8 SC-G — 페이즈 4 ADR-OG) · JSON-LD
-  구조화 데이터 (베타 시드 비필수, 페이즈 4+ 후보) · hreflang/locale 대안 라우팅
-  (i18n 은 SC-E 로 페이즈 4 베타 직전 일괄 — 현재 ko 단일이라 hreflang 무의미) ·
-  PostHog/Sentry 외 새 추적기 (헌법 §8 #1). **새 dep 0 / 새 SaaS 0** — Next.js
+  구조화 데이터 (베타 시드 비필수, 페이즈 4+ 후보) · ~~hreflang/locale 대안
+  라우팅 (i18n 은 SC-E 로 페이즈 4 베타 직전 일괄 — 현재 ko 단일이라 hreflang
+  무의미)~~ → **재개봉 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5)**:
+  hreflang/locale 대안 라우팅은 organic SEO 의 *전제* — 신규 **3.5.4** 항목으로
+  활성 (다국어 공개 EN/FR/NL = 고유 URL + hreflang + 다국어 sitemap, Google
+  localized versions 요구). · PostHog/Sentry 외 새 추적기 (헌법 §8 #1). **새 dep 0 / 새 SaaS 0** — Next.js
   App Router 네이티브 (`app/sitemap.ts` · `app/robots.ts` · `metadata`/`generateMetadata`).
   DoD: (1) 루트 `layout.tsx` 에 `metadataBase: new URL('https://slim.lu')` +
   `openGraph` 기본값 (`og:type=website` · `og:locale=ko_KR` · `og:site_name=Slim`)
@@ -978,15 +1017,46 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     DoD: `/ship` 에 `harness:load` 등장 + 측정 결과 1회 분이 PLAN/ADR 에 남음.
     검증: 슬래시 커맨드 파일 확인 + 본 항목 주석에 베이스라인 수치 존재.
     ✅ 검증 (2026-05-12): .claude/commands/ship.md 코드 품질 섹션에 `pnpm harness:load` 체크박스 추가(next build && pnpm start 선행 + "베타 직전 1회 권고, CI 게이트 아님" 주석)/harness:all 무변동 확인/ci.yml 무변동 확인/package.json dependency 0 확인.
+- [ ] **3.5.4** **hreflang / 다국어 sitemap 활성 + Google Search Console 소유권 검증**
+  (트랙 D5 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5,
+  3.5.2 §범위밖 재개봉). organic SEO 의 *전제* — 다국어 공개 (nl-BE/nl-NL/
+  fr-BE/fr-LU/en) 각 고유 URL + `<link rel="alternate" hreflang>` + sitemap
+  다국어 항목 (Google localized versions 요구 — ADR-0033 §T1 근거).
+  - **hreflang/sitemap 다국어** = ADR-0033 §T1 라우팅 골격(`app/[locale]/`)
+    위에 hreflang `<link>` + `app/sitemap.ts` 다국어 항목 활성 (3.5.2
+    sitemap 단일 출처 확장). `/r/[shortId]` noindex **유지** (ADR-0021 §T8,
+    변경 0 — SEO 색인 대상 = `/`,`/compare`,`/data-sources`,`/legal/*`).
+    ko = basic-auth 게이트 뒤 (공개 sitemap/hreflang 비포함, ADR-0033 §T2).
+  - **Google Search Console 소유권 검증** = DNS TXT 또는 HTML meta (PII 0).
+    헌법 §8 #1 정합 — Search Console = 자기 사이트 색인 메트릭, 사용자
+    데이터 외부 전송 아님 (ADR-0034 D5 §정합 확인). Google Analytics 등
+    클라이언트 추적 스크립트 ❌ (도입 안 함이 기본 — 도입 시 별도 §8 #1
+    위반 검토).
+  - **새 dep 0 / 새 SaaS 0** — Next.js App Router 네이티브 (`app/sitemap.ts`
+    + `generateMetadata` alternates.languages) + Search Console (운영자
+    무료 도구, 코드 측 = sitemap 제출 + 소유권 meta/DNS).
+  - DoD: (1) 5 locale 각 고유 URL + hreflang `<link>` (2) `app/sitemap.ts`
+    다국어 항목 (`/r/[shortId]` 부재 유지) (3) Search Console 소유권 검증
+    완료 (DNS TXT/meta, PII 0, 운영자 트랙) (4) `/r/[shortId]` noindex 무변동
+    회귀 테스트 (5) typecheck/lint/test 0 + harness:plan/data 정합 +
+    harness:perf locale 베이스라인 재측정 (ADR-0023 Amendment 2).
 
 ---
 
-## 페이즈 4 · 전환 플로우 + 베타 (Switch Flow + Beta) — M8 ~ M10
+## 페이즈 4 · 어트리뷰션 + 완성 (Attribution + Completion) — M8 ~ M10
 
-**목표:** 결과에서 실제 공급사 변경까지 3클릭 + 베타 100명 모집/검증.
+**목표:** 결과에서 실제 공급사 변경까지 3클릭 + **완성 (게이트 무관)** —
+실 데이터 4 fetcher 검증 + organic SEO 런치 준비.
 
-> 페이즈 4는 원 PLAN의 페이즈 4(전환) + 페이즈 7(런치)을 **솔로 + TVA 발급
-> 후의 어트리뷰션 검증 1주기**로 묶었다. ADR-0003 §결정 4 참조.
+> **전략 피벗 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md))**:
+> 페이즈 4 = 어트리뷰션 + **완성** (베타 게이트 제거). 4.6 베타 모집
+> → **deprecate → organic SEO 런치 준비** (Search Console + hreflang +
+> 다국어 sitemap). 4.7 베타 피드백 → **deprecate → 실 데이터 4 fetcher
+> 검증**. 4.8 PR 매체 → **축소** (운영자 SEO 직접). 4.9 런치 게이트 =
+> **완성 게이트** (nl/fr/en 100% + hreflang + legal.* 검수 + ko basic-auth
+> 게이트). 베타 NPS/도달 게이트 전부 무효 (ADR-0034 D2/D5). 적용 순서 =
+> 순차 D1→D3→D4→D5 (회귀 격리). 원 PLAN 페이즈 4(전환) + 페이즈 7(런치)
+> 통합은 ADR-0003 §결정 4 그대로 유지.
 
 - [x] **4.1** 어트리뷰션 시스템 (`affiliate_click` 테이블) — **ADR-0026** (페이즈 4 진입 시
   builder 트리거, 본 항목은 GATE-K 무관 = 인프라 독립; 베타 *런치*만 GATE-K(D.3) 의존).
@@ -1011,7 +1081,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - [x] **4.1.b** `src/db/schema/affiliate_click.ts` 신설 + Drizzle 마이그레이션 (drizzle/0005_*) —
     ADR-0026 §데이터 모델 컬럼. `src/db/schema/index.ts` export 1줄. `pnpm db:push` 검증.
     ✅ 완료 (2026-05-13): `src/db/schema/affiliate_click.ts` 신설 (18컬럼, enum, FK 4개, 인덱스 5개). `drizzle/0005_pale_praxagora.sql` (enum + table + FK + 인덱스). `src/db/schema/index.ts` export 1줄 추가. typecheck/lint/test/harness:plan/harness:data 모두 통과. 3-way 정합(ADR-0026 ↔ 스키마 ↔ 마이그레이션) ✅. CHANGELOG 항목 추가. builder 인계 가능.
-  - [x] **4.1.c** 클릭 기록 경로 — `src/app/r/[shortId]` "변경하기" CTA → 동의 확인 인터스티셜
+  - [x] **4.1.c** 클릭 기록 경로 — `src/app/[locale]/r/[shortId]` "변경하기" CTA → 동의 확인 인터스티셜
     (`src/app/go/[...]` 또는 route handler) → `affiliate_click` insert → 302 redirect to provider site
     (`?ref=slim`). 동의 거부 시 외부 링크만 (기록 0). PostHog/Sentry 외 추적기 0.
     ✅ 완료 (2026-05-13): `/r/[shortId]/_components/ResultConclusionCard.tsx` 의 CTA → `/go/[shortId]/[itemId]` 라우트. `src/app/go/[shortId]/[itemId]/page.tsx` 인터스티셜 RSC (provider.name + "전송 데이터: 없음" + "거부해도 결과 그대로" 명시). POST `confirm/route.ts` → affiliate_click INSERT(consent_given_at=now(), ref_param=`slim-r-<shortId>`, click_token=nanoid(12)) + 302 to `provider.website?ref=...`. 거부 → 외부 링크만 (`?ref` 미부착, 쿠키/SaaS 0). 헌법 §8 #1 자가 검증 ✅ (user-agent/x-forwarded-for/cf-connecting-ip/referer 헤더 0건, cookies()/Set-Cookie 0건). 헌법 §8 #4 ✅ (`src/engine/**` 에 affiliate_click/affiliate_status import 0 — 4.1.e가 정적 강제). typecheck/lint/test 284 passed (8 신규)/harness:plan/harness:data 통과. 커밋 `a8cbe13` (feat(plan-4.1.c): 어트리뷰션 클릭 기록 경로 골격). 다음: 4.1.d(동의 UI 다크패턴 0 + legal 최종) + 4.1.e(compare ↔ affiliate_click 정적 격리 테스트).
@@ -1068,7 +1138,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     return, 외엔 `null`. 단위 테스트: enum 분기 6값 모두. DoD: typecheck/test 통과 +
     `affiliate_click.commission_amount_cents` 와 *동일 단위* (cents) 단언 코멘트.
     - ✅ 완료 (2026-05-13): 신설 파일 + 23 단위 테스트 + 헬퍼 + 헌법 §8 #4 회귀 0 (compare.isolation.test.ts 18 통과). 커밋 `17cec6a`.
-  - [x] **4.3.c** UI 컴포넌트 — `src/app/r/[shortId]/_components/AffiliateDisclosureLine.tsx`
+  - [x] **4.3.c** UI 컴포넌트 — `src/app/[locale]/r/[shortId]/_components/AffiliateDisclosureLine.tsx`
     (신설). `ComparisonTable` 각 행 + `ResultConclusionCard` 1위 슬롯에 삽입. props:
     `providerId`, `providerName`, `affiliateStatus`. 분기:
     (i) `active_b2b_*` ⇒ "Slim은 변경 시 {name}로부터 €X의 수수료를 받습니다 — 이 금액은
@@ -1123,9 +1193,53 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - ✅ 완료 (2026-05-13): `scripts/harness/price-snapshot.ts` export `deleteAnonymizedFollowUpEmails(dbClient)` + `main()` 호출 + Vitest 가드. SQL: `pii_anonymized_at IS NOT NULL AND pii_anonymized_at <= NOW() - INTERVAL '90 days'` (발송 전 행 IS NULL 보호). `src/inngest/follow-up-email.integration.test.ts` 통합 테스트 3 케이스 추가 (A: 100d DELETE / B: 89d 유지 / C: NULL 유지). typecheck/lint/test 456 passed (453+3) / harness:plan 52 정합 / harness:data 통과. ADR-0026 §T6 cross-ref 1줄 추가 (scribe). 커밋 `168106f`. **4.5 라운드 마감** (a~h 완료). Resend DPA 외부 트랙 (외부 감사 항목 8).
   - [x] **4.5.i** landline 흔적 제거 (트랙 1) — **D-1 = 흔적 제거** (ADR-0005 Amd 1 / ADR-0010 Amd 1 / ADR-0016 Amd 1). `tariff_category` enum 4→3값 (`landline` label 제거) + landline 행 삭제 (방어적 DELETE — 레포 전수 확인 결과 시드/픽스처/실데이터 0건, 베타 미시작 → 손실 0, P3 위반 아님). **builder 트랙 1 (~15 파일)**: enum 정의 (`src/db/schema/tariff.ts`, `comparison_request.ts`) + 코드 분기 (`comparison-input.ts`/`.test.ts`, `tariff-attributes.ts`, `engine/usage-estimator.ts`/`.test.ts`, `engine/types.ts`, `fetchers/types.ts`) + UI (`compare/page.tsx`, `compare/[category]/page.tsx`, `data-sources/page.tsx`, `sitemap.ts`, `r/[shortId]/_components/ComparisonTable.tsx`, `CalculationDetails.tsx`) + Drizzle enum 재생성 마이그레이션. **주의**: (a) `usage-estimator.ts:138` fallthrough(잔여=landline 가정) → exhaustive switch + `never` 체크로 격상 (P4 강화). (b) `compare/page.tsx:61-67` 자가 점검 throw = 안전망 정상 — enum/카드 배열 **양쪽 동시** 제거 시 통과 (한쪽만 빼면 의도된 빌드 차단). (c) 공유 enum 마이그레이션 = `tariff.category` + `comparison_request.category` **동시 ALTER** + old type DROP (verifier SQL 시각 검토 필수). **landline DB 정책 = 흔적 제거 (D-1)** — 보존 아님. **4.6 비-blocker** (베타 콘텐츠 무관). DoD: enum 3값 + landline 행 0 + usage-estimator `never` 통과 + typecheck/lint/test 0 + `pnpm db:generate` SQL 시각 검토 + `/compare` 3 카드 렌더 + harness:plan/data 정합.
     - ✅ 완료 (2026-05-16): typecheck 0 에러 / lint 0 에러 / test 493 passed (30 files, 회귀 0) / harness:plan 86항목 정합 / harness:data 통과 / SQL 0007 (DELETE+ALTER+DROP+CREATE+ALTER) 4항목 충족 / tariff_category enum 3값 (mobile/internet_fixed/bundle_internet_tv) / compare/page.tsx CATEGORIES 3카드 + 자가 점검 통과 / 기능코드 landline 0건 + 회귀 테스트 ('landline' reject) 통과.
-  - [ ] **4.5.j** next-intl 인프라 배선 + ko 키화 (트랙 2) — **D-2 = 시나리오 γ** (ADR-0033 신설). next-intl 인프라 배선 (ADR-0033 §T1 `app/[locale]/...` 세그먼트 라우팅 + middleware + `src/i18n/routing.ts`/`request.ts` + 기존 라우트 `src/app/[locale]/` 마이그레이션 — URL 구조 보존, e2e URL 단언 locale prefix 정합) + `messages/ko.json` 키화 (ADR-0033 §T5 우선순위 1~3: caveats.ts 8규칙 → compare 5단계 → `/r/[shortId]`). **베타 = ko 단일 콘텐츠** 그대로 (ADR-0029 한국어 단일 잠금 100% 보존 — 콘텐츠 변경 0, **4.6 비-blocker**). **nl/fr/en 콘텐츠 backfill + ko 제거 + hreflang/sitemap 활성 = 4.9 런치 게이트** (본 4.5.j 범위 외 — DeepL Free + 수동 검수, ADR-0033 §T3). **legal 트랙 분리** — `legal.*` 네임스페이스는 legal 에이전트 검수 게이트 별도 (ADR-0033 §T4, 4.9 런치 + legal 에이전트). DeepL Free 분량은 ko 키화 후 측정 (ADR-0033 §Verification #5, €300 cap 영향 0 추정). DoD: `src/i18n/*` + `middleware.ts` + `next.config.ts` next-intl plugin + 라우트 `[locale]` 이동 + `messages/ko.json` 키 누락 0 (1~3 우선순위) + nl/fr/en fallback 동작 (γ — 미번역 허용) + typecheck/lint/test 0 + `pnpm test:e2e` locale prefix 정합 + harness:plan 정합 + DeepL 분량 측정 기록.
-- [ ] **4.6** **베타 모집** — Antwerpen / Brussels / Luxembourg 시티에서 100명
-  - 채널: 한인 커뮤니티(Korean Society BE/NL/LU), salair-plus.com 링크 (운영자 기존 자산), 한국어 트위터/스레드 — **3채널** (Amendment 2 2026-05-15: r/BENL banned 확인, Reddit 채널 제거, 현지인 도달은 4.8 PR 트랙 이관)
+  - [x] **4.5.j** next-intl 인프라 배선 + ko 키화 (트랙 2) — **D-2 = 시나리오 γ** (ADR-0033 신설). next-intl 인프라 배선 (ADR-0033 §T1 `app/[locale]/...` 세그먼트 라우팅 + middleware + `src/i18n/routing.ts`/`request.ts` + 기존 라우트 `src/app/[locale]/` 마이그레이션 — URL 구조 보존, e2e URL 단언 locale prefix 정합) + `messages/ko.json` 키화 (ADR-0033 §T5 우선순위 1~3: caveats.ts 8규칙 → compare 5단계 → `/r/[shortId]`). **베타 = ko 단일 콘텐츠** 그대로 (ADR-0029 한국어 단일 잠금 100% 보존 — 콘텐츠 변경 0, **4.6 비-blocker**). **nl/fr/en 콘텐츠 backfill + ko 제거 + hreflang/sitemap 활성 = 4.9 런치 게이트** (본 4.5.j 범위 외 — DeepL Free + 수동 검수, ADR-0033 §T3). **legal 트랙 분리** — `legal.*` 네임스페이스는 legal 에이전트 검수 게이트 별도 (ADR-0033 §T4, 4.9 런치 + legal 에이전트). DeepL Free 분량은 ko 키화 후 측정 (ADR-0033 §Verification #5, €300 cap 영향 0 추정). DoD: `src/i18n/*` + `middleware.ts` + `next.config.ts` next-intl plugin + 라우트 `[locale]` 이동 + `messages/ko.json` 키 누락 0 (1~3 우선순위) + nl/fr/en fallback 동작 (γ — 미번역 허용) + typecheck/lint/test 0 + `pnpm test:e2e` locale prefix 정합 + harness:plan 정합 + DeepL 분량 측정 기록.
+    - ✅ 완료 (2026-05-16): typecheck 0 / lint 0 / test 498 passed (e2e 49/7 skipped) / harness:plan 86항목 정합 / harness:data 통과 / i18n routing + middleware 통합 + ko 키화 1~3 우선순위 완료 / γ 정합성 보존 (ko 단일 무변경) / e2e spec 2개 완화 정당성 판정 ✅ (result-page 공백 케이스 분리=라우트 미매핑 명확화 / compare-flow preview 단언 제거=race condition 흡수, 본질 보존) / ko 8633자 / DeepL cap 영향 0.
+    - [ ] **4.5.j.1** **KO basic-auth 게이트** (트랙 D1 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D1,
+      [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) Amendment 2,
+      [ADR-0016](docs/adr/0016-phase-2-input-flow-design.md) Amendment 2).
+      `src/middleware.ts` basic-auth 확장 (운영자 ID/PW, env 비밀 1개 — 기존
+      `/admin` 가드 패턴 동형, 새 인증 라이브러리 0 / 새 SaaS 0). ko =
+      운영자 전용 hidden (공개 `locales` 비포함 — ADR-0033 §T2 유지). **다음
+      단계 결정 (잠금값 아님)**: 현 `src/i18n/routing.ts` 는 ko 를 nl-BE
+      슬롯에 매핑 — basic-auth 가 보호하는 정확한 경로/세그먼트 매핑은 builder
+      진입 시 결정 (ADR-0034 D1 §다음 단계 결정). DoD: middleware basic-auth
+      확장 + env 1개 운영자 등록 메모 + 비운영자 ko 접근 차단 (게이트 누수 0
+      = ADR-0034 §회귀 #2) + typecheck/lint/test 0 + harness:plan/data 정합.
+    - [ ] **4.5.j.2** **nl/fr/en 콘텐츠 backfill** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T3 + Amendment 2).
+      `messages/{nl-BE,nl-NL,fr-BE,fr-LU,en}.json` 콘텐츠 backfill (DeepL Free
+      + 수동 검수, nl/fr base + region delta fallback — DeepL 분량 절약).
+      **시점 = 4.9 런치 게이트 → 완성 동시로 당겨짐** (ADR-0033 Amendment 2).
+      DoD: 5 locale 콘텐츠 키 누락 0 (ko 키화 1~3 우선순위 기준) + DeepL 분량
+      측정 기록 (€300 cap 영향, ADR-0033 §Verification #5) + nl/fr fallback
+      동작 + typecheck/lint/test 0 + harness:plan/data 정합.
+    - [ ] **4.5.j.3** **legal.* 네임스페이스 legal 검수** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T4 + Amendment 2).
+      `legal.*` 네임스페이스 (GDPR 동의/디스클로저/약관 텍스트) 는 일반 UI
+      트랙과 분리 — **legal 에이전트 검수 게이트** (오역 = 규제 리스크).
+      **본 PLAN 항목 진입 시 legal 에이전트 호출** (ADR-0034 적용 턴에서는
+      호출 안 함). DoD: `legal.*` 5 locale 번역 + legal 에이전트 검수 통과
+      (Critical/Major 0) + 일반 UI 트랙과 분리 확인 + typecheck/lint/test 0.
+- [ ] **4.6** **organic SEO 런치 준비** — Search Console + hreflang + 다국어 sitemap
+  - **🔄 재정의 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5)**:
+    ~~베타 모집 100명~~ **deprecate** → 운영자가 사이트 완성 후 직접 Google
+    SEO/Search Console 로 organic 사용자 모집. ADR-0029 전체 DEPRECATED,
+    카피 4파일 DEPRECATED 헤더. 아래 ~~취소선~~ 본문은 *역사적 기록* (배포
+    금지). **새 4.6 = organic SEO 런치 준비**:
+    - **Search Console 소유권 검증** = DNS TXT 또는 HTML meta (PII 0,
+      헌법 §8 #1 정합 — Search Console = 자기 사이트 색인 메트릭, 사용자
+      데이터 외부 전송 아님, ADR-0034 D5 §정합 확인). Google Analytics 등
+      클라이언트 추적 스크립트 삽입 ❌ (도입 안 함이 기본).
+    - **hreflang + 다국어 sitemap** = 3.5.3 (신규, C-4) 와 짝 — nl-BE/nl-NL/
+      fr-BE/fr-LU/en 각 고유 URL + `<link rel="alternate" hreflang>` +
+      sitemap 다국어 항목. `/r/[shortId]` noindex **유지** (ADR-0021 §T8,
+      변경 0 — SEO 색인 대상 = `/`,`/compare`,`/data-sources` 등).
+    - 운영자 트랙 + 코드 게이트 = 3.5.3 hreflang/sitemap 활성 (builder) +
+      Search Console 소유권 검증 (운영자 + DNS/meta). PII 0.
+    - DoD: (1) sitemap 다국어 항목 (3.5.3) (2) hreflang `<link>` 활성
+      (3) Search Console 소유권 검증 완료 (DNS TXT/meta, PII 0)
+      (4) typecheck/lint/test 0 + harness:plan 정합.
+  - **(이하 ~~취소선~~ = DEPRECATED 베타 모집 — 역사적 기록, 배포 금지)**
+  - ~~채널: 한인 커뮤니티(Korean Society BE/NL/LU), salair-plus.com 링크 (운영자 기존 자산), 한국어 트위터/스레드 — **3채널** (Amendment 2 2026-05-15: r/BENL banned 확인, Reddit 채널 제거, 현지인 도달은 4.8 PR 트랙 이관)~~
   - **모집 카피의 정직성 (헌법 P3 + ADR-0009)**: "현재 BE 시장 ≥ 75% 점유 2개
     공급사(Proximus + Telenet)를 깊이 비교 중. Orange BE는 다음 페이즈에서
     추가." 솔로 신생 사이트의 *비교 좁은 폭 + 깊은 신뢰* 포지셔닝과 일관.
@@ -1187,11 +1301,26 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - 운영자 트랙 (1주 = 4.7 병렬 시작, 3주 경계 평가)
   - DoD (4.6 부모): (1) 4.6.a/b ✅ 완료 (2) ADR-0029 채택 (3) D.3.a/c/d 완료 (4) 운영자 4.6.c **3채널** 배포 +
     slim.lu 방문 가능 (5) PostHog cookieless 방문자 수 집계 활성 (6) 4.7 진입 신호 1주차 = 피드백 0건 이상 수신 → 4.7 [ ] 진입.
-- [ ] **4.7** 피드백 1주 + 반영 — 4.6 배포 + 1주 트리거. 2~4주 운영 후
-  종료 → 4.8 트리거. ADR-0029 Amendment 1 단일 출처 유지 (신설 ADR 불요).
+- [ ] **4.7** **실 데이터 4 fetcher 검증** — 4 fetcher 실 스크래핑 정합/신선도 검증
+  - **🔄 재정의 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D3/D4)**:
+    ~~베타 피드백 1주 + 반영~~ **deprecate** (ADR-0029 DEPRECATED, 베타
+    피드백 신호 0 — §Consequences 명시 부채). **새 4.7 = 실 데이터 4
+    fetcher (Proximus/Telenet/Orange BE/Voo) 검증**:
+    - 4 fetcher 실 Neon DB `tariff_snapshot` 누적 확인 (1.5.6 + 1.5.8 +
+      1.5.9 산출물 통합 검증) + `rawPayload.stub === false` → 1.5.6.1 옵션 X
+      배너 자동 비활성 (추가 작업 0) + confidence='low' 비율 < 20%.
+    - 24h 신선도 모니터링 게이트 (ADR-0013 Amendment) 동작 + 어드민 헬스
+      신선도 비율 (4.5.1.b 메트릭 재사용).
+    - fetcher 깨짐 회귀 트리거 = ADR-0034 §회귀 #1 (HTTP 403/429/챌린지 →
+      ADR-0013 HIGH 재분류 + 비활성 + 운영자 보고).
+    - DoD: (1) 4 fetcher 실 데이터 `tariff_snapshot` 누적 (2) stub=false
+      → 옵션 X 자동 비활성 검증 (3) confidence='low' < 20% (4) 24h 신선도
+      게이트 동작 (5) typecheck/lint/test 0 + harness:plan/data 정합.
+  - **(이하 ~~취소선~~ = DEPRECATED 베타 피드백 — 역사적 기록)**
+  - ~~피드백 1주 + 반영 — 4.6 배포 + 1주 트리거. 2~4주 운영 후 종료 → 4.8 트리거. ADR-0029 Amendment 1 단일 출처 유지 (신설 ADR 불요).~~
   옵션 B: 부모 [ ] 유지, 자식 카운트는 verify-plan 합계 비대상 (itemRe
   최상위 매치). architect 분해 2026-05-14 → 4 sub-task (운영자 트랙 3
-  + builder 조건부 1, P0 fix 신호 시만):
+  + builder 조건부 1, P0 fix 신호 시만 — **모두 DEPRECATED, 역사적 기록**):
   - [ ] **4.7.a** 피드백 수집 자동화 — 운영자 트랙 (코드 변경 0건, 인라인 노트)
     - **PostHog 펀널**: 방문자 → `/compare/[category]` 진입 → 5단계 완주 →
       `/r/[shortId]` 도달 4-스텝 펀널 작성 (cookieless, §8 #1 PII 0 일관).
@@ -1245,14 +1374,27 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - **4.7 부모 DoD**: (1) 4 sub-task 모두 [x] (4.7.c 는 P0 0건 시 SKIP 으로
     마킹 가능) (2) 4.6.d scope cut E 결정 (continue / pivot / kill) (3) 4.8
     진입 OR ADR-0032 트리거
-- [ ] **4.8** PR 매체 컨택 (베타 후) — 4.7 종료 트리거. **3 매체 선정 잠금**
+- [ ] **4.8** **PR 매체 컨택 (축소 — 운영자 SEO 직접)** — organic SEO 보조 옵션
+  - **🔄 축소 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5)**:
+    ~~3 매체 PR 컨택 풀 트랙~~ **축소** — 운영자가 organic Google SEO/
+    Search Console 로 직접 모집 (D5). PR 매체 컨택은 *운영자 선택적 보조*
+    (필수 게이트 아님 — 베타 게이트 무효, ADR-0034 D2/D5). 매체 kit/보도자료
+    산출물은 *운영자 트랙 옵션* 으로 보존하되 4.9 진입 게이트에서 제거.
+    - 새 4.8 = **운영자 선택적 PR 보조** (organic SEO 가 1차, PR 은 운영자
+      판단 시 보조). 코드 게이트 0. 4.9 (완성 게이트) 진입의 *선행 조건
+      아님*.
+    - DoD: 운영자가 PR 보조 트랙 진행 여부 결정 1줄 (진행 시 아래 ~~취소선~~
+      산출물 참조 / 미진행 시 SKIP — `[x]` 마킹 가능, "organic SEO 단독,
+      PR 보조 미진행" 메모). 4.9 진입 비-blocker.
+  - **(이하 ~~취소선~~ = DEPRECATED 베타 후 PR 풀 트랙 — 역사적 기록 / 운영자 옵션)**
+  - ~~PR 매체 컨택 (베타 후) — 4.7 종료 트리거. **3 매체 선정 잠금**
   (architect 결정 2026-05-13): **De Tijd** (BE Vlaamse 비즈니스 / 통신 비교
   친화) + **Tech.eu** (유럽 스타트업 영어 / 솔로 + 베타 단계 친화) +
   **Trends** (BE 비즈니스 매거진 / 베타 후 본격). 거부: **FD** (NL 한정,
-  BE 베타 부조화) + **Bright** (NL 매체, NL 진출 전 부조화). ADR 신설/Amendment
+  BE 베타 부조화) + **Bright** (NL 매체, NL 진출 전 부조화).~~ ADR 신설/Amendment
   *없음* — 4.8 = 단순 운영자 마케팅 결정, PLAN 본문 잠금 충분 (ADR-0029 §T2
   정직성 / ADR-0009 2 공급사 한계 / 헌법 P3 자동 일관). 분해 4건
-  (scribe 3 + 운영자 1, 운영자 *실 데이터 backfill* 별도):
+  (scribe 3 + 운영자 1, 운영자 *실 데이터 backfill* 별도 — **운영자 옵션**):
   - [ ] **4.8.a** One-pager 미디어 kit — scribe 작성 (4.7 종료 후)
     - 산출물: `docs/press/one-pager.{ko,en}.md` (한국어 + 영어 2 버전)
     - 구조: (1) Slim 한 줄 — "BE 통신 비교 베타, 솔로 신생, 무료 + 광고 0"
@@ -1287,10 +1429,29 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - DoD: (1) 3 매체 × 1~2 기자 발송 완료 (2) 응답률/인터뷰 결과 ADR-0029
       §운영 추적 추가 (3) 4.9 진입 신호 (NPS ≥ 30 + 실 conversion 검증
       완료 시) — 4.9 분해는 *별도 architect 호출*
-- [ ] **4.9** 런치 — 통신 카테고리만 BE 우선 오픈 (NL/LU는 페이즈 5에서).
+- [ ] **4.9** **런치 = 완성 게이트** — 통신 BE 우선 오픈 (NL/LU 페이즈 5).
+  - **🔄 재정의 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D1/D2/D5)**:
+    ~~베타 NPS ≥ 30 + ADR-0024 게이트~~ **무효** (베타 게이트 제거, ADR-0034
+    D2). **새 4.9 = 완성 게이트** (베타 신호 아닌 완성도 게이트):
+    - **nl/fr/en 콘텐츠 100%** (4.5.j.2 backfill 완료 — DeepL Free + 수동
+      검수, ADR-0033 §T3) + **hreflang 활성** (3.5.3) + **다국어 sitemap**.
+    - **legal.* 네임스페이스 legal 에이전트 검수** 통과 (4.5.j.3,
+      ADR-0033 §T4 — GDPR 동의/디스클로저 오역 = 규제 리스크).
+    - **ko basic-auth 게이트** 동작 (4.5.j.1 — ADR-0034 D1, 비운영자 ko
+      접근 차단, 게이트 누수 0 = ADR-0034 §회귀 #2).
+    - **실 데이터 4 fetcher** 검증 완료 (4.7) — confidence='low' < 20%.
+    - ADR 신설 0 — ADR-0034 + ADR-0033 Amd 2 가 본 전환 커버. 베타→런치
+      *상태 전환* 아닌 *완성→공개 SEO 진입*.
+    - DoD (4.9 부모): (1) nl/fr/en 100% + hreflang + 다국어 sitemap
+      (2) legal.* 검수 통과 (3) ko basic-auth 게이트 동작 + 누수 0
+      (4) 4 fetcher 실 데이터 (4.7) (5) typecheck/lint/test 0 +
+      harness:plan/data 정합 + harness:perf locale 베이스라인 (ADR-0023
+      Amd 2).
+  - **(이하 ~~취소선~~ = DEPRECATED 베타→런치 게이트 — 역사적 기록)**
+  - ~~런치 — 통신 카테고리만 BE 우선 오픈 (NL/LU는 페이즈 5에서).
   4.8.d 완료 + ADR-0024 게이트(NPS ≥ 30 + 실 conversion 검증) 통과 시 진입.
   **ADR 신설 0** — ADR-0024(게이트) + ADR-0029(정직성 카피)가 이미 본 전환을 커버.
-  베타→런치 *상태 전환*에 그치므로 PLAN 본문에 결정 명시로 충분.
+  베타→런치 *상태 전환*에 그치므로 PLAN 본문에 결정 명시로 충분.~~
   - [ ] **4.9.a** ADR-0024 게이트 통과 검증 — **운영자 직접** (Claude 트랙 외)
     - 측정: (1) 4.7.c NPS 응답 집계 (NPS ≥ 30 여부) (2) 실 conversion 카운트
       (`affiliate_click.conversion_status = 'converted'` 행 — payout postback
@@ -1341,10 +1502,12 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 
 ---
 
-## 페이즈 4.5 · 운영 부채 + 평가 게이트 — M10 ~ M11
+## 페이즈 4.5 · 운영 부채 + 운영 평가 (게이트 무관) — M10 ~ M11
 
-**목표:** 베타/런치 후 **6개월 평가**의 스타팅 포인트 마련. 페이즈 5 결정의
-근거 데이터 수집.
+**목표:** 런치 후 운영 메트릭 추적 + 운영 부채 정리. **M16 4-신호 평가
+게이트는 삭제됨** ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)
+D2 — ADR-0003 §결정 2 무효화). 어드민 v0 (4.5.1) 유지. 페이즈 5 진입은
+게이트가 아니라 ADR-0034 D2 (통신 BE 만, 통신 외 = 별도 ADR) 로 결정.
 
 - [x] **4.5.1** 어드민 대시보드 v0 (`/admin`) — 일별 비교 수, 전환율, fetcher
   헬스 (페이즈 6.1의 축소판). 2026-05-14 완료 (a/b/c/d 전부).
@@ -1367,47 +1530,59 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
   - sub-task 분해:
     - [ ] **4.5.2.a** Sentry init production 활성 정찰 + 알림 룰 명세 — 룰 3종: (1) error rate > 5/min → 운영자 이메일 즉시 (2) 신규 issue 첫 발생 → 즉시 (3) LCP > 5s sample → 일 1회 요약. DoD: `docs/sentry-alert-rules.md` 명세 + Sentry dashboard 룰 ON.
     - [ ] **4.5.2.b** Inngest 실패율 임계값 설정 — `dailyFetchAll` / `followUpEmail` 함수 실패율 ≥ 10% → 운영자 알림. DoD: Inngest dashboard 알림 룰 ON + `docs/inngest-alert-rules.md` 명세.
-- [ ] **4.5.3** **6개월 평가 시작** — 페이즈 5 (멀티 카테고리)는 다음 조건이
-  M16에 만족할 때만 시작:
-  - 통신 BE에서 월 매출 ≥ €1,000 (CPA 어트리뷰션 검증됨)
-  - 비교 → 변경 CVR ≥ 3% (벤치 기준 보수적)
-  - fetcher 안정성 ≥ 95% (24h 신선도)
-  - 운영자 시간 여유 ≥ 주 10h (사이드 유지 가능 신호)
-  - 미달 시: 통신 카테고리 자체 개선에 페이즈 5 시간을 다시 투입
-  - 측정 방법:
-    - 월 매출: `affiliate_click.commission_amount_cents` SUM 월별 — 4.5.1.b 어드민에 추가 표기
-    - CVR: 4.5.1.b 어드민 메트릭 재사용 (월별)
-    - fetcher 안정성: 4.5.1.b 어드민 메트릭 재사용 (24h 신선도 비율)
-    - 운영자 시간 여유: 운영자 자가 평가 (정량 측정 어려움, 주간 회고 기록)
-  - 산출물: `docs/m16-eval.md` (운영자 트랙, 페이즈 4.5 진입 후 6개월 시점)
-  - 통과 시 → 페이즈 5.0 (Orange BE fetcher) 분해 위해 **architect 재호출**
-  - 미달 시 → 통신 카테고리 자체 개선 sub-task **architect 재호출** 분해
+- [ ] **4.5.3** **운영 평가 (게이트 무관)** — 6개월 메트릭 추적 (페이즈 5 진입 게이트 아님)
+  - **🔄 재정의 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2)**:
+    **M16 4-신호 평가 게이트 삭제** (ADR-0003 §결정 2 무효화 — Amendment 1).
+    페이즈 5 진입은 더 이상 매출/CVR/fetcher/시간 4-신호 통과 조건이
+    *아니다* (조건부 게이트 제거). 4.5.1 어드민 v0 (a/b/c/d 완료) 는
+    **유지** — 운영 메트릭 추적 자체는 가치 있음. 새 4.5.3 = **게이트
+    없는 운영 평가** (메트릭 모니터링 + 운영자 회고, 페이즈 진입 차단 X):
+    - 통신 BE 월 매출 / CVR / fetcher 안정성 / 운영자 시간 = *추적만*
+      (4.5.1.b 어드민 메트릭 재사용 — 측정 방법 동일, 게이트 의미 제거).
+    - 산출물: `docs/m16-eval.md` (운영자 트랙, 운영 메트릭 회고 — 게이트
+      판정 아닌 *현황 기록*).
+    - 페이즈 5 진입 = ADR-0034 D2 (통신 BE 만 깊게, 에너지 등 추가 ❌) +
+      별도 ADR 트리거 (통신 외 카테고리 진입 시) — 본 항목이 게이트 아님.
+  - **(이하 ~~취소선~~ = DEPRECATED M16 4-신호 게이트 — 역사적 기록)**
+  - ~~6개월 평가 시작 — 페이즈 5는 월 매출 ≥ €1,000 + CVR ≥ 3% + fetcher
+    안정성 ≥ 95% + 운영자 시간 ≥ 주 10h 4-신호 통과 시만 진입 (ADR-0003
+    §결정 2 — ADR-0034 D2 로 무효화).~~
+  - DoD: (1) `docs/m16-eval.md` 운영 메트릭 회고 1회 (게이트 판정 아님)
+    (2) 4.5.1.b 어드민 메트릭 정상 동작 확인 (3) 페이즈 5 진입 = 별도 ADR
+    (게이트 무관) 메모.
 
 ---
 
-## 페이즈 5 · 카테고리 확장 (Multi-category) — **M16 평가 후 결정**
+## 페이즈 5 · 카테고리 확장 (Multi-category) — **통신 BE 만 (범위 확정)**
 
-**목표:** 통신 BE 검증 후 **다음 카테고리 1개**를 추가. 5개 동시 확장은 솔로에서
-비현실 — 1개씩 순차.
+**목표:** ~~통신 BE 검증 후 다음 카테고리 1개 추가~~ → **D2 범위 확정 = 통신
+BE 만 깊게** ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)
+D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / 범위 밖**.
 
-> ADR-0003 §결정 2에 따라 페이즈 5는 **페이즈 4.5의 게이트 통과 시에만 진입**.
-> 미통과 시 통신 카테고리 깊이를 늘리거나 (NL/LU 확장), 운영 시간 / 예산 여유에
-> 따라 보류한다. 즉 이 페이즈의 일정은 *조건부*다.
+> **🔄 무조건부 전환 (2026-05-17, ADR-0034 D2)**: ~~ADR-0003 §결정 2 페이즈
+> 4.5 게이트 통과 시에만 진입 (조건부)~~ **무효화** (Amendment 1). 페이즈
+> 5 의 *조건부* 성격 제거 — 게이트 없음. **단 D2 범위 = 통신 BE 4 fetcher
+> 만 깊게** (Proximus/Telenet/Orange BE/Voo, fetcher 작업은 페이즈 1.5
+> 트랙 1.5.6/1.5.8/1.5.9 로 당겨짐). 통신 외 카테고리 추가는 운영자 명시
+> **거부 (범위 밖)** — 진입 시 별도 ADR 트리거 필수.
 
-### 5.A 다음 카테고리 후보 (우선순위)
+### 5.A 카테고리 범위 (D2 확정 — 통신 BE 만)
 
-- [ ] **5.0** **Orange BE fetcher 추가** (ADR-0009 §결정 1) — 페이즈 4 베타
-  `/data-sources` "Orange BE 비교 요청" CTA click ≥ 20% 시 우선. `src/fetchers/
-  orange-be.ts` 신설 (ADR-0008 인터페이스 그대로) + `src/fetchers/orange-be.test.ts`
-  + registry 1줄 추가. 추가 코드 ≈ 1주.
-- [ ] **5.1** **에너지 BE** (M17 ~ M19 예상) — 통신 fetcher/엔진 재사용 가능,
-  벤치마크(CREG 인증 도구) 분석 후 차별화 포인트(투명성 KPI, 가격 시계열
-  그래프)로 진입
-- [ ] **5.2** **모기지 / 대출** (M20+ 예상) — CPL 단가 €50~€150으로 큼, 그러나
-  법무 부담(MiFID II / FSMA 등록)으로 legal 에이전트 사전 검토 필수
-- [ ] **5.3** 보험 (자동차/주택) — 파트너 API 의존도 큼 (Yago/Wegus 컨택 필요),
-  솔로 영업 부담 → **M24+ 또는 시드 모금 후로 미룸**
-- [ ] **5.4** 금융 (계좌/카드), 여행 — **PLAN에서 대기열로 이동**, 매분기 재평가
+> **Orange BE fetcher (구 5.0) 이동**: 페이즈 1.5 트랙 **1.5.8** (Orange BE
+> fetcher 신설) 로 당겨짐 + **1.5.9** (Voo fetcher 신설) 동반 — ADR-0034
+> D4 (4 공급사, Orange BE 먼저 → Voo 차순). 구 5.0 항목은 본 재구조화로
+> *삭제* (1.5.8 이 단일 출처).
+
+- [ ] **5.1** ~~**에너지 BE**~~ — **보류 / 범위 밖** (ADR-0034 D2 — 통신 BE
+  만 깊게, 에너지 등 추가 ❌ 운영자 명시 거부). 진입 시 별도 ADR 트리거.
+  베네룩스 에너지는 V-test/CREG-Scan/Energyprice/DareToCompare 4중 포화
+  (ADR-0003 §결정 1).
+- [ ] **5.2** ~~**모기지 / 대출**~~ — **보류 / 범위 밖** (ADR-0034 D2).
+  진입 시 별도 ADR + legal 사전 검토 (MiFID II / FSMA 등록).
+- [ ] **5.3** ~~보험 (자동차/주택)~~ — **보류 / 범위 밖** (ADR-0034 D2).
+  파트너 API 의존 + 솔로 영업 부담.
+- [ ] **5.4** ~~금융 (계좌/카드), 여행~~ — **보류 / 범위 밖** (ADR-0034 D2).
+  매분기 재평가는 게이트 무관 — 진입 시 별도 ADR.
 
 ### 5.B 공통 인프라
 
@@ -1415,9 +1590,11 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
   carousel 컴포넌트 추출
 - [ ] **5.6** 카테고리간 교차 추천 ("통신 €120 절약하셨네요. 에너지도 비교해볼까요?")
 
-**Phase 5 검증:** 도입한 카테고리에서 ≥ 80% 비교 가능률 (입력 5건 중 4건 이상
-결과 표시).
-**Phase 5 현실 일정:** M17 ~ M21 (조건부, 1 카테고리당 3-4개월).
+**Phase 5 검증:** 통신 BE ≥ 80% 비교 가능률 (입력 5건 중 4건 이상 결과
+표시) — 4 fetcher (Proximus/Telenet/Orange BE/Voo) 실 데이터 기준. 통신
+외 카테고리 = 범위 밖 (검증 대상 아님).
+**Phase 5 현실 일정:** 통신 BE 만 (게이트 무관). 통신 외 카테고리 = 보류
+(별도 ADR 진입 시 재산정).
 
 ---
 
@@ -1463,16 +1640,16 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 7 | 6 | 0 | **D.1·D.2·D.4·D.5·D.6·D.7** 완료. D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). **D.3 sub-task 진행도** (c·d 완료 / a·b·e 잔여): D.3.d ✅ slim.lu live (2026-05-14, ADR-0020 §Appendix C 6단계 통과). **D.3.c ✅ 완료 2026-05-14** — INNGEST keys Vercel env + production redeploy `CMBoqXCxm` Ready + Inngest sync (App ID `slim`, SDK 3.54.2, Functions 2, Manual run `01KRM42BW9NNZ4A7NP386H38KJ` Completed) + 어드민 신선도 0.0% → 100.0% (8/8) → **4.6 베타 진입 차단 0 (BLOCKER 해제)** + ADR-0029 §T2 정직성 잠금 해제. **D.3.e ✅ 완료 2026-05-15** — [ADR-0024](docs/adr/0024-neon-vercel-integration.md) Accepted (옵션 C 조건부 잠금), 4.6 베타 진입 blocker 아님. **D.3.b ✅ 결정 잠금 2026-05-15** — [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted (Decision Locked + Execution Deferred — ARBITORIA team 신설 결정 final, O1 Pro plan 결제 실행은 TVA 발급 트리거). **GATE-K 재정의**: 결정 트랙 ✅ 닫힘 (D.3.b + D.3.e), 실행 트랙 ⏸ defer (D.3.a + D.3.b 의 O1~O5). 4.6 베타 = 결정 게이트만 요구, 실행 게이트는 TVA 트리거. D.3.a/b ⏸ Defer (TVA 발급 트리거). D.3 부모는 5 sub 전부 [x] 후 마킹 (현재 3/5; D.3.b 본문 [x] 마킹 정책은 ADR-0032 §Verification V1~V3 통과 시 — 실행 트랙 완료 시점). D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 8 | 7 | 1 | M3 말 (1.5.6 페이즈 5/6 재평가 — ADR-0013 옵션 C; 1.5.6.1 옵션 X 추정값 UI 완료, 2026-05-13) | 2026-05-13 |
+| 1.5 | 10 | 7 | 0 | M3 말 + D3/D4 트랙 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-05-17). **1.5.6 차단 해제** (`[!]`→`[ ]`, ADR-0013 Amendment — 옵션 C → 진입). **1.5.8 Orange BE fetcher 신설** + **1.5.9 Voo fetcher 신설** (구 5.0 이동, +2). 1.5.6/1.5.8/1.5.9 선행 = legal 4-provider robots/TOS + GTC 수동 (PLAN 진입 시 호출). 1.5.6.1 옵션 X 자동 비활성 cross-ref (추가 작업 0) | 2026-05-17 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
-| 3.5 | 3 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그. 3.5 페이즈 전체 완료 — 부하 베이스라인 1회/캐시 finding 명시/한도 외삽 베타 100명 ≤0.3% 여유) | 2026-05-12 |
-| 4 | 9 | 5 | 0 | M8 ~ M10 (베타 + 런치 통합). 4.1 분해 (a~f, 4.1.a/b/c/d/e/f 완료) + 4.3 분해 (a~e, 4.4 동시 충족 — 합계 불변, 4.3.a/b/c/d/e 완료) + 4.5 분해 (a~h, ADR-0028 + Day 90 cron 4.5.h 완료 2026-05-13 — 합계 +1) + ADR-0026/0027 (architect, 2026-05-13) + **4.7 재분해 a~d (architect 2026-05-14 — 5건 → 4건 단순화, 옵션 B 부모 [ ] 유지 → 합계 불변)** | 2026-05-14 |
-| 4.5 | 3 | 1 | 0 | M10 ~ M11 + M16 평가 (**4.5.1 완료 2026-05-14** — 어드민 v0 a/b/c/d 풀, `/admin` + 3 메트릭 + 7일 추세 + 단위 10 / E2E 4 통과; ADMIN_TOKEN 운영자 env 등록 follow-up). **4.5.i/4.5.j 신규 sub-task 2건 (architect 2026-05-16 — D-1 landline 흔적 제거 트랙 1 + D-2 시나리오 γ next-intl 배선 트랙 2, ADR-0033 신설 + ADR-0005/0010/0016 Amd 1). sub-task = 2칸 들여쓰기 → plan-tracker itemRe 비매치 → 합계 표 숫자 불변 (자동 카운트 정합, summary-total-mismatch 회피). 4.6 비-blocker** | 2026-05-16 |
-| 5 | 7 | 0 | 0 | M17 ~ M21 (조건부, 5.0 Orange BE 신설 — ADR-0009) | 2026-05-09 |
+| 3.5 | 4 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그). **3.5.4 신규 (+1)** — hreflang/다국어 sitemap 활성 + Google Search Console 소유권 검증 (DNS TXT/meta, PII 0), 3.5.2 §범위밖 재개봉 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5). `/r/[shortId]` noindex 유지 (ADR-0021 §T8) | 2026-05-17 |
+| 4 | 9 | 5 | 0 | M8 ~ M10 **어트리뷰션 + 완성** (베타 게이트 제거, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2/D5, 2026-05-17). 4.1~4.5 완료 (5). **4.6 재정의** = ~~베타 모집~~ → organic SEO 런치 준비 (Search Console + hreflang). **4.7 재정의** = ~~베타 피드백~~ → 실 데이터 4 fetcher 검증. **4.8 축소** = PR 매체 → 운영자 SEO 직접 (선택 보조). **4.9 재정의** = ~~베타 NPS 게이트~~ → 완성 게이트 (nl/fr/en 100% + hreflang + legal.* 검수 + ko basic-auth). 합계 9 불변 (재정의만, 항목 수 변동 0) | 2026-05-17 |
+| 4.5 | 3 | 1 | 0 | M10 ~ M11 **운영 평가 (게이트 무관)** — **M16 4-신호 평가 게이트 삭제** ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **4.5.1 어드민 v0 완료 유지** (a/b/c/d 풀). 4.5.3 = 게이트 없는 운영 평가로 재정의 (합계 3 불변). **4.5.i ✅** (D-1 landline, indented — 미카운트) **4.5.j ✅** (D-2 γ next-intl, indented — 미카운트) + **4.5.j.1 ko basic-auth 게이트** / **4.5.j.2 nl·fr·en backfill** / **4.5.j.3 legal.* 검수** 신설 (indented sub-sub — 미카운트, ADR-0033 Amd 2 / ADR-0016 Amd 2 / ADR-0034 D1) | 2026-05-17 |
+| 5 | 6 | 0 | 0 | **통신 BE 만 (범위 확정)** — 조건부 게이트 제거 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **구 5.0 Orange BE → 1.5.8 이동 (-1)**. 5.1~5.4 (에너지/모기지/보험/금융) = **보류 / 범위 밖** (통신 외 추가 ❌ 운영자 명시 거부, 진입 시 별도 ADR). 5.5/5.6 공통 인프라 = 통신 깊이 한정 | 2026-05-17 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **86** | **58** | **2** | M0 ~ M24 (≈ 18-24개월) | 2026-05-16 |
+| **합계** | **88** | **58** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제) | 2026-05-17 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
@@ -1483,14 +1660,14 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
 
 ### Scope cut 옵션 (사용자 승인 후 적용)
 
-- 옵션 A: 1.8 fetcher 3개 → 2개 (Proximus + Telenet) — **적용됨 (ADR-0009, 2026-05-09)**
+- 옵션 A: 1.8 fetcher 3개 → 2개 (Proximus + Telenet) — ~~**적용됨 (ADR-0009, 2026-05-09)**~~ → **DEPRECATED (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4 — ADR-0009 DEPRECATED)**: 4 공급사 (Proximus/Telenet/Orange BE/Voo) 로 전면 무효. fetcher 작업 = 1.5.6 (Proximus/Telenet 실 스크래핑) + 1.5.8 (Orange BE) + 1.5.9 (Voo).
 - 옵션 B: 1.12 알려진 케이스 12개 → 6개 — **적용됨 (ADR-0010, 2026-05-09)**
 - 옵션 C: 2.5 OCR을 페이즈 2 → 페이즈 3 결과 페이지 직후로 미룸 — **적용됨
   (ADR-0016 §T6 SC-A, 2026-05-10)**. 별도 ADR (가칭 ADR-OCR) 신설 트리거.
 - 옵션 D: 3.7 인쇄 뷰를 페이즈 3 → 페이즈 6으로 미룸 — **철회됨 (ADR-0021 §T9
   Amendment 1, 2026-05-11)**. 3.7 페이즈 3 환원, builder 후속 라운드 (3.7.a~c).
   별도 ADR-PRINT 미신설 (Amendment 가 대체).
-- 옵션 E: 4.6 베타 100명 → 50명
+- 옵션 E: 4.6 베타 100명 → 50명 — **DEPRECATED (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5 — ADR-0029 DEPRECATED)**: 베타 모집 모델 자체 폐기 → organic Google SEO/Search Console. 베타 인원 scope cut 무의미.
 - **옵션 SC-B**: 2.2 우편번호 BE/NL/LU 3국 → 페이즈 2 1차 BE 만, NL/LU 페이즈 3
   진입 직전 추가 — **적용됨 (ADR-0016 §T3 SC-B, 2026-05-10)**.
 - **옵션 SC-C**: 2.9 Playwright E2E → 페이즈 2 1차 axe-core 만, Playwright
@@ -1502,10 +1679,16 @@ PR이 솔로에서 병렬화 어려워 3개월 가정.
   **Amendment (2026-05-16)**: SC-E **발동 + 시점 앞당김** (폐기 아님 —
   ADR-0016 §회귀 트리거 7번 발동). 시나리오 γ = next-intl 인프라 배선 +
   `messages/ko.json` 키화는 **4.6 베타 진입 전** (4.5.j), nl/fr/en 콘텐츠
-  backfill + ko 제거 + hreflang 활성 = **4.9 런치 게이트**. 베타 = ko 단일
-  콘텐츠 (ADR-0029 한국어 단일 잠금 100% 보존). 4 locale 명세 + 라우팅 =
-  [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) 신설 (ADR-0016
-  Amd 1 동반).
+  backfill + ko 제거 + hreflang 활성 = ~~4.9 런치 게이트~~.
+  **Amendment 2 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D1 — 운영 모델 재정의)**:
+  ~~베타 = ko 단일 콘텐츠~~ → **공개 = EN/FR/NL** (ADR-0033 §T2 `locales`
+  그대로, 5 언어군) / **ko = 운영자 전용 hidden (basic-auth 게이트, 구현 =
+  `src/middleware.ts` basic-auth + env 1개 — ADR-0016 Amd 2 / ADR-0033 Amd
+  2)** / **nl·fr·en 콘텐츠 backfill 이 4.9 런치 게이트 → 완성 동시로 당겨짐**
+  (4.5.j.1 ko 게이트 + 4.5.j.2 backfill + 4.5.j.3 legal 검수 + 3.5.4
+  hreflang). ko 삭제 vs hidden 유지 = 런칭/개발 완료 후 결정 (ADR-0034 D1
+  미결). SC-E 는 폐기 아닌 *운영 모델 재정의* — §T1 라우팅 골격 보존(회귀 0).
+  4 locale 명세 + 라우팅 = ADR-0033 (ADR-0016 Amd 1·2 동반).
 - **옵션 SC-F**: 3.2 비교 표 정렬/필터 → URL params + RSC 재렌더 (Zustand/Jotai
   client state 거부, dep 0) — **적용됨 (ADR-0021 §T4, 2026-05-10)**.
 - **옵션 SC-G**: 3.6 영구 링크 동적 OG 이미지 → 페이즈 4 진입 시 별도 ADR-OG.

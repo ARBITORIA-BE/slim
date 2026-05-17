@@ -8,6 +8,15 @@ Accepted (2026-05-09) — 본 ADR은 **MONETIZATION.md 본문 자체를 갱신**
 모금 M24+ 이연. 짝 ADR: [ADR-0003](0003-plan-realism-solo-side.md) (PLAN 리얼리즘
 패스).
 
+**Amendment 1 (2026-05-17, [ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D3/D4/D5)**
+— **€300/월 인프라 cap = 유지** (변경 X). 단 ADR-0034 D3 (실 스크래핑) + D4
+(4 fetcher) + D5 (4 공개 locale DeepL) 가 인프라 압박 (Vercel Pro/Neon
+Launch/DeepL Free 한도) 을 가속 → 본 ADR §회귀 트리거 ("분기별 실제 비용/매출
+±50% 차이 시 Amendment") 가 *조기 발화 가능*. 발화 시 cap 재평가 Amendment 2
+(별도 트리거). 본 Amendment 는 cap 을 바꾸지 않고 "압박 가속 → 회귀 트리거
+조기 발화" 만 명시. ADR-0034 §회귀 트리거 #3·#4 (DeepL/Vercel/Neon 한도) 와
+cross-ref.
+
 ## Context
 
 ### 운영자 사실 (`docs/FOUNDER.md`)

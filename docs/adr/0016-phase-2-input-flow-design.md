@@ -13,11 +13,23 @@
 D-1) (b) §T10 SC-E 발동 + 시점 앞당김 (시나리오 γ) (c) ADR-0029 cross-ref
 (d) e2e/PLAN 단언 갱신. 본 문서 끝 §Amendment 1 참조.
 
+**Amendment 2 (2026-05-17, [ADR-0034](0034-strategy-pivot-completion-first-seo-launch.md) D1)**
+— **§T10 SC-E 운영 모델 변경** (ko 단일 베타 → EN/FR/NL 공개 + ko basic-auth
+게이트). 변경 전: "페이즈 4 까지 한국어 단일, nl/fr/en 은 4.9 런치 게이트
+backfill". 변경 후: **공개 = EN/FR/NL (ADR-0033 §T2 `locales` 그대로) /
+ko = 운영자 전용 hidden, 구현 = `src/middleware.ts` basic-auth + env 1개
+(기존 `/admin` 가드 패턴 동형) / nl·fr·en 콘텐츠 backfill 이 4.9 런치
+게이트 → 완성 동시로 당겨짐**. **§T1~§T9 (라우팅/입력 플로우 UI) 는 무관 —
+보존 (회귀 0)**. SC-E 는 폐기 아닌 *재정의* (운영 모델만). 본 문서 끝
+§Amendment 2 참조 (해당 절 없으면 본 Status 블록이 단일 출처).
+
 **격상 이력**:
 - Proposed (2026-05-10) — T1~T10 10 결정 + SC-A/B/C/D + 신규 SC-E
 - Accepted (2026-05-10) — 운영자 GATE-J 통과, T9 옵션 A + T10 SC-E
 - Amendment 1 (2026-05-16) — landline 제거 + SC-E 발동/앞당김 (운영자
   D-1·D-2, ADR-0033 신설)
+- Amendment 2 (2026-05-17) — §T10 SC-E 운영 모델 = EN/FR/NL 공개 + ko
+  basic-auth 게이트 (ADR-0034 D1, §T1~§T9 보존)
 
 본 ADR 은 **결정 + 인계 명세** 만 담는다. 옵션 A 채택의 직접 후속 = RHF +
 resolvers 2 dep 추가 (next-intl / shadcn/ui 등 페이즈 0 dep는 변동 0). shadcn
