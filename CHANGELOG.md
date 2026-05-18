@@ -36,22 +36,27 @@
 
 ### Added
 
-- Phase 4 — **4.5.j.2 다국어 i18n 인프라 배선 (Phase A)** (ADR-0033 §A2.5 / §A2.7(A1~A5) / §A2.5-Amd3):
-  - **범위**: nl/fr/en 로케일 인프라 배선 + G1-a ko 쿠키 오버레이 + 게이트 해제. Phase A (코드 배선) 만 완료, Phase B (DeepL 실번역 + DEEPL_API_KEY 발급) 미착수.
-  - **신규 파일**:
-    - `messages/nl.json` `messages/fr.json` — base 전체 키 골격, 값 = `[nl]`/`[fr]` placeholder (실번역 Phase B)
-    - `scripts/i18n/measure-chars.mjs` `scripts/i18n/translate.mjs` — 골격 파일, 런타임 코드 0, 실행 Phase B, DEEPL_API_KEY 안내 주석 포함
+- Phase 4 — **4.5.j.2 다국어 i18n 인프라 배선 (Phase A+B 완료)** (ADR-0033 §A2.5 / §A2.7(A1~A5) / §A2.5-Amd3):
+  - **범위**: nl/fr/en 로케일 인프라 배선 + G1-a ko 쿠키 오버레이 + 게이트 해제 + DeepL 실번역 완료. Phase A+B 모두 완료, 다국어 실콘텐츠 + ko 검증 오버레이 라이브.
+  - **신규 파일** (Phase A):
+    - `messages/nl.json` `messages/fr.json` — base 전체 키 골격 (Phase B: `[nl]`/`[fr]` placeholder → **실번역**)
+    - `scripts/i18n/measure-chars.mjs` `scripts/i18n/translate.mjs` — 골격 파일 (Phase B: **실구현 + 실행**, DeepL REST ko→{nl,fr,en} batch 호출, next-intl 변수 보호)
     - `src/i18n/request.test.ts` — 신규 단위 테스트
-  - **변경 파일**:
-    - `messages/{nl-NL,fr-BE,fr-LU}.json` — override-only delta, `_comment` 갱신
-    - `messages/en.json` — 독립 전체 키 골격, `[en]` placeholder
-    - `src/i18n/request.ts` — (1) 단일 import → base+delta 얕은 병합 (2) **G1-a ko 오버레이 실제 배선**: `getRequestConfig` 본체에서 `next/headers` `cookies()` 로 `ko_gate_token` 읽음 → `constantTimeEqual`로 DEEPL 미사용 토큰 매칭 시 locale 무관 `messages/ko.json` 로드·반환 (정적 렌더 회귀 0) (3) 무쿠키/불일치 시 정상 병합 + URL/hreflang/sitemap = nl-BE 유지
-    - `src/middleware.ts` — `isKoGateTarget` 항상 false (nl-BE 무프리픽스 게이트 해제) + `PUBLIC_LOCALE_PREFIXES` 선언 제거 + `handleKoGate` env 미설정 pass-through 핫픽스(`10dee59` 정합)
+  - **변경 파일** (Phase A+B):
+    - `messages/nl-BE.json` — **ko 복제본 → thin override-only delta 전환** (Phase B 핵심 스위치): base+delta 병합에서 실 nl base 가 루트 `/` 에 노출 → 루트 = 실 네덜란드어, Phase A 과도기 부채("루트=ko 복제 공개") 해소. (`nl-NL/fr-BE/fr-LU` 는 Phase A 에서 이미 thin stub — 본 번들 무변경)
+    - `messages/en.json` — 독립 전체 키 골격 (Phase B: **182키 실번역**, `[en]` placeholder 0건)
+    - `messages/{nl,fr}.json` — 독립 전체 키 골격 (Phase B: **각각 182키 실번역**, placeholder 0건)
+    - `src/i18n/request.ts` — (1) 단일 import → base+delta 얕은 병합 (2) **G1-a ko 오버레이 실제 배선**: `getRequestConfig` 본체에서 `next/headers` `cookies()` 로 `ko_gate_token` 읽음 → `constantTimeEqual`로 토큰 매칭 시 locale 무관 `messages/ko.json` 로드·반환 (정적 렌더 회귀 0) (3) 무쿠키/불일치 시 정상 병합 + URL/hreflang/sitemap = nl-BE 유지
+    - `src/middleware.ts` — `isKoGateTarget` 항상 false (nl-BE 무프리픽스 게이트 해제) + `PUBLIC_LOCALE_PREFIXES` 선언 제거 + `handleKoGate` env 미설정 pass-through 핫픽스
     - `src/middleware.ko-gate.test.ts` — 게이트 해제 반영 (케이스 ii/vi: 401→200)
-  - **무변경** (회귀 0): `src/i18n/routing.ts` / `messages/ko.json` / `messages/nl-BE.json` / `src/app/[locale]/layout.tsx`
-  - **과도기 부채** (정직 표기): Phase B 완료 전까지 무프리픽스 = ko 복제본 공개 (운영자 다운 회피 의식 수용 — slim.lu 200 복구 우선)
-  - **검증**: `pnpm typecheck` 0 / `pnpm lint` 0 / `pnpm test:run` **523 passed (33 files)** (+16 신규) / `pnpm harness:plan` 88/58 불변 / `pnpm harness:data` 통과. 게이트 6/6 PASS.
-  - ⚠️ **미완료**: Phase B = DeepL 실번역 + 키 누락 0 최종 + 분량 측정 (운영자 `DEEPL_API_KEY` 대기)
+  - **무변경** (회귀 0): `src/i18n/routing.ts` / `messages/ko.json` / `src/app/[locale]/layout.tsx`
+  - **Phase B 실행 결과**:
+    - **DeepL 실사용**: ko 정본 2,886자 → DeepL 7,439자 / 1,000,000 **(0.7% 사용, €300 cap 영향 0)**
+    - **운영자 키 검증**: DEEPL_API_KEY 유효성 probe (`/v2/usage` HTTP 200, Free 키) 사전 확인 — probe 미커밋·삭제
+    - **번역 정확도**: ICU/next-intl 변수(`{months}`,`{amount}` 등) ko↔{nl,fr,en} **182키 100% 정합** (런타임 깨짐 0)
+    - **정직 표기**: `caveats.*` nl/fr/en = DeepL 기계번역 raw (운영자 사후 수동 검수 대기, Q2 부채), `legal.*` = 본 항목 미번역 (4.5.j.3 legal 에이전트 별도)
+  - **검증**: `pnpm typecheck` 0 / `pnpm lint` 0 / `pnpm test:run` **523 passed (33 files)** / `pnpm harness:plan` 88/58 불변 / `pnpm harness:data` 통과. 게이트 6/6 PASS (verifier 독립 재실행).
+  - ✅ **Phase A+B 완료**: nl/fr/en 실콘텐츠 + 변수 정합 + DeepL 한도 점검 완료, ko 검증 오버레이 라이브
 
 - Phase 4 — **4.5.j.1 KO 기본 인증 게이트** (ADR-0034 D1, ADR-0033 Amendment 2 §A2.1~A2.6):
   - **목표**: `ko` 로케일(운영자 전용 hidden) 무프리픽스 경로 보호 — `src/middleware.ts` 단일-토큰 same-domain basic-auth (별도 도메인 거부 옵션 포함, 다른 옵션 미채택).

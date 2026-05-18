@@ -1,259 +1,259 @@
 {
   "_comment": "fr base — fr-BE 와 fr-LU 공통 번역 정본 (ADR-0033 §T3 + §A2.7 G3). Phase A: 키 골격만 (ko.json 키셋 기준, 값=placeholder). Phase B (DeepL): ko→fr 번역 값 채움. region delta(fr-BE.json/fr-LU.json)는 이 base 대비 차이만 override.",
   "caveats": {
-    "commitment": "[fr] {months}개월 약정 — 조기 해지 시 위약금 발생",
-    "activationFee": "[fr] 활성화 비용 {amount} 별도 (1회성)",
-    "promoEnds": "[fr] 프로모 가격은 첫 {months}개월만 — 이후 {price}/월",
-    "dataOverage": "[fr] 월 {usedGb}GB 사용 → 본 요금제 {planGb}GB 초과. 한도 초과 비용은 표시되지 않습니다.",
-    "noEuRoaming": "[fr] EU 로밍 미포함",
-    "speed4kInsufficient": "[fr] 4K 스트리밍에 권장 100 Mbps 미만 (본 요금제 {mbps} Mbps)",
-    "confidenceMedium": "[fr] 비교 데이터 신뢰도: medium ({reason})",
-    "confidenceMediumDefaultReason": "[fr] 셀렉터 fragile 또는 파싱 경고",
-    "currentTariffConfidence": "[fr] 현재 요금제 데이터 신뢰도: {confidence}",
-    "stubEstimate": "[fr] 추정값 — 실 데이터 페이즈 5 이후"
+    "commitment": "{months} Engagement de X mois — Des frais de résiliation s'appliquent en cas de résiliation anticipée",
+    "activationFee": "Frais d'activation : {amount} (en sus, paiement unique)",
+    "promoEnds": "Prix promotionnel valable uniquement pendant les {months} premiers mois — ensuite {price} /mois",
+    "dataOverage": "Utilisation mensuelle de {usedGb} Go → Forfait actuel : {planGb} Go dépassés. Les frais de dépassement ne sont pas indiqués.",
+    "noEuRoaming": "Hors itinérance dans l'UE",
+    "speed4kInsufficient": "Moins de 100 Mbps recommandé pour le streaming 4K (ce forfait offre {mbps} Mbps)",
+    "confidenceMedium": "Fiabilité des données comparatives : moyenne ({reason})",
+    "confidenceMediumDefaultReason": "Sélecteur « fragile » ou avertissement de parsing",
+    "currentTariffConfidence": "Fiabilité des données relatives aux forfaits actuels : {confidence}",
+    "stubEstimate": "Estimations — Données réelles à partir de la phase 5"
   },
   "compare": {
-    "pageTitle": "[fr] 요금제 비교 시작",
-    "pageDescription": "[fr] 모바일, 인터넷, 인터넷+TV — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.",
-    "heading": "[fr] 어떤 요금제를 비교하시겠어요?",
-    "stepBadge": "[fr] 5단계 · 5분",
-    "supportNote": "[fr] 현재 벨기에(BE) 통신 비교를 지원합니다. 네덜란드(NL) / 룩셈부르크(LU)는 페이즈 3에서 추가 예정입니다.",
-    "savingsPreviewPending": "[fr] 평균 절약액 미리보기는 베타 후 노출 예정",
-    "termsNotice": "[fr] 시작 시 본 사이트의",
-    "termsLink": "[fr] 이용 약관",
-    "termsNoticeEnd": "[fr] 에 동의한 것으로 간주됩니다 (GDPR Art. 6(1)(b) 계약 본질).",
+    "pageTitle": "Commencer à comparer les forfaits",
+    "pageDescription": "Mobile, Internet, Internet + TV — Choisissez la catégorie que vous souhaitez comparer. 5 étapes, c'est fait en 5 minutes.",
+    "heading": "Quel forfait souhaitez-vous comparer ?",
+    "stepBadge": "5 étapes · 5 minutes",
+    "supportNote": "Nous proposons actuellement une comparaison des opérateurs télécoms en Belgique (BE). Les Pays-Bas (NL) et le Luxembourg (LU) seront ajoutés lors de la phase 3.",
+    "savingsPreviewPending": "L'aperçu des économies moyennes sera disponible après la phase bêta",
+    "termsNotice": "Au démarrage, ce site",
+    "termsLink": "Conditions d'utilisation",
+    "termsNoticeEnd": "est réputé avoir donné son consentement (RGPD, art. 6, par. 1, point b) : nature du contrat).",
     "categories": {
       "mobile": {
-        "label": "[fr] 모바일",
-        "description": "[fr] 월 €15~€35, 한 회선당"
+        "label": "Mobile",
+        "description": "De 15 à 35 € par mois, par ligne"
       },
       "internet_fixed": {
-        "label": "[fr] 인터넷",
-        "description": "[fr] 월 €35~€70, 가정용 광/케이블"
+        "label": "Internet",
+        "description": "Entre 35 et 70 € par mois, fibre optique/câble pour les particuliers"
       },
       "bundle_internet_tv": {
-        "label": "[fr] 인터넷 + TV",
-        "description": "[fr] 월 €60~€100, 번들 약정"
+        "label": "Internet + Télévision",
+        "description": "Entre 60 et 100 € par mois, offre groupée avec engagement"
       }
     },
-    "ariaStart": "[fr] {label} 비교 시작",
+    "ariaStart": "{label} Lancer la comparaison",
     "layout": {
-      "previous": "[fr] 이전",
-      "previousAriaLabel": "[fr] 이전 단계로",
-      "cancel": "[fr] 취소",
+      "previous": "Précédent",
+      "previousAriaLabel": "Retour à l'étape précédente",
+      "cancel": "Annuler",
       "steps": {
-        "postal": "[fr] 우편번호",
-        "household": "[fr] 가구 형태",
-        "current-provider": "[fr] 현재 공급사",
-        "bill": "[fr] 청구서",
-        "preview": "[fr] 결과 미리보기"
+        "postal": "Code postal",
+        "household": "Types de meubles",
+        "current-provider": "Fournisseurs actuels",
+        "bill": "Facture",
+        "preview": "Aperçu des résultats"
       }
     },
     "postal": {
-      "title": "[fr] 우편번호 입력",
-      "heading": "[fr] 어디 사세요?",
-      "supportNote": "[fr] 국가를 선택한 후 우편번호를 입력하세요. 현재 벨기에(BE) 통신 비교를 지원합니다. 네덜란드(NL) / 룩셈부르크(LU)는 페이즈 5 공급사 추가 시점까지 비교 후보가 없을 수 있습니다.",
-      "countryLabel": "[fr] 국가",
-      "countryAriaLabel": "[fr] 국가 선택",
-      "postalCodeLabel": "[fr] 우편번호",
-      "nextButton": "[fr] 다음 — 가구 형태",
+      "title": "Saisir le code postal",
+      "heading": "Où habitez-vous ?",
+      "supportNote": "Sélectionnez un pays, puis saisissez votre code postal. Nous proposons actuellement des comparaisons de fournisseurs de télécommunications en Belgique (BE). Il se peut qu'il n'y ait pas de fournisseurs disponibles pour les Pays-Bas (NL) et le Luxembourg (LU) jusqu'à l'ajout de nouveaux fournisseurs lors de la phase 5.",
+      "countryLabel": "Pays",
+      "countryAriaLabel": "Sélectionner un pays",
+      "postalCodeLabel": "Code postal",
+      "nextButton": "Suivant — Types de meubles",
       "countries": {
         "BE": {
-          "label": "[fr] 벨기에 (BE)",
-          "placeholder": "[fr] 예: 1000",
-          "description": "[fr] 벨기에 우편번호는 1000~9999 사이의 4자리 숫자입니다."
+          "label": "Belgique (BE)",
+          "placeholder": "Exemple : 1 000",
+          "description": "Les codes postaux belges sont composés de quatre chiffres compris entre 1000 et 9999."
         },
         "NL": {
-          "label": "[fr] 네덜란드 (NL)",
-          "placeholder": "[fr] 예: 1011 또는 1011 AB",
-          "description": "[fr] 네덜란드 우편번호는 4자리 숫자 (PC4) 또는 4자리+공백+대문자 2자 (PC6) 입니다. 비교 후보는 페이즈 5에서 추가됩니다."
+          "label": "Pays-Bas (NL)",
+          "placeholder": "Exemple : 1011 ou 1011 AB",
+          "description": "Les codes postaux néerlandais se composent de 4 chiffres (PC4) ou de 4 chiffres suivis d'un espace et de deux lettres majuscules (PC6). Les candidats à comparer seront ajoutés lors de la phase 5."
         },
         "LU": {
-          "label": "[fr] 룩셈부르크 (LU)",
-          "placeholder": "[fr] 예: 1000",
-          "description": "[fr] 룩셈부르크 우편번호는 1000~9999 사이의 4자리 숫자입니다. 비교 후보는 페이즈 5에서 추가됩니다."
+          "label": "Luxembourg (LU)",
+          "placeholder": "Exemple : 1 000",
+          "description": "Les codes postaux luxembourgeois sont composés de quatre chiffres compris entre 1000 et 9999. Les candidats à comparer seront ajoutés lors de la phase 5."
         }
       }
     },
     "household": {
-      "heading": "[fr] 어떻게 사세요?",
-      "supportNote": "[fr] 가구 형태를 선택하면 평균 사용량으로 추정합니다. 정확한 사용량은 페이즈 3에서 청구서 OCR로 자동 입력 예정입니다.",
-      "nextButton": "[fr] 다음 — 현재 공급사",
+      "heading": "Comment allez-vous ?",
+      "supportNote": "Une fois le type de foyer sélectionné, la consommation est estimée sur la base d'une consommation moyenne. La consommation exacte sera automatiquement renseignée lors de la phase 3 grâce à la reconnaissance optique de caractères (OCR) des factures.",
+      "nextButton": "Suivant — Fournisseur actuel",
       "options": {
         "single": {
-          "label": "[fr] 혼자",
-          "description": "[fr] 1인 가구"
+          "label": "Tout seul",
+          "description": "Ménages d'une seule personne"
         },
         "couple": {
-          "label": "[fr] 커플",
-          "description": "[fr] 2인 가구"
+          "label": "Couple",
+          "description": "Couple"
         },
         "family_3_plus": {
-          "label": "[fr] 가족",
-          "description": "[fr] 3인 이상 가구"
+          "label": "Famille",
+          "description": "Foyers de trois personnes ou plus"
         }
       }
     },
     "currentProvider": {
-      "heading": "[fr] 지금 어디 쓰세요?",
-      "supportNote": "[fr] 현재 공급사 선택은 비교 정확도를 높이지만 필수는 아닙니다. 모르거나 신규 가입이라면 스킵해도 됩니다.",
-      "zeroProvidersFallback": "[fr] 공급사 목록을 불러오지 못했어요. 신규 가입자로 진행하시겠어요? 비교 결과는 시장 전체 후보로 계산됩니다.",
-      "skipAsNew": "[fr] 신규 가입자로 진행 (스킵)"
+      "heading": "Où l'utilisez-vous actuellement ?",
+      "supportNote": "Le choix d'un fournisseur permet d'améliorer la précision de la comparaison, mais n'est pas obligatoire. Si vous ne savez pas ou si vous êtes un nouvel utilisateur, vous pouvez passer cette étape.",
+      "zeroProvidersFallback": "Nous n'avons pas pu charger la liste des fournisseurs. Souhaitez-vous vous inscrire en tant que nouvel abonné ? Les résultats de la comparaison tiendront compte de l'ensemble des offres disponibles sur le marché.",
+      "skipAsNew": "En tant que nouvel abonné (ignorer)"
     },
     "bill": {
-      "heading": "[fr] 청구서를 업로드해 정확한 사용량을 자동 입력하시겠어요?",
-      "supportNote": "[fr] 현재 베타 진행 중 — 청구서 OCR은 페이즈 3 결과 페이지 직후 추가됩니다. 지금은 가구 형태 기반 추정값으로 비교합니다.",
-      "skipButton": "[fr] 청구서 없이 진행 — 결과 미리보기로"
+      "heading": "Souhaitez-vous télécharger votre facture pour que votre consommation soit automatiquement renseignée avec précision ?",
+      "supportNote": "Actuellement en phase bêta — La reconnaissance optique de caractères (OCR) des factures sera ajoutée juste après la page des résultats de la phase 3. Pour l'instant, la comparaison s'effectue à partir d'estimations basées sur la composition du ménage.",
+      "skipButton": "Procédure sans facture — Aperçu des résultats"
     },
     "preview": {
-      "heading": "[fr] 결과를 준비 중입니다",
-      "supportNote": "[fr] 입력하신 정보를 바탕으로 비교 결과 영구 링크를 생성하고 있습니다. 완료 후 자동으로 결과 페이지로 이동합니다.",
-      "submittingMessage": "[fr] 비교 엔진 호출 중… (보통 1초 미만)",
-      "errorTitle": "[fr] 결과 생성 실패",
-      "inputIncomplete": "[fr] 입력이 완전하지 않습니다. 우편번호 또는 가구 형태 단계로 돌아가세요.",
-      "networkError": "[fr] 네트워크 오류가 발생했습니다. 다시 시도해 주세요.",
-      "serverError": "[fr] 서버 오류 ({status})",
-      "retry": "[fr] 다시 시도",
-      "goToStart": "[fr] 처음으로"
+      "heading": "Les résultats sont en cours de préparation",
+      "supportNote": "Nous générons actuellement un lien permanent vers les résultats de la comparaison en fonction des informations que vous avez saisies. Une fois l'opération terminée, vous serez automatiquement redirigé vers la page des résultats.",
+      "submittingMessage": "Appel du moteur de comparaison en cours… (généralement moins d'une seconde)",
+      "errorTitle": "Échec de la génération des résultats",
+      "inputIncomplete": "Les informations saisies sont incomplètes. Veuillez revenir à l'étape du code postal ou du type de ménage.",
+      "networkError": "Une erreur réseau s'est produite. Veuillez réessayer.",
+      "serverError": "Erreur de serveur ({status})",
+      "retry": "Réessayer",
+      "goToStart": "Pour la première fois"
     }
   },
   "result": {
-    "pageTitle": "[fr] 비교 결과 | Slim",
-    "pageDescription": "[fr] 베네룩스 통신 요금제 비교 결과 — Slim",
-    "heading": "[fr] 비교 결과",
-    "permanentId": "[fr] 영구 ID:",
-    "anonymizedNote": "[fr] 이 비교의 입력 가정은 90일 보관 정책으로 일반화되었습니다 — 비교 결과 자체는 그대로 보존됩니다 (ADR-0007 §T9).",
-    "linkLabel": "[fr] 결과 링크",
-    "noCandidatesHeading": "[fr] 비교 후보가 없습니다",
-    "noCandidatesBody": "[fr] 이 카테고리/지역의 비교 가능 공급사가 현재 0건입니다. NL/LU 공급사 fetcher 추가는 페이즈 5에서 평가 후 진행 예정입니다 (ADR-0009 §결정 1).",
-    "dataSourcesLink": "[fr] 데이터 출처 페이지에서 상세 보기 →",
-    "newCompare": "[fr] 새로 비교 시작",
-    "goHome": "[fr] 홈으로 돌아가기",
-    "affiliateFooter": "[fr] 어필리에이트 수수료 관련:",
-    "affiliateFooterEnd": "[fr] (페이즈 6.9 공개 예정). 비교 결과 순위는 알고리즘 기반이며 수수료에 영향받지 않습니다.",
+    "pageTitle": "Résultats de la comparaison | Slim",
+    "pageDescription": "Résultats de la comparaison des forfaits téléphoniques au Benelux — Slim",
+    "heading": "Résultats de la comparaison",
+    "permanentId": "Identifiant permanent :",
+    "anonymizedNote": "Les hypothèses de base de cette comparaison ont été généralisées à une politique de conservation de 90 jours — les résultats de la comparaison eux-mêmes restent inchangés (ADR-0007 §T9).",
+    "linkLabel": "Lien vers les résultats",
+    "noCandidatesHeading": "Il n'y a pas de candidats comparables",
+    "noCandidatesBody": "Il n'y a actuellement aucun fournisseur comparable dans cette catégorie/région. L'ajout du fetcher de fournisseurs NL/LU sera évalué puis mis en œuvre lors de la phase 5 (ADR-0009 § Décision 1).",
+    "dataSourcesLink": "Voir les détails sur la page des sources de données →",
+    "newCompare": "Lancer une nouvelle comparaison",
+    "goHome": "Retour à la page d'accueil",
+    "affiliateFooter": "Concernant les commissions d'affiliation :",
+    "affiliateFooterEnd": "(Phase 6.9 à venir). Le classement des résultats de comparaison est basé sur un algorithme et n'est pas influencé par les frais.",
     "conclusionCard": {
-      "rankLabel": "[fr] 1위 추천",
-      "monthlyCostLabel": "[fr] 월 비용 (12개월 평균)",
-      "monthlyCostUnit": "[fr] / 월",
-      "savingsLabel": "[fr] 예상 절약",
-      "ctaButton": "[fr] 변경하기",
-      "ctaDisabledTitle": "[fr] 비교 후보 없음",
-      "caveatsHeading": "[fr] 주의사항",
+      "rankLabel": "Recommandation n° 1",
+      "monthlyCostLabel": "Coût mensuel (moyenne sur 12 mois)",
+      "monthlyCostUnit": "/ Lundi",
+      "savingsLabel": "Économies estimées",
+      "ctaButton": "Modifier",
+      "ctaDisabledTitle": "Aucun candidat comparable",
+      "caveatsHeading": "Remarques",
       "verdicts": {
-        "newSubscriber": "[fr] 신규 가입자에게 가장 저렴한 요금제입니다.",
-        "positiveSaving": "[fr] 월 {amount} 절약 가능합니다.",
-        "zero": "[fr] 현재 요금제와 동일한 수준입니다.",
-        "negative": "[fr] 현재 요금제보다 저렴한 후보를 찾지 못했습니다 — 유지 권장."
+        "newSubscriber": "C'est le forfait le moins cher pour les nouveaux abonnés.",
+        "positiveSaving": "Vous pouvez économiser {amount} par mois.",
+        "zero": "C'est le même niveau que votre forfait actuel.",
+        "negative": "Nous n'avons pas trouvé d'offre moins chère que votre forfait actuel — nous vous recommandons de le conserver."
       },
       "confidenceLabels": {
-        "high": "[fr] 신뢰도 높음",
-        "medium": "[fr] 신뢰도 보통 — 데이터 출처 검토 필요",
-        "low": "[fr] 신뢰도 낮음 — 비교 엔진 자동 제외 대상"
+        "high": "Haute fiabilité",
+        "medium": "Fiabilité moyenne — Il convient de vérifier la source des données",
+        "low": "Faible fiabilité — Exclu automatiquement par le comparateur"
       },
-      "confidenceAriaPrefix": "[fr] 신뢰도:"
+      "confidenceAriaPrefix": "Fiabilité :"
     },
-    "comparisonHeading": "[fr] 비교 표",
+    "comparisonHeading": "Tableau comparatif",
     "table": {
-      "ariaLabel": "[fr] 요금제 비교 표",
-      "mobileAriaLabel": "[fr] 요금제 비교 (모바일)",
-      "emptyMessage": "[fr] 해당 조건에 맞는 비교 결과가 없습니다. 위 필터를 조정해 보세요.",
+      "ariaLabel": "Tableau comparatif des forfaits",
+      "mobileAriaLabel": "Comparaison des forfaits (mobile)",
+      "emptyMessage": "Aucun résultat ne correspond à ces critères. Veuillez modifier les filtres ci-dessus.",
       "columns": {
         "rank": "#",
-        "provider": "[fr] 공급사 / 요금제",
-        "monthlyCost": "[fr] 월 비용",
-        "commitment": "[fr] 약정",
-        "saving": "[fr] 절약",
-        "confidence": "[fr] 신뢰도",
-        "source": "[fr] 원본"
+        "provider": "Fournisseur / Forfait",
+        "monthlyCost": "Coût mensuel",
+        "commitment": "accord",
+        "saving": "Économie",
+        "confidence": "Fiabilité",
+        "source": "Original"
       },
-      "sourceLink": "[fr] 원본 보기",
-      "sourceLinkNewTab": "[fr] (새 창에서 열림)",
-      "sourceChecked": "[fr] 마지막 확인:",
-      "commitmentNone": "[fr] 없음",
-      "commitmentMonths": "[fr] {months}개월",
-      "monthlyCostUnit": "[fr] / 월",
-      "savingMonthly": "[fr] / 월",
-      "savingYearly": "[fr] 연 {amount}",
-      "savingZero": "[fr] 동일",
+      "sourceLink": "Voir l'original",
+      "sourceLinkNewTab": "(S'ouvre dans une nouvelle fenêtre)",
+      "sourceChecked": "Dernière vérification :",
+      "commitmentNone": "Aucun",
+      "commitmentMonths": "{months} mois",
+      "monthlyCostUnit": "/ Lundi",
+      "savingMonthly": "/ Lundi",
+      "savingYearly": "Yeon {amount}",
+      "savingZero": "idem",
       "confidenceLabels": {
-        "high": "[fr] 높음",
-        "medium": "[fr] 보통",
-        "low": "[fr] 낮음"
+        "high": "Élevé",
+        "medium": "En général",
+        "low": "Faible"
       },
-      "confidenceAriaPrefix": "[fr] 신뢰도 "
+      "confidenceAriaPrefix": "Fiabilité "
     },
     "calculationDetails": {
-      "summary": "[fr] 계산 근거 보기 — 사용한 가정 + 산식 + 주의사항 트리거 + 엔진 버전",
-      "anonymizedWarning": "[fr] 이 결과는 저장 후 90일이 지나 원본 입력(우편번호·사용량 등)이 보관 정책으로 부재합니다. 비교 결과 자체는 그대로 보존되며, 아래 가정은 가구 형태 기반으로 재구성한 값입니다 (ADR-0007 §T9).",
+      "summary": "Afficher les bases de calcul — Hypothèses utilisées + Formules + Remarques + Version du moteur",
+      "anonymizedWarning": "Ces résultats ont été obtenus 90 jours après l'enregistrement, les données d'origine (code postal, consommation, etc.) n'étant plus disponibles en raison de la politique de conservation des données. Les résultats de la comparaison sont conservés tels quels, et les hypothèses ci-dessous correspondent à des valeurs reconstituées sur la base de la composition des ménages (ADR-0007 §T9).",
       "assumptions": {
-        "heading": "[fr] 사용한 가정",
-        "categoryLabel": "[fr] 카테고리",
-        "householdLabel": "[fr] 가구 형태",
-        "usageSourceLabel": "[fr] 사용량 출처",
-        "usageSourceDirect": "[fr] 사용자 직접 입력",
-        "usageSourceEstimated": "[fr] 가구 형태 기반 추정 ({version})",
-        "usageSourceAnonymized": "[fr] 원본 입력 부재 (90일 보관 정책) — 가구 형태 기반 추정 재구성 ({version})",
-        "householdUnknown": "[fr] 미입력 (single 추정)"
+        "heading": "Hypothèses retenues",
+        "categoryLabel": "Catégorie",
+        "householdLabel": "Types de meubles",
+        "usageSourceLabel": "Source des données d'utilisation",
+        "usageSourceDirect": "Saisie manuelle par l'utilisateur",
+        "usageSourceEstimated": "Estimation basée sur la structure des ménages ({version})",
+        "usageSourceAnonymized": "Absence de données d'origine (politique de conservation de 90 jours) — Reconstitution par estimation basée sur la structure des ménages ({version})",
+        "householdUnknown": "Non renseigné (probablement célibataire)"
       },
       "householdLabels": {
-        "single": "[fr] 혼자 (1인 가구)",
-        "couple": "[fr] 커플 (2인 가구)",
-        "family_3_plus": "[fr] 가족 (3인 이상)"
+        "single": "Seul (ménage d'une personne)",
+        "couple": "Couple (ménage de deux personnes)",
+        "family_3_plus": "Famille (3 personnes ou plus)"
       },
       "categoryLabels": {
-        "mobile": "[fr] 모바일",
-        "internet_fixed": "[fr] 인터넷",
-        "bundle_internet_tv": "[fr] 인터넷 + TV"
+        "mobile": "Mobile",
+        "internet_fixed": "Internet",
+        "bundle_internet_tv": "Internet + Télévision"
       },
-      "usageHeading": "[fr] 사용량 수치",
-      "usageEmpty": "[fr] 사용량 정보 없음 (가구 형태 추정값 사용).",
+      "usageHeading": "Chiffres relatifs à l'utilisation",
+      "usageEmpty": "Aucune donnée sur la consommation (estimation basée sur la composition des ménages).",
       "usageLabels": {
-        "dataGb": "[fr] 데이터 사용",
-        "dataGbUnit": "[fr] GB / 월",
-        "voiceMinutes": "[fr] 통화",
-        "voiceMinutesUnit": "[fr] 분 / 월",
-        "sms": "[fr] SMS",
-        "smsUnit": "[fr] 건 / 월",
-        "euRoaming": "[fr] EU 로밍",
-        "euRoamingNeeded": "[fr] 필요",
-        "euRoamingNotNeeded": "[fr] 불필요",
-        "downloadMbps": "[fr] 필요 다운로드 속도",
-        "downloadMbpsUnit": "[fr] Mbps",
-        "devices": "[fr] 동시 디바이스",
-        "devicesUnit": "[fr] 대",
-        "streaming4k": "[fr] 4K 스트리밍",
-        "streaming4kNeeded": "[fr] 필요",
-        "streaming4kNotNeeded": "[fr] 불필요",
-        "tvChannels": "[fr] TV 채널 수",
-        "tvChannelsUnit": "[fr] 개",
-        "tv4k": "[fr] 4K TV",
-        "tv4kNeeded": "[fr] 필요",
-        "tv4kNotNeeded": "[fr] 불필요"
+        "dataGb": "Utilisation des données",
+        "dataGbUnit": "GB / mois",
+        "voiceMinutes": "Appel",
+        "voiceMinutesUnit": "par mois",
+        "sms": "SMS",
+        "smsUnit": "par mois",
+        "euRoaming": "Itinérance dans l'UE",
+        "euRoamingNeeded": "nécessaire",
+        "euRoamingNotNeeded": "Inutile",
+        "downloadMbps": "Vitesse de téléchargement requise",
+        "downloadMbpsUnit": "Mbps",
+        "devices": "Appareils simultanés",
+        "devicesUnit": "contre",
+        "streaming4k": "Streaming 4K",
+        "streaming4kNeeded": "nécessaire",
+        "streaming4kNotNeeded": "Inutile",
+        "tvChannels": "Nombre de chaînes de télévision",
+        "tvChannelsUnit": "chien",
+        "tv4k": "Téléviseur 4K",
+        "tv4kNeeded": "nécessaire",
+        "tv4kNotNeeded": "Inutile"
       },
-      "formulaHeading": "[fr] 적용 산식",
+      "formulaHeading": "Formule utilisée",
       "formulaLabels": {
-        "monthly12": "[fr] 12개월 평균",
-        "monthly12Unit": "[fr] / 월",
-        "monthly24": "[fr] 24개월 평균",
-        "monthly24Unit": "[fr] / 월",
-        "activationAmortize": "[fr] 활성화비 amortize",
-        "activationAmortizeUnit": "[fr] / 월 (12개월 분배)"
+        "monthly12": "Moyenne sur 12 mois",
+        "monthly12Unit": "/ Mois",
+        "monthly24": "Moyenne sur 24 mois",
+        "monthly24Unit": "/ Lundi",
+        "activationAmortize": "Frais d'activation amortis",
+        "activationAmortizeUnit": "/ par mois (réparti sur 12 mois)"
       },
-      "caveatsHeading": "[fr] 주의사항",
-      "triggerHeading": "[fr] 주의사항 트리거 조건",
-      "triggerNote": "[fr] 저장된 요금제 데이터와 사용량 가정으로 각 규칙을 재평가했습니다 (ADR-0010 §T6).",
-      "engineHeading": "[fr] 엔진 버전",
-      "engineNote": "[fr] 영구 링크는 본 버전으로 재현됩니다 (ADR-0010 §T7 + ADR-0007 §T9)."
+      "caveatsHeading": "Remarques",
+      "triggerHeading": "Conditions de déclenchement des avertissements",
+      "triggerNote": "Nous avons réévalué chaque règle à la lumière des données enregistrées relatives aux forfaits et des hypothèses de consommation (ADR-0010 §T6).",
+      "engineHeading": "Version du moteur",
+      "engineNote": "Le lien permanent est reproduit dans cette version (ADR-0010 §T7 + ADR-0007 §T9)."
     }
   },
   "legal": {
     "affiliateDisclosure": {
-      "pageTitle": "[fr] 제휴 수수료 공개"
+      "pageTitle": "제휴 수수료 공개"
     }
   },
   "home": {
-    "headline": "[fr] Slim.",
-    "tagline": "[fr] 비교는 쉽게, 절약은 두툼하게.",
-    "ctaButton": "[fr] 지금 비교하기"
+    "headline": "Slim.",
+    "tagline": "Des comparaisons faciles, des économies substantielles.",
+    "ctaButton": "Comparer maintenant"
   }
 }

@@ -1229,7 +1229,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       (e2e locale prefix 단언 무영향 — 공개 prefix 게이트 비대상) +
       harness:plan(88/58 불변) + harness:data 정합.
       ✅ 완료 (2026-05-17): `src/middleware.ts` handleKoGate 동형 추가 + PUBLIC_LOCALE_PREFIXES routing.locales 단일출처 도출 / `src/middleware.ko-gate.test.ts` 신설 (9 케이스: env-missing fail-closed/무토큰 2차단/유효쿠키 통과/공개prefix 3×통과/api matcher제외/잘못된토큰 차단) / `.env.example`+`.env.local.example` KO_GATE_TOKEN placeholder + 주석. typecheck 0 / lint 0 / test 507 passed (ko-gate +9) / harness:plan 88정합 / harness:data 통과 / 무변경 검증 routing/request/layout/messages 0건. 다음 4.5.j.2 (nl/fr/en backfill).
-    - [ ] **4.5.j.2** **nl/fr/en 콘텐츠 backfill** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T3 + Amendment 2 §A2.3 + **§A2.7 잠금 G1/G2/G3**).
+    - [x] **4.5.j.2** **nl/fr/en 콘텐츠 backfill** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T3 + Amendment 2 §A2.3 + **§A2.7 잠금 G1/G2/G3**).
       `messages/{nl,fr,nl-BE,nl-NL,fr-BE,fr-LU,en}.json` 콘텐츠 backfill
       (DeepL Free + 수동 검수, **nl/fr base + region delta** fallback —
       ADR-0033 §A2.7 G3 잠금). 현 `messages/nl-BE.json` = **ko 복제본**
@@ -1335,6 +1335,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       ❌(ADR-0034 §미결 보류) / hreflang·sitemap ❌(4.6/3.5.3) / ko URL
       세그먼트화 ❌(§T2, §A2.7 G1-b 거부).
       ✅ Phase A 완료 (2026-05-17): typecheck 0 / lint 0 / test 523 passed / harness:plan 88 / harness:data 통과 / G1-a 배선 확인(getRequestConfig 실제 ko 로드) + constantTimeEqual 재사용 + 무쿠키 정적 렌더 회귀 0 / nl-fr base 키셋 누락 0 + delta 병합 정합 / isKoGateTarget 항상 false + handleKoGate env 미설정 pass-through 정합 + middleware 테스트 401→200 갱신 / nl/fr/en placeholder 값만 + Phase B 경계 보존 / 회귀 0 (routing/ko/nl-BE/layout 무변경) / .env 운영자 트랙 (Phase B blocker 아님) + scripts 운영자 안내 포함.
+      ✅ **Phase B 완료 (2026-05-18) → 4.5.j.2 [x]**: DEEPL_API_KEY 검증(probe /v2/usage 200, Free, 미커밋·삭제) → translate.mjs 구현·실행. typecheck 0 / lint 0 / test:run 523 passed (33 files) / harness:plan 88/58 불변 / harness:data 통과. `messages/{nl,fr,en}.json` 실번역 (placeholder 0, 182키 = ko keyset, legal.* 제외=4.5.j.3) / **`nl-BE.json` ko복제본→thin override delta** = 루트 실 nl 노출 (verifier #2 PASS, 핵심 회귀 포인트 해소) / **ICU 변수 ko↔nl/fr/en 100% 정합** 182키 (verifier #3 PASS, 런타임 깨짐 0) / DeepL 실측 **7,439자/1,000,000 (0.7%)** → ADR-0033 §Verification #5 기록 / caveats.* = DeepL raw (운영자 사후 검수 = Q2 수용 부채, non-blocker) / 회귀 0 (routing/ko.json/middleware/request.ts 무변경). DoD (1)~(7) 전부 충족 (Phase A+B). **운영자 잔여**: caveats.* nl/fr/en 사후 수동 검수 (가격 오역 — 운영자 트랙, 비-blocker).
     - [ ] **4.5.j.3** **legal.* 네임스페이스 legal 검수** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T4 + Amendment 2).
       `legal.*` 네임스페이스 (GDPR 동의/디스클로저/약관 텍스트) 는 일반 UI
       트랙과 분리 — **legal 에이전트 검수 게이트** (오역 = 규제 리스크).

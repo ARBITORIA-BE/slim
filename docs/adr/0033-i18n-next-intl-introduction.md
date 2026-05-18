@@ -350,6 +350,13 @@ prefix 노출. 최종 `localePrefix` 값은 builder 가 next-intl 문서 기준
    nl/fr/en = fallback 동작 확인 (4.6 시점 미번역 허용 = γ).
 5. DeepL 분량 측정 — ko 키화 완료 후 총 문자 수 기록 (본 ADR §T3 추정
    검증 — 500K 이내 확인 또는 분할 전략 결정).
+   **§Verification #5 실측 (2026-05-18, PLAN 4.5.j.2 Phase B):**
+   - ko.json 값 총 문자 수: **2,886자** (legal.* 제외 리프 181개)
+   - DeepL 호출 분량 추정: 2,886 × 3 base = **8,658자**
+   - DeepL 실제 사용량: **7,439자** / 1,000,000 (Free 한도 대비 0.7%)
+   - 한도 여유: 992,561자 — 분할 전략 불필요
+   - 실행 커맨드: `pnpm tsx --env-file=.env.local scripts/i18n/translate.mjs`
+   - nl/fr/en.json placeholder 0건 — DoD 충족 확인
 6. **4.9 런치 게이트** — nl/fr/en 콘텐츠 backfill 100% + hreflang/sitemap
    활성 + `legal.*` legal 에이전트 검수 통과 + `messages/ko.json` 제거.
 
