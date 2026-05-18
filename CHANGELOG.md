@@ -36,6 +36,16 @@
 
 ### Added
 
+- Phase 4 — **4.5.j.4.A 컴포넌트 t() 소비 마이그레이션 1순위 — 사용자 대면 다국어 실전달 (2026-05-18, verifier PASS-with-debt)** (ADR-0033 §A2.8 / Amendment 4):
+  - **이게 해소한 것**: 4.5.j.2 §정정에서 드러난 "i18n 인프라·번역은 정상이나 컴포넌트가 `t()` 0% 소비 → 사용자에게 nl/fr/en 미전달" 갭의 **1순위 경로(랜딩 + compare 5단계 + 결과) 해소**. ~23 컴포넌트 하드코딩 한국어 → next-intl `t()` (server=`getTranslations`, client=`useTranslations`).
+  - **런타임 실증 (P0 교훈 — 코드리딩 아닌 실측)**: Vercel 배포 고유 URL fetch(`x-vercel-cache: MISS`) — 루트 `/`(nl-BE) `<main>` = `Vergelijken gaat gemakkelijk, besparen levert flink op.` / `Nu vergelijken` (이전 하드코딩 `비교는 쉽게…`/`지금 비교하기` → `t(home.*)` 소비 실 nl). verifier `pnpm dev` 다중 라우트: `/en`·`/en/compare/mobile/postal` 렌더 UI 한글 0.
+  - **신규 게이트** `scripts/harness/i18n-consumption.ts` + `pnpm harness:i18n`: 검증 blind-spot(소비 미검증) 상시 차단. Node fs 재귀 워크(크로스플랫폼 — Windows glob 버그 회피), 0-file FATAL 가드, .B-pending allowlist 6, 자가검증(한글 주입→RED). verifier 라운드1이 이 게이트의 초기 Windows false-GREEN + CompareLayout aria-label 누락을 잡아 builder 재수정(8aabd2b).
+  - **빌드 SoT = Vercel**: 로컬 `pnpm build` 는 Windows webpack `WasmHash` 환경 버그로 불가(클린 커밋도 동일 실패 — .A 코드 무결), Vercel(Linux) 배포 `dpl_2Zgp…` = READY. 런타임 검증은 배포 URL / `pnpm dev`.
+  - **잠금 envelope 무변경**(verifier git diff): routing/request/middleware 로직 / §T1·T2 / G1-a / G3 / ko.json 정본 구조. ko.json = 키 추가만. legal.* = 4.5.j.3 경계.
+  - **게이트**: typecheck 0 / lint 0 / `test:run` 523 passed / harness:plan 88/58 불변 / harness:data 통과 / harness:i18n GREEN(Phase A).
+  - ⚠️ **명시 부채 (정직 — DoD #2 명시 허용·후속 분리)**: (1) 신규 추가 키 **41개 × 3 locale = `[nl]/[fr]/[en]` placeholder** (currentProvider.* 10 + result.* 25 + caveats.* 6) — 사용자가 result/현재공급사 화면서 `[nl] …` 노출. translate.mjs 재실행 = 신규 후속 **4.5.j.4.A.1**. (2) metadata `<title>`/description 여전히 한국어 = **4.5.j.4.B 이관**(SEO 대면, @i18n-allow 26건 verifier 전수 정당). 
+  - **상태**: 4.5.j.4.A `[x]`. 4.5.j.4 부모 / 4.5.j.2 = `[ ]` 유지 (.B 미완 — .A+.B 완료 시 4.5.j.2 `[x]`, S2 전수 = 사용자 대면 i18n 100%).
+
 - Phase 4 — **4.5.j.2 다국어 i18n — 인프라+번역 완료 / ⚠️ 컴포넌트 미마이그레이션 = 미완 (2026-05-18 정정)** (ADR-0033 §A2.5 / §A2.7(A1~A5) / §A2.5-Amd3):
   - 🔴 **정정 (2026-05-18, 라이브 근거)**: 본 항목은 당초 "Phase A+B 완료"로 기록됐으나 **거짓**으로 판명. Phase B 배포 고유 URL 직접 fetch(`x-vercel-cache: MISS`): next-intl `messages` 페이로드 = 완전한 실 nl 이나 렌더 `<main>` = **하드코딩 한국어**. 스코프 실측 = `useTranslations` 1파일(layout Provider뿐) / 한글 하드코딩 ~25 page·component 전부. 즉 i18n **인프라·번역은 정상이나 컴포넌트가 `t()` 를 0% 소비** → 사용자에게 nl/fr/en 미전달. 4.5.j.2 `[x]` → `[ ]` 정정 (PLAN §정정). 컴포넌트 마이그레이션 = architect 재스코프 (별도 sub-task). 아래 본문은 *실제 수행된 인프라·번역 작업의 사실 기록* (그 자체는 정확 — 단 "완료/라이브" 프레이밍이 오류였음).
   - **범위 (실제 수행분)**: nl/fr/en 로케일 인프라 배선 + G1-a ko 쿠키 오버레이 + 게이트 해제 + DeepL 실번역. **단 컴포넌트 t() 마이그레이션 미포함 → 사용자 대면 다국어 미전달.**
