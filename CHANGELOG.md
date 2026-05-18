@@ -36,8 +36,9 @@
 
 ### Added
 
-- Phase 4 — **4.5.j.2 다국어 i18n 인프라 배선 (Phase A+B 완료)** (ADR-0033 §A2.5 / §A2.7(A1~A5) / §A2.5-Amd3):
-  - **범위**: nl/fr/en 로케일 인프라 배선 + G1-a ko 쿠키 오버레이 + 게이트 해제 + DeepL 실번역 완료. Phase A+B 모두 완료, 다국어 실콘텐츠 + ko 검증 오버레이 라이브.
+- Phase 4 — **4.5.j.2 다국어 i18n — 인프라+번역 완료 / ⚠️ 컴포넌트 미마이그레이션 = 미완 (2026-05-18 정정)** (ADR-0033 §A2.5 / §A2.7(A1~A5) / §A2.5-Amd3):
+  - 🔴 **정정 (2026-05-18, 라이브 근거)**: 본 항목은 당초 "Phase A+B 완료"로 기록됐으나 **거짓**으로 판명. Phase B 배포 고유 URL 직접 fetch(`x-vercel-cache: MISS`): next-intl `messages` 페이로드 = 완전한 실 nl 이나 렌더 `<main>` = **하드코딩 한국어**. 스코프 실측 = `useTranslations` 1파일(layout Provider뿐) / 한글 하드코딩 ~25 page·component 전부. 즉 i18n **인프라·번역은 정상이나 컴포넌트가 `t()` 를 0% 소비** → 사용자에게 nl/fr/en 미전달. 4.5.j.2 `[x]` → `[ ]` 정정 (PLAN §정정). 컴포넌트 마이그레이션 = architect 재스코프 (별도 sub-task). 아래 본문은 *실제 수행된 인프라·번역 작업의 사실 기록* (그 자체는 정확 — 단 "완료/라이브" 프레이밍이 오류였음).
+  - **범위 (실제 수행분)**: nl/fr/en 로케일 인프라 배선 + G1-a ko 쿠키 오버레이 + 게이트 해제 + DeepL 실번역. **단 컴포넌트 t() 마이그레이션 미포함 → 사용자 대면 다국어 미전달.**
   - **신규 파일** (Phase A):
     - `messages/nl.json` `messages/fr.json` — base 전체 키 골격 (Phase B: `[nl]`/`[fr]` placeholder → **실번역**)
     - `scripts/i18n/measure-chars.mjs` `scripts/i18n/translate.mjs` — 골격 파일 (Phase B: **실구현 + 실행**, DeepL REST ko→{nl,fr,en} batch 호출, next-intl 변수 보호)
@@ -56,7 +57,7 @@
     - **번역 정확도**: ICU/next-intl 변수(`{months}`,`{amount}` 등) ko↔{nl,fr,en} **182키 100% 정합** (런타임 깨짐 0)
     - **정직 표기**: `caveats.*` nl/fr/en = DeepL 기계번역 raw (운영자 사후 수동 검수 대기, Q2 부채), `legal.*` = 본 항목 미번역 (4.5.j.3 legal 에이전트 별도)
   - **검증**: `pnpm typecheck` 0 / `pnpm lint` 0 / `pnpm test:run` **523 passed (33 files)** / `pnpm harness:plan` 88/58 불변 / `pnpm harness:data` 통과. 게이트 6/6 PASS (verifier 독립 재실행).
-  - ✅ **Phase A+B 완료**: nl/fr/en 실콘텐츠 + 변수 정합 + DeepL 한도 점검 완료, ko 검증 오버레이 라이브
+  - ⚠️ **상태 = 미완 (정정)**: i18n 인프라·DeepL 번역·G1-a 오버레이 배선은 수행·검증됨. **그러나 ~25 page/component 가 `t()` 미사용 하드코딩 한국어 → 사용자에게 nl/fr/en 0 전달.** 4.5.j.2 [ ] (미완). 컴포넌트 마이그레이션 + 검증 파이프라인 blind-spot(렌더 t() 소비 미검증) 보강 = architect 재스코프 대상.
 
 - Phase 4 — **4.5.j.1 KO 기본 인증 게이트** (ADR-0034 D1, ADR-0033 Amendment 2 §A2.1~A2.6):
   - **목표**: `ko` 로케일(운영자 전용 hidden) 무프리픽스 경로 보호 — `src/middleware.ts` 단일-토큰 same-domain basic-auth (별도 도메인 거부 옵션 포함, 다른 옵션 미채택).
