@@ -32,6 +32,13 @@ fallback) / §T4 (`legal.*` 별도 legal 검수 게이트) / §T5 (키화 우선
   `10dee59` 설계 정본 승인 — §A2.5-Amd3). §A2.7 G1=G1-a / Q2 운영자
   ✅ 확정 (2026-05-17) + §A2.7-R1 cross-ref. 코드 변경 0 (핫픽스 기
   반영, 본 amend 는 설계 정합·정당화). 새 ADR 신설 0 (P5).
+- **Amendment 4 (2026-05-18, 스코프 갭 정직 기록 후 architect)** —
+  §T5 "키화" under-spec 정정: 키화 = S1(추출/배선·완료) + **S2(컴포넌트
+  `t()` 소비 마이그레이션·미완)** 2단계로 명시 분해. 4.5.j.2 `[x]→[ ]`
+  정정 ADR 차원 기록 + 검증 blind-spot(소비 미검증) 근본원인 + 재발
+  방지 게이트 `harness:i18n` 잠금 + PLAN 신규 sub-task 4.5.j.4(.A/.B)
+  정의 — §A2.8. 코드/`messages/`/`src/**` 변경 0 (설계 정정, 구현=builder).
+  새 ADR 신설 0 (P5). ADR-0034 §미결 침범 0.
 
 본 ADR 은 **ADR-0016 §T10 SC-E + §회귀 트리거 7번 (i18n 일괄 도입)** 의 발동
 산출물이다. SC-E 는 **폐기가 아니라 발동 + 시점 앞당김** — 직전 분석 결론 그대로.
@@ -937,3 +944,175 @@ override only delta, en 독립")의 구체 파일 레이아웃:
 메커니즘*(G1)" + "번역 실행/구조(G2/G3)" 만 잠근다. "런칭/개발 완료
 후 ko 삭제 vs hidden 유지"(ADR-0034 D1 단일 미결, 운영자 명시 보류)는
 1mm 도 건드리지 않음 — 본 ADR §A2.6 의 "ko 제거 = 보류" 와 일관.
+
+### A2.8 — 컴포넌트 t() 소비 마이그레이션 누락 정직 기록 + 재스코프 (architect 2026-05-18)
+
+> 본 절은 PLAN 4.5.j.2 §정정(2026-05-18, 라이브 근거)을 ADR 차원에서
+> 정직 기록하고 잔여 작업을 정의한다. **신규 ADR 신설 0 (P5 — 기존
+> §A2 amend)**. 코드/`messages/`/`src/**` 변경 0 (본 절은 *설계 정정* —
+> 구현은 builder, 신규 sub-task §A2.8.3).
+
+#### A2.8.1 — 무엇이 일어났는가 (P3 — 숨기지 않음)
+
+**라이브 근거 (HEAD=a7e6967, Phase B 배포 고유 URL 직접 fetch,
+`x-vercel-cache: MISS`)**: next-intl `messages` 페이로드 = 완전한 실
+nl (4.5.j.2 Phase B 번역 산출물 정상). 그러나 렌더 `<main>` =
+**하드코딩 한국어** (`<p>비교는 쉽게…</p>` / `<a>지금 비교하기</a>`).
+스코프 실측 (`grep -rlP "[가-힣]" src/app --include=*.tsx` + `useTranslations`/
+`getTranslations` 사용처):
+
+- `useTranslations`/`getTranslations` 사용 = **1 파일** —
+  `src/app/[locale]/layout.tsx` 의 `NextIntlClientProvider` 셋업뿐
+  (콘텐츠 번역 0).
+- 한글 하드코딩 = **~25~28 page/component .tsx** (테스트/루트 layout
+  제외) — `src/app/[locale]/` 전 콘텐츠 컴포넌트.
+
+→ 인프라(라우팅/middleware/`request.ts` base+delta 병합/Provider) +
+번역 산출물(nl/fr/en 182키 실번역) 은 정상이나, **컴포넌트가 그
+메시지를 `t()` 로 소비하지 않으므로 사용자에게 nl/fr/en 0 전달**.
+locale 무관 전부 하드코딩 한국어 렌더.
+
+#### A2.8.2 — 근본 원인 = §T5 "키화" 의 under-spec (정직 진단)
+
+**§T5("키화 우선순위") + §SCOPE 표 + 4.5.j DoD 가 정의한 "키화"
+= *문자열 추출 + `messages/*.json` 키 적재 + 인프라 배선* 까지만**.
+"컴포넌트 본문의 하드코딩 문자열을 `t('namespace.key')` 호출로
+*치환* 하여 메시지를 소비" 하는 단계 — i18n 의 *실제 사용자 전달
+경로* — 가 §T5/§SCOPE/DoD 어디에도 명시 deliverable 로 적히지
+않았다. next-intl 문서상 "키화(extract)" 와 "소비(consume via
+`useTranslations`/`getTranslations`)" 는 **별개 단계**
+([next-intl — Messages](https://next-intl.dev/docs/usage/messages):
+메시지 정의 ↔ `useTranslations` 소비는 분리 절차). §T5 가 전자만
+deliverable 로 잡고 후자를 *암묵 가정* 한 것이 under-spec 의 본질.
+
+- 4.5.j ("ko 키화") `[x]` = 인프라+추출 기준으로는 **정당** (취소
+  아님). 단 *사용자 대면 i18n 전달* 은 미완 — PLAN 4.5.j 정정
+  cross-ref(2026-05-18) 가 이를 기록.
+- 4.5.j.2 ("nl/fr/en backfill") `[x]→[ ]` = backfill DoD 가
+  "nl/fr/en 콘텐츠" 를 요구했으나 컴포넌트 미소비 = 사용자에게
+  콘텐츠 0 → DoD 미달. 정정 정당 (PLAN 4.5.j.2 §정정).
+
+이는 **개별 에이전트 과실이 아니라 ADR 스펙 자체의 결함**이다
+(P3 — 책임 전가 0). §T5 가 "키화" 를 i18n 의 *완결* 로 오해할
+여지를 남겼다. 본 §A2.8 이 그 정의 공백을 메운다.
+
+#### A2.8.3 — 잔여 작업의 ADR 차원 정의
+
+§T5 "키화" 정의를 **2 단계로 명시 분해** (정정 잠금):
+
+- **§T5-S1 (추출/배선)** = 문자열 추출 + `messages/*.json` 적재 +
+  인프라 배선 + DeepL 번역 산출. **상태: 완료** (4.5.j + 4.5.j.2
+  Phase A/B).
+- **§T5-S2 (소비 마이그레이션)** = `src/app/[locale]/**` 콘텐츠
+  컴포넌트의 하드코딩 문자열을 `t()` 호출로 치환 (server =
+  `getTranslations`, client = `useTranslations`), `messages/ko.json`
+  네임스페이스(`home`/`compare`/`result`/`caveats` + 중첩) 와 매핑.
+  **상태: 미완 → PLAN 신규 sub-task 4.5.j.4(.A/.B) (§A2.8.4)**.
+
+§T5-S2 = **트랙 D1 의 *실제 누락 deliverable***. ADR-0034 D1
+("EN/FR/NL 공개") + ADR-0033 §SCOPE("4.9 = nl/fr/en 콘텐츠
+100%") 의 *사용자 전달* 조건은 §T5-S2 완료 없이 충족 불가 —
+즉 §T5-S2 는 **완성 게이트(PLAN 4.9)의 실질 blocker**.
+
+**잠금값 (재스코프 envelope — 위배 금지)**:
+- ADR-0034 D1 / §T1 라우팅 골격 / §T2 `locales` 배열 / §A2.7
+  G1-a 오버레이 / G3 base+delta 병합 = **무변경** (S2 = 컴포넌트
+  내부 치환만, 인프라 0 변경).
+- `messages/ko.json` 정본 = **무변경** (S2 는 키를 *소비* 만,
+  키 추가/변경 시 = ko.json amend → 그 자체가 S2 DoD 항목).
+- `legal.*` 네임스페이스 = **4.5.j.3 경계** (S2 대상 아님). 단
+  `legal/affiliate-disclosure/page.tsx` 의 *비-legal UI 텍스트*
+  (페이지 헤딩/네비/구조 라벨)는 일반 트랙 S2 대상 — `legal.*`
+  키(동의/디스클로저/약관 본문)만 4.5.j.3 분리 (경계 = "키
+  네임스페이스" 기준, 파일 기준 아님).
+- ADR-0034 §미결("KO 운명") 침범 **0** — S2 는 컴포넌트가
+  *어떤 메시지 소스든* `t()` 로 소비하게 만들 뿐, ko 삭제/유지와
+  무관 (G1-a 오버레이가 ko 소스 스왑 담당 — S2 는 그 위에서 동작).
+
+#### A2.8.4 — 검증 파이프라인 blind-spot 근본 원인 + 재발 방지 [잠금]
+
+**P3/P5 정직 기록 — blind-spot 실태**: typecheck / lint /
+`pnpm test:run`(523) / `pnpm harness:plan`(88) / `pnpm harness:data`
+/ verifier Phase A·B 전부 통과했으나 **어느 게이트도 "컴포넌트가
+`t()` 를 소비해 번역된 출력을 렌더하는가" 를 검증하지 않았다**.
+
+- verifier #2("루트 실 nl") = `request.ts` base+delta 병합 *코드
+  리딩* 단정 — 렌더 출력 미검증 (병합 페이로드가 옳아도 컴포넌트가
+  소비 안 하면 사용자 0).
+- 단위 테스트 523 = 병합/`request`/middleware 로직만 — 컴포넌트
+  렌더-소비 경로 0 커버.
+- 오케스트레이터 = 라이브 "여전히 한국어" 를 *배포 지연/과도기
+  부채* 로 오진 (실제 = 구조적 미소비).
+
+**근본 원인**: 모든 게이트가 "메시지 *정의/병합* 정합" 만 검사,
+"메시지 *소비/렌더* 정합" 을 검사하는 게이트 부재. i18n 의
+사용자 전달 경로(컴포넌트 `t()` 소비)에 대한 정적/렌더 가드가
+파이프라인에 없었다.
+
+**재발 방지 — 신규 게이트 `harness:i18n` [잠금]** (옵션 비교 →
+권고 1개 + DoD 박음):
+
+- **옵션 (a) — `harness:i18n` 정적 가드 (신규 스크립트)**:
+  `scripts/harness/i18n-consumption.ts` — (i) `src/app/[locale]/**/*.tsx`
+  (`*.test.tsx` / 루트 `src/app/layout.tsx` 제외) 에 한글 리터럴
+  (`/[가-힣]/` JSX 텍스트/문자열) **0** 정적 검사 + (ii) 핵심
+  라우트(랜딩/compare 5단계/`r/[shortId]`) 파일에 `useTranslations`
+  또는 `getTranslations` import **존재** 정적 검사. **권고 — 채택**.
+  - ✅ 얻는 것: 솔로·€300 현실 정합 (라이브 배포 fetch 불요,
+    CI 무비용, Stop hook 게이트 1줄 추가). under-spec 재발 = 한글
+    리터럴 잔존 = 게이트 fail 로 *즉시* 가시화. harness:plan/data
+    동형 패턴 (학습 부담 0 — FOUNDER 모드).
+  - ⚠️ 잃는 것: 정적 검사 = "한글 0 + import 존재" 까지만 —
+    "런타임에 *옳은* 키를 소비하는가"(잘못된 키 = 키 그대로
+    노출)는 미검증. 이는 (c) e2e 1건이 보완 (DoD 에 박음).
+    한글 리터럴 *허용 예외* (예: `lang` 속성 주석, ICU 내부) =
+    화이트리스트 주석 패턴 필요 (builder 가 §A2.8.5 에서 정의).
+- **옵션 (b) — verifier DoD 에 "배포/로컬 렌더 출력 번역 키
+  소비 확인" 의무화** (고유 deployment URL fetch 또는 `pnpm
+  build` + 렌더 단언). ⚠️ 보강으로 채택하되 *단독 게이트 부적합*
+  — 수동/비결정적(배포 타이밍 의존), 솔로 반복 비용 큼. (a) 의
+  *보완* 으로 4.5.j.4 DoD 에 "verifier 가 1회 고유 URL fetch 로
+  `<main>` 한글 0 + nl 텍스트 노출 육안 확인" 만 박음 (상시
+  게이트 아님 = 비용 절감).
+- **옵션 (c) — e2e locale 단언** (`/en` 또는 `/fr-BE` 진입 →
+  핵심 텍스트가 ko 아닌 해당 locale). ⚠️ 보강 — 기존 `pnpm
+  test:e2e` 에 단언 1~2개 추가 (신규 spec 0, 비용 최소). (a)
+  정적 가드의 런타임 보완. 4.5.j.4 DoD 에 박음.
+
+**잠금 결정 (architect)**: **(a) `harness:i18n` = 상시 게이트
+(권고·잠금)** + (b)(c) = 4.5.j.4 DoD 1회성 보완 항목. (a) 단독으로
+under-spec 재발(한글 리터럴 잔존)을 결정적으로 차단 — blind-spot
+의 *근본*(소비 미검증)을 게이트화. **운영자 확인 불요** (€300/솔로
+envelope 내 — 신규 SaaS 0, CI 무비용, architect 기본값 잠금).
+4.6/4.9 진입 전 `harness:i18n` GREEN 필수 (4.9 완성 게이트 보강).
+
+#### A2.8.5 — builder 인계 스펙 (S2 컴포넌트 마이그레이션)
+
+- **server 컴포넌트** (RSC, `async function` / `page.tsx` 다수):
+  `import { getTranslations } from 'next-intl/server'` →
+  `const t = await getTranslations('namespace')` → `{t('key')}`.
+- **client 컴포넌트** (`'use client'`):
+  `import { useTranslations } from 'next-intl'` →
+  `const t = useTranslations('namespace')` → `{t('key')}`.
+- **네임스페이스 매핑** (ko.json 기 구조 — S2 는 *소비* 만):
+  랜딩 `page.tsx` → `home.*` / `compare/**` → `compare.*`
+  (중첩: `compare.layout.*` `compare.categories.*` 등 기존 키
+  경로 그대로) / `r/[shortId]/**` → `result.*` (`result.calculationDetails.*`
+  등) / caveats 출력 경로 → `caveats.*`. ICU 변수(`{label}` 등)는
+  `t('key', { label })` 형태 — ko↔nl/fr/en ICU 100% 정합 기검증
+  (verifier #3 PASS, 4.5.j.2).
+- **ko.json 키 부재 시 처리**: 컴포넌트 문자열에 대응 키 부재 시
+  builder 가 `messages/ko.json` 에 키 *추가* (네임스페이스 규칙
+  준수) → 그 키는 nl/fr/en placeholder 로 남고 다음 DeepL 라운드
+  (4.5.j.2 재실행 또는 신규 보정 round) 대상 — *키 추가 자체가
+  S2 DoD 항목* (P1: 하드코딩 잔존 금지, 키 누락도 금지).
+- **`legal.*` 경계**: legal 본문 키 = 4.5.j.3 (S2 미산출). legal
+  페이지의 *비-legal UI 셸*(헤딩/네비)만 S2 대상.
+- **테스트 명령 = `pnpm test:run`** (*`pnpm test` 아님 — vitest
+  watch 함정*, ADR-0033 4.5.j.2 DoD (6) 동일 주의).
+
+**ADR-0034 §미결 침범 0 재확인 (§A2.8 전체)**: §A2.8 은 컴포넌트
+의 *메시지 소비 경로* 만 정의·정정한다. "런칭 후 ko 삭제 vs
+hidden 유지"(ADR-0034 D1 단일 미결)는 1mm 도 건드리지 않음 —
+S2 는 ko 소스 자체가 아니라 *어떤 소스든 `t()` 로 소비* 하게
+만드는 작업 (ko 소스 스왑 = G1-a 오버레이 책임, S2 무관).
