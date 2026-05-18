@@ -6,7 +6,7 @@
     "promoEnds": "Promotional price valid for the first {months} months only — thereafter {price} /month",
     "dataOverage": "Monthly usage: {usedGb} GB → This plan: {planGb} GB exceeded. Overage charges are not displayed.",
     "noEuRoaming": "EU roaming not included",
-    "speed4kInsufficient": "Less than 100 Mbps is recommended for 4K streaming (this plan{mbps} Mbps)",
+    "speed4kInsufficient": "Less than 100 Mbps is recommended for 4K streaming (this plan {mbps} Mbps)",
     "confidenceMedium": "Reliability of comparison data: medium ({reason})",
     "confidenceMediumDefaultReason": "Selector \"fragile\" or parsing warning",
     "currentTariffConfidence": "Current plan data reliability: {confidence}",
@@ -100,16 +100,16 @@
       "supportNote": "Selecting a provider at this stage improves the accuracy of the comparison, but it is not required. If you're unsure or a new user, you can skip this step.",
       "zeroProvidersFallback": "We were unable to load the list of providers. Would you like to proceed as a new user? The comparison results will be calculated based on all available options in the market.",
       "skipAsNew": "Proceed as a new user (Skip)",
-      "providerLabel": "[en] 현재 공급사",
-      "providerPlaceholder": "[en] 공급사를 선택하세요",
-      "providerAriaLabel": "[en] 현재 공급사 선택",
-      "tariffLabel": "[en] 현재 요금제",
-      "tariffPlaceholder": "[en] 요금제를 선택하세요",
-      "tariffAriaLabel": "[en] 현재 요금제 선택",
-      "tariffNotRegistered": "[en] 이 공급사의 활성 요금제가 아직 등록되지 않았습니다 (페이즈 5에서 추가 예정).",
-      "tariffUnknown": "[en] 이 공급사 요금제는 모르겠어요 (공급사만 비교)",
-      "nextButton": "[en] 다음 — 청구서",
-      "skipButton": "[en] 모르겠어요 / 스킵 — 신규 가입자 케이스로 진행"
+      "providerLabel": "Current Supplier",
+      "providerPlaceholder": "Select a supplier",
+      "providerAriaLabel": "Select a supplier",
+      "tariffLabel": "Current Plan",
+      "tariffPlaceholder": "Select a plan",
+      "tariffAriaLabel": "Select your current plan",
+      "tariffNotRegistered": "This provider's active plans have not yet been registered (to be added in Phase 5).",
+      "tariffUnknown": "I'm not familiar with this provider's rate plan (comparing providers only)",
+      "nextButton": "Next — Invoice",
+      "skipButton": "I don't know / Skip — Proceed as a new subscriber case"
     },
     "bill": {
       "heading": "Would you like to upload your bill to automatically enter your exact usage?",
@@ -184,7 +184,7 @@
       "commitmentMonths": "{months} months",
       "monthlyCostUnit": "/ Mon",
       "savingMonthly": "/ Mon",
-      "savingYearly": "Yeon {amount}",
+      "savingYearly": "{amount} / yr",
       "savingZero": "Same",
       "confidenceLabels": {
         "high": "High",
@@ -192,13 +192,13 @@
         "low": "Low"
       },
       "confidenceAriaPrefix": "Reliability ",
-      "subtitleDataUnlimited": "[en] 데이터 무제한",
-      "subtitleDataGb": "[en] 데이터 {value} GB",
-      "subtitleVoiceUnlimited": "[en] 통화 무제한",
-      "subtitleVoiceMinutes": "[en] 통화 {value}분",
-      "subtitleTvChannels": "[en] TV {value}채널",
-      "promoNote": "[en] 프로모 {price} ({months}개월)",
-      "activationNote": "[en] 활성화비 {amount}"
+      "subtitleDataUnlimited": "Unlimited data",
+      "subtitleDataGb": "Data {value} GB",
+      "subtitleVoiceUnlimited": "Unlimited calls",
+      "subtitleVoiceMinutes": "Call duration {value} minutes",
+      "subtitleTvChannels": "TV Channel: {value}",
+      "promoNote": "Promotion {price} ({months} months)",
+      "activationNote": "Activation fee {amount}"
     },
     "calculationDetails": {
       "summary": "View calculation basis — Assumptions used + Formula + Notes on triggers + Engine version",
@@ -264,44 +264,44 @@
       "engineNote": "The permanent link is reproduced in this version (ADR-0010 §T7 + ADR-0007 §T9)."
     },
     "notFound": {
-      "linkLabel": "[en] 결과 링크 — 404",
-      "heading": "[en] 이 결과는 더 이상 존재하지 않습니다",
-      "body": "[en] 링크가 잘못 입력됐거나, 결과가 만료됐을 수 있습니다. 새로 비교를 시작하면 영구 링크가 다시 생성됩니다.",
-      "formatNote": "[en] 영구 링크 형식:",
+      "linkLabel": "Result link — 404",
+      "heading": "This result no longer exists",
+      "body": "The link may have been entered incorrectly, or the results may have expired. If you start a new comparison, a permanent link will be generated again.",
+      "formatNote": "Permanent link format:",
       "formatCode": "/r/{12 characters letters/digits/_/-}",
-      "newCompare": "[en] 새로 비교 시작",
-      "goHome": "[en] 홈으로"
+      "newCompare": "Start a new comparison",
+      "goHome": "Home"
     },
     "controls": {
-      "ariaLabel": "[en] 비교 표 정렬 및 필터",
-      "sortLabel": "[en] 정렬",
-      "filterLabel": "[en] 필터",
+      "ariaLabel": "Sorting and Filtering Comparison Tables",
+      "sortLabel": "Sort",
+      "filterLabel": "Filter",
       "sorts": {
-        "saving_desc": "[en] 절약액 큰 순",
-        "price_asc": "[en] 월 비용 적은 순",
-        "commitment_none_first": "[en] 약정 없음 우선"
+        "saving_desc": "Largest savings",
+        "price_asc": "Sorted by lowest monthly cost",
+        "commitment_none_first": "No contract required"
       },
       "filters": {
-        "commitment_none": "[en] 약정 없음만",
-        "data_unlimited": "[en] 데이터 무제한"
+        "commitment_none": "No contract only",
+        "data_unlimited": "Unlimited data"
       }
     },
     "excludedProviders": {
-      "heading": "[en] 비교에서 제외된 공급사",
-      "body": "[en] 아래 공급사는 본 비교에 포함되지 않았습니다. 사유는 마스터 데이터 그대로 노출됩니다."
+      "heading": "Suppliers excluded from the comparison",
+      "body": "The following suppliers were not included in this comparison. The reasons are disclosed as per the master data (Constitution §3 P3). You can view the same data in tabular format on the /data-sources page."
     },
     "betaBanner": {
-      "heading": "[en] 베타 단계: 추정값",
-      "body": "[en] 가격은 운영자가 2026-05-09에 수동 검증한 추정값입니다. 실시간 가격은 페이즈 5 이후 격상 예정.",
-      "link": "[en] 자세히: /data-sources"
+      "heading": "Beta phase: Estimated values",
+      "body": "The price is an estimate manually verified by the operator on May 9, 2026. Real-time pricing is scheduled to be implemented after Phase 5.",
+      "link": "Learn more: /data-sources"
     },
     "affiliateDisclosure": {
-      "noCommission": "[en] 수수료 없음",
-      "noCommissionDetail": "[en] Slim은 이 공급사로부터 수수료를 받지 않습니다. 외부 링크로 직접 이동합니다.",
-      "commissionUnknown": "[en] Slim은 변경 시 {providerName}로부터 수수료를 받습니다 (단가 비공개).",
-      "commissionKnown": "[en] Slim은 변경 시 {providerName}로부터 {amount}의 수수료를 받습니다.",
-      "policyLink": "[en] 수수료 정책 자세히 보기",
-      "disclosureAriaLabel": "Commission information for {providerName}"
+      "noCommission": "No fees",
+      "noCommissionDetail": "Slim does not receive any commission from this supplier. You will be redirected directly to an external link.",
+      "commissionUnknown": "Slim receives a commission from {providerName} when you make a change (rate undisclosed — unregistered). This commission does not affect your fees.",
+      "commissionKnown": "Slim receives a commission from {providerName} to {amount} for this change—this amount does not affect your bill.",
+      "policyLink": "Learn more about our fee policy",
+      "disclosureAriaLabel": "{providerName} Fee Information"
     }
   },
   "legal": {

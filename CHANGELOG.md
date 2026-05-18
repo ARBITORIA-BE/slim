@@ -43,7 +43,7 @@
   - **빌드 SoT = Vercel**: 로컬 `pnpm build` 는 Windows webpack `WasmHash` 환경 버그로 불가(클린 커밋도 동일 실패 — .A 코드 무결), Vercel(Linux) 배포 `dpl_2Zgp…` = READY. 런타임 검증은 배포 URL / `pnpm dev`.
   - **잠금 envelope 무변경**(verifier git diff): routing/request/middleware 로직 / §T1·T2 / G1-a / G3 / ko.json 정본 구조. ko.json = 키 추가만. legal.* = 4.5.j.3 경계.
   - **게이트**: typecheck 0 / lint 0 / `test:run` 523 passed / harness:plan 88/58 불변 / harness:data 통과 / harness:i18n GREEN(Phase A).
-  - ⚠️ **명시 부채 (정직 — DoD #2 명시 허용·후속 분리)**: (1) 신규 추가 키 **41개 × 3 locale = `[nl]/[fr]/[en]` placeholder** (currentProvider.* 10 + result.* 25 + caveats.* 6) — 사용자가 result/현재공급사 화면서 `[nl] …` 노출. translate.mjs 재실행 = 신규 후속 **4.5.j.4.A.1**. (2) metadata `<title>`/description 여전히 한국어 = **4.5.j.4.B 이관**(SEO 대면, @i18n-allow 26건 verifier 전수 정당). 
+  - ⚠️ **명시 부채 (정직 — DoD #2 명시 허용·후속 분리)**: (1) ✅ **해소 (2026-05-18, 4.5.j.4.A.1)** — 신규 키 41×3 placeholder → DeepL 보정. var-protection.ts(ko 공백 규칙 보존, DeepL XML 공백 흡수 보정) + savingYearly "Yeon" 의미깨짐 수동 교정(nl `Per jaar`/fr `Par an`/en `{amount} / yr`). verifier 라운드1 FAIL(ICU 공백)→라운드2 PASS. test:run 534, DeepL 누적 12,612/1M. (2) metadata `<title>`/description 여전히 한국어 = **4.5.j.4.B 이관**(SEO 대면, @i18n-allow 26건 verifier 전수 정당). 
   - **상태**: 4.5.j.4.A `[x]`. 4.5.j.4 부모 / 4.5.j.2 = `[ ]` 유지 (.B 미완 — .A+.B 완료 시 4.5.j.2 `[x]`, S2 전수 = 사용자 대면 i18n 100%).
 
 - Phase 4 — **4.5.j.2 다국어 i18n — 인프라+번역 완료 / ⚠️ 컴포넌트 미마이그레이션 = 미완 (2026-05-18 정정)** (ADR-0033 §A2.5 / §A2.7(A1~A5) / §A2.5-Amd3):

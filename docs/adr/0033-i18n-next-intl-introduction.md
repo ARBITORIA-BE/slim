@@ -364,6 +364,21 @@ prefix 노출. 최종 `localePrefix` 값은 builder 가 next-intl 문서 기준
    - 한도 여유: 992,561자 — 분할 전략 불필요
    - 실행 커맨드: `pnpm tsx --env-file=.env.local scripts/i18n/translate.mjs`
    - nl/fr/en.json placeholder 0건 — DoD 충족 확인
+   **§Verification #5 증분 실측 (2026-05-18, PLAN 4.5.j.4.A.1 — placeholder 보정):**
+   - ko.json 값 총 문자 수: **3,776자** (Phase B 후 41키 추가: currentProvider.* + result.table.subtitle*/promo/activation + result.notFound.* + result.controls.* + result.excludedProviders.* + result.betaBanner.* + result.affiliateDisclosure.noCommission/noCommissionDetail/commissionUnknown/commissionKnown/policyLink)
+   - 증분 번역 대상: 41 keys × 3 locale = **123 텍스트 항목** (--incremental 모드)
+   - DeepL 누적 실제 사용량: **8,986자** / 1,000,000 (Free 한도 대비 0.9%) — 이번 증분 +1,547자
+   - 증분 실행 커맨드: `pnpm tsx --env-file=.env.local scripts/i18n/translate.mjs --incremental`
+   - nl/fr/en.json placeholder 0건 — DoD 충족 확인 (기존 비-placeholder 값 무변경)
+
+  **§Verification #5 재보정 실측 (2026-05-18, PLAN 4.5.j.4.A.1 verifier FAIL 수정):**
+   - 수정 근본: DeepL XML tag_handling 이 `<x id="N"/>` 양옆 공백 흡수 버그 → encodeVars/decodeVars 공백 보정 로직 추가 (spaceBefore/spaceAfter 기록 → 복원)
+   - 재보정 대상: 36 keys × 3 locale = **108 텍스트 항목** (--retarget 모드, RETARGET_PATHS 목록 기준)
+   - DeepL 누적 실제 사용량: **12,612자** / 1,000,000 (Free 한도 대비 1.3%) — 이번 재보정 +3,626자
+   - 재보정 실행 커맨드: `pnpm tsx --env-file=.env.local scripts/i18n/translate.mjs --retarget`
+   - 수동 보정 키 (DeepL 재번역 후에도 부자연): nl `savingYearly`→`Per jaar {amount}`, nl `activationFee` 콤마 공백, nl `positiveSaving` 마침표 공백, fr `savingYearly`→`Par an {amount}`, fr `commissionUnknown` `d'` 패턴, en `savingYearly`→`{amount} / yr`, en `subtitleVoiceMinutes` 뒤 공백
+   - `savingYearly "Yeon"` 분류: result.table.savingYearly = **.A.1 41키 집합** (retarget 재번역에서도 "Yeon" 재출력 → 수동 보정 1회 적용, 의미 복원 확인)
+   - nl/fr/en.json placeholder 0건 / 기존 비-.A.1 값 무변경 — DoD 충족
 6. **4.9 런치 게이트** — nl/fr/en 콘텐츠 backfill 100% + hreflang/sitemap
    활성 + `legal.*` legal 에이전트 검수 통과 + `messages/ko.json` 제거.
 

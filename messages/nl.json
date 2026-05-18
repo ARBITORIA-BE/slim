@@ -2,11 +2,11 @@
   "_comment": "nl base — nl-BE 와 nl-NL 공통 번역 정본 (ADR-0033 §T3 + §A2.7 G3). Phase A: 키 골격만 (ko.json 키셋 기준, 값=placeholder). Phase B (DeepL): ko→nl 번역 값 채움. region delta(nl-BE.json/nl-NL.json)는 이 base 대비 차이만 override.",
   "caveats": {
     "commitment": "{months} Contractduur van [aantal] maanden — Bij vroegtijdige opzegging wordt een boete in rekening gebracht",
-    "activationFee": "Activeringskosten{amount}, exclusief (eenmalig)",
+    "activationFee": "Activeringskosten {amount}, exclusief (eenmalig)",
     "promoEnds": "De promotieprijs geldt alleen voor de eerste {months} maanden — daarna {price} per maand",
-    "dataOverage": "Maandelijkse verbruik van {usedGb} GB → Dit abonnement{planGb} GB overschreden. Er worden geen kosten voor overschrijding weergegeven.",
+    "dataOverage": "Maandelijkse verbruik van {usedGb} GB → Dit abonnement {planGb} GB overschreden. Er worden geen kosten voor overschrijding weergegeven.",
     "noEuRoaming": "EU-roaming niet inbegrepen",
-    "speed4kInsufficient": "Minder dan 100 Mbps aanbevolen voor 4K-streaming (dit abonnement{mbps} Mbps)",
+    "speed4kInsufficient": "Minder dan 100 Mbps aanbevolen voor 4K-streaming (dit abonnement {mbps} Mbps)",
     "confidenceMedium": "Betrouwbaarheid van de vergelijkingsgegevens: gemiddeld ({reason})",
     "confidenceMediumDefaultReason": "Selector 'fragile' of parseerfout",
     "currentTariffConfidence": "Betrouwbaarheid van de data in het huidige tariefplan: {confidence}",
@@ -98,18 +98,18 @@
     "currentProvider": {
       "heading": "Waar gebruikt u het momenteel?",
       "supportNote": "Het selecteren van een leverancier verhoogt de nauwkeurigheid van de vergelijking, maar is niet verplicht. Als u het niet weet of een nieuwe klant bent, kunt u deze stap overslaan.",
-      "zeroProvidersFallback": "De lijst met aanbieders kan niet worden geladen. Wilt u doorgaan als nieuwe klant? De vergelijkingsresultaten worden berekend op basis van alle aanbieders op de markt.",
+      "zeroProvidersFallback": "De lijst met aanbieders kan niet worden geladen. Wilt u doorgaan als nieuwe gebruiker? De vergelijkingsresultaten worden berekend op basis van alle aanbieders op de markt.",
       "skipAsNew": "Doorgaan als nieuwe gebruiker (overslaan)",
-      "providerLabel": "[nl] 현재 공급사",
-      "providerPlaceholder": "[nl] 공급사를 선택하세요",
-      "providerAriaLabel": "[nl] 현재 공급사 선택",
-      "tariffLabel": "[nl] 현재 요금제",
-      "tariffPlaceholder": "[nl] 요금제를 선택하세요",
-      "tariffAriaLabel": "[nl] 현재 요금제 선택",
-      "tariffNotRegistered": "[nl] 이 공급사의 활성 요금제가 아직 등록되지 않았습니다 (페이즈 5에서 추가 예정).",
-      "tariffUnknown": "[nl] 이 공급사 요금제는 모르겠어요 (공급사만 비교)",
-      "nextButton": "[nl] 다음 — 청구서",
-      "skipButton": "[nl] 모르겠어요 / 스킵 — 신규 가입자 케이스로 진행"
+      "providerLabel": "Huidige leverancier",
+      "providerPlaceholder": "Kies een leverancier",
+      "providerAriaLabel": "Momenteel gekozen leverancier",
+      "tariffLabel": "Huidig abonnement",
+      "tariffPlaceholder": "Kies een abonnement",
+      "tariffAriaLabel": "Huidige tariefplan selecteren",
+      "tariffNotRegistered": "De actieve tariefplannen van deze leverancier zijn nog niet geregistreerd (worden toegevoegd in fase 5).",
+      "tariffUnknown": "Ik weet niet hoe het tarief van deze leverancier in elkaar zit (alleen leveranciers vergelijken)",
+      "nextButton": "Volgende — Factuur",
+      "skipButton": "Ik weet het niet / Overslaan — Behandelen als nieuwe klant"
     },
     "bill": {
       "heading": "Wilt u uw factuur uploaden om uw exacte verbruik automatisch in te vullen?",
@@ -184,7 +184,7 @@
       "commitmentMonths": "{months} maanden",
       "monthlyCostUnit": "/ maand",
       "savingMonthly": "/ maand",
-      "savingYearly": "Yeon {amount}",
+      "savingYearly": "Per jaar {amount}",
       "savingZero": "hetzelfde",
       "confidenceLabels": {
         "high": "Hoog",
@@ -192,13 +192,13 @@
         "low": "Laag"
       },
       "confidenceAriaPrefix": "betrouwbaarheid ",
-      "subtitleDataUnlimited": "[nl] 데이터 무제한",
-      "subtitleDataGb": "[nl] 데이터 {value} GB",
-      "subtitleVoiceUnlimited": "[nl] 통화 무제한",
-      "subtitleVoiceMinutes": "[nl] 통화 {value}분",
-      "subtitleTvChannels": "[nl] TV {value}채널",
-      "promoNote": "[nl] 프로모 {price} ({months}개월)",
-      "activationNote": "[nl] 활성화비 {amount}"
+      "subtitleDataUnlimited": "Onbeperkt data",
+      "subtitleDataGb": "Gegevens {value} GB",
+      "subtitleVoiceUnlimited": "Onbeperkt bellen",
+      "subtitleVoiceMinutes": "Gesprek {value} minuten",
+      "subtitleTvChannels": "TV-{value}-kanaal",
+      "promoNote": "Promotie {price} ({months} maanden)",
+      "activationNote": "Activeringskosten {amount}"
     },
     "calculationDetails": {
       "summary": "Berekeningsbasis bekijken — Gebruikte aannames + Formule + Opmerkingen Triggers + Engineversie",
@@ -264,44 +264,44 @@
       "engineNote": "De permanente link wordt in deze versie weergegeven (ADR-0010 §T7 + ADR-0007 §T9)."
     },
     "notFound": {
-      "linkLabel": "[nl] 결과 링크 — 404",
-      "heading": "[nl] 이 결과는 더 이상 존재하지 않습니다",
-      "body": "[nl] 링크가 잘못 입력됐거나, 결과가 만료됐을 수 있습니다. 새로 비교를 시작하면 영구 링크가 다시 생성됩니다.",
-      "formatNote": "[nl] 영구 링크 형식:",
+      "linkLabel": "Link naar resultaten — 404",
+      "heading": "Dit resultaat bestaat niet meer",
+      "body": "De link is mogelijk verkeerd ingevoerd of de resultaten zijn verlopen. Als u een nieuwe vergelijking start, wordt er opnieuw een permanente link gegenereerd.",
+      "formatNote": "Permanente link:",
       "formatCode": "/r/{12 tekens letters/cijfers/_/-}",
-      "newCompare": "[nl] 새로 비교 시작",
-      "goHome": "[nl] 홈으로"
+      "newCompare": "Nieuwe vergelijking starten",
+      "goHome": "Naar de startpagina"
     },
     "controls": {
-      "ariaLabel": "[nl] 비교 표 정렬 및 필터",
-      "sortLabel": "[nl] 정렬",
-      "filterLabel": "[nl] 필터",
+      "ariaLabel": "Vergelijkingstabel sorteren en filteren",
+      "sortLabel": "Sorteren",
+      "filterLabel": "Filter",
       "sorts": {
-        "saving_desc": "[nl] 절약액 큰 순",
-        "price_asc": "[nl] 월 비용 적은 순",
-        "commitment_none_first": "[nl] 약정 없음 우선"
+        "saving_desc": "Grote besparingen",
+        "price_asc": "Op basis van de laagste maandelijkse kosten",
+        "commitment_none_first": "Geen contract vereist"
       },
       "filters": {
-        "commitment_none": "[nl] 약정 없음만",
-        "data_unlimited": "[nl] 데이터 무제한"
+        "commitment_none": "Alleen zonder contract",
+        "data_unlimited": "Onbeperkt data"
       }
     },
     "excludedProviders": {
-      "heading": "[nl] 비교에서 제외된 공급사",
-      "body": "[nl] 아래 공급사는 본 비교에 포함되지 않았습니다. 사유는 마스터 데이터 그대로 노출됩니다."
+      "heading": "Leveranciers die niet in de vergelijking zijn meegenomen",
+      "body": "De onderstaande leveranciers zijn niet in deze vergelijking opgenomen. De reden hiervoor wordt weergegeven zoals deze in de masterdata staat (Grondwet §3 P3). Op de pagina /data-sources kunt u dezelfde gegevens in tabelvorm bekijken."
     },
     "betaBanner": {
-      "heading": "[nl] 베타 단계: 추정값",
-      "body": "[nl] 가격은 운영자가 2026-05-09에 수동 검증한 추정값입니다. 실시간 가격은 페이즈 5 이후 격상 예정.",
-      "link": "[nl] 자세히: /data-sources"
+      "heading": "Bètastadium: schatting",
+      "body": "De prijs is een schatting die op 9 mei 2026 handmatig door de beheerder is geverifieerd. De realtime prijs zal na fase 5 worden bijgewerkt.",
+      "link": "Meer informatie: /data-sources"
     },
     "affiliateDisclosure": {
-      "noCommission": "[nl] 수수료 없음",
-      "noCommissionDetail": "[nl] Slim은 이 공급사로부터 수수료를 받지 않습니다. 외부 링크로 직접 이동합니다.",
-      "commissionUnknown": "[nl] Slim은 변경 시 {providerName}로부터 수수료를 받습니다 (단가 비공개).",
-      "commissionKnown": "[nl] Slim은 변경 시 {providerName}로부터 {amount}의 수수료를 받습니다.",
-      "policyLink": "[nl] 수수료 정책 자세히 보기",
-      "disclosureAriaLabel": "Commissie-informatie voor {providerName}"
+      "noCommission": "Geen kosten",
+      "noCommissionDetail": "Slim ontvangt geen commissie van deze leverancier. U wordt rechtstreeks doorgestuurd via een externe link.",
+      "commissionUnknown": "Slim ontvangt bij wijzigingen een commissie van {providerName} (prijs niet bekend — niet geregistreerd). Deze commissie heeft geen invloed op uw tarief.",
+      "commissionKnown": "Slim ontvangt bij wijzigingen een commissie van {providerName} voor {amount} — dit bedrag heeft geen invloed op uw kosten.",
+      "policyLink": "Meer informatie over het kostenbeleid",
+      "disclosureAriaLabel": "{providerName} Informatie over kosten"
     }
   },
   "legal": {
