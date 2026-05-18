@@ -13,8 +13,9 @@
  */
 import type { Metadata } from 'next';
 
+// @i18n-allow metadata 한글은 4.5.j.4.B 대상
 export const metadata: Metadata = {
-  title: '가구 형태 선택',
+  title: '가구 형태 선택', // @i18n-allow
   robots: { index: false, follow: false },
 };
 

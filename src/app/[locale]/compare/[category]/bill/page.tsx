@@ -5,9 +5,12 @@
  *
  * 페이즈 2 1차: OCR 미구현, "청구서 없이 진행" 단일 버튼만. 페이즈 3 결과 페이지
  * 직후 OCR 도입 별도 ADR (ADR-OCR 가칭).
+ *
+ * i18n: useTranslations (client 컴포넌트) — 'compare.bill' 네임스페이스.
  */
 
 import { use } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { useRouter } from '@/i18n/navigation';
 
@@ -25,6 +28,9 @@ export default function BillPage({
 }: {
   params: Promise<{ category: string }>;
 }) {
+  // why: useTranslations 은 client 컴포넌트에서 동기 호출.
+  const t = useTranslations('compare.bill');
+
   const router = useRouter();
   const { category: rawCategory } = use(params);
 
@@ -45,17 +51,16 @@ export default function BillPage({
     <CompareLayout step="bill">
       <header className="flex flex-col gap-2">
         <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          청구서를 업로드해 정확한 사용량을 자동 입력하시겠어요?
+          {t('heading')}
         </h1>
         <p className="text-sm text-fg-soft">
-          현재 베타 진행 중 — 청구서 OCR은 페이즈 3 결과 페이지 직후 추가됩니다.
-          지금은 가구 형태 기반 추정값으로 비교합니다.
+          {t('supportNote')}
         </p>
       </header>
 
       <div className="flex flex-col gap-3">
         <Button type="button" onClick={proceed}>
-          청구서 없이 진행 — 결과 미리보기로
+          {t('skipButton')}
         </Button>
       </div>
     </CompareLayout>

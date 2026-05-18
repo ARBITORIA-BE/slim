@@ -6,9 +6,12 @@
  * 페이즈 2 1차: sessionStorage → /api/compare → shortId 받아 /r/[shortId]
  * redirect. /api/compare 가 stub 응답 (Zod 재검증 + nanoid shortId만) — 풀
  * compare() 호출 + DB insert는 페이즈 3 진입 시 별도 ADR로 추가.
+ *
+ * i18n: useTranslations (client 컴포넌트) — 'compare.preview' 네임스페이스.
  */
 
 import { use, useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { useRouter } from '@/i18n/navigation';
 
@@ -29,6 +32,9 @@ export default function PreviewPage({
 }: {
   params: Promise<{ category: string }>;
 }) {
+  // why: useTranslations 은 client 컴포넌트에서 동기 호출.
+  const t = useTranslations('compare.preview');
+
   const router = useRouter();
   const { category: rawCategory } = use(params);
 
@@ -61,9 +67,7 @@ export default function PreviewPage({
     const parsed = comparisonInputSchema.safeParse(candidate);
     if (!parsed.success) {
       setStatus('error');
-      setErrorMessage(
-        '입력이 완전하지 않습니다. 우편번호 또는 가구 형태 단계로 돌아가세요.',
-      );
+      setErrorMessage(t('inputIncomplete'));
       return;
     }
 
@@ -78,7 +82,7 @@ export default function PreviewPage({
         const reason =
           typeof payload === 'object' && payload !== null && 'error' in payload
             ? String((payload as { error: unknown }).error)
-            : `서버 오류 (${response.status})`;
+            : t('serverError', { status: response.status });
         setStatus('error');
         setErrorMessage(reason);
         return;
@@ -87,9 +91,9 @@ export default function PreviewPage({
       router.push(`/r/${shortId}`);
     } catch {
       setStatus('error');
-      setErrorMessage('네트워크 오류가 발생했습니다. 다시 시도해 주세요.');
+      setErrorMessage(t('networkError'));
     }
-  }, [category, state, router]);
+  }, [category, state, router, t]);
 
   // 마운트 + sessionStorage 복원 후 자동 제출 (T7 미리보기 = preview 진입 = 비교 호출)
   useEffect(() => {
@@ -101,17 +105,16 @@ export default function PreviewPage({
     <CompareLayout step="preview">
       <header className="flex flex-col gap-2">
         <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          결과를 준비 중입니다
+          {t('heading')}
         </h1>
         <p className="text-sm text-fg">
-          입력하신 정보를 바탕으로 비교 결과 영구 링크를 생성하고 있습니다. 완료 후
-          자동으로 결과 페이지로 이동합니다.
+          {t('supportNote')}
         </p>
       </header>
 
       {status === 'submitting' && (
         <div className="rounded-2xl border border-fg/10 bg-bg-warm p-6 text-sm text-fg">
-          <p>비교 엔진 호출 중… (보통 1초 미만)</p>
+          <p>{t('submittingMessage')}</p>
         </div>
       )}
 
@@ -120,7 +123,7 @@ export default function PreviewPage({
           role="alert"
           className="rounded-2xl border border-accent/30 bg-accent/5 p-6 text-sm text-fg"
         >
-          <p className="font-semibold text-accent-dark">결과 생성 실패</p>
+          <p className="font-semibold text-accent-dark">{t('errorTitle')}</p>
           <p className="mt-2">{errorMessage}</p>
           <div className="mt-4 flex gap-2">
             <Button
@@ -130,14 +133,14 @@ export default function PreviewPage({
                 setErrorMessage(null);
               }}
             >
-              다시 시도
+              {t('retry')}
             </Button>
             <Button
               type="button"
               variant="ghost"
               onClick={() => router.push(`/compare/${category}/postal`)}
             >
-              처음으로
+              {t('goToStart')}
             </Button>
           </div>
         </div>

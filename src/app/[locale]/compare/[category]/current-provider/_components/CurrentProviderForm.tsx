@@ -9,12 +9,15 @@
  *      또는 "이 공급사 요금제 모르겠어요" 동등 버튼
  *   3. "모르겠어요 / 스킵" 동등 버튼 — currentProviderId = null + currentTariffId = null
  *
+ * i18n: useTranslations (client 컴포넌트) — 'compare.currentProvider' 네임스페이스.
+ *
  * provider 0건 시 부모 RSC 가 다른 안내 컴포넌트 렌더 — 본 컴포넌트는 providers
  * 가 비어있지 않다고 가정.
  */
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +44,9 @@ export function CurrentProviderForm({
   providers,
   tariffs,
 }: CurrentProviderFormProps) {
+  // why: useTranslations 은 client 컴포넌트에서 동기 호출.
+  const t = useTranslations('compare.currentProvider');
+
   const router = useRouter();
   const { state, updateData, setStep, hydrated } = useCompareSession(
     category,
@@ -82,7 +88,7 @@ export function CurrentProviderForm({
   }, [hydrated, selectedTariffId, state.data.currentTariffId, updateData]);
 
   const filteredTariffs = useMemo(
-    () => (selectedProviderId ? tariffs.filter((t) => t.providerId === selectedProviderId) : []),
+    () => (selectedProviderId ? tariffs.filter((tariff) => tariff.providerId === selectedProviderId) : []),
     [tariffs, selectedProviderId],
   );
 
@@ -111,14 +117,14 @@ export function CurrentProviderForm({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
         <label htmlFor="provider-select" className="text-sm font-medium text-fg">
-          현재 공급사
+          {t('providerLabel')}
         </label>
         <Select
           {...(selectedProviderId !== null ? { value: selectedProviderId } : {})}
           onValueChange={(v) => setSelectedProviderId(v)}
         >
-          <SelectTrigger id="provider-select" aria-label="현재 공급사 선택">
-            <SelectValue placeholder="공급사를 선택하세요" />
+          <SelectTrigger id="provider-select" aria-label={t('providerAriaLabel')}>
+            <SelectValue placeholder={t('providerPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             {providers.map((p) => (
@@ -133,7 +139,7 @@ export function CurrentProviderForm({
       {selectedProviderId !== null && (
         <div className="flex flex-col gap-3">
           <label htmlFor="tariff-select" className="text-sm font-medium text-fg">
-            현재 요금제
+            {t('tariffLabel')}
           </label>
           {filteredTariffs.length > 0 ? (
             <Select
@@ -146,20 +152,20 @@ export function CurrentProviderForm({
               }}
               disabled={tariffUnknown}
             >
-              <SelectTrigger id="tariff-select" aria-label="현재 요금제 선택">
-                <SelectValue placeholder="요금제를 선택하세요" />
+              <SelectTrigger id="tariff-select" aria-label={t('tariffAriaLabel')}>
+                <SelectValue placeholder={t('tariffPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                {filteredTariffs.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
+                {filteredTariffs.map((tariffItem) => (
+                  <SelectItem key={tariffItem.id} value={tariffItem.id}>
+                    {tariffItem.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           ) : (
             <p className="text-sm text-fg-soft">
-              이 공급사의 활성 요금제가 아직 등록되지 않았습니다 (페이즈 5에서 추가 예정).
+              {t('tariffNotRegistered')}
             </p>
           )}
           <button
@@ -170,17 +176,17 @@ export function CurrentProviderForm({
             }}
             className="self-start text-sm text-fg-soft underline underline-offset-4 hover:text-fg"
           >
-            이 공급사 요금제는 모르겠어요 (공급사만 비교)
+            {t('tariffUnknown')}
           </button>
         </div>
       )}
 
       <div className="flex flex-col gap-3 pt-2">
         <Button type="button" onClick={proceedWithSelection} disabled={!canProceed}>
-          다음 — 청구서
+          {t('nextButton')}
         </Button>
         <Button type="button" variant="ghost" onClick={proceedSkip}>
-          모르겠어요 / 스킵 — 신규 가입자 케이스로 진행
+          {t('skipButton')}
         </Button>
       </div>
     </div>

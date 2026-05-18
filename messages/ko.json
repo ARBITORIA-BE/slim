@@ -40,6 +40,7 @@
       "previous": "이전",
       "previousAriaLabel": "이전 단계로",
       "cancel": "취소",
+      "stepProgressAriaLabel": "{current}/{total} 단계 완료",
       "steps": {
         "postal": "우편번호",
         "household": "가구 형태",
@@ -97,7 +98,17 @@
       "heading": "지금 어디 쓰세요?",
       "supportNote": "현재 공급사 선택은 비교 정확도를 높이지만 필수는 아닙니다. 모르거나 신규 가입이라면 스킵해도 됩니다.",
       "zeroProvidersFallback": "공급사 목록을 불러오지 못했어요. 신규 가입자로 진행하시겠어요? 비교 결과는 시장 전체 후보로 계산됩니다.",
-      "skipAsNew": "신규 가입자로 진행 (스킵)"
+      "skipAsNew": "신규 가입자로 진행 (스킵)",
+      "providerLabel": "현재 공급사",
+      "providerPlaceholder": "공급사를 선택하세요",
+      "providerAriaLabel": "현재 공급사 선택",
+      "tariffLabel": "현재 요금제",
+      "tariffPlaceholder": "요금제를 선택하세요",
+      "tariffAriaLabel": "현재 요금제 선택",
+      "tariffNotRegistered": "이 공급사의 활성 요금제가 아직 등록되지 않았습니다 (페이즈 5에서 추가 예정).",
+      "tariffUnknown": "이 공급사 요금제는 모르겠어요 (공급사만 비교)",
+      "nextButton": "다음 — 청구서",
+      "skipButton": "모르겠어요 / 스킵 — 신규 가입자 케이스로 진행"
     },
     "bill": {
       "heading": "청구서를 업로드해 정확한 사용량을 자동 입력하시겠어요?",
@@ -130,6 +141,16 @@
     "goHome": "홈으로 돌아가기",
     "affiliateFooter": "어필리에이트 수수료 관련:",
     "affiliateFooterEnd": "(페이즈 6.9 공개 예정). 비교 결과 순위는 알고리즘 기반이며 수수료에 영향받지 않습니다.",
+    "comparisonHeading": "비교 표",
+    "notFound": {
+      "linkLabel": "결과 링크 — 404",
+      "heading": "이 결과는 더 이상 존재하지 않습니다",
+      "body": "링크가 잘못 입력됐거나, 결과가 만료됐을 수 있습니다. 새로 비교를 시작하면 영구 링크가 다시 생성됩니다.",
+      "formatNote": "영구 링크 형식:",
+      "formatCode": "/r/{12자 영문/숫자/_/-}",
+      "newCompare": "새로 비교 시작",
+      "goHome": "홈으로"
+    },
     "conclusionCard": {
       "rankLabel": "1위 추천",
       "monthlyCostLabel": "월 비용 (12개월 평균)",
@@ -151,7 +172,6 @@
       },
       "confidenceAriaPrefix": "신뢰도:"
     },
-    "comparisonHeading": "비교 표",
     "table": {
       "ariaLabel": "요금제 비교 표",
       "mobileAriaLabel": "요금제 비교 (모바일)",
@@ -179,7 +199,45 @@
         "medium": "보통",
         "low": "낮음"
       },
-      "confidenceAriaPrefix": "신뢰도 "
+      "confidenceAriaPrefix": "신뢰도 ",
+      "subtitleDataUnlimited": "데이터 무제한",
+      "subtitleDataGb": "데이터 {value} GB",
+      "subtitleVoiceUnlimited": "통화 무제한",
+      "subtitleVoiceMinutes": "통화 {value}분",
+      "subtitleTvChannels": "TV {value}채널",
+      "promoNote": "프로모 {price} ({months}개월)",
+      "activationNote": "활성화비 {amount}"
+    },
+    "controls": {
+      "ariaLabel": "비교 표 정렬 및 필터",
+      "sortLabel": "정렬",
+      "filterLabel": "필터",
+      "sorts": {
+        "saving_desc": "절약액 큰 순",
+        "price_asc": "월 비용 적은 순",
+        "commitment_none_first": "약정 없음 우선"
+      },
+      "filters": {
+        "commitment_none": "약정 없음만",
+        "data_unlimited": "데이터 무제한"
+      }
+    },
+    "excludedProviders": {
+      "heading": "비교에서 제외된 공급사",
+      "body": "아래 공급사는 본 비교에 포함되지 않았습니다. 사유는 마스터 데이터 그대로 노출됩니다 (헌법 §3 P3). /data-sources 페이지에서 동일 데이터를 표 형식으로 볼 수 있습니다."
+    },
+    "betaBanner": {
+      "heading": "베타 단계: 추정값",
+      "body": "가격은 운영자가 2026-05-09에 수동 검증한 추정값입니다. 실시간 가격은 페이즈 5 이후 격상 예정.",
+      "link": "자세히: /data-sources"
+    },
+    "affiliateDisclosure": {
+      "noCommission": "수수료 없음",
+      "noCommissionDetail": "Slim은 이 공급사로부터 수수료를 받지 않습니다. 외부 링크로 직접 이동합니다.",
+      "commissionUnknown": "Slim은 변경 시 {providerName}로부터 수수료를 받습니다 (단가 비공개 — 미등록). 이 수수료는 회원님의 요금에 영향이 없습니다.",
+      "commissionKnown": "Slim은 변경 시 {providerName}로부터 {amount}의 수수료를 받습니다 — 이 금액은 회원님의 요금에 영향이 없습니다.",
+      "policyLink": "수수료 정책 자세히 보기",
+      "disclosureAriaLabel": "{providerName} 수수료 정보"
     },
     "calculationDetails": {
       "summary": "계산 근거 보기 — 사용한 가정 + 산식 + 주의사항 트리거 + 엔진 버전",

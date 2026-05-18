@@ -89,6 +89,22 @@ test('5단계 입력 → /r/[shortId] 도달 (mobile + 1000 + single + skip + bi
   expect(consoleErrors).toEqual([]);
 });
 
+// ADR-0033 §A2.8.4 옵션 (c) — locale 단언 보완.
+// /en 진입 시 핵심 텍스트가 한국어가 아님을 검증.
+// why: t() 소비가 실제로 번역된 텍스트를 렌더하는지 런타임 확인.
+test('/en 진입 → compare 페이지 핵심 텍스트가 ko 아님 (locale i18n 소비 검증)', async ({
+  page,
+}) => {
+  await page.goto('/en/compare');
+  // 영어 heading 은 "What plan do you want to compare?" 계열.
+  // 한국어 "어떤 요금제를 비교하시겠어요?" 가 없어야 함.
+  const heading = page.getByRole('heading', { level: 1 });
+  await expect(heading).toBeVisible();
+  const headingText = await heading.textContent();
+  // 한글 유니코드 블록 [가-힣] 이 없어야 함 — i18n 소비 정합 확인.
+  expect(headingText).not.toMatch(/[가-힣]/);
+});
+
 test('5단계 + provider 선택 path (Proximus) + tariff 모르겠어요 → /r/[shortId] (Sub-task 6)', async ({
   page,
 }) => {

@@ -10,6 +10,8 @@
  *   3. providers 0건 → 안내 + 스킵 단일 CTA (0건 fallback)
  *   4. providers ≥ 1 → getActiveTariffsByProviders + CurrentProviderForm props 전달
  *
+ * i18n: getTranslations (RSC) — 'compare.currentProvider' 네임스페이스.
+ *
  * 페이즈 5 NL/LU 진입 시점에 country 동적 — sessionStorage `postalCountry` 또는
  * URL search param 으로. 본 라운드는 BE 단일.
  */
@@ -17,6 +19,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 
 import {
   getActiveProviders,
@@ -34,11 +37,11 @@ import { CurrentProviderForm } from './_components/CurrentProviderForm';
  * 왜 noindex 인가?
  *   현재 공급사 선택 단계는 sessionStorage 상태에 의존하며, 단독 URL 접근 시
  *   의미 있는 콘텐츠가 없다 (공급사 목록만 있고 비교 결과는 없음).
- *   색인해도 사용자가 비교 플로우 중간 단계에 진입해 혼란을 겪을 수 있다.
- *   PLAN 3.5.2.c 참조.
+ * @i18n-allow metadata 한글은 4.5.j.4.B 대상
  */
+// @i18n-allow metadata 한글은 4.5.j.4.B 대상
 export const metadata: Metadata = {
-  title: '현재 공급사 선택',
+  title: '현재 공급사 선택', // @i18n-allow
   robots: { index: false, follow: false },
 };
 
@@ -56,6 +59,9 @@ export default async function CurrentProviderPage({
   }
   const category = rawCategory as TariffCategoryInput;
 
+  // why: RSC 이므로 getTranslations 사용 (await 필요).
+  const t = await getTranslations('compare.currentProvider');
+
   // 페이즈 3 1차: BE 단일. NL/LU 는 페이즈 5 fetcher 추가 시 country 동적 분기.
   const providers = await getActiveProviders('BE');
   const providerIds = providers.map((p) => p.id);
@@ -65,16 +71,19 @@ export default async function CurrentProviderPage({
     <CompareLayout step="current-provider">
       <header className="flex flex-col gap-2">
         <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          지금 어디 쓰세요?
+          {t('heading')}
         </h1>
         <p className="text-sm text-fg-soft">
-          현재 공급사 선택은 비교 정확도를 높이지만 필수는 아닙니다. 모르거나
-          신규 가입이라면 스킵해도 됩니다.
+          {t('supportNote')}
         </p>
       </header>
 
       {providers.length === 0 ? (
-        <ZeroProvidersFallback category={category} />
+        <ZeroProvidersFallback
+          category={category}
+          fallbackText={t('zeroProvidersFallback')}
+          skipText={t('skipAsNew')}
+        />
       ) : (
         <CurrentProviderForm
           category={category}
@@ -91,18 +100,25 @@ export default async function CurrentProviderPage({
  *
  * Sub-task 5 (`/api/compare` 풀 + 운영자 seed) 진입 후 정상 상태에선 도달 0.
  */
-function ZeroProvidersFallback({ category }: { category: TariffCategoryInput }) {
+function ZeroProvidersFallback({
+  category,
+  fallbackText,
+  skipText,
+}: {
+  category: TariffCategoryInput;
+  fallbackText: string;
+  skipText: string;
+}) {
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl border border-fg/10 bg-bg-warm/40 p-4 text-sm text-fg-soft">
-        공급사 목록을 불러오지 못했어요. 신규 가입자로 진행하시겠어요? 비교 결과는 시장
-        전체 후보로 계산됩니다.
+        {fallbackText}
       </div>
       <Link
         href={`/compare/${category}/bill`}
         className="inline-flex items-center justify-center self-start rounded-full bg-fg px-6 py-3 text-sm font-medium text-bg transition hover:bg-primary"
       >
-        신규 가입자로 진행 (스킵)
+        {skipText}
       </Link>
     </div>
   );

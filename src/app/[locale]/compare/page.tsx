@@ -9,104 +9,95 @@
  * 데이터 정직 표시).
  *
  * ADR-0033 §T1: [locale] 세그먼트 — setRequestLocale 추가.
+ * i18n: getTranslations (RSC) — 'compare' 네임스페이스.
  */
 
 import type { Metadata } from 'next';
 import { Smartphone, Tv, Wifi, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+// @i18n-allow metadata 한글은 4.5.j.4.B 대상
 export const metadata: Metadata = {
-  title: '요금제 비교 시작',
+  title: '요금제 비교 시작', // @i18n-allow
   description:
-    '모바일, 인터넷, 인터넷+TV — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.',
+    '모바일, 인터넷, 인터넷+TV — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.', // @i18n-allow
   alternates: {
     canonical: '/compare',
   },
 };
 import { TARIFF_CATEGORIES, type TariffCategoryInput } from '@/types/comparison-input';
 
-interface CategoryMeta {
-  category: TariffCategoryInput;
-  label: string;
-  description: string;
-  icon: LucideIcon;
-}
+type CategoryIconKey = TariffCategoryInput;
 
-const CATEGORIES: CategoryMeta[] = [
-  {
-    category: 'mobile',
-    label: '모바일',
-    description: '월 €15~€35, 한 회선당',
-    icon: Smartphone,
-  },
-  {
-    category: 'internet_fixed',
-    label: '인터넷',
-    description: '월 €35~€70, 가정용 광/케이블',
-    icon: Wifi,
-  },
-  {
-    category: 'bundle_internet_tv',
-    label: '인터넷 + TV',
-    description: '월 €60~€100, 번들 약정',
-    icon: Tv,
-  },
-];
+const CATEGORY_ICONS: Record<CategoryIconKey, LucideIcon> = {
+  mobile: Smartphone,
+  internet_fixed: Wifi,
+  bundle_internet_tv: Tv,
+};
 
 // TARIFF_CATEGORIES enum 정합성 자가 점검 (개발자 안전망)
-const declaredCategories = new Set<string>(CATEGORIES.map((c) => c.category));
+const iconKeys = new Set<string>(Object.keys(CATEGORY_ICONS));
 for (const c of TARIFF_CATEGORIES) {
-  if (!declaredCategories.has(c)) {
-    throw new Error(`/compare: TARIFF_CATEGORIES "${c}" 누락 — 카드 추가 필요`);
+  if (!iconKeys.has(c)) {
+    throw new Error(`/compare: TARIFF_CATEGORIES "${c}" 아이콘 누락 — CATEGORY_ICONS 추가 필요`); // @i18n-allow 개발자 에러 메시지
   }
 }
 
-export default function ComparePage() {
-  // setRequestLocale은 [locale]/layout.tsx에서 처리됨 (next-intl v3 패턴)
+export default async function ComparePage() {
+  // why: RSC 이므로 getTranslations 사용. 'compare' 네임스페이스.
+  const t = await getTranslations('compare');
+
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-4 py-10 md:px-6 md:py-16">
       <header className="flex flex-col gap-3">
-        <span className="text-sm text-muted">5단계 · 5분</span>
+        <span className="text-sm text-muted">{t('stepBadge')}</span>
         <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-          어떤 요금제를 비교하시겠어요?
+          {t('heading')}
         </h1>
         <p className="text-base text-fg-soft">
-          현재 벨기에(BE) 통신 비교를 지원합니다. 네덜란드(NL) / 룩셈부르크(LU)는 페이즈 3에서 추가 예정입니다.
+          {t('supportNote')}
         </p>
       </header>
 
       <ul className="grid grid-cols-1 gap-4 md:auto-rows-fr md:grid-cols-2">
-        {CATEGORIES.map(({ category, label, description, icon: Icon }) => (
-          <li key={category}>
-            <Link
-              href={`/compare/${category}/postal`}
-              className="block rounded-2xl outline-none ring-offset-bg focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label={`${label} 비교 시작`}
-            >
-              <Card className="flex h-full flex-col justify-between transition hover:border-primary/40 hover:bg-bg-warm/70">
-                <CardHeader className="flex flex-row items-center gap-4 pb-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Icon className="h-6 w-6" aria-hidden />
-                  </span>
-                  <div className="flex flex-col gap-1">
-                    <CardTitle>{label}</CardTitle>
-                    <CardDescription className="line-clamp-2 min-h-[2.5em]">{description}</CardDescription>
-                  </div>
-                </CardHeader>
-                <p className="text-xs text-muted">평균 절약액 미리보기는 베타 후 노출 예정</p>
-              </Card>
-            </Link>
-          </li>
-        ))}
+        {TARIFF_CATEGORIES.map((category) => {
+          const Icon = CATEGORY_ICONS[category];
+          // why: 타입 단언 없이 접근 — TARIFF_CATEGORIES 와 CATEGORY_ICONS 키가 정합함을 위 점검이 보장.
+          const label = t(`categories.${category}.label` as Parameters<typeof t>[0]);
+          const description = t(`categories.${category}.description` as Parameters<typeof t>[0]);
+          return (
+            <li key={category}>
+              <Link
+                href={`/compare/${category}/postal`}
+                className="block rounded-2xl outline-none ring-offset-bg focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label={t('ariaStart', { label })}
+              >
+                <Card className="flex h-full flex-col justify-between transition hover:border-primary/40 hover:bg-bg-warm/70">
+                  <CardHeader className="flex flex-row items-center gap-4 pb-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Icon className="h-6 w-6" aria-hidden />
+                    </span>
+                    <div className="flex flex-col gap-1">
+                      <CardTitle>{label}</CardTitle>
+                      <CardDescription className="line-clamp-2 min-h-[2.5em]">{description}</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <p className="text-xs text-muted">{t('savingsPreviewPending')}</p>
+                </Card>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
 
       <footer className="border-t border-fg/10 pt-6 text-xs text-muted">
-        시작 시 본 사이트의{' '}
+        {t('termsNotice')}{' '}
         <Link href="/legal/terms" className="underline underline-offset-4 hover:text-fg-soft">
-          이용 약관
+          {t('termsLink')}
         </Link>{' '}
-        에 동의한 것으로 간주됩니다 (GDPR Art. 6(1)(b) 계약 본질).
+        {t('termsNoticeEnd')}
       </footer>
     </main>
   );

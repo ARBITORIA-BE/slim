@@ -8,6 +8,8 @@
  *   - NL PC6 입력 시 자동 대문자화 (UI 친화 — schema는 대문자 강제, UI에서 흡수)
  *   - NL/LU 비교 후보는 페이즈 5 fetcher 추가 전까지 0 — 결과 페이지가 정직 안내
  *
+ * i18n: useTranslations (client 컴포넌트) — 'compare.postal' 네임스페이스.
+ *
  * 학습자 메모 (RHF + Zod discriminatedUnion):
  *   - formSchema = postalCodeSchema (전체 union) — useForm<FormValues> 가
  *     country 분기 자동 추론
@@ -18,6 +20,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { use, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
+import { useTranslations } from 'next-intl';
 
 import { useRouter } from '@/i18n/navigation';
 
@@ -53,34 +56,11 @@ import { useCompareSession } from '../_components/useCompareSession';
 const formSchema = postalCodeSchema;
 type FormValues = z.infer<typeof formSchema>;
 
-interface CountryHint {
-  label: string;
-  placeholder: string;
-  description: string;
-  maxLength: number;
-}
-
-const COUNTRY_HINTS: Record<PostalCountry, CountryHint> = {
-  BE: {
-    label: '벨기에 (BE)',
-    placeholder: '예: 1000',
-    description: '벨기에 우편번호는 1000~9999 사이의 4자리 숫자입니다.',
-    maxLength: 4,
-  },
-  NL: {
-    label: '네덜란드 (NL)',
-    placeholder: '예: 1011 또는 1011 AB',
-    description:
-      '네덜란드 우편번호는 4자리 숫자 (PC4) 또는 4자리+공백+대문자 2자 (PC6) 입니다. 비교 후보는 페이즈 5에서 추가됩니다.',
-    maxLength: 7, // "1011 AB"
-  },
-  LU: {
-    label: '룩셈부르크 (LU)',
-    placeholder: '예: 1000',
-    description:
-      '룩셈부르크 우편번호는 1000~9999 사이의 4자리 숫자입니다. 비교 후보는 페이즈 5에서 추가됩니다.',
-    maxLength: 4,
-  },
+/** maxLength 는 번역 키 없이 고정값 — 우편번호 형식은 국가 규격이므로 i18n 무관. */
+const COUNTRY_MAX_LENGTH: Record<PostalCountry, number> = {
+  BE: 4,
+  NL: 7, // "1011 AB"
+  LU: 4,
 };
 
 export default function PostalPage({
@@ -88,6 +68,10 @@ export default function PostalPage({
 }: {
   params: Promise<{ category: string }>;
 }) {
+  // why: useTranslations 은 client 컴포넌트에서 동기 호출.
+  // 'compare.postal' 네임스페이스.
+  const t = useTranslations('compare.postal');
+
   const router = useRouter();
   const { category: rawCategory } = use(params);
 
@@ -149,17 +133,20 @@ export default function PostalPage({
     router.push(`/compare/${category}/household`);
   };
 
-  const hint = COUNTRY_HINTS[watchedCountry];
+  const maxLength = COUNTRY_MAX_LENGTH[watchedCountry];
+  // why: t() 로 국가별 placeholder/description 조회.
+  // 키 경로: compare.postal.countries.BE.placeholder 등
+  const placeholder = t(`countries.${watchedCountry}.placeholder` as Parameters<typeof t>[0]);
+  const description = t(`countries.${watchedCountry}.description` as Parameters<typeof t>[0]);
 
   return (
     <CompareLayout step="postal">
       <header className="flex flex-col gap-2">
         <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          어디 사세요?
+          {t('heading')}
         </h1>
         <p className="text-sm text-fg-soft">
-          국가를 선택한 후 우편번호를 입력하세요. 현재 벨기에(BE) 통신 비교를 지원합니다.
-          네덜란드(NL) / 룩셈부르크(LU)는 페이즈 5 공급사 추가 시점까지 비교 후보가 없을 수 있습니다.
+          {t('supportNote')}
         </p>
       </header>
 
@@ -170,17 +157,17 @@ export default function PostalPage({
             name="country"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>국가</FormLabel>
+                <FormLabel>{t('countryLabel')}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger aria-label="국가 선택">
+                    <SelectTrigger aria-label={t('countryAriaLabel')}>
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {POSTAL_COUNTRIES.map((c) => (
                       <SelectItem key={c} value={c}>
-                        {COUNTRY_HINTS[c].label}
+                        {t(`countries.${c}.label` as Parameters<typeof t>[0])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -195,12 +182,12 @@ export default function PostalPage({
             name="postalCode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>우편번호</FormLabel>
+                <FormLabel>{t('postalCodeLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     inputMode={watchedCountry === 'NL' ? 'text' : 'numeric'}
-                    maxLength={hint.maxLength}
-                    placeholder={hint.placeholder}
+                    maxLength={maxLength}
+                    placeholder={placeholder}
                     autoComplete="postal-code"
                     autoFocus
                     value={field.value ?? ''}
@@ -215,14 +202,14 @@ export default function PostalPage({
                     }}
                   />
                 </FormControl>
-                <FormDescription>{hint.description}</FormDescription>
+                <FormDescription>{description}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
           <Button type="submit" disabled={!form.formState.isValid}>
-            다음 — 가구 형태
+            {t('nextButton')}
           </Button>
         </form>
       </Form>

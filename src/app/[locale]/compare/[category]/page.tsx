@@ -14,10 +14,11 @@ import { TARIFF_CATEGORIES, type TariffCategoryInput } from '@/types/comparison-
  *   미지원 카테고리는 robots noindex (404 redirect 전에 메타가 먼저 평가되는 경우 대비).
  */
 // ADR-0005 §Amendment 1 (2026-05-16): landline 제거 → 3값
+// @i18n-allow metadata 한글은 4.5.j.4.B 대상
 const CATEGORY_LABELS: Record<TariffCategoryInput, string> = {
-  mobile: '모바일 요금제',
-  internet_fixed: '고정 인터넷 요금제',
-  bundle_internet_tv: '인터넷+TV 번들 요금제',
+  mobile: '모바일 요금제', // @i18n-allow
+  internet_fixed: '고정 인터넷 요금제', // @i18n-allow
+  bundle_internet_tv: '인터넷+TV 번들 요금제', // @i18n-allow
 };
 
 export async function generateMetadata({
@@ -39,7 +40,7 @@ export async function generateMetadata({
 
   return {
     title: label,
-    description: `${label} 비교 — 벨기에 통신사를 5분 안에 비교해 최적 요금제를 찾으세요.`,
+    description: `${label} 비교 — 벨기에 통신사를 5분 안에 비교해 최적 요금제를 찾으세요.`, // @i18n-allow metadata 4.5.j.4.B 대상
     alternates: {
       canonical: `/compare/${cat}`,
     },

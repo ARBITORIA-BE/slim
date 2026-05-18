@@ -4,6 +4,8 @@
  * /compare/[category]/household — 단계 2 가구 형태 (ADR-0016 §T4).
  *
  * RadioGroup 카드. 모바일 (375px) 세로 스택 / md: 이상 가로 그리드 3열.
+ *
+ * i18n: useTranslations (client 컴포넌트) — 'compare.household' 네임스페이스.
  */
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +13,7 @@ import { User, Users, UsersRound, type LucideIcon } from 'lucide-react';
 import { use, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useTranslations } from 'next-intl';
 
 import { useRouter } from '@/i18n/navigation';
 
@@ -39,29 +42,19 @@ import { useCompareSession } from '../_components/useCompareSession';
 const formSchema = z.object({ householdType: householdTypeSchema });
 type FormValues = z.infer<typeof formSchema>;
 
-interface HouseholdMeta {
-  value: HouseholdTypeInput;
-  label: string;
-  description: string;
-  icon: LucideIcon;
-}
+type HouseholdOptionKey = HouseholdTypeInput;
 
-const OPTIONS: HouseholdMeta[] = [
-  { value: 'single', label: '혼자', description: '1인 가구', icon: User },
-  { value: 'couple', label: '커플', description: '2인 가구', icon: Users },
-  {
-    value: 'family_3_plus',
-    label: '가족',
-    description: '3인 이상 가구',
-    icon: UsersRound,
-  },
-];
+const OPTION_ICONS: Record<HouseholdOptionKey, LucideIcon> = {
+  single: User,
+  couple: Users,
+  family_3_plus: UsersRound,
+};
 
 // HOUSEHOLD_TYPES enum 정합성 자가 점검
-const declaredOptions = new Set<string>(OPTIONS.map((o) => o.value));
+const iconKeys = new Set<string>(Object.keys(OPTION_ICONS));
 for (const v of HOUSEHOLD_TYPES) {
-  if (!declaredOptions.has(v)) {
-    throw new Error(`/household: HOUSEHOLD_TYPES "${v}" 누락`);
+  if (!iconKeys.has(v)) {
+    throw new Error(`/household: HOUSEHOLD_TYPES "${v}" 아이콘 누락`); // @i18n-allow 개발자 에러 메시지 — 사용자 미노출
   }
 }
 
@@ -70,6 +63,9 @@ export default function HouseholdPage({
 }: {
   params: Promise<{ category: string }>;
 }) {
+  // why: useTranslations 은 client 컴포넌트에서 동기 호출.
+  const t = useTranslations('compare.household');
+
   const router = useRouter();
   const { category: rawCategory } = use(params);
 
@@ -105,11 +101,10 @@ export default function HouseholdPage({
     <CompareLayout step="household">
       <header className="flex flex-col gap-2">
         <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          어떻게 사세요?
+          {t('heading')}
         </h1>
         <p className="text-sm text-fg-soft">
-          가구 형태를 선택하면 평균 사용량으로 추정합니다. 정확한 사용량은
-          페이즈 3에서 청구서 OCR로 자동 입력 예정입니다.
+          {t('supportNote')}
         </p>
       </header>
 
@@ -126,7 +121,11 @@ export default function HouseholdPage({
                     value={field.value}
                     className="grid grid-cols-1 gap-3 md:grid-cols-3"
                   >
-                    {OPTIONS.map(({ value, label, description, icon: Icon }) => {
+                    {HOUSEHOLD_TYPES.map((value) => {
+                      const Icon = OPTION_ICONS[value];
+                      // why: t() 로 label/description 조회 — 키: compare.household.options.{value}.label
+                      const label = t(`options.${value}.label` as Parameters<typeof t>[0]);
+                      const description = t(`options.${value}.description` as Parameters<typeof t>[0]);
                       const id = `household-${value}`;
                       const isSelected = field.value === value;
                       return (
@@ -159,7 +158,7 @@ export default function HouseholdPage({
           />
 
           <Button type="submit" disabled={!form.formState.isValid}>
-            다음 — 현재 공급사
+            {t('nextButton')}
           </Button>
         </form>
       </Form>

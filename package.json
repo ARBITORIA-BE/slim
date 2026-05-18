@@ -32,6 +32,7 @@
     "harness:perf": "tsx scripts/harness/perf-budget.ts",
     "harness:load": "tsx scripts/harness/load-smoke.ts",
     "harness:transparency": "tsx scripts/harness/transparency-audit.ts",
+    "harness:i18n": "tsx scripts/harness/i18n-consumption.ts",
     "harness:all": "pnpm harness:plan && pnpm harness:data && pnpm harness:bias",
     "prepare": "husky"
   },

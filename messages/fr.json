@@ -41,6 +41,7 @@
       "previous": "Précédent",
       "previousAriaLabel": "Retour à l'étape précédente",
       "cancel": "Annuler",
+      "stepProgressAriaLabel": "Étape {current}/{total} terminée",
       "steps": {
         "postal": "Code postal",
         "household": "Types de meubles",
@@ -98,7 +99,17 @@
       "heading": "Où l'utilisez-vous actuellement ?",
       "supportNote": "Le choix d'un fournisseur permet d'améliorer la précision de la comparaison, mais n'est pas obligatoire. Si vous ne savez pas ou si vous êtes un nouvel utilisateur, vous pouvez passer cette étape.",
       "zeroProvidersFallback": "Nous n'avons pas pu charger la liste des fournisseurs. Souhaitez-vous vous inscrire en tant que nouvel abonné ? Les résultats de la comparaison tiendront compte de l'ensemble des offres disponibles sur le marché.",
-      "skipAsNew": "En tant que nouvel abonné (ignorer)"
+      "skipAsNew": "En tant que nouvel abonné (ignorer)",
+      "providerLabel": "[fr] 현재 공급사",
+      "providerPlaceholder": "[fr] 공급사를 선택하세요",
+      "providerAriaLabel": "[fr] 현재 공급사 선택",
+      "tariffLabel": "[fr] 현재 요금제",
+      "tariffPlaceholder": "[fr] 요금제를 선택하세요",
+      "tariffAriaLabel": "[fr] 현재 요금제 선택",
+      "tariffNotRegistered": "[fr] 이 공급사의 활성 요금제가 아직 등록되지 않았습니다 (페이즈 5에서 추가 예정).",
+      "tariffUnknown": "[fr] 이 공급사 요금제는 모르겠어요 (공급사만 비교)",
+      "nextButton": "[fr] 다음 — 청구서",
+      "skipButton": "[fr] 모르겠어요 / 스킵 — 신규 가입자 케이스로 진행"
     },
     "bill": {
       "heading": "Souhaitez-vous télécharger votre facture pour que votre consommation soit automatiquement renseignée avec précision ?",
@@ -180,7 +191,14 @@
         "medium": "En général",
         "low": "Faible"
       },
-      "confidenceAriaPrefix": "Fiabilité "
+      "confidenceAriaPrefix": "Fiabilité ",
+      "subtitleDataUnlimited": "[fr] 데이터 무제한",
+      "subtitleDataGb": "[fr] 데이터 {value} GB",
+      "subtitleVoiceUnlimited": "[fr] 통화 무제한",
+      "subtitleVoiceMinutes": "[fr] 통화 {value}분",
+      "subtitleTvChannels": "[fr] TV {value}채널",
+      "promoNote": "[fr] 프로모 {price} ({months}개월)",
+      "activationNote": "[fr] 활성화비 {amount}"
     },
     "calculationDetails": {
       "summary": "Afficher les bases de calcul — Hypothèses utilisées + Formules + Remarques + Version du moteur",
@@ -244,6 +262,46 @@
       "triggerNote": "Nous avons réévalué chaque règle à la lumière des données enregistrées relatives aux forfaits et des hypothèses de consommation (ADR-0010 §T6).",
       "engineHeading": "Version du moteur",
       "engineNote": "Le lien permanent est reproduit dans cette version (ADR-0010 §T7 + ADR-0007 §T9)."
+    },
+    "notFound": {
+      "linkLabel": "[fr] 결과 링크 — 404",
+      "heading": "[fr] 이 결과는 더 이상 존재하지 않습니다",
+      "body": "[fr] 링크가 잘못 입력됐거나, 결과가 만료됐을 수 있습니다. 새로 비교를 시작하면 영구 링크가 다시 생성됩니다.",
+      "formatNote": "[fr] 영구 링크 형식:",
+      "formatCode": "/r/{12 caractères lettres/chiffres/_/-}",
+      "newCompare": "[fr] 새로 비교 시작",
+      "goHome": "[fr] 홈으로"
+    },
+    "controls": {
+      "ariaLabel": "[fr] 비교 표 정렬 및 필터",
+      "sortLabel": "[fr] 정렬",
+      "filterLabel": "[fr] 필터",
+      "sorts": {
+        "saving_desc": "[fr] 절약액 큰 순",
+        "price_asc": "[fr] 월 비용 적은 순",
+        "commitment_none_first": "[fr] 약정 없음 우선"
+      },
+      "filters": {
+        "commitment_none": "[fr] 약정 없음만",
+        "data_unlimited": "[fr] 데이터 무제한"
+      }
+    },
+    "excludedProviders": {
+      "heading": "[fr] 비교에서 제외된 공급사",
+      "body": "[fr] 아래 공급사는 본 비교에 포함되지 않았습니다. 사유는 마스터 데이터 그대로 노출됩니다."
+    },
+    "betaBanner": {
+      "heading": "[fr] 베타 단계: 추정값",
+      "body": "[fr] 가격은 운영자가 2026-05-09에 수동 검증한 추정값입니다. 실시간 가격은 페이즈 5 이후 격상 예정.",
+      "link": "[fr] 자세히: /data-sources"
+    },
+    "affiliateDisclosure": {
+      "noCommission": "[fr] 수수료 없음",
+      "noCommissionDetail": "[fr] Slim은 이 공급사로부터 수수료를 받지 않습니다. 외부 링크로 직접 이동합니다.",
+      "commissionUnknown": "[fr] Slim은 변경 시 {providerName}로부터 수수료를 받습니다 (단가 비공개).",
+      "commissionKnown": "[fr] Slim은 변경 시 {providerName}로부터 {amount}의 수수료를 받습니다.",
+      "policyLink": "[fr] 수수료 정책 자세히 보기",
+      "disclosureAriaLabel": "Informations sur la commission pour {providerName}"
     }
   },
   "legal": {

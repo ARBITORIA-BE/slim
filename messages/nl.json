@@ -41,6 +41,7 @@
       "previous": "Vorige",
       "previousAriaLabel": "Terug naar de vorige stap",
       "cancel": "Annuleren",
+      "stepProgressAriaLabel": "Stap {current}/{total} voltooid",
       "steps": {
         "postal": "Postcode",
         "household": "Meubelvorm",
@@ -98,7 +99,17 @@
       "heading": "Waar gebruikt u het momenteel?",
       "supportNote": "Het selecteren van een leverancier verhoogt de nauwkeurigheid van de vergelijking, maar is niet verplicht. Als u het niet weet of een nieuwe klant bent, kunt u deze stap overslaan.",
       "zeroProvidersFallback": "De lijst met aanbieders kan niet worden geladen. Wilt u doorgaan als nieuwe klant? De vergelijkingsresultaten worden berekend op basis van alle aanbieders op de markt.",
-      "skipAsNew": "Doorgaan als nieuwe gebruiker (overslaan)"
+      "skipAsNew": "Doorgaan als nieuwe gebruiker (overslaan)",
+      "providerLabel": "[nl] 현재 공급사",
+      "providerPlaceholder": "[nl] 공급사를 선택하세요",
+      "providerAriaLabel": "[nl] 현재 공급사 선택",
+      "tariffLabel": "[nl] 현재 요금제",
+      "tariffPlaceholder": "[nl] 요금제를 선택하세요",
+      "tariffAriaLabel": "[nl] 현재 요금제 선택",
+      "tariffNotRegistered": "[nl] 이 공급사의 활성 요금제가 아직 등록되지 않았습니다 (페이즈 5에서 추가 예정).",
+      "tariffUnknown": "[nl] 이 공급사 요금제는 모르겠어요 (공급사만 비교)",
+      "nextButton": "[nl] 다음 — 청구서",
+      "skipButton": "[nl] 모르겠어요 / 스킵 — 신규 가입자 케이스로 진행"
     },
     "bill": {
       "heading": "Wilt u uw factuur uploaden om uw exacte verbruik automatisch in te vullen?",
@@ -180,7 +191,14 @@
         "medium": "meestal",
         "low": "Laag"
       },
-      "confidenceAriaPrefix": "betrouwbaarheid "
+      "confidenceAriaPrefix": "betrouwbaarheid ",
+      "subtitleDataUnlimited": "[nl] 데이터 무제한",
+      "subtitleDataGb": "[nl] 데이터 {value} GB",
+      "subtitleVoiceUnlimited": "[nl] 통화 무제한",
+      "subtitleVoiceMinutes": "[nl] 통화 {value}분",
+      "subtitleTvChannels": "[nl] TV {value}채널",
+      "promoNote": "[nl] 프로모 {price} ({months}개월)",
+      "activationNote": "[nl] 활성화비 {amount}"
     },
     "calculationDetails": {
       "summary": "Berekeningsbasis bekijken — Gebruikte aannames + Formule + Opmerkingen Triggers + Engineversie",
@@ -244,6 +262,46 @@
       "triggerNote": "We hebben elke regel opnieuw beoordeeld op basis van de opgeslagen tariefgegevens en verbruiksveronderstellingen (ADR-0010 §T6).",
       "engineHeading": "Motorversie",
       "engineNote": "De permanente link wordt in deze versie weergegeven (ADR-0010 §T7 + ADR-0007 §T9)."
+    },
+    "notFound": {
+      "linkLabel": "[nl] 결과 링크 — 404",
+      "heading": "[nl] 이 결과는 더 이상 존재하지 않습니다",
+      "body": "[nl] 링크가 잘못 입력됐거나, 결과가 만료됐을 수 있습니다. 새로 비교를 시작하면 영구 링크가 다시 생성됩니다.",
+      "formatNote": "[nl] 영구 링크 형식:",
+      "formatCode": "/r/{12 tekens letters/cijfers/_/-}",
+      "newCompare": "[nl] 새로 비교 시작",
+      "goHome": "[nl] 홈으로"
+    },
+    "controls": {
+      "ariaLabel": "[nl] 비교 표 정렬 및 필터",
+      "sortLabel": "[nl] 정렬",
+      "filterLabel": "[nl] 필터",
+      "sorts": {
+        "saving_desc": "[nl] 절약액 큰 순",
+        "price_asc": "[nl] 월 비용 적은 순",
+        "commitment_none_first": "[nl] 약정 없음 우선"
+      },
+      "filters": {
+        "commitment_none": "[nl] 약정 없음만",
+        "data_unlimited": "[nl] 데이터 무제한"
+      }
+    },
+    "excludedProviders": {
+      "heading": "[nl] 비교에서 제외된 공급사",
+      "body": "[nl] 아래 공급사는 본 비교에 포함되지 않았습니다. 사유는 마스터 데이터 그대로 노출됩니다."
+    },
+    "betaBanner": {
+      "heading": "[nl] 베타 단계: 추정값",
+      "body": "[nl] 가격은 운영자가 2026-05-09에 수동 검증한 추정값입니다. 실시간 가격은 페이즈 5 이후 격상 예정.",
+      "link": "[nl] 자세히: /data-sources"
+    },
+    "affiliateDisclosure": {
+      "noCommission": "[nl] 수수료 없음",
+      "noCommissionDetail": "[nl] Slim은 이 공급사로부터 수수료를 받지 않습니다. 외부 링크로 직접 이동합니다.",
+      "commissionUnknown": "[nl] Slim은 변경 시 {providerName}로부터 수수료를 받습니다 (단가 비공개).",
+      "commissionKnown": "[nl] Slim은 변경 시 {providerName}로부터 {amount}의 수수료를 받습니다.",
+      "policyLink": "[nl] 수수료 정책 자세히 보기",
+      "disclosureAriaLabel": "Commissie-informatie voor {providerName}"
     }
   },
   "legal": {

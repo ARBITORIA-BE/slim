@@ -2,22 +2,19 @@
  * ComparisonTable — 2층 비교 표 (PLAN 3.2, ADR-0021 §T2 2층 + §T5 caveats 매트릭스).
  *
  * 디자인:
- *   - Desktop (md:): native `<table>` — 정보 밀도 ↑ (다나와 스타일).
- *   - Mobile (<md): 카드 stack — 한 행 = 한 카드, 6 필드 수직.
- *   - 6 컬럼: 순위 / 공급사·요금제 / 월 비용 / 약정 / 절약 / 신뢰도.
- *   - 카테고리별 보조 텍스트 (subtitle): 공급사·요금제 셀 아래 1줄.
- *   - 프로모 / 활성화비 표기는 월 비용 셀 보조로 (T5 매트릭스 정합).
+ *   - Desktop (md:): native `<table>` — 정보 밀도 ↑.
+ *   - Mobile (<md): 카드 stack.
+ *
+ * i18n: getTranslations (RSC) — 'result.table' 네임스페이스.
  *
  * 다크 패턴 회피 (헌법 §8 #3 + ADR-0021 §T5):
  *   - 색상 neutral. 절약액 강조 색상 X.
- *   - 음의 절약 (현재 요금제가 더 저렴) 도 정직 표기.
- *
- * 후속: 카테고리별 데이터/Mbps 별도 컬럼화는 비교 데이터 풍부해진 라운드에서 평가.
  */
 
 import type { ResultRowData } from '@/db/queries/comparison';
 import type { Confidence } from '@/db/schema/tariff_snapshot';
 import type { TariffCategory } from '@/db/schema/tariff';
+import { getTranslations } from 'next-intl/server';
 
 import { formatRelativeTime } from '../_lib/stale';
 import { AffiliateDisclosureLine } from './AffiliateDisclosureLine';
@@ -26,39 +23,7 @@ import { AffiliateDisclosureLine } from './AffiliateDisclosureLine';
 
 export interface ComparisonTableProps {
   readonly rows: readonly ResultRowData[];
-  /**
-   * RSC 가 호출 시점 Date 주입 — `revalidate=3600` ISR 사이클 안에서 결정적 표시.
-   * 테스트에서 고정 시각 주입 가능.
-   */
   readonly now?: Date;
-}
-
-function SourceLink({
-  href,
-  fetchedAt,
-  now,
-}: {
-  readonly href: string;
-  readonly fetchedAt: Date;
-  readonly now: Date;
-}) {
-  const relative = formatRelativeTime(fetchedAt, now);
-  return (
-    <a
-      href={href}
-      target="_blank"
-      // rel="nofollow noopener" — 어트리뷰션 신호 X (헌법 P3 + ADR-0021 §T2 3층),
-      // noopener 보안 (Tab nabbing 회피).
-      rel="nofollow noopener"
-      className="inline-flex flex-col items-start text-xs text-primary underline-offset-4 hover:underline"
-    >
-      <span>
-        원본 보기 <span aria-hidden="true">↗</span>
-        <span className="sr-only"> (새 창에서 열림)</span>
-      </span>
-      <span className="text-fg-soft">마지막 확인: {relative}</span>
-    </a>
-  );
 }
 
 // ─── 표시 helper ──────────────────────────────────────────────────────────
@@ -71,132 +36,174 @@ function formatEuro(cents: number): string {
   return sub === 0 ? `${sign}€${euros}` : `${sign}€${euros}.${sub.toString().padStart(2, '0')}`;
 }
 
-function formatCommitment(months: number): string {
-  if (months === 0) return '없음';
-  return `${months}개월`;
+type TableTranslator = Awaited<ReturnType<typeof getTranslations<'result.table'>>>;
+
+function formatCommitment(months: number, t: TableTranslator): string {
+  if (months === 0) return t('commitmentNone');
+  return t('commitmentMonths', { months });
 }
 
 function formatSubtitle(
   category: TariffCategory,
   attrs: Record<string, unknown>,
+  t: TableTranslator,
 ): string {
   const parts: string[] = [];
   if (category === 'mobile') {
     const d = attrs['data_gb'];
-    if (d === 'unlimited') parts.push('데이터 무제한');
-    else if (typeof d === 'number') parts.push(`데이터 ${d} GB`);
+    if (d === 'unlimited') parts.push(t('subtitleDataUnlimited'));
+    else if (typeof d === 'number') parts.push(t('subtitleDataGb', { value: d }));
     const v = attrs['voice_minutes'];
-    if (v === 'unlimited') parts.push('통화 무제한');
-    else if (typeof v === 'number') parts.push(`통화 ${v}분`);
+    if (v === 'unlimited') parts.push(t('subtitleVoiceUnlimited'));
+    else if (typeof v === 'number') parts.push(t('subtitleVoiceMinutes', { value: v }));
   } else if (
     category === 'internet_fixed' ||
     category === 'bundle_internet_tv'
   ) {
     const down = attrs['download_mbps'];
     if (typeof down === 'number') parts.push(`${down} Mbps`);
-    if (attrs['unlimited_data'] === true) parts.push('데이터 무제한');
+    if (attrs['unlimited_data'] === true) parts.push(t('subtitleDataUnlimited'));
     if (category === 'bundle_internet_tv') {
       const tv = attrs['tv_channels'];
-      if (typeof tv === 'number') parts.push(`TV ${tv}채널`);
+      if (typeof tv === 'number') parts.push(t('subtitleTvChannels', { value: tv }));
     }
   }
-  // ADR-0005 §Amendment 1 (2026-05-16): landline 분기 제거 (D-1 흔적 제거)
+  // ADR-0005 §Amendment 1 (2026-05-16): landline 분기 제거
   return parts.join(' · ');
 }
 
 function formatPromoNote(
   promoPriceCents: number | null,
   promoMonths: number | null,
+  t: TableTranslator,
 ): string | null {
   if (promoPriceCents === null || promoMonths === null) return null;
-  return `프로모 ${formatEuro(promoPriceCents)} (${promoMonths}개월)`;
+  return t('promoNote', { price: formatEuro(promoPriceCents), months: promoMonths });
 }
 
-function formatActivationNote(activationFeeCents: number): string | null {
+function formatActivationNote(activationFeeCents: number, t: TableTranslator): string | null {
   if (activationFeeCents <= 0) return null;
-  return `활성화비 ${formatEuro(activationFeeCents)}`;
+  return t('activationNote', { amount: formatEuro(activationFeeCents) });
 }
 
-function formatSaving(cents: number): string {
+function formatSaving(cents: number, t: TableTranslator): string {
   if (cents > 0) return `+${formatEuro(cents)}`;
-  if (cents === 0) return '동일';
+  if (cents === 0) return t('savingZero');
   return formatEuro(cents);
 }
 
-const CONFIDENCE_LABEL: Record<Confidence, string> = {
-  high: '높음',
-  medium: '보통',
-  low: '낮음',
-};
+function SourceLink({
+  href,
+  fetchedAt,
+  now,
+  label,
+  newTabLabel,
+  checkedLabel,
+}: {
+  readonly href: string;
+  readonly fetchedAt: Date;
+  readonly now: Date;
+  readonly label: string;
+  readonly newTabLabel: string;
+  readonly checkedLabel: string;
+}) {
+  const relative = formatRelativeTime(fetchedAt, now);
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="nofollow noopener"
+      className="inline-flex flex-col items-start text-xs text-primary underline-offset-4 hover:underline"
+    >
+      <span>
+        {label} <span aria-hidden="true">↗</span>
+        <span className="sr-only"> {newTabLabel}</span>
+      </span>
+      <span className="text-fg-soft">{checkedLabel} {relative}</span>
+    </a>
+  );
+}
 
-function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
+// why: confidence prop 제거 — 레이블을 외부에서 조회해 label 로만 받음.
+// confidence 값 자체는 aria-label / 표시 텍스트에 불필요. label 이 이미 정보 포함.
+function ConfidenceBadge({ label }: { label: string }) {
   return (
     // PLAN 3.7.b — 인쇄 시 bg 안 보임 → print:border-current 로 배지 경계선 유지
-    // (neutral 테두리, 빨강/노랑 경고색 없음 — 헌법 §8 #3).
     <span
-      aria-label={`신뢰도 ${CONFIDENCE_LABEL[confidence]}`}
+      aria-label={label}
       className="inline-flex items-center gap-1 rounded-full border border-fg/15 bg-bg px-2 py-0.5 text-xs text-fg-soft print:border-current"
     >
       <span aria-hidden="true">●</span>
-      {CONFIDENCE_LABEL[confidence]}
+      {label}
     </span>
   );
 }
 
 // ─── 컴포넌트 ─────────────────────────────────────────────────────────────
 
-export function ComparisonTable({ rows, now }: ComparisonTableProps) {
+export async function ComparisonTable({ rows, now }: ComparisonTableProps) {
+  // why: RSC 이므로 getTranslations 사용.
+  const t = await getTranslations('result.table');
   const ref = now ?? new Date();
+
   if (rows.length === 0) {
     return (
       <p className="rounded-2xl border border-fg/10 bg-bg-warm/40 p-6 text-sm text-fg-soft">
-        해당 조건에 맞는 비교 결과가 없습니다. 위 필터를 조정해 보세요.
+        {t('emptyMessage')}
       </p>
     );
   }
 
+  const sourceLinkLabel = t('sourceLink');
+  const sourceLinkNewTab = t('sourceLinkNewTab');
+  const sourceChecked = t('sourceChecked');
+
+  const confidenceLabels: Record<Confidence, string> = {
+    high: t('confidenceAriaPrefix') + t('confidenceLabels.high'),
+    medium: t('confidenceAriaPrefix') + t('confidenceLabels.medium'),
+    low: t('confidenceAriaPrefix') + t('confidenceLabels.low'),
+  };
+
   return (
     <>
-      {/* Desktop: native table.
-          PLAN 3.7.b — 인쇄 시 md: breakpoint 무관하게 테이블 표시 (`print:block`).
-          mobile 카드 스택은 `print:hidden` — 표가 더 정보 밀도 높음. */}
+      {/* Desktop: native table. */}
       <div className="hidden overflow-x-auto rounded-2xl border border-fg/10 md:block print:block">
         <table
-          aria-label="요금제 비교 표"
+          aria-label={t('ariaLabel')}
           className="w-full border-collapse text-sm"
         >
           <thead className="bg-bg-warm/60 text-left text-xs uppercase tracking-wider text-muted">
             <tr>
               <th scope="col" className="px-4 py-3 font-medium">
-                #
+                {t('columns.rank')}
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
-                공급사 / 요금제
+                {t('columns.provider')}
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
-                월 비용
+                {t('columns.monthlyCost')}
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
-                약정
+                {t('columns.commitment')}
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
-                절약
+                {t('columns.saving')}
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
-                신뢰도
+                {t('columns.confidence')}
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
-                원본
+                {t('columns.source')}
               </th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => {
-              const subtitle = formatSubtitle(r.category, r.attributes);
-              const promoNote = formatPromoNote(r.promoPriceCents, r.promoMonths);
-              const actNote = formatActivationNote(r.activationFeeCents);
+              const subtitle = formatSubtitle(r.category, r.attributes, t);
+              const promoNote = formatPromoNote(r.promoPriceCents, r.promoMonths, t);
+              const actNote = formatActivationNote(r.activationFeeCents, t);
+              const savingYearly = t('savingYearly', { amount: formatSaving(r.yearlySavingCents, t) });
               return (
-                // React.Fragment — 데이터 행 + 디스클로저 행을 tbody 안 묶음
                 <tr
                   key={r.tariffSnapshotId}
                   className="border-t border-fg/10 align-top"
@@ -213,7 +220,6 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
                     {subtitle && (
                       <div className="mt-0.5 text-xs text-fg-soft">{subtitle}</div>
                     )}
-                    {/* PLAN 4.3.c — 공급사 셀 하단: 디스클로저 라인 (ADR-0026 §T4) */}
                     <AffiliateDisclosureLine
                       providerId={r.providerId}
                       providerName={r.providerName}
@@ -221,27 +227,34 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-fg">{formatEuro(r.monthlyAvg12Cents)} / 월</div>
-                    {(promoNote || actNote) && (
+                    <div className="text-fg">{formatEuro(r.monthlyAvg12Cents)} {t('monthlyCostUnit')}</div>
+                    {(promoNote ?? actNote) && (
                       <div className="mt-0.5 text-xs text-fg-soft">
                         {[promoNote, actNote].filter(Boolean).join(' · ')}
                       </div>
                     )}
                   </td>
                   <td className="px-4 py-3 text-fg">
-                    {formatCommitment(r.commitmentMonths)}
+                    {formatCommitment(r.commitmentMonths, t)}
                   </td>
                   <td className="px-4 py-3 text-fg">
-                    {formatSaving(r.monthlySavingCents)} / 월
+                    {formatSaving(r.monthlySavingCents, t)} {t('savingMonthly')}
                     <div className="mt-0.5 text-xs text-fg-soft">
-                      연 {formatSaving(r.yearlySavingCents)}
+                      {savingYearly}
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <ConfidenceBadge confidence={r.confidence} />
+                    <ConfidenceBadge label={confidenceLabels[r.confidence] ?? r.confidence} />
                   </td>
                   <td className="px-4 py-3">
-                    <SourceLink href={r.sourceUrl} fetchedAt={r.fetchedAt} now={ref} />
+                    <SourceLink
+                      href={r.sourceUrl}
+                      fetchedAt={r.fetchedAt}
+                      now={ref}
+                      label={sourceLinkLabel}
+                      newTabLabel={sourceLinkNewTab}
+                      checkedLabel={sourceChecked}
+                    />
                   </td>
                 </tr>
               );
@@ -250,12 +263,13 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
         </table>
       </div>
 
-      {/* Mobile: card stack — PLAN 3.7.b: 인쇄 시 숨김 (desktop table 사용). */}
-      <ul aria-label="요금제 비교 (모바일)" className="flex flex-col gap-3 md:hidden print:hidden">
+      {/* Mobile: card stack. */}
+      <ul aria-label={t('mobileAriaLabel')} className="flex flex-col gap-3 md:hidden print:hidden">
         {rows.map((r) => {
-          const subtitle = formatSubtitle(r.category, r.attributes);
-          const promoNote = formatPromoNote(r.promoPriceCents, r.promoMonths);
-          const actNote = formatActivationNote(r.activationFeeCents);
+          const subtitle = formatSubtitle(r.category, r.attributes, t);
+          const promoNote = formatPromoNote(r.promoPriceCents, r.promoMonths, t);
+          const actNote = formatActivationNote(r.activationFeeCents, t);
+          const savingYearly = t('savingYearly', { amount: formatSaving(r.yearlySavingCents, t) });
           return (
             <li key={r.tariffSnapshotId}>
               <article className="flex flex-col gap-2 rounded-2xl border border-fg/10 bg-bg p-4">
@@ -269,30 +283,35 @@ export function ComparisonTable({ rows, now }: ComparisonTableProps) {
                       <p className="mt-0.5 text-xs text-fg-soft">{subtitle}</p>
                     )}
                   </div>
-                  <ConfidenceBadge confidence={r.confidence} />
+                  <ConfidenceBadge label={confidenceLabels[r.confidence] ?? r.confidence} />
                 </div>
                 <dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
-                  <dt className="text-fg-soft">월 비용</dt>
+                  <dt className="text-fg-soft">{t('columns.monthlyCost')}</dt>
                   <dd className="text-fg">
-                    {formatEuro(r.monthlyAvg12Cents)} / 월
-                    {(promoNote || actNote) && (
+                    {formatEuro(r.monthlyAvg12Cents)} {t('monthlyCostUnit')}
+                    {(promoNote ?? actNote) && (
                       <span className="ml-2 text-xs text-fg-soft">
                         {[promoNote, actNote].filter(Boolean).join(' · ')}
                       </span>
                     )}
                   </dd>
-                  <dt className="text-fg-soft">약정</dt>
-                  <dd className="text-fg">{formatCommitment(r.commitmentMonths)}</dd>
-                  <dt className="text-fg-soft">절약</dt>
+                  <dt className="text-fg-soft">{t('columns.commitment')}</dt>
+                  <dd className="text-fg">{formatCommitment(r.commitmentMonths, t)}</dd>
+                  <dt className="text-fg-soft">{t('columns.saving')}</dt>
                   <dd className="text-fg">
-                    {formatSaving(r.monthlySavingCents)} / 월 · 연{' '}
-                    {formatSaving(r.yearlySavingCents)}
+                    {formatSaving(r.monthlySavingCents, t)} {t('savingMonthly')} · {savingYearly}
                   </dd>
                 </dl>
                 <div className="mt-1 border-t border-fg/10 pt-2">
-                  <SourceLink href={r.sourceUrl} fetchedAt={r.fetchedAt} now={ref} />
+                  <SourceLink
+                    href={r.sourceUrl}
+                    fetchedAt={r.fetchedAt}
+                    now={ref}
+                    label={sourceLinkLabel}
+                    newTabLabel={sourceLinkNewTab}
+                    checkedLabel={sourceChecked}
+                  />
                 </div>
-                {/* PLAN 4.3.c — 카드 하단 슬롯: 디스클로저 라인 (ADR-0026 §T4) */}
                 <AffiliateDisclosureLine
                   providerId={r.providerId}
                   providerName={r.providerName}
