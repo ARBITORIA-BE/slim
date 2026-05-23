@@ -340,7 +340,8 @@
     "legalLinksLabel": "Juridisch en transparantie",
     "affiliateDisclosureLink": "Affiliate-vergoeding",
     "dataSourcesLink": "Gegevensbronnen",
-    "copyright": "© {year} Slim"
+    "copyright": "© {year} Slim",
+    "languageLabel": "Taal"
   },
   "validation": {
     "postal": {

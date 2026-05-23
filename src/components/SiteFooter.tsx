@@ -24,6 +24,7 @@ import {
   formatEnterpriseNumber,
   formatVatNumber,
 } from '@/lib/legal';
+import { LocaleSwitcher } from './LocaleSwitcher';
 
 export async function SiteFooter() {
   const t = await getTranslations('footer');
@@ -97,6 +98,9 @@ export async function SiteFooter() {
             {t('dataSourcesLink')}
           </Link>
         </nav>
+
+        {/* ── 언어 전환기 (LocaleSwitcher client 섬, PLAN 4.11.c) ── */}
+        <LocaleSwitcher />
 
         {/* ── 저작권 ── */}
         <p className="text-fg-soft/70">{t('copyright', { year: currentYear })}</p>

@@ -42,6 +42,14 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
+// LocaleSwitcher 는 client 훅(usePathname/useLocale/useTranslations)을 사용 —
+// SiteFooter 단위 테스트에서는 스텁으로 격리 (전용 검증은 LocaleSwitcher.test.tsx).
+// why: 미스텁 시 usePathname(@/i18n/navigation mock 미제공) + next-intl client 훅이
+//      provider 없이 throw → SiteFooter 6 케이스 전부 깨짐 (4.11.c 회귀 차단).
+vi.mock('./LocaleSwitcher', () => ({
+  LocaleSwitcher: () => <nav aria-label="language">lang</nav>,
+}));
+
 import { SiteFooter } from './SiteFooter';
 
 describe('SiteFooter', () => {

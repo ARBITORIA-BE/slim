@@ -340,7 +340,8 @@
     "legalLinksLabel": "Legal & transparency",
     "affiliateDisclosureLink": "Affiliate disclosure",
     "dataSourcesLink": "Data sources",
-    "copyright": "© {year} Slim"
+    "copyright": "© {year} Slim",
+    "languageLabel": "Language"
   },
   "validation": {
     "postal": {

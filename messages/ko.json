@@ -339,7 +339,8 @@
     "legalLinksLabel": "법무 및 투명성",
     "affiliateDisclosureLink": "제휴 수수료 공개",
     "dataSourcesLink": "데이터 출처",
-    "copyright": "© {year} Slim"
+    "copyright": "© {year} Slim",
+    "languageLabel": "언어"
   },
   "validation": {
     "postal": {
