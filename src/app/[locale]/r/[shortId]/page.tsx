@@ -18,7 +18,7 @@
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
 
@@ -66,28 +66,29 @@ export const revalidate = 3600;
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ shortId: string }>;
+  params: Promise<{ locale: string; shortId: string }>;
 }): Promise<Metadata> {
-  const { shortId } = await params;
+  const { locale, shortId } = await params;
+  setRequestLocale(locale);
+  // §A2.9.2 재사용: result.pageTitle / result.pageDescription (ko.json L131 존재)
+  const t = await getTranslations({ locale, namespace: 'result' });
+
   if (!SHORT_ID_PATTERN.test(shortId)) {
     return {
-      // @i18n-allow metadata 한글은 4.5.j.4.B 대상
-      title: '결과를 찾을 수 없음 | Slim',
+      title: t('notFound.heading'),
       robots: { index: false, follow: false },
     };
   }
   const url = `${SITE_ORIGIN}/r/${shortId}`;
   return {
-    // @i18n-allow metadata 한글은 4.5.j.4.B 대상
-    title: '비교 결과 | Slim',
-    description: '베네룩스 통신 요금제 비교 결과 — Slim',
+    title: t('pageTitle'),
+    description: t('pageDescription'),
     // ADR-0021 §T8: 개별 결과는 검색 엔진 인덱스 X (PII 파생물 보수 보호).
     robots: { index: false, follow: true },
     alternates: { canonical: url },
     openGraph: {
-      // @i18n-allow metadata 한글은 4.5.j.4.B 대상
-      title: '비교 결과 | Slim',
-      description: '베네룩스 통신 요금제 비교 결과',
+      title: t('pageTitle'),
+      description: t('pageDescription'),
       url,
       type: 'website',
       // SC-G 적용: og:image 미설정 — 페이즈 4 ADR-OG 도입 시 동적 OG 일괄.

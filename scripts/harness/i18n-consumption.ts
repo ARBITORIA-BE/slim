@@ -3,6 +3,7 @@
  * Harness: i18n-consumption
  *
  * ADR-0033 §A2.8.4 "재발 방지 — 신규 게이트" 잠금 구현.
+ * ADR-0036 D2: src/components/ + src/types/comparison-input.ts 스캔 확장 (4.5.j.5.b).
  *
  * 목적: 컴포넌트가 next-intl `t()` 를 실제로 소비하는지 정적 검사.
  * Phase A/B 구분 구조:
@@ -14,6 +15,8 @@
  *   1. src/app/[locale]/**\/*.tsx (*.test.tsx 제외, 루트 src/app/layout.tsx 제외)에서
  *      한글 리터럴(JSX 텍스트 / 문자열) 0 개 (단, 화이트리스트 패턴 허용)
  *   2. 핵심 라우트 파일에 useTranslations 또는 getTranslations import 존재
+ *   3. (ADR-0036 D2) src/components/**\/*.tsx 한글 리터럴 0 (*.test.tsx 제외)
+ *   4. (ADR-0036 D2) src/types/comparison-input.ts 한글 리터럴 0
  *
  * 화이트리스트 허용 예외 (§A2.8.4):
  *   - ICU 토큰 내부: {variable} 형태의 플레이스홀더 (t() 인자 안에 있음 — 파일에서는 0)
@@ -25,6 +28,7 @@
  *     (줄 자체가 `key: '...',` 형태의 metadata 줄인 경우 허용)
  *   NOTE: 주석 안 한글은 "@i18n-allow" 마커 없이도 허용 (주석 행 자동 필터)
  *   NOTE: [locale]/layout.tsx 는 metadata 전체가 Phase B 대기 → PHASE_B_LAYOUT 예외 처리
+ *   NOTE: src/components/SiteFooter.tsx JSDoc/{/* */} 주석 한글 → 자동 필터 통과 (허용)
  *
  * 실행: pnpm harness:i18n
  *
@@ -35,9 +39,15 @@
  *   - JSX 블록 주석 ( {slash* ... *slash} ) 내부 연속 줄 허용
  *   - @i18n-allow 블록 마커 인식 개선 (마커 뒤 연속 metadata 줄 허용)
  *   - [locale]/layout.tsx metadata 블록 Phase B 예외 추가
+ *
+ * D2 수정 (4.5.j.5.b — ADR-0036):
+ *   - src/components/**\/*.tsx 스캔 추가 (*.test.tsx 제외)
+ *   - src/types/comparison-input.ts 화이트리스트 스캔 추가
+ *   - 각 그룹별 0파일 FATAL 자가검증 추가
+ *   - import 검사(useTranslations/getTranslations)는 CORE_ROUTE_FILES 한정 유지 (신규 그룹 적용 안 함)
  */
 
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, access } from 'node:fs/promises';
 import * as path from 'node:path';
 
 // ─── Phase B 대기 allowlist ──────────────────────────────────────────────────
@@ -45,14 +55,14 @@ import * as path from 'node:path';
 // allowlist 에 있는 파일은 한글 리터럴 검사를 건너뜀 (단, import 검사도 스킵).
 // NOTE: 경로는 슬래시 기준으로 작성 (path.sep 정규화 후 비교).
 const PHASE_B_ALLOWLIST: readonly string[] = [
-  // 4.5.j.4.B 에서 제거 예정:
+  // 4.5.j.4.B (나) 메타데이터 i18n 완료 후에도 잔류 — (가) 보조 페이지 본문 미완:
   'src/app/[locale]/data-sources/page.tsx',
   'src/app/[locale]/go/[shortId]/[itemId]/page.tsx',
   'src/app/[locale]/unsubscribe/[token]/page.tsx',
   'src/app/[locale]/admin/page.tsx',
   'src/app/[locale]/legal/affiliate-disclosure/page.tsx',
-  // §A2.8.4 화이트리스트: [locale]/layout.tsx 는 metadata 전체가 Phase B 대기
-  'src/app/[locale]/layout.tsx',
+  // NOTE: [locale]/layout.tsx 는 metadata i18n 완료 (§A2.9.1) → allowlist 제거됨.
+  //       한글 리터럴 0 확인 후 스캔 대상 복귀.
 ];
 
 // ─── 핵심 라우트 파일 — useTranslations/getTranslations import 존재 필수 ──────
@@ -350,7 +360,7 @@ async function main(): Promise<void> {
   const projectRoot = normalizePath(process.cwd());
   const localeDir = path.join(process.cwd(), 'src', 'app', '[locale]');
 
-  // src/app/[locale] 하위 .tsx 파일 수집 (Node fs 재귀 워크 — 크로스플랫폼)
+  // ── 그룹 1: src/app/[locale] 하위 .tsx 파일 수집 (Node fs 재귀 워크 — 크로스플랫폼) ──
   const allFiles = await collectTsxFiles(localeDir);
 
   // 루트 src/app/layout.tsx 제외 (next-intl 공식 비대상 — [locale] 하위만)
@@ -358,17 +368,53 @@ async function main(): Promise<void> {
     (f) => !f.endsWith('src/app/layout.tsx'),
   );
 
-  // 파일 수 로그 (자가검증: 0 파일이면 게이트가 false GREEN — 즉시 경고)
-  console.log(`[harness:i18n] 대상 파일 수: ${targetFiles.length}`);
+  // 자가검증: 0 파일이면 게이트가 false GREEN — 즉시 FATAL
+  console.log(`[harness:i18n] [locale] 대상 파일 수: ${targetFiles.length}`);
   if (targetFiles.length === 0) {
     console.error(
-      `[harness:i18n] FATAL — 대상 파일 0개. src/app/[locale] 경로 확인 필요: ${localeDir}`,
+      `[harness:i18n] FATAL — src/app/[locale] 대상 파일 0개. 경로 확인 필요: ${localeDir}`,
     );
     process.exit(2);
   }
 
+  // ── 그룹 2 (ADR-0036 D2): src/components/**/*.tsx 수집 — *.test.tsx 제외 ──
+  // why: 공유 컴포넌트(PriceWithSource/StaleLabel 등)의 한글 누출이 harness 사각이었음.
+  //      collectTsxFiles 의 test 제외 규칙(*.test.tsx 제외)을 그대로 재사용한다.
+  const componentsDir = path.join(process.cwd(), 'src', 'components');
+  const componentFiles = await collectTsxFiles(componentsDir);
+
+  // 자가검증: src/components 에 .tsx 파일이 0개면 경로/구조 이상 — FATAL
+  console.log(`[harness:i18n] components 대상 파일 수: ${componentFiles.length}`);
+  if (componentFiles.length === 0) {
+    console.error(
+      `[harness:i18n] FATAL — src/components 대상 .tsx 파일 0개. 경로 확인 필요: ${componentsDir}`,
+    );
+    process.exit(2);
+  }
+
+  // ── 그룹 3 (ADR-0036 D2): src/types/comparison-input.ts 단일 파일 화이트리스트 ──
+  // why: Zod 메시지 한국어 하드코딩이 이 .ts 1파일에만 실증됨.
+  //      src/**/*.ts 전체 확장은 dev throw·주석·픽스처 오탐을 폭증시키므로 거부(ADR-0036 §대안).
+  const comparisonInputPath = normalizePath(
+    path.join(process.cwd(), 'src', 'types', 'comparison-input.ts'),
+  );
+
+  // 자가검증: comparison-input.ts 가 없으면 FATAL (파일 이동/삭제 시 게이트 false GREEN 방지)
+  try {
+    await access(comparisonInputPath);
+  } catch {
+    console.error(
+      `[harness:i18n] FATAL — src/types/comparison-input.ts 파일 없음. 경로 확인 필요: ${comparisonInputPath}`,
+    );
+    process.exit(2);
+  }
+  console.log(`[harness:i18n] comparison-input.ts 확인됨: ${comparisonInputPath}`);
+
+  // ── 한글 리터럴 검사 실행 ──────────────────────────────────────────────────
+  // 그룹 1(locale route) + 그룹 2(components) + 그룹 3(comparison-input.ts) 통합.
+  // import 검사(useTranslations/getTranslations)는 CORE_ROUTE_FILES 한정 — 신규 그룹엔 적용 안 함.
   await Promise.all([
-    checkNoKoreanLiterals(targetFiles, projectRoot),
+    checkNoKoreanLiterals([...targetFiles, ...componentFiles, comparisonInputPath], projectRoot),
     checkTranslationsImport(targetFiles, projectRoot),
   ]);
 
@@ -377,6 +423,7 @@ async function main(): Promise<void> {
     const allowlistCount = PHASE_B_ALLOWLIST.length;
     console.log(
       `[harness:i18n] GREEN — 한글 리터럴 0 + translations import 정합.\n` +
+      `  스캔 범위: [locale](${targetFiles.length}) + components(${componentFiles.length}) + comparison-input.ts(1)\n` +
       `  Phase B allowlist: ${allowlistCount}개 파일 대기 중 (4.5.j.4.B 완료 시 0 예정).`,
     );
     process.exit(0);

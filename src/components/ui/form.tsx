@@ -41,6 +41,7 @@ import {
   type FieldPath,
   type FieldValues,
 } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -162,18 +163,40 @@ export const FormDescription = forwardRef<
 });
 FormDescription.displayName = 'FormDescription';
 
+/**
+ * FormMessage — RHF error.message 를 렌더한다.
+ *
+ * ADR-0036 D1 guard: message 가 "validation." 으로 시작하면 next-intl t() 로 번역.
+ * 다른 폼(비-validation 메시지 / Zod 기본 메시지)은 pass-through — blast radius 0.
+ * why: schema 는 locale-free 키 토큰 ("validation.postal.be" 등)을 가지므로
+ *      표시 시점에만 t() 로 매핑하여 nl/fr/en 사이트에 한국어 0 보장.
+ */
 export const FormMessage = forwardRef<
   HTMLParagraphElement,
   HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
+  // why: FormMessage 는 이미 'use client' — useTranslations 동기 호출 안전.
+  const t = useTranslations('validation');
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error.message ?? '') : children;
+
+  // ADR-0036 D1: "validation." prefix keys only — map via t(); others pass-through.
+  const rawMessage = error ? String(error.message ?? '') : undefined;
+  const translatedMessage =
+    rawMessage?.startsWith('validation.')
+      ? // @builder-justification: rawMessage is guaranteed a valid validation.* key
+        // because only comparison-input.ts Zod schemas emit "validation." prefixed
+        // messages (ADR-0036 D1 invariant). String→key cast is safe here; runtime
+        // integrity is enforced by the fixed set of keys in messages/*/validation.*.
+        t(rawMessage.slice('validation.'.length) as Parameters<typeof t>[0])
+      : rawMessage;
+  const body = translatedMessage ?? children;
+
   if (!body) return null;
   return (
     <p
       ref={ref}
       id={formMessageId}
-      // text-accent-dark — AA contrast 통과 (text-accent 단독은 미달).
+      // text-accent-dark — AA contrast pass (text-accent alone fails 4.5 ratio).
       className={cn('text-sm font-medium text-accent-dark', className)}
       {...props}
     >

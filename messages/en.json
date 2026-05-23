@@ -77,6 +77,7 @@
       }
     },
     "household": {
+      "title": "Select household type",
       "heading": "How are you doing?",
       "supportNote": "If you select a household type, we will estimate your average usage. Your exact usage will be automatically entered in Phase 3 using bill OCR.",
       "nextButton": "Next — Current Supplier",
@@ -96,6 +97,7 @@
       }
     },
     "currentProvider": {
+      "title": "Select current provider",
       "heading": "Where are you using it right now?",
       "supportNote": "Selecting a provider at this stage improves the accuracy of the comparison, but it is not required. If you're unsure or a new user, you can skip this step.",
       "zeroProvidersFallback": "We were unable to load the list of providers. Would you like to proceed as a new user? The comparison results will be calculated based on all available options in the market.",
@@ -112,11 +114,13 @@
       "skipButton": "I don't know / Skip — Proceed as a new subscriber case"
     },
     "bill": {
+      "title": "Upload bill",
       "heading": "Would you like to upload your bill to automatically enter your exact usage?",
       "supportNote": "Currently in beta — Invoice OCR will be added immediately after the Phase 3 results page. For now, comparisons are based on estimates derived from household composition.",
       "skipButton": "No invoice required — Preview the results"
     },
     "preview": {
+      "title": "Results being prepared",
       "heading": "Results are being prepared",
       "supportNote": "We are generating a permalink for the comparison results based on the information you entered. Once complete, you will be automatically redirected to the results page.",
       "submittingMessage": "Calling the comparison engine... (usually takes less than 1 second)",
@@ -309,9 +313,43 @@
       "pageTitle": "제휴 수수료 공개"
     }
   },
+  "dataDisplay": {
+    "viewSource": "View source",
+    "staleData": "{relative} (stale data)"
+  },
   "home": {
     "headline": "Slim.",
     "tagline": "Compare easily, save big.",
-    "ctaButton": "Compare Now"
+    "ctaButton": "Compare Now",
+    "metaTitle": "Slim — Compare easily, save big",
+    "metaDescription": "Compare telecom plans in Belgium, the Netherlands and Luxembourg. Make the smartest choice in 5 minutes."
+  },
+  "metadata": {
+    "defaultTitle": "Slim — Compare easily, save big",
+    "description": "Benelux comparison platform. BE · NL · LU compared in 5 minutes.",
+    "ogTitle": "Slim — Compare easily, save big",
+    "ogDescription": "Benelux comparison platform. BE · NL · LU compared in 5 minutes."
+  },
+  "footer": {
+    "companyInfoHeading": "Company information",
+    "operatorLabel": "Operator",
+    "companyNumberLabel": "Company number",
+    "vatLabel": "VAT number",
+    "addressLabel": "Address",
+    "contactLabel": "Contact",
+    "legalLinksLabel": "Legal & transparency",
+    "affiliateDisclosureLink": "Affiliate disclosure",
+    "dataSourcesLink": "Data sources",
+    "copyright": "© {year} Slim"
+  },
+  "validation": {
+    "postal": {
+      "be": "Belgian (BE) postal code must be a 4-digit number between 1000 and 9999 (e.g. 1000, 9000)",
+      "nl": "Dutch (NL) postal code must be 4 digits or 4 digits + 2 uppercase letters (e.g. 1011, 1011 AB)",
+      "lu": "Luxembourg (LU) postal code must be a 4-digit number between 1000 and 9999 (e.g. 1000, 4000)"
+    },
+    "currentProvider": {
+      "tariffWithoutProvider": "Please select a provider before choosing a tariff"
+    }
   }
 }

@@ -34,13 +34,13 @@ describe('postalCodeSchema (ADR-0016 §T3, SC-B BE 1차)', () => {
     expect(postalCodeSchema.safeParse({ country: 'BE', postalCode: '12 34' }).success).toBe(false);
   });
 
-  it('한국어 에러 메시지 노출 (P3 정직성)', () => {
+  it('BE validation error message = locale-free key token (ADR-0036 D1)', () => {
+    // Schema emits a key token — FormMessage maps via t() at render time.
     const result = postalCodeSchema.safeParse({ country: 'BE', postalCode: '0001' });
     expect(result.success).toBe(false);
     if (!result.success) {
       const message = result.error.issues[0]?.message ?? '';
-      expect(message).toContain('벨기에');
-      expect(message).toContain('1000');
+      expect(message).toBe('validation.postal.be');
     }
   });
 });
@@ -74,12 +74,12 @@ describe('postalCodeSchema NL (ADR-0021 §T10, 페이즈 3 진입 직전 추가)
     expect(postalCodeSchema.safeParse({ country: 'NL', postalCode: '10110' }).success).toBe(false);
   });
 
-  it('NL 한국어 에러 메시지 노출', () => {
+  it('NL validation error message = locale-free key token (ADR-0036 D1)', () => {
     const result = postalCodeSchema.safeParse({ country: 'NL', postalCode: '0001' });
     expect(result.success).toBe(false);
     if (!result.success) {
       const message = result.error.issues[0]?.message ?? '';
-      expect(message).toContain('네덜란드');
+      expect(message).toBe('validation.postal.nl');
     }
   });
 });
@@ -99,12 +99,12 @@ describe('postalCodeSchema LU (ADR-0021 §T10, 페이즈 3 진입 직전 추가)
     expect(postalCodeSchema.safeParse({ country: 'LU', postalCode: '1000 AB' }).success).toBe(false);
   });
 
-  it('LU 한국어 에러 메시지 노출', () => {
+  it('LU validation error message = locale-free key token (ADR-0036 D1)', () => {
     const result = postalCodeSchema.safeParse({ country: 'LU', postalCode: '0001' });
     expect(result.success).toBe(false);
     if (!result.success) {
       const message = result.error.issues[0]?.message ?? '';
-      expect(message).toContain('룩셈부르크');
+      expect(message).toBe('validation.postal.lu');
     }
   });
 });
@@ -170,6 +170,18 @@ describe('currentProviderSchema (ADR-0016 §T5, 선택적 + 스킵 동등)', () 
       currentTariffId: '22222222-2222-2222-2222-222222222222',
     });
     expect(result.success).toBe(false);
+  });
+
+  it('tariff-without-provider error message = locale-free key token (ADR-0036 D1)', () => {
+    const result = currentProviderSchema.safeParse({
+      currentProviderId: null,
+      currentTariffId: '22222222-2222-2222-2222-222222222222',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const message = result.error.issues[0]?.message ?? '';
+      expect(message).toBe('validation.currentProvider.tariffWithoutProvider');
+    }
   });
 
   it('비-UUID 거부', () => {

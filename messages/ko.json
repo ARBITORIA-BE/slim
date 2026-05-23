@@ -76,6 +76,7 @@
       }
     },
     "household": {
+      "title": "가구 형태 선택",
       "heading": "어떻게 사세요?",
       "supportNote": "가구 형태를 선택하면 평균 사용량으로 추정합니다. 정확한 사용량은 페이즈 3에서 청구서 OCR로 자동 입력 예정입니다.",
       "nextButton": "다음 — 현재 공급사",
@@ -95,6 +96,7 @@
       }
     },
     "currentProvider": {
+      "title": "현재 공급사 선택",
       "heading": "지금 어디 쓰세요?",
       "supportNote": "현재 공급사 선택은 비교 정확도를 높이지만 필수는 아닙니다. 모르거나 신규 가입이라면 스킵해도 됩니다.",
       "zeroProvidersFallback": "공급사 목록을 불러오지 못했어요. 신규 가입자로 진행하시겠어요? 비교 결과는 시장 전체 후보로 계산됩니다.",
@@ -111,11 +113,13 @@
       "skipButton": "모르겠어요 / 스킵 — 신규 가입자 케이스로 진행"
     },
     "bill": {
+      "title": "청구서 업로드",
       "heading": "청구서를 업로드해 정확한 사용량을 자동 입력하시겠어요?",
       "supportNote": "현재 베타 진행 중 — 청구서 OCR은 페이즈 3 결과 페이지 직후 추가됩니다. 지금은 가구 형태 기반 추정값으로 비교합니다.",
       "skipButton": "청구서 없이 진행 — 결과 미리보기로"
     },
     "preview": {
+      "title": "결과 준비 중",
       "heading": "결과를 준비 중입니다",
       "supportNote": "입력하신 정보를 바탕으로 비교 결과 영구 링크를 생성하고 있습니다. 완료 후 자동으로 결과 페이지로 이동합니다.",
       "submittingMessage": "비교 엔진 호출 중… (보통 1초 미만)",
@@ -308,9 +312,43 @@
       "pageTitle": "제휴 수수료 공개"
     }
   },
+  "dataDisplay": {
+    "viewSource": "원본 보기",
+    "staleData": "{relative} 데이터"
+  },
   "home": {
     "headline": "Slim.",
     "tagline": "비교는 쉽게, 절약은 두툼하게.",
-    "ctaButton": "지금 비교하기"
+    "ctaButton": "지금 비교하기",
+    "metaTitle": "Slim — 비교는 쉽게, 절약은 두툼하게",
+    "metaDescription": "벨기에 · 네덜란드 · 룩셈부르크에서 5분 안에 통신 요금을 비교하고 매달 더 영리한 선택을 하세요."
+  },
+  "metadata": {
+    "defaultTitle": "Slim — 비교는 쉽게, 절약은 두툼하게",
+    "description": "베네룩스 비교 플랫폼. BE · NL · LU에서 5분 안에 비교.",
+    "ogTitle": "Slim — 비교는 쉽게, 절약은 두툼하게",
+    "ogDescription": "베네룩스 비교 플랫폼. BE · NL · LU에서 5분 안에 비교."
+  },
+  "footer": {
+    "companyInfoHeading": "사업자 정보",
+    "operatorLabel": "운영자",
+    "companyNumberLabel": "기업번호",
+    "vatLabel": "VAT 번호",
+    "addressLabel": "주소",
+    "contactLabel": "문의",
+    "legalLinksLabel": "법무 및 투명성",
+    "affiliateDisclosureLink": "제휴 수수료 공개",
+    "dataSourcesLink": "데이터 출처",
+    "copyright": "© {year} Slim"
+  },
+  "validation": {
+    "postal": {
+      "be": "벨기에(BE) 우편번호는 1000~9999 사이의 4자리 숫자여야 합니다 (예: 1000, 9000)",
+      "nl": "네덜란드(NL) 우편번호는 4자리 숫자 또는 4자리+대문자 2자입니다 (예: 1011, 1011 AB)",
+      "lu": "룩셈부르크(LU) 우편번호는 1000~9999 사이의 4자리 숫자여야 합니다 (예: 1000, 4000)"
+    },
+    "currentProvider": {
+      "tariffWithoutProvider": "요금제를 선택하려면 먼저 공급사를 선택해야 합니다"
+    }
   }
 }

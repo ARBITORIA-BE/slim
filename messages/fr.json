@@ -77,6 +77,7 @@
       }
     },
     "household": {
+      "title": "Choisir le type de foyer",
       "heading": "Comment allez-vous ?",
       "supportNote": "Une fois le type de foyer sélectionné, la consommation est estimée sur la base d'une consommation moyenne. La consommation exacte sera automatiquement renseignée lors de la phase 3 grâce à la reconnaissance optique de caractères (OCR) des factures.",
       "nextButton": "Suivant — Fournisseur actuel",
@@ -96,6 +97,7 @@
       }
     },
     "currentProvider": {
+      "title": "Choisir le fournisseur actuel",
       "heading": "Où l'utilisez-vous actuellement ?",
       "supportNote": "Le choix d'un fournisseur permet d'améliorer la précision de la comparaison, mais n'est pas obligatoire. Si vous ne savez pas ou si vous êtes un nouvel utilisateur, vous pouvez passer cette étape.",
       "zeroProvidersFallback": "Nous n'avons pas pu charger la liste des fournisseurs. Souhaitez-vous vous inscrire en tant que nouvel abonné ? Les résultats de la comparaison tiendront compte de l'ensemble des offres disponibles sur le marché.",
@@ -112,11 +114,13 @@
       "skipButton": "Je ne sais pas / Passer — Traiter comme un nouveau client"
     },
     "bill": {
+      "title": "Télécharger la facture",
       "heading": "Souhaitez-vous télécharger votre facture pour que votre consommation soit automatiquement renseignée avec précision ?",
       "supportNote": "Actuellement en phase bêta — La reconnaissance optique de caractères (OCR) des factures sera ajoutée juste après la page des résultats de la phase 3. Pour l'instant, la comparaison s'effectue à partir d'estimations basées sur la composition du ménage.",
       "skipButton": "Procédure sans facture — Aperçu des résultats"
     },
     "preview": {
+      "title": "Résultats en préparation",
       "heading": "Les résultats sont en cours de préparation",
       "supportNote": "Nous générons actuellement un lien permanent vers les résultats de la comparaison en fonction des informations que vous avez saisies. Une fois l'opération terminée, vous serez automatiquement redirigé vers la page des résultats.",
       "submittingMessage": "Appel du moteur de comparaison en cours… (généralement moins d'une seconde)",
@@ -309,9 +313,43 @@
       "pageTitle": "제휴 수수료 공개"
     }
   },
+  "dataDisplay": {
+    "viewSource": "Voir la source",
+    "staleData": "{relative} (données anciennes)"
+  },
   "home": {
     "headline": "Slim.",
     "tagline": "Des comparaisons faciles, des économies substantielles.",
-    "ctaButton": "Comparer maintenant"
+    "ctaButton": "Comparer maintenant",
+    "metaTitle": "Slim — Comparez facilement, économisez davantage",
+    "metaDescription": "Comparez les forfaits télécom en Belgique, aux Pays-Bas et au Luxembourg. Le meilleur choix en 5 minutes."
+  },
+  "metadata": {
+    "defaultTitle": "Slim — Comparez facilement, économisez davantage",
+    "description": "Plateforme de comparaison Benelux. BE · NL · LU comparés en 5 minutes.",
+    "ogTitle": "Slim — Comparez facilement, économisez davantage",
+    "ogDescription": "Plateforme de comparaison Benelux. BE · NL · LU comparés en 5 minutes."
+  },
+  "footer": {
+    "companyInfoHeading": "Informations légales",
+    "operatorLabel": "Exploitant",
+    "companyNumberLabel": "Numéro d'entreprise",
+    "vatLabel": "Numéro de TVA",
+    "addressLabel": "Adresse",
+    "contactLabel": "Contact",
+    "legalLinksLabel": "Mentions légales et transparence",
+    "affiliateDisclosureLink": "Rémunération d'affiliation",
+    "dataSourcesLink": "Sources de données",
+    "copyright": "© {year} Slim"
+  },
+  "validation": {
+    "postal": {
+      "be": "Le code postal belge (BE) doit être un nombre de 4 chiffres compris entre 1000 et 9999 (ex. : 1000, 9000)",
+      "nl": "Le code postal néerlandais (NL) doit comporter 4 chiffres ou 4 chiffres + 2 lettres majuscules (ex. : 1011, 1011 AB)",
+      "lu": "Le code postal luxembourgeois (LU) doit être un nombre de 4 chiffres compris entre 1000 et 9999 (ex. : 1000, 4000)"
+    },
+    "currentProvider": {
+      "tariffWithoutProvider": "Veuillez d'abord sélectionner un fournisseur avant de choisir un forfait"
+    }
   }
 }

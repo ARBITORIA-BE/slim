@@ -11,14 +11,27 @@
  *   입력 폼 단계(우편번호)는 sessionStorage 상태에 의존하고, 단독 URL 접근 시
  *   의미 있는 콘텐츠가 없다. 색인해도 검색엔진 품질에 이득이 없고, 중복 URL 로
  *   색인 예산을 낭비한다 (PLAN 3.5.2.c 근거).
+ *
+ * i18n: generateMetadata + getTranslations — compare.postal.title 키 재사용 (§A2.9.2).
  */
 import type { Metadata } from 'next';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-// @i18n-allow metadata 한글은 4.5.j.4.B 대상
-export const metadata: Metadata = {
-  title: '우편번호 입력', // @i18n-allow
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'compare' });
+
+  return {
+    // §A2.9.2 재사용: compare.postal.title (ko = "우편번호 입력")
+    title: t('postal.title'),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default function PostalLayout({
   children,

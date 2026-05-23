@@ -49,6 +49,8 @@ export const POSTAL_COUNTRIES = ['BE', 'NL', 'LU'] as const;
 export const postalCountrySchema = z.enum(POSTAL_COUNTRIES);
 export type PostalCountry = z.infer<typeof postalCountrySchema>;
 
+// ADR-0036 D1: Zod message = locale-free key token. display component maps via t().
+// Schema stays single-source (ADR-0016 §T7); no factory, no errorMap.
 export const postalCodeSchema = z.discriminatedUnion('country', [
   z.object({
     country: z.literal('BE'),
@@ -56,18 +58,18 @@ export const postalCodeSchema = z.discriminatedUnion('country', [
       .string()
       .regex(
         /^[1-9][0-9]{3}$/,
-        '벨기에(BE) 우편번호는 1000~9999 사이의 4자리 숫자여야 합니다 (예: 1000, 9000)',
+        'validation.postal.be',
       ),
   }),
   z.object({
     country: z.literal('NL'),
-    // PC4 ("1234") 또는 PC6 ("1234 AB" / "1234AB") — UPU Netherlands.
-    // PC6 알파벳은 반드시 대문자 (소문자 입력 시 UI 단계에서 자동 대문자화).
+    // PC4 ("1234") or PC6 ("1234 AB" / "1234AB") — UPU Netherlands.
+    // PC6 letters must be uppercase (UI auto-uppercases on input).
     postalCode: z
       .string()
       .regex(
         /^[1-9][0-9]{3}( ?[A-Z]{2})?$/,
-        '네덜란드(NL) 우편번호는 4자리 숫자 또는 4자리+대문자 2자입니다 (예: 1011, 1011 AB)',
+        'validation.postal.nl',
       ),
   }),
   z.object({
@@ -76,7 +78,7 @@ export const postalCodeSchema = z.discriminatedUnion('country', [
       .string()
       .regex(
         /^[1-9][0-9]{3}$/,
-        '룩셈부르크(LU) 우편번호는 1000~9999 사이의 4자리 숫자여야 합니다 (예: 1000, 4000)',
+        'validation.postal.lu',
       ),
   }),
 ]);
@@ -95,6 +97,7 @@ export type HouseholdTypeInput = z.infer<typeof householdTypeSchema>;
  * 자연 처리. currentTariffId 가 명시되어 있으면 currentProviderId 도 명시되어야
  * (sub-step 요금제 선택은 공급사 선택 후에만 노출 — ADR-0016 §T5).
  */
+// ADR-0036 D1: custom refine message also uses key token.
 export const currentProviderSchema = z
   .object({
     currentProviderId: z.string().uuid().nullable(),
@@ -104,7 +107,7 @@ export const currentProviderSchema = z
     ({ currentProviderId, currentTariffId }) =>
       !(currentTariffId !== null && currentProviderId === null),
     {
-      message: '요금제를 선택하려면 먼저 공급사를 선택해야 합니다',
+      message: 'validation.currentProvider.tariffWithoutProvider',
       path: ['currentTariffId'],
     },
   );

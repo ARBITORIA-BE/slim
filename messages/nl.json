@@ -77,6 +77,7 @@
       }
     },
     "household": {
+      "title": "Huishoudtype kiezen",
       "heading": "Hoe gaat het met u?",
       "supportNote": "Als u het type woning selecteert, wordt het gemiddelde verbruik geschat. Het exacte verbruik wordt in fase 3 automatisch ingevuld via OCR-verwerking van de factuur.",
       "nextButton": "Volgende — Huidige leverancier",
@@ -96,6 +97,7 @@
       }
     },
     "currentProvider": {
+      "title": "Huidige provider kiezen",
       "heading": "Waar gebruikt u het momenteel?",
       "supportNote": "Het selecteren van een leverancier verhoogt de nauwkeurigheid van de vergelijking, maar is niet verplicht. Als u het niet weet of een nieuwe klant bent, kunt u deze stap overslaan.",
       "zeroProvidersFallback": "De lijst met aanbieders kan niet worden geladen. Wilt u doorgaan als nieuwe gebruiker? De vergelijkingsresultaten worden berekend op basis van alle aanbieders op de markt.",
@@ -112,11 +114,13 @@
       "skipButton": "Ik weet het niet / Overslaan — Behandelen als nieuwe klant"
     },
     "bill": {
+      "title": "Factuur uploaden",
       "heading": "Wilt u uw factuur uploaden om uw exacte verbruik automatisch in te vullen?",
       "supportNote": "Momenteel in bètafase — OCR voor facturen wordt toegevoegd direct na de resultatenpagina van fase 3. Voorlopig wordt er vergeleken op basis van schattingen op basis van het huishoudtype.",
       "skipButton": "Zonder factuur — met een voorbeeld van het resultaat"
     },
     "preview": {
+      "title": "Resultaten worden voorbereid",
       "heading": "De resultaten worden momenteel verwerkt",
       "supportNote": "Op basis van de door u ingevoerde gegevens wordt er een permanente link naar de vergelijkingsresultaten aangemaakt. Zodra dit is voltooid, wordt u automatisch doorgestuurd naar de resultatenpagina.",
       "submittingMessage": "Vergelijkingsengine wordt opgeroepen… (meestal minder dan 1 seconde)",
@@ -309,9 +313,43 @@
       "pageTitle": "제휴 수수료 공개"
     }
   },
+  "dataDisplay": {
+    "viewSource": "Bron bekijken",
+    "staleData": "{relative} (verouderd)"
+  },
   "home": {
     "headline": "Slank.",
     "tagline": "Vergelijken gaat gemakkelijk, besparen levert flink op.",
-    "ctaButton": "Nu vergelijken"
+    "ctaButton": "Nu vergelijken",
+    "metaTitle": "Slim — Vergelijk eenvoudig, bespaar flink",
+    "metaDescription": "Vergelijk telecomabonnementen in België, Nederland en Luxemburg. In 5 minuten de slimste keuze."
+  },
+  "metadata": {
+    "defaultTitle": "Slim — Vergelijk eenvoudig, bespaar flink",
+    "description": "Vergelijkingsplatform voor de Benelux. BE · NL · LU in 5 minuten vergeleken.",
+    "ogTitle": "Slim — Vergelijk eenvoudig, bespaar flink",
+    "ogDescription": "Vergelijkingsplatform voor de Benelux. BE · NL · LU in 5 minuten vergeleken."
+  },
+  "footer": {
+    "companyInfoHeading": "Bedrijfsgegevens",
+    "operatorLabel": "Uitbater",
+    "companyNumberLabel": "Ondernemingsnummer",
+    "vatLabel": "Btw-nummer",
+    "addressLabel": "Adres",
+    "contactLabel": "Contact",
+    "legalLinksLabel": "Juridisch en transparantie",
+    "affiliateDisclosureLink": "Affiliate-vergoeding",
+    "dataSourcesLink": "Gegevensbronnen",
+    "copyright": "© {year} Slim"
+  },
+  "validation": {
+    "postal": {
+      "be": "Belgische (BE) postcode moet een 4-cijferig getal zijn tussen 1000 en 9999 (bijv. 1000, 9000)",
+      "nl": "Nederlandse (NL) postcode moet 4 cijfers of 4 cijfers + 2 hoofdletters zijn (bijv. 1011, 1011 AB)",
+      "lu": "Luxemburgse (LU) postcode moet een 4-cijferig getal zijn tussen 1000 en 9999 (bijv. 1000, 4000)"
+    },
+    "currentProvider": {
+      "tariffWithoutProvider": "Selecteer eerst een aanbieder voordat u een abonnement kiest"
+    }
   }
 }

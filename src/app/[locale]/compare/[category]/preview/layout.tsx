@@ -11,14 +11,27 @@
  *   미리보기/제출 단계는 sessionStorage 상태에 의존하고, 단독 URL 접근 시
  *   의미 있는 콘텐츠가 없다. /api/compare 호출 후 /r/[shortId] 로 redirect 되는
  *   중간 단계라 색인 가치가 없다. PLAN 3.5.2.c 참조.
+ *
+ * i18n: generateMetadata + getTranslations — compare.preview.title 신규 키 (§A2.9.2).
  */
 import type { Metadata } from 'next';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-// @i18n-allow metadata 한글은 4.5.j.4.B 대상
-export const metadata: Metadata = {
-  title: '결과 준비 중', // @i18n-allow
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'compare' });
+
+  return {
+    // §A2.9.2: compare.preview.title
+    title: t('preview.title'),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default function PreviewLayout({
   children,

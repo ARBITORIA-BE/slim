@@ -1,29 +1,45 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 /**
  * 루트 레이아웃의 title template(`%s · Slim`) 을 사용하지 않고
- * default 값을 직접 쓰기 위해 absolute 로 설정한다.
+ * absolute 로 설정한다.
  * 홈은 브랜드 슬로건 전체가 title 이어야 탭에서 의미가 있다.
  *
- * i18n: getTranslations (RSC) — 'home' 네임스페이스.
- * metadata 는 아직 정적 (4.5.j.4.B 에서 i18n 처리 예정).
+ * i18n: generateMetadata + getTranslations (RSC) — 'home' 네임스페이스.
+ * ADR-0033 §A2.9.1 — locale 명시 전달 패턴.
  */
-export const metadata: Metadata = {
-  title: {
-    // @i18n-allow metadata 한글은 4.5.j.4.B 대상 (layout metadata i18n)
-    absolute: 'Slim — 비교는 쉽게, 절약은 두툼하게',
-  },
-  description:
-    // @i18n-allow metadata 한글은 4.5.j.4.B 대상
-    '벨기에 · 네덜란드 · 룩셈부르크에서 5분 안에 통신 요금을 비교하고 매달 더 영리한 선택을 하세요.',
-  alternates: {
-    canonical: '/',
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  // next-intl v3: metadata 컨텍스트는 setRequestLocale 보장 안 됨 → locale 명시 (§A2.9.1 규칙 2)
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'home' });
 
-export default async function Home() {
+  return {
+    title: {
+      // absolute — layout template 무시하고 전체 title 직접 (홈 브랜드 슬로건)
+      absolute: t('metaTitle'),
+    },
+    description: t('metaDescription'),
+    alternates: {
+      canonical: '/',
+    },
+  };
+}
+
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  // next-intl v3 static rendering 활성화 (RSC 컴포넌트 내부)
+  setRequestLocale(locale);
   // why: RSC 이므로 getTranslations 사용 (await 필요).
   // 'home' 네임스페이스 = ko.json "home" 키 블록.
   const t = await getTranslations('home');
