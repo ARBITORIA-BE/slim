@@ -28,7 +28,7 @@
  *     (줄 자체가 `key: '...',` 형태의 metadata 줄인 경우 허용)
  *   NOTE: 주석 안 한글은 "@i18n-allow" 마커 없이도 허용 (주석 행 자동 필터)
  *   NOTE: [locale]/layout.tsx 는 metadata 전체가 Phase B 대기 → PHASE_B_LAYOUT 예외 처리
- *   NOTE: src/components/SiteFooter.tsx JSDoc/{/* */} 주석 한글 → 자동 필터 통과 (허용)
+ *   NOTE: src/components/SiteFooter.tsx JSDoc{slash* *slash} 주석 한글 → 자동 필터 통과 (허용)
  *
  * 실행: pnpm harness:i18n
  *
