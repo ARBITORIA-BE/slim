@@ -543,13 +543,28 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     배너 + caveat 규칙 9 가 `rawPayload.stub === false` 조건으로 *자동
     비활성* — ADR-0013 Amendment 1 §트리거 + 1.5.6.1 §재진입 트리거에 *이미
     설계됨* (추가 코드 0 — cross-ref 만).
-  - **유지 산출물**: 본 항목 본문에 정의된 fetcher 파일들의 `// 실 fetch
-    준비 코드` 주석 블록은 그대로 보존 — 주석 해제 + Cheerio 추가만으로 진입
-    (인터페이스 ADR-0008 동결).
-  - DoD: legal 4-provider 검토 통과 + GTC 수동 열람 완료 + 실 Neon DB에
-    `tariff_snapshot` 행 Proximus/Telenet 2 fetcher × N tariff 누적 확인 +
-    24h 신선도 모니터링 게이트 복원 동작 + confidence='low' 비율 < 20% (스텁
-    100%에서 격상) + typecheck/lint/test 0 + harness:plan/data 정합.
+  - **⚠️ 진입 전제 정정 (2026-05-28, [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Amendment 3)**:
+    "주석 해제 + Cheerio 추가만으로 진입" 전제는 **거짓으로 판명**. 메인 정찰이
+    "Telenet = JS 렌더링 → 정적 불가"로 보고했으나, architect WebFetch 검증
+    결과 *host/path staleness가 원인* (`www.telenet.be` → **302 `www2.telenet.be`**
+    리다이렉트 미추적). 종착지 정적 HTML에 mobile 가격 리터럴 존재 (Telenet
+    Mobile Basic €21/Unlimited €41; Proximus Essential €14.99~Unlimited €34.99).
+    단 **internet 페이지는 정적 가격 부재** (Telenet 관측). `api.prd.telenet.be`
+    = HTTP 403 OAuth 게이트 (우회 금지). **채택 = 페이지 단위 하이브리드 Cheerio**.
+  - **채택 산출물 (Amendment 3)**: 스텁 prepared 코드 *경로는 보존하되 URL/셀렉터/
+    plan명을 builder가 전면 재작성*. (1) Telenet/Proximus **mobile = `method='scraping'`**
+    (undici fetch + Cheerio, www2 host + 현행 경로 + 현행 plan명 KING/KONG/Mobile
+    Basic·Unlimited, Mobile Essential/Easy/Smart/Maxi/Unlimited). (2) **internet
+    페이지 = 첫 fetch 런타임 검증** → 정적 매칭 성공 시 `scraping`, 실패(Telenet
+    internet 현 관측) 시 **`method='manual'` 폴백** (ADR-0008 §T5 enum, 운영자
+    ~1h/월 입력). 인터페이스 ADR-0008 §T1/T4/T5 변경 0 (method 혼합 이미 지원).
+    어필리에이트 피드(ADR-0014) **미트리거** (Cheerio 가용).
+  - DoD: legal 4-provider 검토 통과 + GTC 수동 열람 완료 + builder 첫 fetch(raw
+    HTML) 셀렉터 매칭 검증 (mobile ≥ Telenet 2 + Proximus 5 plan; internet 매칭
+    0 → manual 폴백 등록) + 실 Neon DB에 `tariff_snapshot` 행 Proximus/Telenet
+    2 fetcher × N tariff 누적 확인 + 24h 신선도 모니터링 게이트 복원 동작 +
+    confidence='low' 비율 < 20% (스텁 100%에서 격상) + typecheck/lint/test 0 +
+    harness:plan/data 정합.
 - [x] **1.5.6.1** **옵션 X "추정값" UI 표시** (페이즈 4.6 베타 배포 의존성 —
   ADR-0013 §평가 6 옵션 X + Amendment 1 예정). 1.5.6 본문은 차단 유지(옵션 C);
   본 sub-task 는 *비차단* — 베타 동안 스텁 데이터의 P1/P3 정직성 보강.
@@ -613,6 +628,12 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - **🔒 선행조건**: 1.5.6 §선행조건 (legal 4-provider robots/TOS 일괄 검토
     + GTC 수동 열람) 통과 후 진입. Orange BE robots.txt + TOS 는 ADR-0013 이
     *미검토* → legal 4-provider 트리거에 포함 (PLAN 항목 진입 시 호출).
+  - **함의 cross-ref ([ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Amendment 3, 2026-05-28)**:
+    4사 모두 현대 JS 사이트(AEM/React 위젯) 가능성 높음 — *정적 파싱 가용성은
+    공급사가 아니라 페이지 단위*로 판단해야 함 (Telenet mobile=정적 가능 /
+    internet=불가 사례). Orange BE 진입 시 첫 fetch raw HTML 셀렉터 매칭으로
+    페이지별 검증 → 실패 페이지는 `method='manual'` 폴백 (1.5.6과 동일 패턴).
+    리다이렉트(host 변경) 추적 필수 — stale URL이 정적/JS 판정을 오도할 수 있음.
   - DoD: legal Orange BE robots/TOS 통과 + `src/fetchers/orange-be.ts` 실
     fetch + `src/fetchers/orange-be.test.ts` 단위 1 + registry 등록 + 실 Neon
     DB `tariff_snapshot` Orange BE N tariff 누적 + confidence='low' < 20% +

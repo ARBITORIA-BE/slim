@@ -1223,3 +1223,277 @@ ADR-0013 Appendix A §조건 A 의 운영자 트랙. Appendix B legal 검토 통
 **Appendix B 작성: legal 에이전트 (2026-05-17)**
 **다음 단계**: 운영자 B.8 GTC 수동 열람 병행 트랙 → 결과 Appendix B Amendment로 기록.
 1.5.6 fetcher 코드: 본 Appendix B 통과 + 운영자 GTC 수동 열람 완료 후 builder 진입.
+
+---
+
+## Appendix B Amendment (2026-05-28) — 운영자 GTC 수동 열람 완료 (Proximus/Telenet)
+
+**실행 주체**: legal 에이전트 (1차 검토). 변호사 아님.
+
+**검토 대상**: Proximus + Telenet 2사 (Orange BE = 1.5.8 별건, 이하 §잔여 조건 참조).
+
+**기존 Appendix B 본문**: 변경 없음. 본 Amendment는 B.8 체크리스트 실행 결과를 append한다.
+
+---
+
+### 검토 방식
+
+Appendix A (2026-05-09) + Appendix B (2026-05-17) 에서 WebFetch + FlateDecode 압축으로
+텍스트 추출에 전부 실패했던 기술 장벽을, 이번 턴에서 운영자가 브라우저로 직접 PDF를 다운로드한 후
+로컬 `pdftotext`(poppler) 도구로 텍스트 추출하는 방식으로 극복했다.
+
+- **Proximus GTC** ("General terms and conditions for consumers and small enterprises", 영문,
+  170줄): 로컬 추출 완료. 검토 파일: `C:\Users\kimwo\gtc-review\proximus.txt`.
+  버전 표기: "1 of January 2025". 발행사: Proximus SA, VAT: BE 0202.239.951.
+- **Telenet Algemene voorwaarden** (네덜란드어, 2025-03-23 최신판, 317줄): 로컬 추출 완료.
+  검토 파일: `C:\Users\kimwo\gtc-review\telenet.txt`. 버전 표기: "Laatste update: 23 maart 2025".
+  발행사: Telenet BV, BTW BE0473.416.418.
+
+두 파일 모두 이번 턴에서 `Read` 도구로 직접 확인하여 키워드 검색 결과를 대조했다.
+이하 조항 분류 및 판정은 **원문 직접 확인 기반**이다 (인용 아님).
+
+---
+
+### 키워드 검색 결과 — 0건
+
+B.8 체크리스트 3개 언어 키워드를 두 파일 전문에서 검색한 결과:
+
+자동 접근/스크래핑을 **직접 금지**하는 조항: **0건** (Proximus + Telenet 양사 모두).
+
+매칭된 항목은 전부 다음 3개 유형 중 하나로, 공개 가격 페이지 스크래핑과 무관하다:
+
+| 파일 | 매칭 문구 | 실제 스코프 | 판정 |
+|---|---|---|---|
+| Proximus Art. 3.2 | "automatically renewed" | 계약 자동갱신 조항 | false positive |
+| Proximus Art. 8.1~8.3 | "intellectual property rights on the Products and Services...trademarks" | 제품/장비/상표 IP 조항 — 웹사이트 가격 데이터 스크래핑 언급 없음 | 스코프 밖 |
+| Telenet Art. 4.4 | "automatisch verlengd" | 계약 자동갱신 조항 | false positive |
+| Telenet Bijz. Vaste Telefonie 3.1 | "automatische internationale gesprekken" | 자동 국제통화 과금 조항 | false positive |
+| Telenet Bijz. Televisie Art. 5 | "intellectuele eigendom op de Telenet Televisie-dienst en de audio- en audiovisuele inhoud" | TV 서비스/방송 콘텐츠 IP 조항 | 스코프 밖 |
+| Telenet Bijz. Internet 1.1 | "oneigenlijk gebruik" (부적절 사용) | Telenet **네트워크** 남용(바이러스/스팸/침입) 가입자 AUP — 웹사이트 방문자 스크래핑과 다른 스코프 | 스코프 밖 |
+| Telenet Bijz. Huur Toestel 2.6 | "oneigenlijk...gebruik van het Toestel" | 임대 **셋톱박스 장비** 오용 조항 | 스코프 밖 |
+| Telenet Art. 12.2.1 | "centrale nummerdatabank" | 전화번호부 DB 조항 | 스코프 밖 |
+| Telenet Bijz. Internet 1.2.1 | "WHOIS-databanken" | 인터넷 남용 신고 절차 내 IP 소유자 확인 안내 | 스코프 밖 |
+
+---
+
+### 조항 강도 판정 — ADR-0013 §B.7 프레임워크 적용
+
+#### Proximus
+
+검토 범위: `C:\Users\kimwo\gtc-review\proximus.txt` 전문 (170줄, 직접 확인).
+
+Art. 8 (Intellectual rights):
+> "All intellectual property rights on the Products and Services (including all documents
+> created by Proximus under the Contract) as well as all trademarks, service marks, trading
+> names, logos and other words or symbols...shall remain the exclusive property of Proximus...
+> The Customer may not claim any rights in such intellectual property."
+
+이 조항은 **가입자-Proximus 간 계약 맥락**의 제품·장비·상표 IP 조항이다. 적용 당사자는
+Proximus 서비스 가입자("Customer")이며, 웹사이트 방문자 또는 제3자의 공개 페이지 접근을
+규율하는 조항이 아니다. 공개 요금제 가격 데이터 수집을 언급하지 않는다.
+
+CJEU Ryanair v PR Aviation (C-30/14) 관점: 계약 제한이 유효하려면 TOS가 스크래핑 대상
+당사자(여기서는 Slim)에게 *적용되는* 약관이어야 한다. Proximus GTC는 Proximus 서비스
+**가입자** 약관이다. Slim은 Proximus 가입자가 아니라 공개 웹사이트 방문자이므로, 이 GTC가
+Slim의 스크래핑 행위에 계약적으로 구속력을 갖는다는 법적 근거가 없다.
+
+EU Database Directive 96/9/EC Sui Generis 관점: Proximus 요금제 가격표는 가입자 약관의
+일부로 공개 게시되며("Price list: All tariffs and prices...as published on its website"),
+독립적 DB 구축 투자 목적의 창작물로 볼 근거가 약하다 (Football Dataco C-604/10 축소
+해석). Slim의 1일 1회 현재 가격 추출은 "substantial part re-utilization" 기준 미달
+가능성이 높다 (Innoweb C-202/12).
+
+**Proximus 강도 판정: 약함 (WEAK)** — 가입자 서비스 약관 내 IP 조항이 존재하나 웹사이트
+방문자의 공개 가격 페이지 스크래핑에 직접 적용되는 명시 금지 조항 없음. §B.9 차단 조건
+"중간 강도 이상" 미충족.
+
+#### Telenet
+
+검토 범위: `C:\Users\kimwo\gtc-review\telenet.txt` 전문 (317줄, 직접 확인).
+
+Appendix B (2026-05-17)에서 HTML `juridische-informatie` 페이지 기반으로 판정된 "약한
+강도 (2.5)" 결론이 GTC PDF 직접 확인을 통해 **재확인·유지**된다.
+
+GTC PDF 전문에서 추가로 확인된 주요 조항:
+
+- **Art. 6.1~6.4** (Verplichtingen van de Klant): 서비스를 합법적 목적으로만 사용할 것,
+  콘텐츠를 제3자에게 재배포·판매·임대 금지 — 적용 당사자는 Telenet 서비스 **가입자**.
+  웹사이트 방문자 스크래핑 언급 없음.
+- **Art. 6.3 원문**: "U mag deze diensten noch de inhoud ervan, kosteloos noch ten bezwarende
+  titel verspreiden, commercialiseren, verkopen..." — 이는 Telenet **서비스 콘텐츠**(TV,
+  인터넷 서비스)의 재배포 금지이며 공개 요금제 가격 페이지 접근과 무관하다.
+- **Bijzondere voorwaarden Internet 1.1~1.2**: Telenet 네트워크 남용(바이러스, 스팸,
+  침입 등) 금지 — 가입자 AUP로, 웹사이트 방문자 스크래핑 스코프와 다르다.
+- **Bijzondere voorwaarden Televisie Art. 5**: TV 서비스/방송 콘텐츠 IP — 요금제 가격
+  데이터와 무관.
+
+CJEU Ryanair v PR Aviation 관점: Proximus 동일 분석 적용. Telenet GTC는 Telenet 서비스
+**가입자** 약관이며, Slim은 가입자가 아니다.
+
+**Telenet 강도 판정: 약함 (WEAK)** — Appendix B 2.5점 결론을 GTC PDF 직접 확인으로
+재확인. 가입자 대상 서비스 이용 금지 조항 + TV 콘텐츠 IP 조항 존재하나 웹사이트 방문자의
+공개 가격 페이지 스크래핑에 직접 적용되는 명시 금지 조항 없음. §B.9 차단 조건
+"중간 강도 이상" 미충족.
+
+---
+
+### §B.9 차단 조건 가부 판정
+
+**Proximus 차단 조건 충족 여부**: 미충족.
+- "중간 강도 이상 자동접근 금지 조항 발견" → 해당 조항 없음. 차단 조건 미충족.
+
+**Telenet 차단 조건 충족 여부**: 미충족.
+- Appendix B 2026-05-17의 약한 강도 판정 유지. 차단 조건 미충족.
+
+**결론: 1.5.6 코드 머지 게이트 — OPEN**.
+
+Proximus + Telenet GTC 수동 열람 완료 결과, §B.9 차단 조건(중간 강도 이상 자동접근 금지
+조항 발견)을 충족하는 조항이 발견되지 않았다. B.5 공통 조건(일 1회 이하 fetch, 정직한
+User-Agent, 요금제 경로 직접 fetch, robots.txt 모니터링, /legal/affiliate-disclosure
+출처 표기, 차단 발생 시 즉시 비활성)을 준수하는 것을 전제로 1.5.6 fetcher 코드 머지를
+차단하지 않는다.
+
+---
+
+### 외부 변호사 필요 여부
+
+**아니오 — 현재 시점 외부 변호사 즉시 감사 불필요.**
+
+ADR-0013 Appendix A §조건 A (운영자 GTC 수동 열람에서 중간 강도 이상 조항 발견) 미충족.
+ADR-0013 §B.7 조건 A/B/C/D 모두 미충족.
+ADR-0004 §결정 3 기준(자체 legal 에이전트 우선, 외부는 베타 직전 €800 1회 + 수익 €5K/월
+시점)에서 현재는 진행 가능 범위다.
+
+§B.7 조건 C (어필리에이트 수수료 발생 = 상업 운영 신호)가 충족되는 시점, 즉 베타 진입 후
+수익이 발생하는 시점에 CJEU Ryanair v PR Aviation (C-30/14) 리스크가 격상되므로, 그
+시점에 €800 외부 감사 1회를 권고한다 (ADR-0013 Appendix A §조건 C 동일).
+
+---
+
+### 잔여 리스크 및 한계
+
+1. **GTC 스코프 한계**: 검토한 두 PDF는 **가입자 서비스 약관**이다. 웹사이트 방문자에
+   대한 별도 이용약관(Website Terms of Use)이 존재한다면 해당 문서가 직접 적용 약관이
+   된다. Proximus/Telenet 웹사이트에서 방문자용 별도 이용약관 링크를 발견하지 못했으나
+   (Appendix A WebFetch 시도 + Appendix B HTML 검토 기반), 별도 페이지가 사후 추가될
+   가능성을 배제할 수 없다. robots.txt 월 1회 모니터링(B.5 공통 조건 4)에 TOS 변경
+   모니터링을 병행 권장한다.
+
+2. **언어 커버리지**: Proximus GTC는 영문판만 검토했다. FR/NL판에 추가 조항이 존재할
+   가능성은 통신 약관 실무상 낮으나(다국어 판본은 동일 내용 번역이 일반적), 0%로
+   단정할 수 없다. 베타 진입 전 €800 감사 시 FR/NL판 병행 검토 권장.
+
+3. **Orange BE 미결**: Orange BE(PLAN 1.5.8) 소비자 TOS PDF 수동 열람은 이번 검토 범위 밖이다.
+   Appendix B §B.9 조건 ("strictly personal use" 조항 소비자 TOS 미존재 확인)이
+   여전히 충족되지 않았다. Orange BE 소비자 TOS PDF 수동 열람 = 1.5.8 진입의
+   별도 선행조건으로 남는다.
+
+4. **본 검토의 법적 지위**: 이 Amendment는 "1차 법무 검토 의견"이며 "법률 자문"이 아니다.
+   변호사 검토를 대체하지 않는다.
+
+---
+
+**Appendix B Amendment 작성: legal 에이전트 (2026-05-28)**
+**결론**: 1.5.6 (Proximus + Telenet) 코드 머지 게이트 **OPEN** (B.5 공통 조건 준수 전제).
+**Orange BE (1.5.8)**: 소비자 TOS PDF 수동 열람 별도 선행조건 — 미완료.
+
+---
+
+## Amendment 3 (2026-05-28) — 접근법 재평가: 스텁 전제 붕괴 → 정정 + 페이지 단위 하이브리드 Cheerio 채택
+
+### Status
+
+**Accepted (architect, 2026-05-28)**. ADR status = **Accepted 유지** (옵션 C → 진입 기조
+보존, Amendment 1 옵션 B 유사 진입 + 24h 게이트 + Amendment 2 GTC 보존). 본 Amendment는
+**1.5.6 *진입 방법*의 정정**이지 분기 재격상(LOW/MEDIUM/HIGH)이 아니다. MEDIUM 2.75 분류
+근거는 유효. 어필리에이트 피드(ADR-0014)는 트리거되지 않음 (Cheerio 가용 확인).
+
+### Context — 무엇이 깨졌나
+
+PLAN 1.5.6 본문 및 §평가 2(HTML 구조 안정성)는 "fetcher 파일의 `// 실 fetch 준비 코드`
+주석 해제 + Cheerio 추가만으로 진입"을 전제했다. **메인 정찰(Claude, 2026-05-28)이 이
+전제가 Telenet에서 깨졌다고 보고**:
+
+1. 스텁 URL 2개 모두 stale (리다이렉트).
+2. 사이트 = Adobe AEM + `wink` React 위젯, `/etc.clientlibs/` 1330건.
+3. 메인 mobile 페이지 정적 HTML에 가격 class(price/prijs/tarief) 0건, JSON-LD = Organization만.
+4. 가격 API 추정 `api.prd.telenet.be/{omapi,ocapi,searchapi}` = OAuth 게이트.
+5. 결론: "정적 Cheerio 파싱으로 Telenet 가격 수집 불가".
+
+### architect 정찰 검증 (WebFetch, 2026-05-28) — 전제 붕괴의 *원인 정정*
+
+정찰 결론은 **부분적으로만 맞다**. 핵심 오류 = **잘못된 host/path 참조**:
+
+- **Telenet mobile**: `www.telenet.be/.../mobiel.html` 은 **302 → `www2.telenet.be`** 로
+  리다이렉트한다. 정찰은 `www`(또는 stale 경로)만 봤다. **`www2.telenet.be/residential/nl/producten/mobiel.html`
+  (리다이렉트 종착지) 의 정적 HTML에는 가격이 *리터럴 텍스트*로 존재** — WebFetch 2026-05-28
+  확인: Mobile Basic 15GB € 21/월, Mobile Unlimited € 41/월, combo promo € 56. 가격은
+  JSON-LD/data-attr가 아닌 **HTML 본문 리터럴**, `wink` React 컨테이너 미검출.
+  ⇒ **Telenet mobile = 정적 Cheerio 파싱 가능 (정찰 결론 반증)**.
+- **Telenet internet**: `www2.../producten/internet.html` 의 정적 HTML에는 **기본 월정액
+  가격이 없음** (Basic 200/Standard 500/Turbo 2.5Gbps plan명만, promo 단편만). ⇒
+  **internet 페이지는 정찰 우려가 맞다 — 정적 파싱 불가/불충분**.
+- **Proximus mobile**: `www.proximus.be/en/mobile-subscription` + `.../id_cr_msub_belfius/.../mobile-subscriptions.html`
+  정적 HTML에 가격 리터럴 존재 — Mobile Essential €14.99→16.99, Easy €15.99→19.99,
+  Smart €18.99→24.99, Maxi €21.99→29.99, Unlimited €34.99→49.99. React 위젯/clientlib
+  미검출. ⇒ **Proximus mobile = 정적 Cheerio 파싱 가능**.
+- **Telenet API**: `api.prd.telenet.be/omapi` = **HTTP 403** (인증 게이트 확인). 인증 우회
+  시도 안 함. ⇒ 정찰의 "OAuth 게이트" 맞음. (a) 경로 = **거부 사유 확정**.
+
+**정정 요약**: 정찰의 "JS 렌더링 = Cheerio 불가" 결론은 **host/path staleness가 원인**이었지
+사이트의 근본적 JS-rendering 때문이 아니다. 단 **internet 페이지는 mobile과 다르게 가격이
+정적 HTML에 없을 수 있다** — 즉 깨진 것은 "공급사 단위 전제"가 아니라 "*페이지 단위* 전제".
+
+**미확인 (정직 명시)**:
+- Proximus internet 페이지의 정적 가격 존재 여부 — 본 라운드 미확인 (URL 404 다수). 1.5.6
+  진입 시 builder가 첫 fetch로 런타임 검증.
+- mobile 가격이 *promo* 노출이고 standard 가격이 별도 클릭/오버레이로만 노출되는지 — WebFetch는
+  렌더 후 일부 텍스트를 합칠 수 있어, builder가 *raw HTML(undici fetch)*로 셀렉터 매칭을
+  반드시 재검증해야 함 (WebFetch ≠ raw fetch).
+- Cloudflare/Akamai 봇 챌린지 첫 fetch 응답 — 여전히 미확인 (Amendment 1 §24h 게이트 유효).
+
+### 4 경로 트레이드오프 (솔로/€300/Inngest free 30s·256MB/학습자)
+
+| 경로 | 적합성 | 비용/리스크 | 판정 |
+|---|---|---|---|
+| **(a) 가격 API 리버스** (`api.prd.telenet.be`) | 403 OAuth 게이트. 인증 토큰 추출 = fragile + TOS 적합성 불명 + 인증 우회 윤리·법적 회색 | 높음 | **거부** — §대안 3 정신 + 우회 금지 |
+| **(b) 헤드리스 Playwright** | Inngest free 30s step + 256MB cap 위협 (부팅 2-5s + 로드 2-10s + 150MB). ADR-0013 대안 3 "별도 ADR" 명시 | 높음 (학습자 디버깅 sink) | **거부 (현 단계)** — 정적 가용 페이지엔 과잉. internet 페이지가 끝내 정적 불가 시 재검토 |
+| **(c) 수동 method='manual'** (ADR-0008 §T5 enum 존재) | 가장 단순·P3 정직·솔로 ~1h/월·ADR-0034 옵션 X 정직성과 정합 | 낮음 (시간 의존) | **부분 채택** — 정적 파싱 불가 페이지(예: Telenet internet)의 *폴백* |
+| **(d) 어필리에이트 피드** Daisycon/Awin (TVA 발급됨 → 가입 자격 충족) | MONETIZATION §A #1(순위 무영향) 위협 = /data-sources 출처 노출 필수. advertiser 활성 미확인 | 중간 (윤리 가드레일 + 미확인) | **defer** — Cheerio 가용으로 1차 불필요. ADR-0014 미트리거 (예약 유지) |
+
+### Decision — 페이지 단위 하이브리드 Cheerio (공급사 혼합 + 폴백)
+
+ADR-0008 §T1/§T5 인터페이스는 fetcher별 `method` 혼합을 *이미 지원*. 채택:
+
+1. **Telenet mobile + Proximus mobile = `method='scraping'` (Cheerio + undici)**. 정찰이
+   주장한 "주석 해제만" 전제는 **무효** — **URL 정정 필수** (www2 host + 현행 경로 +
+   plan명 정정: KING/KONG/Mobile Basic/Mobile Unlimited, Mobile Essential/Easy/Smart/Maxi/Unlimited).
+   스텁의 prepared 코드 *경로는 보존하되 URL/셀렉터는 builder가 재작성*.
+2. **internet 페이지 = 첫 fetch 런타임 검증 후 분기**: 정적 가격 매칭 성공 → `scraping`.
+   실패(Telenet internet 현 관측) → **`method='manual'` 폴백** (ADR-0008 §T5 enum, 운영자
+   ~1h/월 입력). confidence는 manual도 ADR-0008 §T3 휴리스틱 적용.
+3. **24h 신선도 모니터링 게이트 = Amendment 1 그대로 유효** (Telenet 1개 먼저 → Proximus
+   점진). 첫 fetch 응답 헤더(`Server`/`cf-ray`/`x-akamai-*`) + 챌린지 페이지 탐지.
+
+### Consequences (정직 — CLAUDE.md §2)
+
+- ✅ Telenet/Proximus **mobile = 실 데이터 가능** (정찰 비관 정정) → confidence 격상.
+- ⚠️ **운영자가 "실 데이터" 택한 결정(ADR-0034)은 "Cheerio로 가능"이라는 전제 위에 있었고,
+  그 전제는 *mobile에서만* 성립**. internet 페이지가 정적 불가면 *그 페이지는 manual*이
+  되어 자동화 목표와 부분 배치 — 운영자 시간 의존 일부 잔존. **이 전제 부분 붕괴를 숨기지
+  않는다**.
+- ⚠️ "주석 해제 + Cheerio만" 1.5.6 본문 전제는 **거짓** — URL 전면 정정 + 셀렉터 신작 필요.
+  builder 작업량이 본문 추정보다 큼.
+- 🔁 ADR-0014(affiliate-feed-as-primary) **예약 유지 — 미트리거**. internet manual 폴백이
+  장기 부담이 되거나 Cheerio 차단 시 ADR-0014 또는 Playwright 신규 ADR 재호출.
+- 🔁 ADR-0008 §T1 attributes / §T4 union / §T5 method enum **변경 0** (혼합 이미 지원).
+
+### 검증 방법
+
+- builder 첫 fetch(undici raw HTML) 후 셀렉터 매칭 ≥ Telenet mobile 2 plan + Proximus
+  mobile 5 plan → `method='scraping'`. internet 매칭 0 → `method='manual'` 폴백 등록.
+- 24h 내 Sentry 차단(403/429/챌린지) 0건 → Amendment 3 정당화. 1건 → fetcher 비활성 +
+  Amendment 4 (Playwright 또는 manual 전면 전환 재평가).
+- harness:plan/data 정합 + confidence='low' 비율 < 20%.
+
+### Amendment 3 작성: architect (2026-05-28) — WebFetch 검증 기반, 인증 우회 0
