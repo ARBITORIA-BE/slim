@@ -1,50 +1,158 @@
 /**
- * Telenet 스텁 fetcher 단위 테스트 (PLAN 1.8)
+ * Telenet 실 스크래핑 fetcher 단위 테스트 (PLAN 1.5.6)
  *
- * 외부 호출 0 — 스텁이므로 실 HTTP fetch가 없다.
- * Proximus 테스트와 동일 패턴 — 두 fetcher가 같은 인터페이스를 지킨다는 증거.
+ * 외부 호출 0 — global.fetch를 vi.fn()으로 모킹.
+ * 케이스:
+ *   (a) 정상 HTML → mobile 요금제 파싱 + method='scraping' + stub===false
+ *   (b) HTTP 403 → ok:false kind:'network'
+ *   (c) 빈 HTML (셀렉터 0 매칭) → ok:false kind:'parse'
+ *   (d) STUB_FAIL_TELENET=1 → ok:false kind:'network' (1.9 격리)
+ *   (e) 챌린지 페이지 → ok:false kind:'network'
  */
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { telenet } from './telenet';
 
-// ─── afterEach: 환경변수 정리 ─────────────────────────────────────────────
+// ─── 최소 fixture HTML ────────────────────────────────────────────────────
+//
+// 실제 Telenet mobile 페이지 구조 기반 최소 마크업.
+// price=0 카드(조합 전용) 2개 + 실제 모바일 요금제 카드 2개.
+// 가격은 tg-lazy-loading-standalone inputs의 customProduct.price로 존재.
+
+const FIXTURE_HTML_HAPPY = `<!DOCTYPE html>
+<html lang="nl">
+<head><title>Mobiel - Telenet</title></head>
+<body>
+<!-- 카드 1: Basic 조합 가격 (price=0, skip 대상) -->
+<div class="cmp-product-summary">
+  <div class="product-summary">
+    <h3 class="heading--4">Basic</h3>
+    <div data-tg-cmp-is="title" class="heading--3"><b>15 GB data</b></div>
+    <p>In combinatie met internet Nu vanaf € 56 per maand</p>
+    <tg-lazy-loading-standalone
+      component-id="tg-marketing-cafe-pricing"
+      inputs='{"productCategory":"customProducts","customProduct":{"duration":"0","promoPrice":"","endDate":"","price":"0","startDate":""}}'
+    ></tg-lazy-loading-standalone>
+  </div>
+</div>
+
+<!-- 카드 2: Unlimited 조합 가격 (price=0, skip 대상) -->
+<div class="cmp-product-summary">
+  <div class="product-summary">
+    <h3 class="heading--4">Unlimited</h3>
+    <div data-tg-cmp-is="title" class="heading--3"><b>Unlimited data</b></div>
+    <p>In combinatie met internet Nu vanaf € 56 per maand</p>
+    <tg-lazy-loading-standalone
+      component-id="tg-marketing-cafe-pricing"
+      inputs='{"productCategory":"customProducts","customProduct":{"duration":"0","promoPrice":"","endDate":"","price":"0","startDate":""}}'
+    ></tg-lazy-loading-standalone>
+  </div>
+</div>
+
+<!-- 카드 3: Mobile Basic 단독 (price=21) -->
+<div class="cmp-product-summary">
+  <div class="product-summary">
+    <h3 class="heading--4">Basic</h3>
+    <div data-tg-cmp-is="title" class="heading--3"><b>15 GB data</b></div>
+    <p>Voor basisgebruik zoals surfen</p>
+    <tg-lazy-loading-standalone
+      component-id="tg-marketing-cafe-pricing"
+      inputs='{"productCategory":"customProducts","customProduct":{"duration":"0","promoPrice":"","endDate":"","price":"21","startDate":""}}'
+    ></tg-lazy-loading-standalone>
+  </div>
+</div>
+
+<!-- 카드 4: Mobile Unlimited 단독 (price=41) -->
+<div class="cmp-product-summary">
+  <div class="product-summary">
+    <h3 class="heading--4">Unlimited</h3>
+    <div data-tg-cmp-is="title" class="heading--3"><b>Unlimited data</b></div>
+    <p>Voor wie zorgeloos en zonder limieten wil</p>
+    <tg-lazy-loading-standalone
+      component-id="tg-marketing-cafe-pricing"
+      inputs='{"productCategory":"customProducts","customProduct":{"duration":"","promoPrice":"","endDate":"","price":"41","startDate":""}}'
+    ></tg-lazy-loading-standalone>
+  </div>
+</div>
+</body>
+</html>`;
+
+const FIXTURE_HTML_EMPTY = `<!DOCTYPE html>
+<html lang="nl"><head><title>Mobiel</title></head><body><p>Geen producten</p></body></html>`;
+
+const FIXTURE_HTML_CHALLENGE = `<!DOCTYPE html>
+<html><head><title>Just a moment...</title></head><body><p>Just a moment</p></body></html>`;
+
+// ─── fetch 모킹 헬퍼 ─────────────────────────────────────────────────────
+
+function makeMockResponse(
+  status: number,
+  body: string,
+): Response {
+  return new Response(body, {
+    status,
+    headers: { 'content-type': 'text/html; charset=utf-8' },
+  });
+}
+
+// ─── afterEach: 환경변수 정리 + 모킹 초기화 ──────────────────────────────
 afterEach(() => {
   delete process.env['STUB_FAIL_TELENET'];
+  vi.restoreAllMocks();
 });
 
-// ─── 1. metadata 모양 검증 ────────────────────────────────────────────────
+// ─── 1. metadata 검증 ────────────────────────────────────────────────────
 describe('TelenetFetcher — metadata', () => {
-  it('FetcherMetadata 모든 필드 존재 + 올바른 값 (ADR-0008 §T5)', () => {
-    const { metadata } = telenet;
+  it('method=scraping으로 변경됨 (1.5.6 전환 완료)', () => {
+    expect(telenet.metadata.method).toBe('scraping');
+  });
 
+  it('FetcherMetadata 필수 필드 모두 존재 (ADR-0008 §T5)', () => {
+    const { metadata } = telenet;
     expect(metadata.providerSlug).toBe('telenet-be');
     expect(metadata.displayName).toBe('Telenet');
     expect(metadata.country).toBe('BE');
-    // ADR-0011 §T2 항목 3 Amendment: 스텁 fetcher는 'stub' (1.5.6 실 스크래핑 전환 시 'scraping'으로 변경)
-    expect(metadata.method).toBe('stub');
     expect(metadata.version).toMatch(/^telenet-be@\d{4}-\d{2}-\d{2}$/);
     expect(metadata.homepageUrl).toBe('https://www.telenet.be');
   });
 });
 
-// ─── 2. fetch() 성공 케이스 ───────────────────────────────────────────────
-describe('TelenetFetcher — fetch() 성공', () => {
+// ─── 2. 정상 HTML → mobile 요금제 파싱 ──────────────────────────────────
+describe('TelenetFetcher — fetch() 정상 케이스', () => {
+  beforeEach(() => {
+    // global.fetch를 mock으로 교체 (네트워크 0)
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      makeMockResponse(200, FIXTURE_HTML_HAPPY),
+    );
+  });
+
   it('FetchOutcome.ok=true + FetchResult 모양 검증', async () => {
     const outcome = await telenet.fetch();
-
     expect(outcome.ok).toBe(true);
-    if (!outcome.ok) {
-      throw new Error('ok=true 기대, false 반환됨');
-    }
+    if (!outcome.ok) throw new Error('ok=true 기대, false 반환됨');
 
     const { result } = outcome;
     expect(result.fetcherSlug).toBe('telenet-be');
     expect(result.fetchedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-    // 스텁: 2 internet + 1 mobile + 1 bundle = 4개 tariff
-    expect(result.data.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('모든 tariff가 올바른 providerSlug를 가진다 (T2 페치 단위)', async () => {
+  it('price>0인 카드만 반환 — 조합 전용(price=0) 카드 제외', async () => {
+    const outcome = await telenet.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    // 4개 카드 중 price>0인 카드는 2개 (Basic=21, Unlimited=41)
+    expect(outcome.result.data.length).toBe(2);
+  });
+
+  it('모든 tariff가 category=mobile (Amendment 3: mobile만 반환)', async () => {
+    const outcome = await telenet.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    for (const tariff of outcome.result.data) {
+      expect(tariff.category).toBe('mobile');
+    }
+  });
+
+  it('모든 tariff providerSlug=telenet-be', async () => {
     const outcome = await telenet.fetch();
     if (!outcome.ok) throw new Error('fetch 실패');
 
@@ -53,91 +161,152 @@ describe('TelenetFetcher — fetch() 성공', () => {
     }
   });
 
-  it('모든 가격이 정수 cents + 양수 (ADR-0005 §T2)', async () => {
+  it('가격이 cents 정수로 정확히 변환됨 (€21 → 2100, €41 → 4100)', async () => {
+    const outcome = await telenet.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    const prices = outcome.result.data.map((t) => t.monthlyPriceCents);
+    expect(prices).toContain(2100); // €21
+    expect(prices).toContain(4100); // €41
+  });
+
+  it('rawPayload.stub===false (BetaEstimatedBanner 1.5.6.1 자동 비활성 신호)', async () => {
     const outcome = await telenet.fetch();
     if (!outcome.ok) throw new Error('fetch 실패');
 
     for (const tariff of outcome.result.data) {
-      expect(Number.isInteger(tariff.monthlyPriceCents)).toBe(true);
-      expect(tariff.monthlyPriceCents).toBeGreaterThan(0);
-      expect(tariff.monthlyPriceCents).toBeLessThanOrEqual(100_000);
+      expect(tariff.rawPayload['stub']).toBe(false);
     }
   });
 
-  it('모든 tariff에 sourceUrl이 실 Telenet URL이다 (P1 정보 우선)', async () => {
+  it('rawPayload에 fetcher_version, url, fetched_at, http 포함 (ADR-0006 §T3)', async () => {
+    const outcome = await telenet.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    const payload = outcome.result.data[0]?.rawPayload;
+    expect(payload?.['fetcher_version']).toContain('telenet-be');
+    expect(payload?.['url']).toContain('telenet.be');
+    expect(payload?.['fetched_at']).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(payload?.['http']).toBeDefined();
+  });
+
+  it('mobile attributes에 mobileAttributesSchema 호환 키 포함', async () => {
     const outcome = await telenet.fetch();
     if (!outcome.ok) throw new Error('fetch 실패');
 
     for (const tariff of outcome.result.data) {
-      // 스텁이라도 sourceUrl은 실 마스터 페이지를 가리켜야 함
-      expect(tariff.sourceUrl).toMatch(/^https:\/\/www2?\.telenet\.be/);
+      const attrs = tariff.attributes;
+      // mobileAttributesSchema 키 확인
+      expect('data_gb' in attrs).toBe(true);
+      expect('voice_minutes' in attrs).toBe(true);
+      expect('sms' in attrs).toBe(true);
+      expect('eu_roaming_included' in attrs).toBe(true);
     }
   });
 
-  it('bundle_internet_tv 카테고리 tariff가 존재한다', async () => {
+  it('Basic 카드: data_gb=15, Unlimited 카드: data_gb="unlimited"', async () => {
     const outcome = await telenet.fetch();
     if (!outcome.ok) throw new Error('fetch 실패');
 
-    const bundles = outcome.result.data.filter(
-      (t) => t.category === 'bundle_internet_tv',
+    const basic = outcome.result.data.find((t) => t.tariffName.includes('Basic'));
+    const unlimited = outcome.result.data.find((t) => t.tariffName.includes('Unlimited'));
+
+    expect(basic?.attributes['data_gb']).toBe(15);
+    expect(unlimited?.attributes['data_gb']).toBe('unlimited');
+  });
+
+  it('confidence는 high 또는 medium (price 파싱 성공 + sanity pass)', async () => {
+    const outcome = await telenet.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    for (const tariff of outcome.result.data) {
+      expect(['high', 'medium']).toContain(tariff.confidence);
+    }
+  });
+
+  it('modemRentalCents=null (모바일 — 모뎀 임대 개념 없음)', async () => {
+    const outcome = await telenet.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    for (const tariff of outcome.result.data) {
+      expect(tariff.modemRentalCents).toBeNull();
+    }
+  });
+
+  it('sourceUrl이 실 Telenet mobile URL (P1 정보 우선)', async () => {
+    const outcome = await telenet.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    for (const tariff of outcome.result.data) {
+      expect(tariff.sourceUrl).toMatch(/telenet\.be.*mobiel/);
+    }
+  });
+});
+
+// ─── 3. HTTP 403 → ok:false kind:'network' ───────────────────────────────
+describe('TelenetFetcher — HTTP 403 에러', () => {
+  it('HTTP 403 → FetchOutcome.ok=false kind=network (B.5)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      makeMockResponse(403, 'Forbidden'),
     );
-    expect(bundles.length).toBeGreaterThanOrEqual(1);
 
-    // 번들 attributes에 tv_channels가 있어야 함
-    const bundle = bundles[0];
-    if (!bundle) throw new Error('bundle tariff 없음');
-    expect(typeof bundle.attributes['tv_channels']).toBe('number');
-  });
-});
-
-// ─── 3. confidence='low' 강제 ─────────────────────────────────────────────
-describe('TelenetFetcher — confidence (P1 정직성)', () => {
-  it(
-    '스텁 fetcher는 모든 tariff의 confidence가 low (ADR-0008 §T3 down-grade)',
-    async () => {
-      const outcome = await telenet.fetch();
-      if (!outcome.ok) throw new Error('fetch 실패');
-
-      for (const tariff of outcome.result.data) {
-        expect(tariff.confidence).toBe('low');
-        expect(tariff.confidenceReason).toContain('stub fetcher');
-      }
-    },
-  );
-
-  it('rawPayload에 stub=true 명시 (P1 + ADR-0006 §T3)', async () => {
     const outcome = await telenet.fetch();
-    if (!outcome.ok) throw new Error('fetch 실패');
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) throw new Error('ok=false 기대');
 
-    for (const tariff of outcome.result.data) {
-      expect(tariff.rawPayload['stub']).toBe(true);
-      expect(tariff.rawPayload['fetcher_version']).toContain('telenet-be');
-    }
+    expect(outcome.error.fetcherSlug).toBe('telenet-be');
+    expect(outcome.error.kind).toBe('network');
+    expect(outcome.error.message).toContain('403');
   });
 });
 
-// ─── 4. STUB_FAIL_TELENET=1 → 실패 outcome (1.9 격리 수동 검증용) ─────────
+// ─── 4. 빈 HTML → ok:false kind:'parse' ──────────────────────────────────
+describe('TelenetFetcher — 셀렉터 0 매칭 (구조 변경)', () => {
+  it('div.cmp-product-summary 없는 HTML → ok:false kind=parse', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      makeMockResponse(200, FIXTURE_HTML_EMPTY),
+    );
+
+    const outcome = await telenet.fetch();
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) throw new Error('ok=false 기대');
+
+    expect(outcome.error.kind).toBe('parse');
+    expect(outcome.error.message).toContain('No mobile plans parsed');
+  });
+});
+
+// ─── 5. 챌린지 페이지 → ok:false kind:'network' ─────────────────────────
+describe('TelenetFetcher — 챌린지 페이지 (B.5)', () => {
+  it('"Just a moment" 페이지 → ok:false kind=network', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      makeMockResponse(200, FIXTURE_HTML_CHALLENGE),
+    );
+
+    const outcome = await telenet.fetch();
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) throw new Error('ok=false 기대');
+
+    expect(outcome.error.kind).toBe('network');
+    expect(outcome.error.message).toContain('challenge');
+  });
+});
+
+// ─── 6. STUB_FAIL_TELENET=1 → 실패 outcome (1.9 격리) ────────────────────
 describe('TelenetFetcher — STUB_FAIL 환경변수 (1.9 격리)', () => {
-  it('STUB_FAIL_TELENET=1 이면 FetchOutcome.ok=false 반환', async () => {
+  it('STUB_FAIL_TELENET=1 → FetchOutcome.ok=false (fetch 호출 없음)', async () => {
     process.env['STUB_FAIL_TELENET'] = '1';
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
     const outcome = await telenet.fetch();
 
     expect(outcome.ok).toBe(false);
-    if (outcome.ok) {
-      throw new Error('ok=false 기대, true 반환됨');
-    }
+    if (outcome.ok) throw new Error('ok=false 기대');
 
     expect(outcome.error.fetcherSlug).toBe('telenet-be');
     expect(outcome.error.kind).toBe('network');
     expect(outcome.error.message).toContain('STUB_FAIL_TELENET');
-    expect(outcome.error.fetchedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-  });
-
-  it('1.9 격리: Proximus 실패가 Telenet 성공에 영향 없다', async () => {
-    // STUB_FAIL_PROXIMUS는 설정하지 않고 Telenet만 정상 확인
-    // (Proximus fetcher와 독립적으로 실행됨을 증명)
-    const outcome = await telenet.fetch();
-    expect(outcome.ok).toBe(true);
+    // STUB_FAIL 분기는 fetch 호출 전에 리턴 — 네트워크 0 확인
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
