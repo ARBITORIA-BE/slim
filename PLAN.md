@@ -50,9 +50,9 @@
 
 - [x] **D.1** Vercel build gate 책임 분리 (ADR-0002 Decision 1 + Amendment 1)
   — 코드 3건(a/b/d) 완료 + DoD #1·#2 통과 (2026-05-14: Vercel `5KZoKk8AI`
-  Production Ready 34s 실측). DoD #3 (의도적 typecheck 깨는 PR 차단)은
-  D.1.c 와 묶여 **Team plan 전환 후 재검증 트리거** ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2).
-  D.1.c 는 deferred — Free org plan 제약, ruleset 정의는 보존됨.
+  Production Ready 34s 실측). **DoD #3 (의도적 typecheck 깨는 PR 차단) = 2026-05-28
+  완료** — Team plan 전환 후 D.1.c 와 함께 라이브 음성 PR(#2)로 main 머지 차단 실측
+  ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). D.1.c ✅ (아래).
   - [x] **D.1.a** `next.config.ts`에 `typescript.ignoreBuildErrors: true` +
     `eslint.ignoreDuringBuilds: true` 추가 — `next.config.ts:12-13`. `pnpm build`
     로그에 "Skipping validation of types" / "Skipping linting" 확인.
@@ -61,13 +61,15 @@
     > Amendment 1으로 D.1.d에서 lint 단계 제거 → 실제 운영은 4단 게이트.
     > 2026-05-11: ci.yml 인코딩 정리 — UTF-8 BOM 제거 + 깨진 em-dash 스텝명
     > (`Harness ??plan integrity`) → `Harness - plan integrity`로 교정.
-  - [ ] **D.1.c** `main` 브랜치 보호 규칙 (GitHub repo settings) — CI 통과 필수
-    체크박스 활성화 (수동 작업, scribe가 운영 노트로 기록).
-    **2026-05-14 보류**: GitHub Free org plan 이 ruleset enforcement 를 차단
-    (ARBITORIA-BE/slim 의 `protect-main` ruleset 정의는 보존, 작동 X) →
-    TVA 발급 + Team $4/user/month 전환 후 자동 작동. 음성 PR #1 (`test/
-    build-gate-negative`) 가이드 + 브랜치는 준비 완료. 본 잠금은
-    [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2 와 cross-ref.
+  - [x] **D.1.c** `main` 브랜치 보호 규칙 (GitHub ruleset) — CI 통과 필수.
+    **2026-05-28 완료**: repo `Arbitoria/slim`(user) → `ARBITORIA-BE/slim`(org) 이전
+    + org Free → Team($4/seat, TVA `BE1037548919`) 전환 → `protect-main` ruleset
+    enforcement 활성. 검증: ruleset active(id 16383049) — PR 필수 + required status
+    check `gate`(= ci.yml job 이름, strict) + force-push/삭제 차단 + bypass actor 0.
+    DoD #3 라이브 음성 PR(#2): 의도적 typecheck 에러 → `gate` FAILURE →
+    `mergeStateStatus: BLOCKED` 실측 → close + 브랜치 삭제. Vercel Git 재연결
+    (ARBITORIA-BE org, webhook 자동배포 검증 동반).
+    [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2 cross-ref.
   - [x] **D.1.d** `.github/workflows/ci.yml`에서 `Lint` 단계 제거 (Amendment 1)
     — GitHub Actions ubuntu-latest에서 `pnpm lint`가 ESLint 9 +
     `@next/eslint-plugin-next` 호환성 이슈로 매번 실패. lint는 로컬
