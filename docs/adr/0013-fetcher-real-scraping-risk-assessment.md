@@ -1396,3 +1396,104 @@ ADR-0004 §결정 3 기준(자체 legal 에이전트 우선, 외부는 베타 �
 **Appendix B Amendment 작성: legal 에이전트 (2026-05-28)**
 **결론**: 1.5.6 (Proximus + Telenet) 코드 머지 게이트 **OPEN** (B.5 공통 조건 준수 전제).
 **Orange BE (1.5.8)**: 소비자 TOS PDF 수동 열람 별도 선행조건 — 미완료.
+
+---
+
+## Amendment 3 (2026-05-28) — 접근법 재평가: 스텁 전제 붕괴 → 정정 + 페이지 단위 하이브리드 Cheerio 채택
+
+### Status
+
+**Accepted (architect, 2026-05-28)**. ADR status = **Accepted 유지** (옵션 C → 진입 기조
+보존, Amendment 1 옵션 B 유사 진입 + 24h 게이트 + Amendment 2 GTC 보존). 본 Amendment는
+**1.5.6 *진입 방법*의 정정**이지 분기 재격상(LOW/MEDIUM/HIGH)이 아니다. MEDIUM 2.75 분류
+근거는 유효. 어필리에이트 피드(ADR-0014)는 트리거되지 않음 (Cheerio 가용 확인).
+
+### Context — 무엇이 깨졌나
+
+PLAN 1.5.6 본문 및 §평가 2(HTML 구조 안정성)는 "fetcher 파일의 `// 실 fetch 준비 코드`
+주석 해제 + Cheerio 추가만으로 진입"을 전제했다. **메인 정찰(Claude, 2026-05-28)이 이
+전제가 Telenet에서 깨졌다고 보고**:
+
+1. 스텁 URL 2개 모두 stale (리다이렉트).
+2. 사이트 = Adobe AEM + `wink` React 위젯, `/etc.clientlibs/` 1330건.
+3. 메인 mobile 페이지 정적 HTML에 가격 class(price/prijs/tarief) 0건, JSON-LD = Organization만.
+4. 가격 API 추정 `api.prd.telenet.be/{omapi,ocapi,searchapi}` = OAuth 게이트.
+5. 결론: "정적 Cheerio 파싱으로 Telenet 가격 수집 불가".
+
+### architect 정찰 검증 (WebFetch, 2026-05-28) — 전제 붕괴의 *원인 정정*
+
+정찰 결론은 **부분적으로만 맞다**. 핵심 오류 = **잘못된 host/path 참조**:
+
+- **Telenet mobile**: `www.telenet.be/.../mobiel.html` 은 **302 → `www2.telenet.be`** 로
+  리다이렉트한다. 정찰은 `www`(또는 stale 경로)만 봤다. **`www2.telenet.be/residential/nl/producten/mobiel.html`
+  (리다이렉트 종착지) 의 정적 HTML에는 가격이 *리터럴 텍스트*로 존재** — WebFetch 2026-05-28
+  확인: Mobile Basic 15GB € 21/월, Mobile Unlimited € 41/월, combo promo € 56. 가격은
+  JSON-LD/data-attr가 아닌 **HTML 본문 리터럴**, `wink` React 컨테이너 미검출.
+  ⇒ **Telenet mobile = 정적 Cheerio 파싱 가능 (정찰 결론 반증)**.
+- **Telenet internet**: `www2.../producten/internet.html` 의 정적 HTML에는 **기본 월정액
+  가격이 없음** (Basic 200/Standard 500/Turbo 2.5Gbps plan명만, promo 단편만). ⇒
+  **internet 페이지는 정찰 우려가 맞다 — 정적 파싱 불가/불충분**.
+- **Proximus mobile**: `www.proximus.be/en/mobile-subscription` + `.../id_cr_msub_belfius/.../mobile-subscriptions.html`
+  정적 HTML에 가격 리터럴 존재 — Mobile Essential €14.99→16.99, Easy €15.99→19.99,
+  Smart €18.99→24.99, Maxi €21.99→29.99, Unlimited €34.99→49.99. React 위젯/clientlib
+  미검출. ⇒ **Proximus mobile = 정적 Cheerio 파싱 가능**.
+- **Telenet API**: `api.prd.telenet.be/omapi` = **HTTP 403** (인증 게이트 확인). 인증 우회
+  시도 안 함. ⇒ 정찰의 "OAuth 게이트" 맞음. (a) 경로 = **거부 사유 확정**.
+
+**정정 요약**: 정찰의 "JS 렌더링 = Cheerio 불가" 결론은 **host/path staleness가 원인**이었지
+사이트의 근본적 JS-rendering 때문이 아니다. 단 **internet 페이지는 mobile과 다르게 가격이
+정적 HTML에 없을 수 있다** — 즉 깨진 것은 "공급사 단위 전제"가 아니라 "*페이지 단위* 전제".
+
+**미확인 (정직 명시)**:
+- Proximus internet 페이지의 정적 가격 존재 여부 — 본 라운드 미확인 (URL 404 다수). 1.5.6
+  진입 시 builder가 첫 fetch로 런타임 검증.
+- mobile 가격이 *promo* 노출이고 standard 가격이 별도 클릭/오버레이로만 노출되는지 — WebFetch는
+  렌더 후 일부 텍스트를 합칠 수 있어, builder가 *raw HTML(undici fetch)*로 셀렉터 매칭을
+  반드시 재검증해야 함 (WebFetch ≠ raw fetch).
+- Cloudflare/Akamai 봇 챌린지 첫 fetch 응답 — 여전히 미확인 (Amendment 1 §24h 게이트 유효).
+
+### 4 경로 트레이드오프 (솔로/€300/Inngest free 30s·256MB/학습자)
+
+| 경로 | 적합성 | 비용/리스크 | 판정 |
+|---|---|---|---|
+| **(a) 가격 API 리버스** (`api.prd.telenet.be`) | 403 OAuth 게이트. 인증 토큰 추출 = fragile + TOS 적합성 불명 + 인증 우회 윤리·법적 회색 | 높음 | **거부** — §대안 3 정신 + 우회 금지 |
+| **(b) 헤드리스 Playwright** | Inngest free 30s step + 256MB cap 위협 (부팅 2-5s + 로드 2-10s + 150MB). ADR-0013 대안 3 "별도 ADR" 명시 | 높음 (학습자 디버깅 sink) | **거부 (현 단계)** — 정적 가용 페이지엔 과잉. internet 페이지가 끝내 정적 불가 시 재검토 |
+| **(c) 수동 method='manual'** (ADR-0008 §T5 enum 존재) | 가장 단순·P3 정직·솔로 ~1h/월·ADR-0034 옵션 X 정직성과 정합 | 낮음 (시간 의존) | **부분 채택** — 정적 파싱 불가 페이지(예: Telenet internet)의 *폴백* |
+| **(d) 어필리에이트 피드** Daisycon/Awin (TVA 발급됨 → 가입 자격 충족) | MONETIZATION §A #1(순위 무영향) 위협 = /data-sources 출처 노출 필수. advertiser 활성 미확인 | 중간 (윤리 가드레일 + 미확인) | **defer** — Cheerio 가용으로 1차 불필요. ADR-0014 미트리거 (예약 유지) |
+
+### Decision — 페이지 단위 하이브리드 Cheerio (공급사 혼합 + 폴백)
+
+ADR-0008 §T1/§T5 인터페이스는 fetcher별 `method` 혼합을 *이미 지원*. 채택:
+
+1. **Telenet mobile + Proximus mobile = `method='scraping'` (Cheerio + undici)**. 정찰이
+   주장한 "주석 해제만" 전제는 **무효** — **URL 정정 필수** (www2 host + 현행 경로 +
+   plan명 정정: KING/KONG/Mobile Basic/Mobile Unlimited, Mobile Essential/Easy/Smart/Maxi/Unlimited).
+   스텁의 prepared 코드 *경로는 보존하되 URL/셀렉터는 builder가 재작성*.
+2. **internet 페이지 = 첫 fetch 런타임 검증 후 분기**: 정적 가격 매칭 성공 → `scraping`.
+   실패(Telenet internet 현 관측) → **`method='manual'` 폴백** (ADR-0008 §T5 enum, 운영자
+   ~1h/월 입력). confidence는 manual도 ADR-0008 §T3 휴리스틱 적용.
+3. **24h 신선도 모니터링 게이트 = Amendment 1 그대로 유효** (Telenet 1개 먼저 → Proximus
+   점진). 첫 fetch 응답 헤더(`Server`/`cf-ray`/`x-akamai-*`) + 챌린지 페이지 탐지.
+
+### Consequences (정직 — CLAUDE.md §2)
+
+- ✅ Telenet/Proximus **mobile = 실 데이터 가능** (정찰 비관 정정) → confidence 격상.
+- ⚠️ **운영자가 "실 데이터" 택한 결정(ADR-0034)은 "Cheerio로 가능"이라는 전제 위에 있었고,
+  그 전제는 *mobile에서만* 성립**. internet 페이지가 정적 불가면 *그 페이지는 manual*이
+  되어 자동화 목표와 부분 배치 — 운영자 시간 의존 일부 잔존. **이 전제 부분 붕괴를 숨기지
+  않는다**.
+- ⚠️ "주석 해제 + Cheerio만" 1.5.6 본문 전제는 **거짓** — URL 전면 정정 + 셀렉터 신작 필요.
+  builder 작업량이 본문 추정보다 큼.
+- 🔁 ADR-0014(affiliate-feed-as-primary) **예약 유지 — 미트리거**. internet manual 폴백이
+  장기 부담이 되거나 Cheerio 차단 시 ADR-0014 또는 Playwright 신규 ADR 재호출.
+- 🔁 ADR-0008 §T1 attributes / §T4 union / §T5 method enum **변경 0** (혼합 이미 지원).
+
+### 검증 방법
+
+- builder 첫 fetch(undici raw HTML) 후 셀렉터 매칭 ≥ Telenet mobile 2 plan + Proximus
+  mobile 5 plan → `method='scraping'`. internet 매칭 0 → `method='manual'` 폴백 등록.
+- 24h 내 Sentry 차단(403/429/챌린지) 0건 → Amendment 3 정당화. 1건 → fetcher 비활성 +
+  Amendment 4 (Playwright 또는 manual 전면 전환 재평가).
+- harness:plan/data 정합 + confidence='low' 비율 < 20%.
+
+### Amendment 3 작성: architect (2026-05-28) — WebFetch 검증 기반, 인증 우회 0
