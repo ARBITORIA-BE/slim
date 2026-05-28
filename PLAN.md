@@ -87,22 +87,29 @@
   - DoD: jq 부재 환경(Windows + PATH에서 jq 제거)에서 `rm -rf /` 입력 시
     차단 메시지 정상 출력
   - 검증: ADR-0002 §검증 방법 2
-- [ ] **D.3** ARBITORIA 정렬 follow-ups (ADR-0020 결정 3/4/6/7) — GATE-K
-  (페이즈 4 베타 진입) 직전 일괄 처리. 5 작업 → **잔여 2** (D.3.c, D.3.d,
-  D.3.e 완료; D.3.a/b 결정 잠금 + 실행 defer):
+- [x] **D.3** ARBITORIA 정렬 follow-ups (ADR-0020 결정 3/4/6/7) — GATE-K
+  (페이즈 4 베타 진입) 직전 일괄 처리. 5 작업 → **전부 완료** (D.3.c/d/e +
+  D.3.a/b 2026-05-28 TVA 트리거 발화 → 실행 완료). **GATE-K 완전 닫힘**:
   - **GATE-K 재정의 (2026-05-15, [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md))**:
     결정 트랙 (D.3.b 본 ADR-0032 + D.3.e ADR-0024) ✅ 잠금 완료 — GATE-K 결정 게이트 **닫힘**.
     실행 트랙 (D.3.a Vercel App OAuth + D.3.b O1 Pro plan 결제) 은 **TVA 번호 발급 트리거**
     까지 defer — GATE-K 실행 게이트 **열림 (defer)**. 4.6 베타 진입 = 결정 게이트만 요구,
     실행 게이트는 personal team scope interim 운영 (ADR-0032 §Defer 기간 interim 정책 I1~I6).
+  - **GATE-K 완전 닫힘 (2026-05-28)**: TVA 번호 발급(2026-05-23) → [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md)
+    §Trigger G1 발화. 운영자 O1~O5 실행 완료 — `arbitoria` Vercel team 신설(Pro) + slim 프로젝트
+    이관 + Git 재연결 + Billing TVA `BE1037548919`. 검증: **V2** (slim이 personal team
+    `team_BSdTg9wKOVhi9trPdJkWhWqR` 에서 사라짐 + `vercel.com/arbitoria/slim` 라이브) ✅ /
+    **V3** (slim.lu 200 + /compare 200 + /en/admin 200 + /api/inngest 401 정상 + `pnpm verify:db`
+    all-green) ✅ / **V1** (Billing TVA 표기, 운영자 확인) ✅. MCP arbitoria scope 재인증은
+    커넥터 재설치 완료 + 다음 세션 반영 (선택, 비차단).
   - **D.3.a** Vercel App을 ARBITORIA-BE org에 직접 설치 (현 redirect follow를
-    org 직접 권한으로 격상, 운영자 5분) — ⏸ Defer — TVA 발급 트리거 (Trigger gate, [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) §Trigger G1).
-    O4 단계 (ARBITORIA team scope 에서 권한 재인증) 와 동시 완료 — 운영자 액션 O1~O5 일괄.
+    org 직접 권한으로 격상, 운영자 5분) — ✅ **완료 2026-05-28** (TVA 트리거 발화) — O4
+    (ARBITORIA team scope 권한 재인증 = Git 재연결) 동시 완료, 운영자 액션 O1~O5 일괄.
   - **D.3.b** Vercel team scope 결정 — personal `kimwonmin91-4132s-projects`
     유지 vs ARBITORIA team 신설 — ✅ **결정 잠금 2026-05-15 [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted**:
-    ARBITORIA team 신설 (Pro $20/seat/month). 실행 = ⏸ Defer — TVA 발급 트리거 (Trigger gate).
-    운영자 O1 (Pro plan 결제) 의 실행은 TVA 번호 발급 시점까지 defer — VAT 21% 환급 가치
-    €46.6/year 보존. 4.6 베타 진입 blocker **아님** (ADR-0032 §4.6 베타 진입 blocker 재평가
+    ARBITORIA team 신설 (Pro $20/seat/month). 실행 = ✅ **완료 2026-05-28** (team 신설 + slim
+    이관 + Pro 결제, TVA 트리거 발화). VAT 21% 환급 가치 €46.6/year 는 Billing TVA 표기로 확보.
+    4.6 베타 진입 blocker **아님** (ADR-0032 §4.6 베타 진입 blocker 재평가
     결론 0건 — personal team scope interim 운영으로 진입 가능, 헌장 §3 P1·P3 + §8 [4] 위반 0).
   - [x] **D.3.c** Vercel runtime env vars 등록 — production + preview 양쪽에
     EXPECTED_DB_ENDPOINTS / INNGEST_EVENT_KEY / INNGEST_SIGNING_KEY 3개 추가
@@ -1803,7 +1810,7 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 7 | 6 | 0 | **D.1·D.2·D.4·D.5·D.6·D.7** 완료. D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). **D.3 sub-task 진행도** (c·d 완료 / a·b·e 잔여): D.3.d ✅ slim.lu live (2026-05-14, ADR-0020 §Appendix C 6단계 통과). **D.3.c ✅ 완료 2026-05-14** — INNGEST keys Vercel env + production redeploy `CMBoqXCxm` Ready + Inngest sync (App ID `slim`, SDK 3.54.2, Functions 2, Manual run `01KRM42BW9NNZ4A7NP386H38KJ` Completed) + 어드민 신선도 0.0% → 100.0% (8/8) → **4.6 베타 진입 차단 0 (BLOCKER 해제)** + ADR-0029 §T2 정직성 잠금 해제. **D.3.e ✅ 완료 2026-05-15** — [ADR-0024](docs/adr/0024-neon-vercel-integration.md) Accepted (옵션 C 조건부 잠금), 4.6 베타 진입 blocker 아님. **D.3.b ✅ 결정 잠금 2026-05-15** — [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted (Decision Locked + Execution Deferred — ARBITORIA team 신설 결정 final, O1 Pro plan 결제 실행은 TVA 발급 트리거). **GATE-K 재정의**: 결정 트랙 ✅ 닫힘 (D.3.b + D.3.e), 실행 트랙 ⏸ defer (D.3.a + D.3.b 의 O1~O5). 4.6 베타 = 결정 게이트만 요구, 실행 게이트는 TVA 트리거. D.3.a/b ⏸ Defer (TVA 발급 트리거). D.3 부모는 5 sub 전부 [x] 후 마킹 (현재 3/5; D.3.b 본문 [x] 마킹 정책은 ADR-0032 §Verification V1~V3 통과 시 — 실행 트랙 완료 시점). D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
+| 0.5 | 7 | 7 | 0 | **D.1~D.7 전부 완료** (D.3 부모 [x] 2026-05-28 — GATE-K 완전 닫힘). D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). **D.3 sub-task 진행도** (c·d 완료 / a·b·e 잔여): D.3.d ✅ slim.lu live (2026-05-14, ADR-0020 §Appendix C 6단계 통과). **D.3.c ✅ 완료 2026-05-14** — INNGEST keys Vercel env + production redeploy `CMBoqXCxm` Ready + Inngest sync (App ID `slim`, SDK 3.54.2, Functions 2, Manual run `01KRM42BW9NNZ4A7NP386H38KJ` Completed) + 어드민 신선도 0.0% → 100.0% (8/8) → **4.6 베타 진입 차단 0 (BLOCKER 해제)** + ADR-0029 §T2 정직성 잠금 해제. **D.3.e ✅ 완료 2026-05-15** — [ADR-0024](docs/adr/0024-neon-vercel-integration.md) Accepted (옵션 C 조건부 잠금), 4.6 베타 진입 blocker 아님. **D.3.b ✅ 결정 잠금 2026-05-15** — [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted (Decision Locked + Execution Deferred — ARBITORIA team 신설 결정 final, O1 Pro plan 결제 실행은 TVA 발급 트리거). **GATE-K 재정의**: 결정 트랙 ✅ 닫힘 (D.3.b + D.3.e), 실행 트랙 ⏸ defer (D.3.a + D.3.b 의 O1~O5). **D.3 완전 종결 (2026-05-28)**: TVA 발급(2026-05-23) → ADR-0032 §Trigger G1 발화 → 운영자 O1~O5 (arbitoria Vercel team 신설 Pro + slim 이관 + Git 재연결 + Billing TVA). V1~V3 통과 (V2 slim이 personal scope에서 사라짐 + slim.lu live / V3 HTTP 200 + verify:db all-green / V1 Billing TVA). D.3.a ✅ + D.3.b ✅ + D.3 부모 [x] → GATE-K 완전 닫힘. MCP arbitoria 재인증은 다음 세션 반영 (선택). D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-28 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 10 | 7 | 0 | M3 말 + D3/D4 트랙 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-05-17). **1.5.6 차단 해제** (`[!]`→`[ ]`, ADR-0013 Amendment — 옵션 C → 진입). **1.5.8 Orange BE fetcher 신설** + **1.5.9 Voo fetcher 신설** (구 5.0 이동, +2). 1.5.6/1.5.8/1.5.9 선행 = legal 4-provider robots/TOS + GTC 수동 (PLAN 진입 시 호출). 1.5.6.1 옵션 X 자동 비활성 cross-ref (추가 작업 0) | 2026-05-17 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
@@ -1814,7 +1821,7 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 5 | 6 | 0 | 0 | **통신 BE 만 (범위 확정)** — 조건부 게이트 제거 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **구 5.0 Orange BE → 1.5.8 이동 (-1)**. 5.1~5.4 (에너지/모기지/보험/금융) = **보류 / 범위 밖** (통신 외 추가 ❌ 운영자 명시 거부, 진입 시 별도 ADR). 5.5/5.6 공통 인프라 = 통신 깊이 한정 | 2026-05-17 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **91** | **58** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)**; done 58 불변 | 2026-05-23 |
+| **합계** | **91** | **59** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)**; **done 58→59 (D.3 부모 [x], 2026-05-28 — GATE-K 닫힘)** | 2026-05-28 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

@@ -2,7 +2,9 @@
 
 ## Status
 
-**Accepted (2026-05-15, Decision Locked + Execution Deferred)**.
+**Accepted (2026-05-15, Decision Locked + Execution Deferred) → Execution Completed (2026-05-28, GATE-K 완전 닫힘)**.
+
+> **2026-05-28 갱신**: TVA 발급(2026-05-23)으로 §Trigger G1 발화 → 운영자 O1~O5 실행 완료. `arbitoria` Vercel team(Pro) 신설 + slim 이관 + V1~V3 검증 통과. 상세는 §History 2026-05-28 항목.
 
 채택 결정 = **ARBITORIA team 신설** (Pro plan $20/seat/month, slim 프로젝트 personal → ARBITORIA team 이관). 단, **운영자 액션 O1 (Pro plan 구독 결제) 의 실행은 TVA 부가가치세 번호 발급 시점까지 defer**. 결정 트랙은 본 ADR 로 잠금, 실행 트랙은 트리거(§Trigger) 발화 시 운영자 OAuth 1회로 재개.
 
@@ -220,4 +222,5 @@ V1~V3 통과 시 본 ADR §History Amendment + PLAN §D.3.a/b ✅ 마킹 + D.3 �
 
 ## History
 
+- **2026-05-28 (Execution Completed — GATE-K 완전 닫힘)** — Pieter 세션. TVA 번호 발급(2026-05-23, [[founder_situation]]) → §Trigger **G1 발화**. 운영자 O1~O5 실행 완료: `arbitoria` Vercel team 신설(Pro $20/seat) + slim 프로젝트 personal `kimwonmin91-4132s-projects` → `arbitoria` 이관 + Git 재연결(O4 = D.3.a) + Billing TVA `BE1037548919` 입력. **§Verification 게이트 통과**: **V2** — `list_teams`/`list_projects` 로 slim 이 personal team(`team_BSdTg9wKOVhi9trPdJkWhWqR`)에서 사라짐 확인 + `vercel.com/arbitoria/slim` 라이브 (MCP arbitoria scope 미인증이라 시각 확인은 "personal 에서 제거됨" + slim.lu 200 으로 간접 증명). **V3** — `curl` slim.lu 200 / `/compare` 200 / `/en/admin` 200 / `/api/inngest` 401(서명키 GET 차단=정상) + `pnpm verify:db` all-green (endpoint allowlist 매칭, 6 tables, seed 2 providers). 도메인 4건 + env + Neon integration 무손실(R3 회피 — `/compare` 렌더가 DATABASE_URL 생존 증명). **V1** — Billing TVA 표기 운영자 확인. PLAN §D.3.a ✅ + §D.3.b ✅ + D.3 부모 [x] + 합계 58→59 + Phase 0.5 7/7. MCP arbitoria scope 재인증 = Vercel 커넥터 재설치 완료, 현 세션 도구엔 미반영(옛 UUID 서버 Not connected) → 다음 세션 재시작 후 가시화(선택, 비차단).
 - **2026-05-15 (Accepted, Decision Locked + Execution Deferred)** — Pieter 세션, architect 호출로 작성. ARBITORIA team 신설 결정 잠금 + O1 Pro plan 결제 실행을 TVA 번호 발급 트리거까지 defer. §Trigger G1~G3 + §Operator Steps O1~O5 + §Defer 기간 interim 정책 I1~I6 + §4.6 베타 진입 blocker 재평가 결론 (blocker 0건) + §자동 추적 권고 (옵션 a, `pnpm harness:plan` 확장) 명시. ADR-0024 옵션 C 와 정렬 — *결정 잠금 + 실행 보류* 패턴 동형. PLAN §D.3.a/b 라벨 = `⏸ Defer — TVA 발급 트리거` 갱신.

@@ -14,7 +14,7 @@
  *   - @/i18n/routing: routing.locales 실 값 사용 (mock 불요 — 순수 상수)
  */
 
-import type { ReactNode } from 'react';
+import type { AriaAttributes, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
@@ -47,7 +47,8 @@ vi.mock('@/i18n/navigation', () => ({
     locale?: string;
     children: ReactNode;
     className?: string;
-    'aria-current'?: string;
+    // DOM <a> 의 aria-current 유니온과 호환되도록 string 대신 React 타입 사용
+    'aria-current'?: AriaAttributes['aria-current'];
   }) => (
     <a
       href={href}
