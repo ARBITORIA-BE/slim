@@ -77,6 +77,7 @@
       }
     },
     "household": {
+      "title": "Choisir le type de foyer",
       "heading": "Comment allez-vous ?",
       "supportNote": "Une fois le type de foyer sélectionné, la consommation est estimée sur la base d'une consommation moyenne. La consommation exacte sera automatiquement renseignée lors de la phase 3 grâce à la reconnaissance optique de caractères (OCR) des factures.",
       "nextButton": "Suivant — Fournisseur actuel",
@@ -96,6 +97,7 @@
       }
     },
     "currentProvider": {
+      "title": "Choisir le fournisseur actuel",
       "heading": "Où l'utilisez-vous actuellement ?",
       "supportNote": "Le choix d'un fournisseur permet d'améliorer la précision de la comparaison, mais n'est pas obligatoire. Si vous ne savez pas ou si vous êtes un nouvel utilisateur, vous pouvez passer cette étape.",
       "zeroProvidersFallback": "Nous n'avons pas pu charger la liste des fournisseurs. Souhaitez-vous vous inscrire en tant que nouvel abonné ? Les résultats de la comparaison tiendront compte de l'ensemble des offres disponibles sur le marché.",
@@ -112,11 +114,13 @@
       "skipButton": "Je ne sais pas / Passer — Traiter comme un nouveau client"
     },
     "bill": {
+      "title": "Télécharger la facture",
       "heading": "Souhaitez-vous télécharger votre facture pour que votre consommation soit automatiquement renseignée avec précision ?",
       "supportNote": "Actuellement en phase bêta — La reconnaissance optique de caractères (OCR) des factures sera ajoutée juste après la page des résultats de la phase 3. Pour l'instant, la comparaison s'effectue à partir d'estimations basées sur la composition du ménage.",
       "skipButton": "Procédure sans facture — Aperçu des résultats"
     },
     "preview": {
+      "title": "Résultats en préparation",
       "heading": "Les résultats sont en cours de préparation",
       "supportNote": "Nous générons actuellement un lien permanent vers les résultats de la comparaison en fonction des informations que vous avez saisies. Une fois l'opération terminée, vous serez automatiquement redirigé vers la page des résultats.",
       "submittingMessage": "Appel du moteur de comparaison en cours… (généralement moins d'une seconde)",
@@ -307,11 +311,146 @@
   "legal": {
     "affiliateDisclosure": {
       "pageTitle": "제휴 수수료 공개"
+    },
+    "terms": {
+      "pageTitle": "[fr] Conditions d'utilisation",
+      "pageDescription": "[fr] Conditions d'utilisation de Slim — définition du service, clause de non-responsabilité, droit applicable, identification de l'opérateur.",
+      "heading": "[fr] Conditions d'utilisation",
+      "draftNotice": "[fr] Ces conditions sont un projet. Non définitif avant la révision juridique (PLAN 4.12.f).",
+      "serviceDefinitionHeading": "[fr] Définition du service",
+      "serviceDefinitionBody": "[fr] Slim est un service d'information qui compare les forfaits télécom en Belgique (BE), aux Pays-Bas (NL) et au Luxembourg (LU). Slim ne fournit pas de services télécom directement et n'est pas partie aux contrats entre un opérateur et un utilisateur.",
+      "comparisonDisclaimerHeading": "[fr] Avertissement relatif aux résultats de comparaison",
+      "comparisonDisclaimerBody": "[fr] Slim affiche les informations tarifaires telles que fournies par les opérateurs, sans modification. Les calculs d'économies sont des estimations arithmétiques basées sur des hypothèses d'entrée et peuvent différer des économies réelles. Slim ne garantit pas l'exhaustivité, l'exactitude ou l'actualité des résultats de comparaison.",
+      "affiliateHeading": "[fr] Relations d'affiliation",
+      "affiliateBody": "[fr] Slim peut recevoir des commissions d'affiliation de certains opérateurs. Les commissions n'ont aucune incidence sur votre tarif ; les classements de comparaison sont déterminés uniquement par l'algorithme, indépendamment du statut d'affiliation. Voir la page de divulgation des affiliations pour plus de détails.",
+      "affiliateLinkText": "[fr] Divulgation des affiliations",
+      "privacyRefHeading": "[fr] Traitement des données",
+      "privacyRefBody": "[fr] Pour des informations sur le traitement des données personnelles collectées lors de l'utilisation du service (code postal, type de ménage, opérateur actuel, etc.), veuillez consulter notre Politique de confidentialité.",
+      "privacyLinkText": "[fr] Politique de confidentialité",
+      "liabilityHeading": "[fr] Limitation de responsabilité",
+      "liabilityBody": "[fr] En tant que service d'information, Slim n'est pas responsable, dans toute la mesure permise par la loi, des dommages résultant de contrats conclus ou de modifications tarifaires basés sur les résultats de comparaison.",
+      "governingLawHeading": "[fr] Droit applicable et juridiction compétente",
+      "governingLawBody": "[fr] Les présentes conditions sont régies et interprétées conformément au droit belge. Les litiges seront résolus devant les tribunaux belges compétents.",
+      "operatorHeading": "[fr] Identification de l'opérateur",
+      "operatorBody": "[fr] L'opérateur de ce service est identifié ci-dessous. Pour toute question, veuillez nous contacter par e-mail.",
+      "operatorNameLabel": "[fr] Opérateur",
+      "operatorNumberLabel": "[fr] Numéro d'entreprise",
+      "operatorVatLabel": "[fr] Numéro de TVA",
+      "operatorEmailLabel": "[fr] E-mail",
+      "backLink": "[fr] ← Retour aux sources de données"
+    },
+    "privacy": {
+      "pageTitle": "[fr] Politique de confidentialité",
+      "pageDescription": "[fr] Politique de confidentialité RGPD Art.13 de Slim — données collectées, base légale, durées de conservation, droits des personnes concernées.",
+      "heading": "[fr] Politique de confidentialité",
+      "draftNotice": "[fr] Cette politique de confidentialité est un projet. Non définitif avant la révision juridique (PLAN 4.12.f).",
+      "lastUpdated": "[fr] Dernière mise à jour : 2026-05-23",
+      "directCollectionNote": "[fr] Cette politique est une notification de collecte directe au sens de l'Art.13. Slim ne collecte pas indirectement des données personnelles auprès de tiers (Art.14 non applicable).",
+      "controllerHeading": "[fr] 1. Responsable du traitement (Art.13 §1(a))",
+      "controllerBody": "[fr] Le responsable du traitement pour ce service est identifié ci-dessous.",
+      "controllerNameLabel": "[fr] Nom",
+      "controllerNumberLabel": "[fr] Numéro d'entreprise",
+      "controllerVatLabel": "[fr] Numéro de TVA",
+      "controllerEmailLabel": "[fr] E-mail de contact",
+      "dpoHeading": "[fr] DPD (Art.13 §1(b))",
+      "dpoBody": "[fr] Ce service n'est pas tenu de désigner un DPD en vertu de l'Art.37 du RGPD (entrepreneur individuel, aucun traitement à haut risque).",
+      "processingHeading": "[fr] 2. Finalités du traitement et base légale (Art.13 §1(c))",
+      "processingPA01Heading": "[fr] PA-01 Traitement des demandes de comparaison",
+      "processingPA01Purpose": "[fr] Finalité : Calculer et fournir des résultats de comparaison de forfaits télécom sur la base de la saisie de l'utilisateur.",
+      "processingPA01LegalBasis": "[fr] Base légale : RGPD Art.6(1)(b) — exécution du contrat de service de comparaison.",
+      "processingPA01Data": "[fr] Données collectées : Code postal (PC4), type de ménage, ID de l'opérateur actuel, données d'utilisation par catégorie. Aucune information IP ou appareil collectée.",
+      "processingPA02Heading": "[fr] PA-02 Conservation permanente des résultats de comparaison",
+      "processingPA02Purpose": "[fr] Finalité : Fournir un lien permanent (/r/[shortId]) pour que les résultats puissent être consultés à tout moment.",
+      "processingPA02LegalBasis": "[fr] Base légale : RGPD Art.6(1)(b).",
+      "processingPA03Heading": "[fr] PA-03 Attribution des clics d'affiliation",
+      "processingPA03Purpose": "[fr] Finalité : Enregistrer qu'un utilisateur s'est rendu sur le site d'un opérateur affilié après consentement et régler la commission.",
+      "processingPA03LegalBasis": "[fr] Base légale : Art.6(1)(a) consentement (enregistrement du clic) + Art.6(1)(c) obligation légale (obligation de conservation comptable belge).",
+      "processingPA04Heading": "[fr] PA-04 Journaux de sécurité",
+      "processingPA04Purpose": "[fr] Finalité : Détecter les incidents de sécurité et surveiller les anomalies du système.",
+      "processingPA04LegalBasis": "[fr] Base légale : Art.6(1)(f) intérêt légitime — sécurité opérationnelle du service.",
+      "processingPA05Heading": "[fr] PA-05 E-mail de suivi",
+      "processingPA05Purpose": "[fr] Finalité : Envoyer un e-mail de suivi unique 7 jours après un clic d'affiliation (mesure du taux de conversion en bêta).",
+      "processingPA05LegalBasis": "[fr] Base légale : Art.6(1)(a) consentement explicite (case à cocher distincte, non pré-cochée).",
+      "legitimateInterestHeading": "[fr] 3. Intérêts légitimes (Art.13 §1(d))",
+      "legitimateInterestBody": "[fr] PA-04 Journaux de sécurité : la détection de fraudes et la sécurité du service constituent un intérêt légitime. Les données sont minimisées et proportionnées à la finalité de sécurité.",
+      "recipientsHeading": "[fr] 4. Destinataires et tiers (Art.13 §1(e))",
+      "recipientsBody": "[fr] Les données de comparaison PA-01/PA-02 ne sont pas transmises à l'extérieur. Les sous-traitants tiers sont répertoriés ci-dessous.",
+      "recipientSentry": "[fr] Sentry — surveillance des erreurs (journaux de sécurité). Sentry Inc. (États-Unis, CCT applicables).",
+      "recipientPostHog": "[fr] PostHog — analyse produit (journaux de sécurité). Option région UE utilisée.",
+      "recipientNeon": "[fr] Neon — hébergement de base de données. EU-Central-1 (Francfort). DPA Neon conclu.",
+      "recipientVercel": "[fr] Vercel — hébergement du service. Déploiement edge UE (FRA1).",
+      "recipientResend": "[fr] Resend — envoi d'e-mails de suivi (PA-05). Région UE utilisée.",
+      "recipientAffiliateNote": "[fr] Redirections d'affiliation : Les utilisateurs naviguent directement vers les sites des opérateurs via le navigateur. Slim ne transmet pas de données personnelles aux opérateurs (pas de transfert au sens du RGPD).",
+      "internationalTransferHeading": "[fr] 5. Transferts internationaux (Art.13 §1(f))",
+      "internationalTransferBody": "[fr] Neon, Resend et PostHog utilisent des régions UE. Sentry est une entité américaine ; les transferts sont régis par des CCT (clauses contractuelles types). Les détails d'adéquation seront confirmés par audit externe (avant la bêta).",
+      "retentionHeading": "[fr] 6. Durées de conservation (Art.13 §2(a))",
+      "retentionPA01": "[fr] Données personnelles de la demande de comparaison (code postal, type de ménage, utilisation) : 90 jours. Ensuite généralisées ou mises à NULL.",
+      "retentionPA02": "[fr] Résultats de comparaison : conservés de façon permanente (SLA lien permanent). Champs dérivés contenant des DCP : NULL après 90 jours.",
+      "retentionPA03Click": "[fr] FK clics d'affiliation : SET NULL après 90 jours. Champs de règlement : obligation comptable belge (7 à 10 ans).",
+      "retentionPA05Email": "[fr] Adresse e-mail : mise à NULL immédiatement après envoi réussi. Colonnes méta : supprimées après 90 jours.",
+      "rightsHeading": "[fr] 7. Droits des personnes concernées (Art.13 §2(b))",
+      "rightsBody": "[fr] Les personnes concernées peuvent exercer les droits suivants en contactant le responsable du traitement à l'adresse e-mail ci-dessous.",
+      "rightAccess": "[fr] Droit d'accès (Art.15)",
+      "rightRectification": "[fr] Droit de rectification (Art.16)",
+      "rightErasure": "[fr] Droit à l'effacement (Art.17)",
+      "rightRestriction": "[fr] Droit à la limitation du traitement (Art.18)",
+      "rightObject": "[fr] Droit d'opposition (Art.21)",
+      "rightPortability": "[fr] Droit à la portabilité (Art.20)",
+      "rightWithdraw": "[fr] Droit de retrait du consentement (Art.7(3)) — le consentement à l'affiliation, à l'e-mail de suivi et aux cookies analytiques peut être retiré séparément.",
+      "withdrawConsentHeading": "[fr] 8. Retrait du consentement (Art.13 §2(c))",
+      "withdrawConsentBody": "[fr] Le traitement basé sur le consentement Art.6(1)(a) (PA-03/PA-05/cookies analytiques) peut être retiré à tout moment. Méthodes de retrait : consentement affiliation — contacter l'opérateur par e-mail ; e-mail de suivi — désinscription en 1 clic dans l'e-mail ; cookies analytiques — Paramètres des cookies ci-dessous.",
+      "supervisoryHeading": "[fr] 9. Droit d'introduire une réclamation auprès d'une autorité de contrôle (Art.13 §2(d))",
+      "supervisoryBody": "[fr] Les personnes concernées peuvent introduire une réclamation auprès des autorités de contrôle suivantes.",
+      "supervisoryBE": "[fr] Belgique : Autorité de protection des données (APD) / Gegevensbeschermingsautoriteit (GBA) — www.autoriteprotectiondonnees.be",
+      "supervisoryNL": "[fr] Pays-Bas : Autoriteit Persoonsgegevens (AP) — www.autoriteitpersoonsgegevens.nl",
+      "supervisoryLU": "[fr] Luxembourg : Commission nationale pour la protection des données (CNPD) — www.cnpd.public.lu",
+      "obligationHeading": "[fr] 10. Nature de l'obligation de fourniture des données (Art.13 §2(e))",
+      "obligationBody": "[fr] Les données saisies pour les demandes de comparaison (code postal, type de ménage, utilisation) sont nécessaires à l'exécution du service (Art.6(1)(b)). Sans ces données, aucun résultat de comparaison ne peut être calculé.",
+      "automatedDecisionHeading": "[fr] 11. Décision automatisée (Art.13 §2(f))",
+      "automatedDecisionBody": "[fr] Le moteur de comparaison de Slim effectue uniquement des calculs arithmétiques d'économies. Il n'y a aucune prise de décision individuelle automatisée ni profilage au sens de l'Art.22 du RGPD. Les classements de comparaison ne sont pas basés sur le profilage de caractéristiques personnelles, mais sont le résultat arithmétique de la comparaison de données tarifaires avec des hypothèses d'entrée.",
+      "contactHeading": "[fr] 12. Contact",
+      "contactBody": "[fr] Pour toute question relative à la confidentialité ou demande d'exercice de droits, veuillez nous contacter à l'adresse e-mail ci-dessous.",
+      "backLink": "[fr] ← Retour aux sources de données"
     }
+  },
+  "dataDisplay": {
+    "viewSource": "Voir la source",
+    "staleData": "{relative} (données anciennes)"
   },
   "home": {
     "headline": "Slim.",
     "tagline": "Des comparaisons faciles, des économies substantielles.",
-    "ctaButton": "Comparer maintenant"
+    "ctaButton": "Comparer maintenant",
+    "metaTitle": "Slim — Comparez facilement, économisez davantage",
+    "metaDescription": "Comparez les forfaits télécom en Belgique, aux Pays-Bas et au Luxembourg. Le meilleur choix en 5 minutes."
+  },
+  "metadata": {
+    "defaultTitle": "Slim — Comparez facilement, économisez davantage",
+    "description": "Plateforme de comparaison Benelux. BE · NL · LU comparés en 5 minutes.",
+    "ogTitle": "Slim — Comparez facilement, économisez davantage",
+    "ogDescription": "Plateforme de comparaison Benelux. BE · NL · LU comparés en 5 minutes."
+  },
+  "footer": {
+    "companyInfoHeading": "Informations légales",
+    "operatorLabel": "Exploitant",
+    "companyNumberLabel": "Numéro d'entreprise",
+    "vatLabel": "Numéro de TVA",
+    "addressLabel": "Adresse",
+    "contactLabel": "Contact",
+    "legalLinksLabel": "Mentions légales et transparence",
+    "affiliateDisclosureLink": "Rémunération d'affiliation",
+    "dataSourcesLink": "Sources de données",
+    "copyright": "© {year} Slim",
+    "languageLabel": "Langue"
+  },
+  "validation": {
+    "postal": {
+      "be": "Le code postal belge (BE) doit être un nombre de 4 chiffres compris entre 1000 et 9999 (ex. : 1000, 9000)",
+      "nl": "Le code postal néerlandais (NL) doit comporter 4 chiffres ou 4 chiffres + 2 lettres majuscules (ex. : 1011, 1011 AB)",
+      "lu": "Le code postal luxembourgeois (LU) doit être un nombre de 4 chiffres compris entre 1000 et 9999 (ex. : 1000, 4000)"
+    },
+    "currentProvider": {
+      "tariffWithoutProvider": "Veuillez d'abord sélectionner un fournisseur avant de choisir un forfait"
+    }
   }
 }

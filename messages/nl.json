@@ -77,6 +77,7 @@
       }
     },
     "household": {
+      "title": "Huishoudtype kiezen",
       "heading": "Hoe gaat het met u?",
       "supportNote": "Als u het type woning selecteert, wordt het gemiddelde verbruik geschat. Het exacte verbruik wordt in fase 3 automatisch ingevuld via OCR-verwerking van de factuur.",
       "nextButton": "Volgende — Huidige leverancier",
@@ -96,6 +97,7 @@
       }
     },
     "currentProvider": {
+      "title": "Huidige provider kiezen",
       "heading": "Waar gebruikt u het momenteel?",
       "supportNote": "Het selecteren van een leverancier verhoogt de nauwkeurigheid van de vergelijking, maar is niet verplicht. Als u het niet weet of een nieuwe klant bent, kunt u deze stap overslaan.",
       "zeroProvidersFallback": "De lijst met aanbieders kan niet worden geladen. Wilt u doorgaan als nieuwe gebruiker? De vergelijkingsresultaten worden berekend op basis van alle aanbieders op de markt.",
@@ -112,11 +114,13 @@
       "skipButton": "Ik weet het niet / Overslaan — Behandelen als nieuwe klant"
     },
     "bill": {
+      "title": "Factuur uploaden",
       "heading": "Wilt u uw factuur uploaden om uw exacte verbruik automatisch in te vullen?",
       "supportNote": "Momenteel in bètafase — OCR voor facturen wordt toegevoegd direct na de resultatenpagina van fase 3. Voorlopig wordt er vergeleken op basis van schattingen op basis van het huishoudtype.",
       "skipButton": "Zonder factuur — met een voorbeeld van het resultaat"
     },
     "preview": {
+      "title": "Resultaten worden voorbereid",
       "heading": "De resultaten worden momenteel verwerkt",
       "supportNote": "Op basis van de door u ingevoerde gegevens wordt er een permanente link naar de vergelijkingsresultaten aangemaakt. Zodra dit is voltooid, wordt u automatisch doorgestuurd naar de resultatenpagina.",
       "submittingMessage": "Vergelijkingsengine wordt opgeroepen… (meestal minder dan 1 seconde)",
@@ -307,11 +311,146 @@
   "legal": {
     "affiliateDisclosure": {
       "pageTitle": "제휴 수수료 공개"
+    },
+    "terms": {
+      "pageTitle": "[nl] Terms of Use",
+      "pageDescription": "[nl] Slim terms of use — service definition, disclaimer, governing law, operator identification.",
+      "heading": "[nl] Gebruiksvoorwaarden",
+      "draftNotice": "[nl] Deze voorwaarden zijn een concept. Niet definitief totdat juridische beoordeling (PLAN 4.12.f) is voltooid.",
+      "serviceDefinitionHeading": "[nl] Servicedefinitie",
+      "serviceDefinitionBody": "[nl] Slim is een informatiedienst die telecomabonnementen vergelijkt in België (BE), Nederland (NL) en Luxemburg (LU). Slim levert zelf geen telecomdiensten en is geen partij bij contracten tussen aanbieder en gebruiker.",
+      "comparisonDisclaimerHeading": "[nl] Disclaimer vergelijkingsresultaten",
+      "comparisonDisclaimerBody": "[nl] Slim geeft tariefinformatie weer zoals aangeleverd door aanbieders, zonder bewerking. Berekeningen van besparingen zijn rekenkundige schattingen op basis van invoerveronderstellingen en kunnen afwijken van werkelijke besparingen. Slim geeft geen garanties voor de volledigheid, juistheid of actualiteit van de vergelijkingsresultaten.",
+      "affiliateHeading": "[nl] Affiliaterelaties",
+      "affiliateBody": "[nl] Slim kan affiliatecommissies ontvangen van sommige aanbieders. Commissies hebben geen invloed op uw tarief; vergelijkingsranglijsten worden uitsluitend bepaald door het algoritme, ongeacht de affiliatestatus. Zie de affiliateopenbaarmaking voor details.",
+      "affiliateLinkText": "[nl] Affiliateopenbaarmaking",
+      "privacyRefHeading": "[nl] Gegevensverwerking",
+      "privacyRefBody": "[nl] Voor informatie over de verwerking van persoonlijke gegevens die tijdens de dienst worden verzameld (postcode, huishoudtype, huidige aanbieder, enz.), zie ons Privacybeleid.",
+      "privacyLinkText": "[nl] Privacybeleid",
+      "liabilityHeading": "[nl] Aansprakelijkheidsbeperking",
+      "liabilityBody": "[nl] Als informatiedienst is Slim niet aansprakelijk, voor zover wettelijk toegestaan, voor schade voortvloeiend uit contracten of tariefwijzigingen op basis van vergelijkingsresultaten.",
+      "governingLawHeading": "[nl] Toepasselijk recht en bevoegde rechter",
+      "governingLawBody": "[nl] Deze voorwaarden worden beheerst door en uitgelegd overeenkomstig het Belgische recht. Geschillen worden beslecht voor de bevoegde Belgische rechtbanken.",
+      "operatorHeading": "[nl] Identificatie van de exploitant",
+      "operatorBody": "[nl] De exploitant van deze dienst is hieronder vermeld. Neem voor vragen contact op via e-mail.",
+      "operatorNameLabel": "[nl] Exploitant",
+      "operatorNumberLabel": "[nl] Ondernemingsnummer",
+      "operatorVatLabel": "[nl] BTW-nummer",
+      "operatorEmailLabel": "[nl] E-mail",
+      "backLink": "[nl] ← Terug naar gegevensbronnen"
+    },
+    "privacy": {
+      "pageTitle": "[nl] Privacybeleid",
+      "pageDescription": "[nl] Slim GDPR Art.13 privacybeleid — verzamelde gegevens, rechtsgrondslag, bewaartermijnen, rechten van betrokkenen.",
+      "heading": "[nl] Privacybeleid",
+      "draftNotice": "[nl] Dit privacybeleid is een concept. Niet definitief totdat juridische beoordeling (PLAN 4.12.f) is voltooid.",
+      "lastUpdated": "[nl] Laatste update: 2026-05-23",
+      "directCollectionNote": "[nl] Dit beleid is een Art.13 kennisgeving van directe verzameling. Slim verzamelt geen persoonsgegevens indirect van derden (Art.14 niet van toepassing).",
+      "controllerHeading": "[nl] 1. Verwerkingsverantwoordelijke (Art.13 §1(a))",
+      "controllerBody": "[nl] De verwerkingsverantwoordelijke voor deze dienst is hieronder vermeld.",
+      "controllerNameLabel": "[nl] Naam",
+      "controllerNumberLabel": "[nl] Ondernemingsnummer",
+      "controllerVatLabel": "[nl] BTW-nummer",
+      "controllerEmailLabel": "[nl] Contact-e-mail",
+      "dpoHeading": "[nl] FG (Art.13 §1(b))",
+      "dpoBody": "[nl] Deze dienst is niet verplicht een FG aan te stellen op grond van GDPR Art.37 (eenmanszaak, geen verwerking met hoog risico).",
+      "processingHeading": "[nl] 2. Verwerkingsdoeleinden en rechtsgrondslag (Art.13 §1(c))",
+      "processingPA01Heading": "[nl] PA-01 Verwerking van vergelijkingsverzoeken",
+      "processingPA01Purpose": "[nl] Doel: Bereken en verstrek vergelijkingsresultaten op basis van gebruikersinvoer.",
+      "processingPA01LegalBasis": "[nl] Rechtsgrondslag: GDPR Art.6(1)(b) — uitvoering van het vergelijkingsservicecontract.",
+      "processingPA01Data": "[nl] Verzamelde gegevens: Postcode (PC4), huishoudtype, huidige aanbieder-ID, gebruiksgegevens per categorie. Geen IP- of apparaatinformatie.",
+      "processingPA02Heading": "[nl] PA-02 Permanente opslag van vergelijkingsresultaten",
+      "processingPA02Purpose": "[nl] Doel: Permanente koppeling (/r/[shortId]) zodat resultaten altijd kunnen worden herbekeken.",
+      "processingPA02LegalBasis": "[nl] Rechtsgrondslag: GDPR Art.6(1)(b).",
+      "processingPA03Heading": "[nl] PA-03 Affiliateklik-attributie",
+      "processingPA03Purpose": "[nl] Doel: Vastleggen dat een gebruiker na toestemming naar een affiliateaanbieder is gegaan en commissie vereffenen.",
+      "processingPA03LegalBasis": "[nl] Rechtsgrondslag: Art.6(1)(a) toestemming + Art.6(1)(c) wettelijke verplichting (Belgische boekhoudkundige bewaarplicht).",
+      "processingPA04Heading": "[nl] PA-04 Beveiligingslogboek",
+      "processingPA04Purpose": "[nl] Doel: Beveiligingsincidenten detecteren en systeemstoringen monitoren.",
+      "processingPA04LegalBasis": "[nl] Rechtsgrondslag: Art.6(1)(f) gerechtvaardigd belang — beveiliging van de dienst.",
+      "processingPA05Heading": "[nl] PA-05 Opvolgingsmail",
+      "processingPA05Purpose": "[nl] Doel: Eén opvolgingsmail versturen 7 dagen na een affiliateklik (bètaconversieanalyse).",
+      "processingPA05LegalBasis": "[nl] Rechtsgrondslag: Art.6(1)(a) uitdrukkelijke toestemming (apart selectievakje, niet vooraf aangevinkt).",
+      "legitimateInterestHeading": "[nl] 3. Gerechtvaardigd belang (Art.13 §1(d))",
+      "legitimateInterestBody": "[nl] PA-04 Beveiligingslogboek: fraudedetectie en beveiliging van de dienst vormen een gerechtvaardigd belang. Gegevens zijn geminimaliseerd en proportioneel.",
+      "recipientsHeading": "[nl] 4. Ontvangers en derden (Art.13 §1(e))",
+      "recipientsBody": "[nl] PA-01/PA-02 vergelijkingsgegevens worden niet extern doorgezonden. Externe verwerkers zijn hieronder vermeld.",
+      "recipientSentry": "[nl] Sentry — foutmonitoring (beveiligingslogboek). Sentry Inc. (VS, SCCs van toepassing).",
+      "recipientPostHog": "[nl] PostHog — productanalyse (beveiligingslogboek). EU-regio gebruikt.",
+      "recipientNeon": "[nl] Neon — databasehosting. EU-Central-1 (Frankfurt). Neon DPA gesloten.",
+      "recipientVercel": "[nl] Vercel — servicehosting. EU-edge-implementatie (FRA1).",
+      "recipientResend": "[nl] Resend — opvolgingsmailverzending (PA-05). EU-regio gebruikt.",
+      "recipientAffiliateNote": "[nl] Affiliateredirecties: Gebruikers navigeren via de browser rechtstreeks naar aanbiedersites. Slim draagt geen persoonsgegevens over aan aanbieders (geen GDPR-doorgifte aan derde).",
+      "internationalTransferHeading": "[nl] 5. Internationale doorgiften (Art.13 §1(f))",
+      "internationalTransferBody": "[nl] Neon, Resend en PostHog gebruiken EU-regio's. Sentry is een Amerikaanse entiteit; doorgiften worden beheerst door SCCs. Details worden bevestigd door externe audit (vóór bèta).",
+      "retentionHeading": "[nl] 6. Bewaartermijnen (Art.13 §2(a))",
+      "retentionPA01": "[nl] Persoonsgegevens vergelijkingsverzoek (postcode, huishoudtype, gebruik): 90 dagen. Daarna gegeneraliseerd of op NULL gezet.",
+      "retentionPA02": "[nl] Vergelijkingsresultaten: permanent bewaard (permanente koppeling SLA). PII-afgeleide velden: NULL na 90 dagen.",
+      "retentionPA03Click": "[nl] Affiliateklik FK's: SET NULL na 90 dagen. Vereffeningsvelden: Belgische boekhoudkundige verplichting (7–10 jaar).",
+      "retentionPA05Email": "[nl] E-mailadres: direct na succesvol verzenden op NULL gezet. Metakolommen: verwijderd na 90 dagen.",
+      "rightsHeading": "[nl] 7. Rechten van betrokkenen (Art.13 §2(b))",
+      "rightsBody": "[nl] Betrokkenen kunnen de volgende rechten uitoefenen door contact op te nemen via het onderstaande e-mailadres.",
+      "rightAccess": "[nl] Recht op inzage (Art.15)",
+      "rightRectification": "[nl] Recht op rectificatie (Art.16)",
+      "rightErasure": "[nl] Recht op verwijdering (Art.17)",
+      "rightRestriction": "[nl] Recht op beperking van verwerking (Art.18)",
+      "rightObject": "[nl] Recht van bezwaar (Art.21)",
+      "rightPortability": "[nl] Recht op gegevensoverdraagbaarheid (Art.20)",
+      "rightWithdraw": "[nl] Recht op intrekking van toestemming (Art.7(3)) — affiliatetoestemming, opvolgingsmailtoestemming en analytische cookietoestemming kunnen elk afzonderlijk worden ingetrokken.",
+      "withdrawConsentHeading": "[nl] 8. Intrekking van toestemming (Art.13 §2(c))",
+      "withdrawConsentBody": "[nl] Verwerking op basis van Art.6(1)(a) toestemming (PA-03/PA-05/analytische cookies) kan te allen tijde worden ingetrokken. Intrekkingsmethodes: affiliatetoestemming — contacteer exploitant via e-mail; opvolgingsmail — 1-click uitschrijven in de e-mail; analytische cookies — Cookie-instellingen hieronder.",
+      "supervisoryHeading": "[nl] 9. Klachtrecht bij toezichthoudende autoriteit (Art.13 §2(d))",
+      "supervisoryBody": "[nl] Betrokkenen kunnen een klacht indienen bij de volgende toezichthoudende autoriteiten.",
+      "supervisoryBE": "[nl] België: Autorité de protection des données (APD) / Gegevensbeschermingsautoriteit (GBA) — www.autoriteprotectiondonnees.be",
+      "supervisoryNL": "[nl] Nederland: Autoriteit Persoonsgegevens (AP) — www.autoriteitpersoonsgegevens.nl",
+      "supervisoryLU": "[nl] Luxemburg: Commission nationale pour la protection des données (CNPD) — www.cnpd.public.lu",
+      "obligationHeading": "[nl] 10. Aard van de gegevensverstrekking (Art.13 §2(e))",
+      "obligationBody": "[nl] Invoer voor vergelijkingsverzoeken (postcode, huishoudtype, gebruik) is noodzakelijk voor de uitvoering van de service (Art.6(1)(b)). Zonder deze gegevens kunnen geen vergelijkingsresultaten worden berekend.",
+      "automatedDecisionHeading": "[nl] 11. Geautomatiseerde besluitvorming (Art.13 §2(f))",
+      "automatedDecisionBody": "[nl] De vergelijkingsmotor van Slim voert uitsluitend rekenkundige berekeningen van besparingen uit. Er is geen geautomatiseerde individuele besluitvorming of profilering in de zin van GDPR Art.22. Vergelijkingsrankings zijn niet gebaseerd op profilering van persoonlijke kenmerken, maar zijn het rekenkundige resultaat van het vergelijken van tariefdata met invoerveronderstellingen.",
+      "contactHeading": "[nl] 12. Contact",
+      "contactBody": "[nl] Voor privacyvragen en verzoeken om rechtenuitoefening kunt u contact opnemen via het onderstaande e-mailadres.",
+      "backLink": "[nl] ← Terug naar gegevensbronnen"
     }
+  },
+  "dataDisplay": {
+    "viewSource": "Bron bekijken",
+    "staleData": "{relative} (verouderd)"
   },
   "home": {
     "headline": "Slank.",
     "tagline": "Vergelijken gaat gemakkelijk, besparen levert flink op.",
-    "ctaButton": "Nu vergelijken"
+    "ctaButton": "Nu vergelijken",
+    "metaTitle": "Slim — Vergelijk eenvoudig, bespaar flink",
+    "metaDescription": "Vergelijk telecomabonnementen in België, Nederland en Luxemburg. In 5 minuten de slimste keuze."
+  },
+  "metadata": {
+    "defaultTitle": "Slim — Vergelijk eenvoudig, bespaar flink",
+    "description": "Vergelijkingsplatform voor de Benelux. BE · NL · LU in 5 minuten vergeleken.",
+    "ogTitle": "Slim — Vergelijk eenvoudig, bespaar flink",
+    "ogDescription": "Vergelijkingsplatform voor de Benelux. BE · NL · LU in 5 minuten vergeleken."
+  },
+  "footer": {
+    "companyInfoHeading": "Bedrijfsgegevens",
+    "operatorLabel": "Uitbater",
+    "companyNumberLabel": "Ondernemingsnummer",
+    "vatLabel": "Btw-nummer",
+    "addressLabel": "Adres",
+    "contactLabel": "Contact",
+    "legalLinksLabel": "Juridisch en transparantie",
+    "affiliateDisclosureLink": "Affiliate-vergoeding",
+    "dataSourcesLink": "Gegevensbronnen",
+    "copyright": "© {year} Slim",
+    "languageLabel": "Taal"
+  },
+  "validation": {
+    "postal": {
+      "be": "Belgische (BE) postcode moet een 4-cijferig getal zijn tussen 1000 en 9999 (bijv. 1000, 9000)",
+      "nl": "Nederlandse (NL) postcode moet 4 cijfers of 4 cijfers + 2 hoofdletters zijn (bijv. 1011, 1011 AB)",
+      "lu": "Luxemburgse (LU) postcode moet een 4-cijferig getal zijn tussen 1000 en 9999 (bijv. 1000, 4000)"
+    },
+    "currentProvider": {
+      "tariffWithoutProvider": "Selecteer eerst een aanbieder voordat u een abonnement kiest"
+    }
   }
 }

@@ -59,8 +59,15 @@ export async function POST(request: Request) {
 
   const parsed = comparisonInputSchema.safeParse(body);
   if (!parsed.success) {
+    // ADR-0036 D1: expose only { message (= key token), path } — no Korean text.
+    // message is now a locale-free key (e.g. "validation.postal.be").
+    // Client can call t(message) to render in the user's locale.
+    const issues = parsed.error.issues.map((issue) => ({
+      message: issue.message,
+      path: issue.path,
+    }));
     return NextResponse.json(
-      { ok: false, error: 'Validation failed', issues: parsed.error.issues },
+      { ok: false, error: 'Validation failed', issues },
       { status: 400 },
     );
   }

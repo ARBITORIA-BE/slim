@@ -19,7 +19,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import {
   getActiveProviders,
@@ -37,13 +37,24 @@ import { CurrentProviderForm } from './_components/CurrentProviderForm';
  * 왜 noindex 인가?
  *   현재 공급사 선택 단계는 sessionStorage 상태에 의존하며, 단독 URL 접근 시
  *   의미 있는 콘텐츠가 없다 (공급사 목록만 있고 비교 결과는 없음).
- * @i18n-allow metadata 한글은 4.5.j.4.B 대상
+ *
+ * i18n: generateMetadata + getTranslations — compare.currentProvider.title 신규 키 (§A2.9.2).
  */
-// @i18n-allow metadata 한글은 4.5.j.4.B 대상
-export const metadata: Metadata = {
-  title: '현재 공급사 선택', // @i18n-allow
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'compare' });
+
+  return {
+    // §A2.9.2: compare.currentProvider.title
+    title: t('currentProvider.title'),
+    robots: { index: false, follow: false },
+  };
+}
 
 export const revalidate = 3600; // 1시간 ISR — provider 마스터 변경 빈도 낮음
 

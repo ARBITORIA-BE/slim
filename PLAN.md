@@ -50,9 +50,9 @@
 
 - [x] **D.1** Vercel build gate 책임 분리 (ADR-0002 Decision 1 + Amendment 1)
   — 코드 3건(a/b/d) 완료 + DoD #1·#2 통과 (2026-05-14: Vercel `5KZoKk8AI`
-  Production Ready 34s 실측). DoD #3 (의도적 typecheck 깨는 PR 차단)은
-  D.1.c 와 묶여 **Team plan 전환 후 재검증 트리거** ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2).
-  D.1.c 는 deferred — Free org plan 제약, ruleset 정의는 보존됨.
+  Production Ready 34s 실측). **DoD #3 (의도적 typecheck 깨는 PR 차단) = 2026-05-28
+  완료** — Team plan 전환 후 D.1.c 와 함께 라이브 음성 PR(#2)로 main 머지 차단 실측
+  ([ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). D.1.c ✅ (아래).
   - [x] **D.1.a** `next.config.ts`에 `typescript.ignoreBuildErrors: true` +
     `eslint.ignoreDuringBuilds: true` 추가 — `next.config.ts:12-13`. `pnpm build`
     로그에 "Skipping validation of types" / "Skipping linting" 확인.
@@ -61,13 +61,15 @@
     > Amendment 1으로 D.1.d에서 lint 단계 제거 → 실제 운영은 4단 게이트.
     > 2026-05-11: ci.yml 인코딩 정리 — UTF-8 BOM 제거 + 깨진 em-dash 스텝명
     > (`Harness ??plan integrity`) → `Harness - plan integrity`로 교정.
-  - [ ] **D.1.c** `main` 브랜치 보호 규칙 (GitHub repo settings) — CI 통과 필수
-    체크박스 활성화 (수동 작업, scribe가 운영 노트로 기록).
-    **2026-05-14 보류**: GitHub Free org plan 이 ruleset enforcement 를 차단
-    (ARBITORIA-BE/slim 의 `protect-main` ruleset 정의는 보존, 작동 X) →
-    TVA 발급 + Team $4/user/month 전환 후 자동 작동. 음성 PR #1 (`test/
-    build-gate-negative`) 가이드 + 브랜치는 준비 완료. 본 잠금은
-    [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2 와 cross-ref.
+  - [x] **D.1.c** `main` 브랜치 보호 규칙 (GitHub ruleset) — CI 통과 필수.
+    **2026-05-28 완료**: repo `Arbitoria/slim`(user) → `ARBITORIA-BE/slim`(org) 이전
+    + org Free → Team($4/seat, TVA `BE1037548919`) 전환 → `protect-main` ruleset
+    enforcement 활성. 검증: ruleset active(id 16383049) — PR 필수 + required status
+    check `gate`(= ci.yml job 이름, strict) + force-push/삭제 차단 + bypass actor 0.
+    DoD #3 라이브 음성 PR(#2): 의도적 typecheck 에러 → `gate` FAILURE →
+    `mergeStateStatus: BLOCKED` 실측 → close + 브랜치 삭제. Vercel Git 재연결
+    (ARBITORIA-BE org, webhook 자동배포 검증 동반).
+    [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2 cross-ref.
   - [x] **D.1.d** `.github/workflows/ci.yml`에서 `Lint` 단계 제거 (Amendment 1)
     — GitHub Actions ubuntu-latest에서 `pnpm lint`가 ESLint 9 +
     `@next/eslint-plugin-next` 호환성 이슈로 매번 실패. lint는 로컬
@@ -87,22 +89,29 @@
   - DoD: jq 부재 환경(Windows + PATH에서 jq 제거)에서 `rm -rf /` 입력 시
     차단 메시지 정상 출력
   - 검증: ADR-0002 §검증 방법 2
-- [ ] **D.3** ARBITORIA 정렬 follow-ups (ADR-0020 결정 3/4/6/7) — GATE-K
-  (페이즈 4 베타 진입) 직전 일괄 처리. 5 작업 → **잔여 2** (D.3.c, D.3.d,
-  D.3.e 완료; D.3.a/b 결정 잠금 + 실행 defer):
+- [x] **D.3** ARBITORIA 정렬 follow-ups (ADR-0020 결정 3/4/6/7) — GATE-K
+  (페이즈 4 베타 진입) 직전 일괄 처리. 5 작업 → **전부 완료** (D.3.c/d/e +
+  D.3.a/b 2026-05-28 TVA 트리거 발화 → 실행 완료). **GATE-K 완전 닫힘**:
   - **GATE-K 재정의 (2026-05-15, [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md))**:
     결정 트랙 (D.3.b 본 ADR-0032 + D.3.e ADR-0024) ✅ 잠금 완료 — GATE-K 결정 게이트 **닫힘**.
     실행 트랙 (D.3.a Vercel App OAuth + D.3.b O1 Pro plan 결제) 은 **TVA 번호 발급 트리거**
     까지 defer — GATE-K 실행 게이트 **열림 (defer)**. 4.6 베타 진입 = 결정 게이트만 요구,
     실행 게이트는 personal team scope interim 운영 (ADR-0032 §Defer 기간 interim 정책 I1~I6).
+  - **GATE-K 완전 닫힘 (2026-05-28)**: TVA 번호 발급(2026-05-23) → [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md)
+    §Trigger G1 발화. 운영자 O1~O5 실행 완료 — `arbitoria` Vercel team 신설(Pro) + slim 프로젝트
+    이관 + Git 재연결 + Billing TVA `BE1037548919`. 검증: **V2** (slim이 personal team
+    `team_BSdTg9wKOVhi9trPdJkWhWqR` 에서 사라짐 + `vercel.com/arbitoria/slim` 라이브) ✅ /
+    **V3** (slim.lu 200 + /compare 200 + /en/admin 200 + /api/inngest 401 정상 + `pnpm verify:db`
+    all-green) ✅ / **V1** (Billing TVA 표기, 운영자 확인) ✅. MCP arbitoria scope 재인증은
+    커넥터 재설치 완료 + 다음 세션 반영 (선택, 비차단).
   - **D.3.a** Vercel App을 ARBITORIA-BE org에 직접 설치 (현 redirect follow를
-    org 직접 권한으로 격상, 운영자 5분) — ⏸ Defer — TVA 발급 트리거 (Trigger gate, [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) §Trigger G1).
-    O4 단계 (ARBITORIA team scope 에서 권한 재인증) 와 동시 완료 — 운영자 액션 O1~O5 일괄.
+    org 직접 권한으로 격상, 운영자 5분) — ✅ **완료 2026-05-28** (TVA 트리거 발화) — O4
+    (ARBITORIA team scope 권한 재인증 = Git 재연결) 동시 완료, 운영자 액션 O1~O5 일괄.
   - **D.3.b** Vercel team scope 결정 — personal `kimwonmin91-4132s-projects`
     유지 vs ARBITORIA team 신설 — ✅ **결정 잠금 2026-05-15 [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted**:
-    ARBITORIA team 신설 (Pro $20/seat/month). 실행 = ⏸ Defer — TVA 발급 트리거 (Trigger gate).
-    운영자 O1 (Pro plan 결제) 의 실행은 TVA 번호 발급 시점까지 defer — VAT 21% 환급 가치
-    €46.6/year 보존. 4.6 베타 진입 blocker **아님** (ADR-0032 §4.6 베타 진입 blocker 재평가
+    ARBITORIA team 신설 (Pro $20/seat/month). 실행 = ✅ **완료 2026-05-28** (team 신설 + slim
+    이관 + Pro 결제, TVA 트리거 발화). VAT 21% 환급 가치 €46.6/year 는 Billing TVA 표기로 확보.
+    4.6 베타 진입 blocker **아님** (ADR-0032 §4.6 베타 진입 blocker 재평가
     결론 0건 — personal team scope interim 운영으로 진입 가능, 헌장 §3 P1·P3 + §8 [4] 위반 0).
   - [x] **D.3.c** Vercel runtime env vars 등록 — production + preview 양쪽에
     EXPECTED_DB_ENDPOINTS / INNGEST_EVENT_KEY / INNGEST_SIGNING_KEY 3개 추가
@@ -1343,13 +1352,18 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       - [x] **4.5.j.4.A** **1순위 배치 — 랜딩 + compare 5단계 + 결과 페이지** (SEO/사용자 critical, organic SEO 런치=ADR-0034 D5 직접 의존). 대상 (~21 컴포넌트): `src/app/[locale]/page.tsx`(`home.*`) + `compare/page.tsx`·`compare/[category]/page.tsx`·`compare/[category]/_components/CompareLayout.tsx`(`compare.*`) + `compare/[category]/{postal,household,current-provider,bill,preview}/page.tsx` + 각 `layout.tsx`(4개) + `current-provider/_components/CurrentProviderForm.tsx` + `r/[shortId]/page.tsx`·`not-found.tsx`(`result.*`) + `r/[shortId]/_components/`(ResultConclusionCard·ComparisonTable·CalculationDetails·ComparisonControls·ExcludedProvidersSection·BetaEstimatedBanner·AffiliateDisclosureLine, 7개 — `result.*`/`caveats.*`). DoD: (1) 대상 파일 한글 리터럴 0 (`grep -P "[가-힣]"`, ICU/주석 화이트리스트 §A2.8.4 제외) + `t()` 소비 ✅ (2) ko.json 키 부재 시 키 추가 (네임스페이스 규칙, nl/fr/en placeholder = 다음 보정 round) ✅ 41 keys pending (3) **신규 게이트 `harness:i18n` 추가·GREEN** (`scripts/harness/i18n-consumption.ts` — `src/app/[locale]/**/*.tsx` `*.test.tsx`·루트 layout 제외 한글 0 + 핵심 라우트 `useTranslations`/`getTranslations` import 존재 정적 검사, §A2.8.4 옵션 a 잠금) ✅ Phase A GREEN (4) `pnpm typecheck`/`pnpm lint`/**`pnpm test:run`** 0 ✅ (5) Runtime 검증 (`/en` 렌더 한글 0 + co.json ko 채움): ✅ (6) `pnpm harness:plan` 88/58 불변 ✅ + `pnpm harness:data` 정합 ✅. 완료 (2026-05-18 verifier). **명시 부채**: Placeholder 41 keys ([@nl]/[@fr]/[@en] — translate.mjs 미실행) — 다음 sub-task 4.5.j.4.A.1 대상.
         - [x] **4.5.j.4.A.1** **신규 추가 키 DeepL 보정 round** (트랙 D1 — 후속 i18n 개선). 4.5.j.4.A 완료 시점의 명시 부채: `messages/{nl,fr,en}.json`의 `[nl]`/`[fr]`/`[en]` prefix placeholder 41 keys 각 locale (총 123 string entries). 출처 = currentProvider.* (10 keys) + result.* (25 keys) + caveats.* (6 keys). 사용자 영향 = result/current provider 화면에서 "다음 보정" 표시. DoD: (1) `scripts/i18n/translate.mjs` 재실행 (`pnpm tsx --env-file=.env.local`, DEEPL_API_KEY 로드 — harness:price 동형) — DeepL로 41 keys 각 locale 문자열 보정 (2) 보정 후 `messages/{nl,fr,en}.json` `[nl]`/`[fr]`/`[en]` prefix 제거 (3) `pnpm test:run` 0 (4) `pnpm harness:i18n` Phase A 유지 + Phase B → Phase A 흡수 (if .B 미완료) 또는 Stage B GREEN 승격 (if .B 완료). **합계 `harness:plan` 88/58 불변** (indented sub-sub는 미카운트).
           ✅ 완료 (2026-05-18, verifier 라운드2 PASS — 라운드1 FAIL[ICU 공백 흡수] 수정 후): `scripts/i18n/var-protection.ts`+`.test.ts`(11 단위) 신설 — encode/decode 시 ko 원문 `{var}` 양옆 공백 규칙 기록·복원(DeepL XML 공백 흡수 보정, 과교정 0). translate.mjs `--retarget` 41키 모드. placeholder prefix 0 / 공백 실수정(en `Data {value} GB` / nl `Gegevens {value} GB` / fr `de {providerName} lors` 등) / `savingYearly` 의미깨짐 "Yeon" → nl `Per jaar {amount}`·fr `Par an {amount}`·en `{amount} / yr` 수동 교정 / ICU 변수 이름·개수 ko↔nl·fr·en 정합 / 기존 비-.A.1 값(Phase B 실번역) 무회귀(diff = messages 41키 국한, ko.json·컴포넌트·routing·request·middleware 무변경). 게이트: typecheck 0 / lint 0 / test:run **534 passed**(523+11) / harness:plan 88·58 불변(sub-sub itemRe 비매치) / harness:data 통과 / harness:i18n GREEN(Phase A). DeepL 누적 **12,612 / 1,000,000 (1.3%)** → ADR-0033 §Verification #5 기록. **4.5.j.4.A "명시 부채 41 keys" 해소.** verifier 라운드2가 PLAN 갱신 누락+오진(이미[x]) → 오케스트레이터 정정 마킹. 4.5.j.4 부모/4.5.j.2 = `[ ]` 유지(.B 미완).
-      - [ ] **4.5.j.4.B** **2순위 배치 — 보조 경로** (사용자 직접 critical 아님 — SEO 색인/펀널 비핵심). 대상 (~5 컴포넌트): `src/app/[locale]/data-sources/page.tsx` + `go/[shortId]/[itemId]/page.tsx` + `unsubscribe/[token]/page.tsx` + `admin/page.tsx` + `[locale]/layout.tsx`(locale별 `generateMetadata` 한글 — metadata i18n) + `legal/affiliate-disclosure/page.tsx` **비-legal UI 셸만**(헤딩/네비 — `legal.*` 동의/디스클로저 본문 키 = 4.5.j.3 분리, 경계 §A2.8.3). 루트 `src/app/layout.tsx` = 콘텐츠 0 검토만(브랜드 metadata 한글 = 의도 — 변경 불요 판정 기록). DoD: (1)~(2) 4.5.j.4.A 동형 (대상=2순위 파일) (3) `harness:i18n` GREEN 유지 (전체 `src/app/[locale]/**` 한글 0 — .B 완료 시 비로소 전수 GREEN) (4) typecheck/lint/`pnpm test:run` 0 (5) `pnpm harness:plan` 88/58 불변 + `pnpm harness:data` 정합. **완료 시 4.5.j.4 부모 + 4.5.j.2 `[x]`** (S2 전수 완결 = 사용자 대면 i18n 100% 전달, 4.9 완성 게이트 보강).
+      - [ ] **4.5.j.4.B** **2순위 배치 — 보조 경로 + 메타데이터 i18n** (사용자 직접 critical 아님 — SEO 색인/펀널 비핵심, 단 metadata 는 SEO/탭 노출). 대상 (~5 컴포넌트 + metadata 전수): (가) **보조 페이지** `src/app/[locale]/data-sources/page.tsx` + `go/[shortId]/[itemId]/page.tsx` + `unsubscribe/[token]/page.tsx` + `admin/page.tsx` + `legal/affiliate-disclosure/page.tsx` **비-legal UI 셸만**(헤딩/네비 — `legal.*` 동의/디스클로저 본문 키 = 4.5.j.3 분리, 경계 §A2.8.3). (나) **메타데이터 i18n 전수** ([ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) **Amendment 5 / §A2.9** 패턴 잠금 — `generateMetadata` + `getTranslations`, `'use client'` page 는 부모 layout 담당): `[locale]/layout.tsx`(브랜드 metadata + og:locale 동적) + `page.tsx`(home) + `compare/page.tsx` + `compare/[category]/page.tsx`(CATEGORY_LABELS 한글) + `compare/[category]/{postal,household,bill,preview}/layout.tsx`(4개 step metadata) + `compare/[category]/current-provider/page.tsx` + `r/[shortId]/page.tsx`(generateMetadata 한글 title/desc). `@i18n-allow metadata` 마커 전부 제거 (dev throw `@i18n-allow 개발자 에러 메시지` 마커는 유지 — 사용자 미노출). 루트 `src/app/layout.tsx` = metadata 없음 확인만(브랜드 metadata 는 [locale]/layout.tsx 로 이미 이동). 키 재사용 우선(§A2.9.2 — `compare.<step>.title`/`result.pageTitle`/`compare.pageTitle` 기존 키), 신규 = `home.metaTitle`/`home.metaDescription` + `metadata.*` 네임스페이스(브랜드). canonical/robots/og 구조 무변경(§A2.9.5 — 텍스트만). DoD: (1)~(2) 4.5.j.4.A 동형 (대상=2순위 파일 + metadata) (3) `harness:i18n` GREEN 유지 (전체 `src/app/[locale]/**` 한글 0 — .B 완료 시 비로소 전수 GREEN, `@i18n-allow metadata` 마커 잔존 0) (4) typecheck/lint/`pnpm test:run` 0 (5) `pnpm harness:plan` 88/58 불변 + `pnpm harness:data` 정합 (6) Vercel `/en` 탭 title 영어 + `/fr-BE/compare` description 프랑스어 (한글 0). **완료 시 4.5.j.4 부모 + 4.5.j.2 `[x]`** (S2 전수 완결 = 사용자 대면 i18n 100% 전달, 4.9 완성 게이트 보강). **주의**: Zod 검증 메시지(.ts) + 공유 컴포넌트(`src/components/`) 한국어 = 본 .B 범위 **밖** = 신규 4.5.j.5 ([ADR-0036](docs/adr/0036-i18n-completion-zod-harness-locale-switcher.md)).
     - [ ] **4.5.j.3** **legal.* 네임스페이스 legal 검수** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T4 + Amendment 2).
       `legal.*` 네임스페이스 (GDPR 동의/디스클로저/약관 텍스트) 는 일반 UI
       트랙과 분리 — **legal 에이전트 검수 게이트** (오역 = 규제 리스크).
       **본 PLAN 항목 진입 시 legal 에이전트 호출** (ADR-0034 적용 턴에서는
       호출 안 함). DoD: `legal.*` 5 locale 번역 + legal 에이전트 검수 통과
       (Critical/Major 0) + 일반 UI 트랙과 분리 확인 + typecheck/lint/test 0.
+    - [ ] **4.5.j.5** **Zod 메시지 i18n + harness 범위 확장 + 고아 컴포넌트 정리** (트랙 D1 — [ADR-0036](docs/adr/0036-i18n-completion-zod-harness-locale-switcher.md) D1/D2). 라이브 진단: (a) Zod 검증 메시지가 `.ts` 정적 schema 에 한국어 하드코딩 → `<FormMessage />` (클라이언트) + `/api/compare` issues (서버) 로 공개 nl/fr/en 누출 (b) `harness:i18n` 가 `.ts`/`src/components/` 미스캔 = blind-spot. 4칸 들여쓰기 = `harness:plan` `^- \[` itemRe 비매치 = **88/58 카운트 불변**.
+      - [ ] **4.5.j.5.a** **Zod 메시지 → 에러 키 전략** (ADR-0036 D1). `src/types/comparison-input.ts` L59/L70/L79(우편번호 BE/NL/LU regex message) + L107(superRefine `요금제를 선택하려면…`) 의 한국어 message 를 **안정적 키 토큰**(예: `'validation.postal.be'`)으로 치환 (schema = locale-free 유지, ADR-0016 §T7 단일 출처 보존 — schema factory 거부). **클라이언트**: `postal/page.tsx`·`household/page.tsx` 의 `<FormMessage />` 가 `formState.errors.<field>.message`(=키) 를 `useTranslations('validation')` 로 매핑 표시 (래퍼 또는 message→t() 매핑). **서버**(`src/app/api/compare/route.ts:60-63`): `parsed.error.issues` 전체 대신 `{ code(=키), path }` 만 응답(한국어 message 노출 0). `messages/*` 에 `validation.*` 네임스페이스 신규 키(base nl/fr/en + ko). DoD: (1) comparison-input.ts 한국어 0 (2) FormMessage 영어/nl/fr 렌더(키→t()) (3) /api/compare 응답 한글 message 0 (4) `validation.*` 키 base 4파일(ko/nl/fr/en) — nl/fr/en placeholder 허용(다음 DeepL round) (5) typecheck/lint/`test:run` 0 + 기존 RHF 검증 회귀 0.
+      - [ ] **4.5.j.5.b** **harness:i18n 범위 확장** (ADR-0036 D2). `scripts/harness/i18n-consumption.ts` 스캔 대상에 **`src/components/**/*.tsx`(`*.test.tsx` 제외)** + **`src/types/comparison-input.ts`** 추가 (`.ts` 화이트리스트 = 이 1파일만 — `src/**/*.ts` 전체 확장 거부, dev throw/주석 오탐 폭증). 기존 필터(주석/JSDoc/JSX 블록 주석/`@i18n-allow`/인라인 주석/dev throw) + 자가검증(그룹별 0파일 FATAL) 유지. metadata Phase B 화이트리스트는 4.5.j.4.B 완료 시 자연 축소(§A2.9.3). DoD: (1) 확장 스캔 GREEN(4.5.j.5.a + 고아 정리 후) (2) 자가검증 그룹별 파일 수 로그 (3) 의도적 한글 주입 시 RED 재현(역검증).
+      - [ ] **4.5.j.5.c** **고아 컴포넌트 정리** (ADR-0036 §결과). `src/components/{PriceWithSource,StaleLabel}.tsx` = 한국어 하드코딩(`원본 보기`/`방금 전`/`{n}시간 전`/`⚠️ {n}일 전 데이터`) + JSX 렌더 사용처 **0**(schema/harness 주석 참조 + PriceWithSource.test.tsx 만). **i18n 보존 확정** (2026-05-23 운영자 결정 — 삭제 거부). 근거: `harness:data` Rule 3(`checkStaleLabel`, error)이 `StaleLabel.tsx` 존재를 P1 강행 계약으로 요구 + Rule 2 가 PriceWithSource 가격 래퍼 요구 + `e2e-smoke.ts` 신선도 체크 → 삭제 시 게이트 error (고아 아님 = P1 앵커). 두 컴포넌트를 `'use client'` + `useTranslations`/`useLocale` 키화: 상대시간 = `Intl.RelativeTimeFormat(locale)`(키 불필요), 신규 `dataDisplay.*`(viewSource/staleData) 4 locale, `PriceWithSource.test.tsx` i18n context 갱신. DoD: (1) 두 컴포넌트 한국어 0 (2) typecheck/lint/test:run 회귀 0 (3) **harness:data GREEN 유지**(컴포넌트 존속) (4) harness:i18n RED 8→4(comparison-input.ts 잔존=4.5.j.5.a).
+      - DoD (4.5.j.5 부모): (1) a/b/c 전부 (2) `harness:i18n` 확장 GREEN (3) typecheck/lint/test:run 0 + harness:plan 88/58 불변 + harness:data 정합 (4) Vercel `/en` 우편번호 빈 제출 → 영어 에러(한글 0).
 - [ ] **4.6** **organic SEO 런치 준비** — Search Console + hreflang + 다국어 sitemap
   - **🔄 재정의 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5)**:
     ~~베타 모집 100명~~ **deprecate** → 운영자가 사이트 완성 후 직접 Google
@@ -1626,6 +1640,35 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - DoD: (1) 페이즈 4.5 진입 commit (2) 4.5.3 M16 평가 시점 `docs/m16-eval.md`
       placeholder (또는 ADR backfill) (3) CHANGELOG 페이즈 4 요약 1 entry
 
+- [ ] **4.10** 사업자 식별정보 공개 + 전역 Footer (벨기에 CDE Art. III.74 / XII.6)
+  - 왜: 벨기에 경제법전 — 상업 웹사이트는 기업번호·VAT·법인명·연락처를 *모든 페이지*에서 접근 가능하게 표시 의무. 헌법 P3(투명성) 정합. 운영자 식별정보 단일 출처 부재 해소. 결정 = [ADR-0035](docs/adr/0035-legal-identity-disclosure-global-footer.md).
+  - [ ] **4.10.a** `src/lib/legal.ts` 신설 — `LEGAL_ENTITY`(legalName/enterpriseNumber/vatNumber/address/contactEmail) + 표기 헬퍼 `formatEnterpriseNumber`(→ `1037.548.919`)·`formatVatNumber`(→ `BE 1037.548.919`). `address: null` (운영자 주소 미수령 — P1 추측 금지). 단위 테스트 `src/lib/legal.test.ts`.
+  - [ ] **4.10.b** `footer.*` 네임스페이스 4 메시지 파일(`messages/{ko,nl,fr,en}.json`) — 라벨만 i18n (식별번호 값은 LEGAL_ENTITY locale 무관). 식별 라벨 = 비-legal UI 셸 → `footer.*` 일반 트랙 (4.5.j.3 `legal.*` 경계와 분리).
+  - [ ] **4.10.c** `src/components/SiteFooter.tsx` (RSC) 신설 — `getTranslations('footer')` + LEGAL_ENTITY 렌더, address null 조건부 비노출, 법무 링크(`/legal/affiliate-disclosure`·`/data-sources`). 테스트 `src/components/SiteFooter.test.tsx` (next-intl/server + i18n/navigation mock).
+  - [ ] **4.10.d** `src/app/[locale]/layout.tsx` 배선 (Edit 외과 수정) — `<body>` 내 `{children}` 다음 `<SiteFooter />` 1회 → 전 페이지 하단 노출 (Art. XII.6 상시 접근).
+  - [ ] **4.10.e** 게이트 — `pnpm typecheck`/`lint`/`test:run` 0 + `harness:i18n` GREEN + Vercel 배포 URL footer 렌더 확인 (로컬 build 깨짐 — WasmHash).
+  - [ ] **4.10.f** legal 에이전트 검수 — Art. XII.6/III.74 항목 충족(기업번호·VAT·법인명·연락처) + RPM/RPR 표기 필요 여부 판정 + 주소 갭 명시. 외부 변호사 감사는 베타 직전/수익 후.
+  - 미해결: 등록 주소 미수령 → `address: null` (주소 줄 비노출 = 부분 충족). 운영자 제공 시 1줄 PR 로 완전 충족 (Art. XII.6).
+  - DoD: (1) 4.10.a~f 전부 (2) 전 페이지 footer 노출 (3) typecheck/lint/test/harness:i18n 0 (4) legal 검수 pass (5) ADR-0035 기록.
+- [ ] **4.11** 언어 전환기 (LocaleSwitcher) — `as-needed` prefix 갇힘 해소
+  - 왜: `localePrefix:'as-needed'` (nl-BE 기본 = prefix 없음) 에서 사용자가 `/fr-BE/`·`/en/` 로 갈 UI 경로가 0. nl-BE 기본 슬롯에 갇힘. 결정 = [ADR-0036](docs/adr/0036-i18n-completion-zod-harness-locale-switcher.md) D3.
+  - [ ] **4.11.a** `src/components/LocaleSwitcher.tsx` 신설 (**client 서브컴포넌트** — RSC footer 가 현재 pathname 미접근). `usePathname`(`@/i18n/navigation`) + next-intl `Link` 의 `locale` prop 으로 현재 경로 보존하며 locale 교체. 대상 = `routing.locales` 단일 출처 도출(하드코딩 금지) = nl-BE/nl-NL/fr-BE/fr-LU/en. **ko 제외**(운영자 전용 게이트, locale 목록 비포함 — ADR-0033 §T2). UX = **NL/FR/EN 3 언어 토글 권고**(region 변이는 현 region 유지: nl→현 nl-region, fr→현 fr-region, default fr-BE — ADR-0036 §대안 D3-region; 운영자 재량 5 전체 fallback). 현재 locale 강조 `aria-current` + `<nav aria-label>`. 테스트 `src/components/LocaleSwitcher.test.tsx`(usePathname/Link mock).
+  - [ ] **4.11.b** `footer.*` 네임스페이스에 전환기 키 추가(`messages/{ko,nl,fr,en}.json`) — `footer.languageLabel`(nav aria-label) + 언어 표시명(NL/FR/EN = 자기언어 endonym 또는 ISO 코드, builder 결정). delta(nl-BE 등) 상속.
+  - [ ] **4.11.c** `src/components/SiteFooter.tsx` 에 `<LocaleSwitcher />` 배선 — footer 하단 `<nav>` 1회. footer 본문은 RSC 유지(전환기만 client 섬 — 헌법 P2 번들 보호).
+  - [ ] **4.11.d** 게이트 — typecheck/lint/`test:run` 0 + `harness:i18n` GREEN(LocaleSwitcher 한글 0 — 4.5.j.5.b 확장 스캔 대상) + Vercel `/en` footer 에서 NL/FR/EN 전환 클릭 → 현재 경로 유지 + locale 교체 + `aria-current` 정합.
+  - DoD: (1) 4.11.a~d 전부 (2) 전 페이지 footer 에 언어 전환기 노출 (3) typecheck/lint/test:run 0 + harness:i18n GREEN + harness:plan 정합 (4) Vercel 배포 URL 전환 동작 확인 (5) ADR-0036 D3 §검증 충족.
+- [ ] **4.12** 공개 법적 페이지 (terms/privacy) + 쿠키 동의 배너 — 공개 전 🔴 법적 블로커 3건 봉합 (track 2 envelope)
+  - 왜: legal 1차 검수(2026-05-23) 발견 — (1) `compare/page.tsx:96` 가 `/legal/terms` 링크 + "동의 간주" 문구 노출하나 terms 라우트 부재 → **공개 랜딩 404 + 허위 동의** (헌법 P3 위반). (2) 개인정보처리방침 페이지 부재 → GDPR Art.13/14 위반(비교 플로우가 우편번호/가구형태/현재공급사 수집 — ADR-0007). (3) 쿠키 동의 배너 부재 + `posthog-js` 설치(`package.json:55`)·미배선(init 0건 grep 검증) → ePrivacy opt-in 위반 리스크(벨기에 GBA / 네덜란드 AP). 결정 = [ADR-0037](docs/adr/0037-public-legal-pages-and-cookie-consent.md). track 2(i18n 완성 + LocaleSwitcher, 4.10/4.11 + ADR-0033/0035/0036) envelope 에 통합 — 신규 페이지는 처음부터 4 locale i18n.
+  - [ ] **4.12.a** `src/app/[locale]/legal/terms/page.tsx` 신설 (RSC — affiliate-disclosure 동형, 동적 데이터 0). 내용 범위(구조만 — 본문=legal 검수): 서비스 정의(통신 비교, 정보제공 only) / 비교 결과 면책(공급사 가격 그대로, 가공 0 — 헌법 §8 #2 / 절약액 계산만) / 어필리에이트 cross-ref(`/legal/affiliate-disclosure`) / 처리 cross-ref(`/legal/privacy`) / 책임 제한 / 준거법(벨기에) / 운영자 식별(LEGAL_ENTITY cross-ref). `legal.terms.*` 네임스페이스(legal 검수 게이트, ADR-0033 §T4) 4 locale + region delta. `generateMetadata`+`getTranslations`(ADR-0033 Amd5 — `@i18n-allow metadata` 마커 금지). 테스트 `page.test.tsx`(next-intl/server mock).
+  - [ ] **4.12.b** `src/app/[locale]/legal/privacy/page.tsx` 신설 (RSC 동형). GDPR Art.13 §1·§2 전수 노출 — gdpr-register.md PA-01~05 단일 노출 매핑(ADR-0037 D2 표): 컨트롤러 신원(LEGAL_ENTITY)/DPO 없음/목적+법적근거(6(1)(b)/(a)/(c)/(f))/정당한이익/수령자(Sentry·PostHog·Resend·Neon·Vercel)/제3국 이전(EU+SCCs)/보존기간(request 90일·result 영구·정산 7~10년·email NULL)/정보주체 권리(Art.15-21)/동의 철회(어필리에이트+follow-up+쿠키)/감독기관(BE APD·NL AP·LU CNPD)/제공 의무 성격/자동화 의사결정 없음 명시. Art.14 = "직접 수집 only" 명시(비대상). `legal.privacy.*`(legal 검수) 4 locale. 메타데이터 동형. 테스트.
+  - [ ] **4.12.c** 쿠키 동의 배너 — `src/components/CookieConsent.tsx` 신설 (client island, ePrivacy opt-in). (가) **동의 저장** = `localStorage` 키 `slim_cookie_consent`(`accepted`/`rejected` 또는 `{analytics:boolean}`) — 서버 쿠키 거부(무동의 정적 렌더 회귀 0, ko 오버레이 동형), ko_gate_token 과 별도 키. (나) **PostHog 게이팅 지점** = PostHog 현 미배선(init 0건) → 게이팅 = "동의 게이트 안에서만 init 신설"(fail-safe). `analytics===true` 일 때만 `posthog.init` lazy 호출, 무동의=init 0=쿠키 0. env 키 없으면 게이팅된 채 no-op. (다) **필수 vs 분석 구분** = 필수(ko_gate_token·세션 동작) 동의 불요 / 분석(PostHog) 동의 필요, 배너 카피 명시. (라) **거부/철회** = 거부 1차 레이어 Accept 동등 비중(GBA Reject-all 동등 노출 + 다크패턴 0, 헌법 §8 #3) → `rejected` 저장 + (이미 init 시) `opt_out_capturing` + 쿠키 정리. 철회 = footer "쿠키 설정" 트리거. (마) `legal.cookie.*`(legal 검수) 4 locale, `useTranslations` — harness:i18n 4.5.j.5.b `src/components/**` 확장 스캔 대상(한글 0). (바) layout 배선 = `src/app/[locale]/layout.tsx`(Edit 외과 수정) `<body>` 내 `<CookieConsent />` 1회(SiteFooter 인접). 테스트.
+  - [ ] **4.12.d** 링크 정합 (ADR-0037 D4). (가) **compare 동의 문구**(`compare/page.tsx:95-101`): terms 신설로 404 해소 + 처리방침 링크 동반 — `compare.privacyLink`(→`/legal/privacy`) 신규 키 + 문구 조정("이용약관 및 개인정보처리방침에 동의 간주", Art.6(1)(b) 표현=legal 검수). (나) **SiteFooter**(`SiteFooter.tsx:82-99` 법무 nav): terms+privacy 2 링크 + 쿠키 설정 트리거 추가 — `footer.termsLink`/`footer.privacyLink`/`footer.cookieSettingsLink` 신규 키(`messages/{ko,nl,fr,en}.json` + delta 상속). footer 본문 RSC 유지(쿠키 설정 버튼만 client — D3 트리거).
+  - [ ] **4.12.e** 게이트 — `pnpm typecheck`/`lint`/`test:run` 0 + `harness:i18n` GREEN(CookieConsent + terms/privacy 한글 0, legal.* 본문 화이트리스트 정합) + `harness:plan` 90→91 정합 + Vercel 배포 URL `/legal/terms`·`/legal/privacy` 200(4 locale) + compare 동의 링크 200(404 0) + 무동의 PostHog 쿠키 0(DevTools)·동의 후만 발생. (로컬 build 깨짐 — WasmHash, 검증=Vercel URL.)
+  - [ ] **4.12.f** legal 에이전트 검수 — terms/privacy/cookie **본문 텍스트** 4 locale(`legal.*`) Critical/Major 0 + Art.13 12항목 충족(ADR-0037 D2 표) + 쿠키 거부 동등 비중·다크패턴 0 + 동의 간주 법적근거(Art.6(1)(b)) 표현 + gdpr-register.md ↔ 처리방침 정합. 외부 변호사 감사는 베타 직전/수익 후(legal 판단 — 수익0 단계 불요).
+  - 미해결: (1) 등록 주소 null(ADR-0035) → 처리방침 컨트롤러 주소 줄 조건부 비노출(LEGAL_ENTITY 동형). (2) PostHog 실 init env(`NEXT_PUBLIC_POSTHOG_KEY`/`_HOST` EU region) = 운영자 트랙(키 없으면 게이팅된 채 no-op). (3) Sentry US SCCs / PostHog DPA = gdpr-register 외부감사 항목 6(베타 직전/수익후) — 처리방침은 "EU 옵션/SCCs" 표기, 외부감사 확정. (4) `legal.terms.*`/`legal.privacy.*`/`legal.cookie.*` 본문 = 4.12.f legal 검수 전 placeholder.
+  - DoD: (1) 4.12.a~f 전부 (2) compare 동의 404 해소 + privacy 노출 + 쿠키 opt-in 동작(무동의 PostHog 쿠키 0) (3) typecheck/lint/test:run 0 + harness:i18n GREEN + harness:plan 91 정합 (4) Vercel 배포 URL terms/privacy 200 + 4 locale 한글 0 (5) legal 검수 pass (6) ADR-0037 §검증 충족.
+  - **PLAN 6.5/6.9 cross-ref**: 6.5(쿠키 동의 CookieBot) = 본 4.12.c 로 선반영(자체 구현, 외부 SaaS 거부 — ADR-0037 §대안). 6.9(`/legal/affiliate-disclosure`) = 이미 4.3.d 완료. 6.5 는 본 항목 완료 후 축소/cross-ref(별도 처리, 합계 영향은 별 라운드).
+
 **Phase 4 검증:** 어트리뷰션 정확성 — `pnpm harness:price` + 수동 5건 검증
 + 베타 NPS ≥ 30.
 **Phase 4 현실 일정:** M8 ~ M10 (3개월). 어트리뷰션 + UI + 베타 모집/반영 +
@@ -1769,18 +1812,18 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 페이즈 | 항목 수 | 완료 | 차단 | 현실 일정 (솔로 사이드) | 최종 업데이트 |
 |---|---|---|---|---|---|
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
-| 0.5 | 7 | 6 | 0 | **D.1·D.2·D.4·D.5·D.6·D.7** 완료. D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). **D.3 sub-task 진행도** (c·d 완료 / a·b·e 잔여): D.3.d ✅ slim.lu live (2026-05-14, ADR-0020 §Appendix C 6단계 통과). **D.3.c ✅ 완료 2026-05-14** — INNGEST keys Vercel env + production redeploy `CMBoqXCxm` Ready + Inngest sync (App ID `slim`, SDK 3.54.2, Functions 2, Manual run `01KRM42BW9NNZ4A7NP386H38KJ` Completed) + 어드민 신선도 0.0% → 100.0% (8/8) → **4.6 베타 진입 차단 0 (BLOCKER 해제)** + ADR-0029 §T2 정직성 잠금 해제. **D.3.e ✅ 완료 2026-05-15** — [ADR-0024](docs/adr/0024-neon-vercel-integration.md) Accepted (옵션 C 조건부 잠금), 4.6 베타 진입 blocker 아님. **D.3.b ✅ 결정 잠금 2026-05-15** — [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted (Decision Locked + Execution Deferred — ARBITORIA team 신설 결정 final, O1 Pro plan 결제 실행은 TVA 발급 트리거). **GATE-K 재정의**: 결정 트랙 ✅ 닫힘 (D.3.b + D.3.e), 실행 트랙 ⏸ defer (D.3.a + D.3.b 의 O1~O5). 4.6 베타 = 결정 게이트만 요구, 실행 게이트는 TVA 트리거. D.3.a/b ⏸ Defer (TVA 발급 트리거). D.3 부모는 5 sub 전부 [x] 후 마킹 (현재 3/5; D.3.b 본문 [x] 마킹 정책은 ADR-0032 §Verification V1~V3 통과 시 — 실행 트랙 완료 시점). D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-14 |
+| 0.5 | 7 | 7 | 0 | **D.1~D.7 전부 완료** (D.3 부모 [x] 2026-05-28 — GATE-K 완전 닫힘). D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). **D.3 sub-task 진행도** (c·d 완료 / a·b·e 잔여): D.3.d ✅ slim.lu live (2026-05-14, ADR-0020 §Appendix C 6단계 통과). **D.3.c ✅ 완료 2026-05-14** — INNGEST keys Vercel env + production redeploy `CMBoqXCxm` Ready + Inngest sync (App ID `slim`, SDK 3.54.2, Functions 2, Manual run `01KRM42BW9NNZ4A7NP386H38KJ` Completed) + 어드민 신선도 0.0% → 100.0% (8/8) → **4.6 베타 진입 차단 0 (BLOCKER 해제)** + ADR-0029 §T2 정직성 잠금 해제. **D.3.e ✅ 완료 2026-05-15** — [ADR-0024](docs/adr/0024-neon-vercel-integration.md) Accepted (옵션 C 조건부 잠금), 4.6 베타 진입 blocker 아님. **D.3.b ✅ 결정 잠금 2026-05-15** — [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted (Decision Locked + Execution Deferred — ARBITORIA team 신설 결정 final, O1 Pro plan 결제 실행은 TVA 발급 트리거). **GATE-K 재정의**: 결정 트랙 ✅ 닫힘 (D.3.b + D.3.e), 실행 트랙 ⏸ defer (D.3.a + D.3.b 의 O1~O5). **D.3 완전 종결 (2026-05-28)**: TVA 발급(2026-05-23) → ADR-0032 §Trigger G1 발화 → 운영자 O1~O5 (arbitoria Vercel team 신설 Pro + slim 이관 + Git 재연결 + Billing TVA). V1~V3 통과 (V2 slim이 personal scope에서 사라짐 + slim.lu live / V3 HTTP 200 + verify:db all-green / V1 Billing TVA). D.3.a ✅ + D.3.b ✅ + D.3 부모 [x] → GATE-K 완전 닫힘. MCP arbitoria 재인증은 다음 세션 반영 (선택). D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-28 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
 | 1.5 | 10 | 7 | 0 | M3 말 + D3/D4 트랙 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-05-17). **1.5.6 차단 해제** (`[!]`→`[ ]`, ADR-0013 Amendment — 옵션 C → 진입). **1.5.8 Orange BE fetcher 신설** + **1.5.9 Voo fetcher 신설** (구 5.0 이동, +2). 1.5.6/1.5.8/1.5.9 선행 = legal 4-provider robots/TOS + GTC 수동 (PLAN 진입 시 호출). 1.5.6.1 옵션 X 자동 비활성 cross-ref (추가 작업 0) | 2026-05-17 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 4 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그). **3.5.4 신규 (+1)** — hreflang/다국어 sitemap 활성 + Google Search Console 소유권 검증 (DNS TXT/meta, PII 0), 3.5.2 §범위밖 재개봉 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5). `/r/[shortId]` noindex 유지 (ADR-0021 §T8) | 2026-05-17 |
-| 4 | 9 | 5 | 0 | M8 ~ M10 **어트리뷰션 + 완성** (베타 게이트 제거, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2/D5, 2026-05-17). 4.1~4.5 완료 (5). **4.6 재정의** = ~~베타 모집~~ → organic SEO 런치 준비 (Search Console + hreflang). **4.7 재정의** = ~~베타 피드백~~ → 실 데이터 4 fetcher 검증. **4.8 축소** = PR 매체 → 운영자 SEO 직접 (선택 보조). **4.9 재정의** = ~~베타 NPS 게이트~~ → 완성 게이트 (nl/fr/en 100% + hreflang + legal.* 검수 + ko basic-auth). 합계 9 불변 (재정의만, 항목 수 변동 0) | 2026-05-17 |
+| 4 | 12 | 5 | 0 | M8 ~ M10 **어트리뷰션 + 완성** (베타 게이트 제거, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2/D5, 2026-05-17). 4.1~4.5 완료 (5). **4.6 재정의** = ~~베타 모집~~ → organic SEO 런치 준비 (Search Console + hreflang). **4.7 재정의** = ~~베타 피드백~~ → 실 데이터 4 fetcher 검증. **4.8 축소** = PR 매체 → 운영자 SEO 직접 (선택 보조). **4.9 재정의** = ~~베타 NPS 게이트~~ → 완성 게이트 (nl/fr/en 100% + hreflang + legal.* 검수 + ko basic-auth). 합계 10 (**4.10 사업자 식별정보 공개 +1**, 2026-05-23 — ADR-0035) → 11 (**4.11 언어 전환기 +1**, 2026-05-23 — ADR-0036 D3) **→ 12** (**4.12 공개 법적 페이지 terms/privacy + 쿠키 동의 +1**, 2026-05-23 — ADR-0037, track 2 envelope, 공개 전 🔴 법적 블로커 3건 봉합). **4.5.j.5 (Zod i18n + harness 확장 + 고아 정리, ADR-0036 D1/D2)** = indented sub-task 신설 — 미카운트. **4.5.j.4.B = metadata i18n 흡수** (ADR-0033 Amd 5/§A2.9) | 2026-05-23 |
 | 4.5 | 3 | 1 | 0 | M10 ~ M11 **운영 평가 (게이트 무관)** — **M16 4-신호 평가 게이트 삭제** ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **4.5.1 어드민 v0 완료 유지** (a/b/c/d 풀). 4.5.3 = 게이트 없는 운영 평가로 재정의 (합계 3 불변). **4.5.i ✅** (D-1 landline, indented — 미카운트) **4.5.j ✅** (D-2 γ next-intl, indented — 미카운트) + **4.5.j.1 ko basic-auth 게이트** / **4.5.j.2 nl·fr·en backfill ([x]→[ ] 정정 2026-05-18 — S2 미완)** / **4.5.j.3 legal.* 검수** / **4.5.j.4(.A/.B) 컴포넌트 t() 소비 마이그레이션 신설 (ADR-0033 Amd 4 / §A2.8 — §T5 under-spec 정정)** (전부 indented sub/sub-sub — 미카운트, 합계 88/58 불변) | 2026-05-18 |
 | 5 | 6 | 0 | 0 | **통신 BE 만 (범위 확정)** — 조건부 게이트 제거 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **구 5.0 Orange BE → 1.5.8 이동 (-1)**. 5.1~5.4 (에너지/모기지/보험/금융) = **보류 / 범위 밖** (통신 외 추가 ❌ 운영자 명시 거부, 진입 시 별도 ADR). 5.5/5.6 공통 인프라 = 통신 깊이 한정 | 2026-05-17 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **88** | **58** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제) | 2026-05-17 |
+| **합계** | **91** | **59** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)**; **done 58→59 (D.3 부모 [x], 2026-05-28 — GATE-K 닫힘)** | 2026-05-28 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

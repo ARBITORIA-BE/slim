@@ -1131,3 +1131,81 @@ envelope 내 — 신규 SaaS 0, CI 무비용, architect 기본값 잠금).
 hidden 유지"(ADR-0034 D1 단일 미결)는 1mm 도 건드리지 않음 —
 S2 는 ko 소스 자체가 아니라 *어떤 소스든 `t()` 로 소비* 하게
 만드는 작업 (ko 소스 스왑 = G1-a 오버레이 책임, S2 무관).
+
+---
+
+## Amendment 5 (2026-05-23) — 메타데이터 i18n 패턴 (§A2.9, 4.5.j.4.B 구현 잠금)
+
+**트리거**: 라이브 `slim.lu` 진단 — 페이지 `<title>`/`description` 이 한국어
+(브라우저 탭 + SEO 노출). compare 트리 전반 `@i18n-allow metadata 한글은
+4.5.j.4.B 대상` 마커로 의도적 Phase B 보류 중이던 메타데이터 i18n 을 본
+Amendment 가 패턴 잠금 + 4.5.j.4.B 구현 명세로 확정한다. (Zod 메시지 i18n +
+harness 범위 확장 + 언어 전환기는 도메인 분리 → [ADR-0036](0036-i18n-completion-zod-harness-locale-switcher.md).)
+
+### §A2.9.1 — generateMetadata + getTranslations 패턴 (잠금)
+
+영향 파일 = `@i18n-allow metadata` 마커 보유 metadata export 전수 (architect
+grep 2026-05-23):
+
+| 파일 | 현 형태 | 전환 패턴 |
+|---|---|---|
+| `compare/page.tsx` | `export const metadata` (정적, page=server) | → `export async function generateMetadata` + `getTranslations('compare')` |
+| `compare/[category]/page.tsx` | 이미 `generateMetadata` (CATEGORY_LABELS 한글) | 한글 라벨 → `getTranslations('compare.categories')` |
+| `compare/[category]/{postal,household,bill,preview}/layout.tsx` | `export const metadata` (정적, layout=server) | → `generateMetadata({params})` + `getTranslations('compare.<step>')` |
+| `compare/[category]/current-provider/page.tsx` | `export const metadata` (page=server) | → `generateMetadata` + `getTranslations` |
+| `r/[shortId]/page.tsx` | 이미 `generateMetadata` (한글 title/desc) | 한글 → `getTranslations('result')` |
+| `page.tsx` (home) | `export const metadata` (한글) | → `generateMetadata` + `getTranslations('home')` |
+| `[locale]/layout.tsx` | `export const metadata` (한글 default/template/og) | → `generateMetadata({params})` + `getTranslations('metadata')` |
+
+**핵심 규칙**:
+1. **`'use client'` page 는 metadata 를 못 export** (Next.js App Router 규칙) →
+   부모 `layout.tsx` 의 `generateMetadata` 가 담당 (postal/household/bill/preview
+   = 이미 layout.tsx 분리 구조 — 정적 metadata 를 `generateMetadata` 로 격상만).
+2. `generateMetadata({ params })` 에서 `const { locale } = await params` →
+   `getTranslations({ locale, namespace })`. **`params` 의 `locale` 명시 전달**
+   (RSC 외 metadata 컨텍스트는 setRequestLocale 보장 안 됨 — locale 명시 안전).
+3. `setRequestLocale(locale)` 를 metadata 함수 진입 시 호출 (next-intl v3 static
+   rendering — layout.tsx 이미 동일 패턴).
+
+### §A2.9.2 — 키 네이밍 (재사용 우선)
+
+기존 ko.json 키를 **재사용** (신규 키 최소화):
+- `compare.pageTitle`/`compare.pageDescription` → compare/page.tsx metadata 재사용.
+- `compare.postal.title`·`household.title`·`bill.title`·`preview.title`·
+  `current-provider.title` → 각 step layout metadata (현 ko.json `compare.<step>.title`
+  존재 확인 — postal=L53 `우편번호 입력`).
+- `result.pageTitle` (ko.json L131 존재) → r/[shortId] metadata.
+- `home.*` → home metadata (단 home 은 metaTitle/metaDescription 신규 키 필요 —
+  현 home.* 는 headline/tagline/ctaButton 만, metadata 용 분리 키 `home.metaTitle`/
+  `home.metaDescription` 신규).
+- `[locale]/layout.tsx` = **신규 `metadata.*` 네임스페이스** (defaultTitle/template/
+  description/ogTitle 등 — 브랜드 메타). **og:locale 은 locale 별 동적**
+  (`ko_KR` 하드코딩 → locale→OG locale 매핑: nl-BE→`nl_BE`, en→`en_US` 등).
+
+**규칙**: metadata 전용 키가 본문 표시 키와 의미 충돌하면 `metaTitle` 접미사로
+분리 (예: `home.metaTitle` vs `home.headline`). 같으면 재사용.
+
+### §A2.9.3 — `@i18n-allow` 마커 제거 방침
+
+4.5.j.4.B 구현 시 metadata `@i18n-allow metadata` 마커를 **전부 제거**한다
+(getTranslations 전환 = 한글 리터럴 0 → 마커 불요). 단 **dev throw 메시지**
+(`@i18n-allow 개발자 에러 메시지` — compare/page.tsx:44, household/page.tsx:57)
+는 사용자 미노출 → **마커 유지** (harness 화이트리스트 보존). 루트
+`src/app/layout.tsx` 브랜드 metadata = 콘텐츠 0 검토만 (4.5.j.4.B 본문 명시 —
+변경 불요 판정 기록, 단 [locale]/layout.tsx 로 metadata 가 이동했으므로 루트는
+이미 metadata 없음 — 확인만).
+
+### §A2.9.4 — hreflang/canonical 관계 (3.5.3/3.5.4)
+
+metadata i18n 전환은 `alternates.canonical` (이미 compare/[category]·r/[shortId]
+존재) 을 **건드리지 않는다**. hreflang `<link rel="alternate">` 활성은 3.5.3/
+3.5.4 (4.6) 트랙 — 본 Amendment 는 title/description 텍스트만 locale-aware 화.
+canonical 경로는 locale prefix 를 next-intl `getPathname` 가 처리 (3.5.3 책임).
+**경계**: 본 Amendment ⊂ 4.5.j.4.B (텍스트), hreflang/sitemap = 4.6/3.5.3 (구조).
+
+### §A2.9.5 — 잠금 envelope (위배 금지)
+
+§A2.8.3 envelope 전부 상속 + 추가: metadata 전환은 (a) `robots`/`canonical`/
+`openGraph.url`/`alternates` 구조 무변경 (b) `revalidate`(r/[shortId] ISR 3600)
+무변경 (c) noindex 정책(입력 step layout robots index:false) 무변경. **텍스트만**.
+

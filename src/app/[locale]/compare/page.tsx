@@ -15,19 +15,32 @@
 import type { Metadata } from 'next';
 import { Smartphone, Tv, Wifi, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// @i18n-allow metadata 한글은 4.5.j.4.B 대상
-export const metadata: Metadata = {
-  title: '요금제 비교 시작', // @i18n-allow
-  description:
-    '모바일, 인터넷, 인터넷+TV — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.', // @i18n-allow
-  alternates: {
-    canonical: '/compare',
-  },
-};
 import { TARIFF_CATEGORIES, type TariffCategoryInput } from '@/types/comparison-input';
+
+/**
+ * 기존 compare.pageTitle / compare.pageDescription 키 재사용 (§A2.9.2).
+ * ADR-0033 §A2.9.1 — locale 명시 전달 패턴.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'compare' });
+
+  return {
+    title: t('pageTitle'),
+    description: t('pageDescription'),
+    alternates: {
+      canonical: '/compare',
+    },
+  };
+}
 
 type CategoryIconKey = TariffCategoryInput;
 
@@ -45,7 +58,13 @@ for (const c of TARIFF_CATEGORIES) {
   }
 }
 
-export default async function ComparePage() {
+export default async function ComparePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   // why: RSC 이므로 getTranslations 사용. 'compare' 네임스페이스.
   const t = await getTranslations('compare');
 
