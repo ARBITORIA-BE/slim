@@ -1496,4 +1496,23 @@ ADR-0008 §T1/§T5 인터페이스는 fetcher별 `method` 혼합을 *이미 지�
   Amendment 4 (Playwright 또는 manual 전면 전환 재평가).
 - harness:plan/data 정합 + confidence='low' 비율 < 20%.
 
+### Amendment 3 — 구현 결과 (Proximus, 2026-05-29)
+
+builder 첫 fetch(undici raw HTML) 검증 완료 — Amendment 3 §검증 방법 게이트 통과:
+
+- **Proximus 스텁 URL 3개 모두 HTTP 404** → 현행 정정: mobile `www.proximus.be/en/mobile-subscription`,
+  internet `www.proximus.be/en/internet` (둘 다 raw undici fetch 200, 챌린지 없음). architect가
+  WebFetch로 본 URL과 일부 상이 → "WebFetch ≠ raw fetch" 경고가 정당했음을 재확인.
+- **internet "미확인" 해소 = `scraping` (manual 폴백 *아님*)**: §Decision 2의 "정적 매칭 성공 →
+  scraping" 분기 발화. Proximus internet 페이지 raw HTML에 4개 plan(Light/Go/Mega/Giga Fiber)
+  월정액 + 표준가 + 다운/업로드 속도가 **정적 리터럴로 존재**. Telenet internet(정적 부재)과 달리
+  Proximus internet은 정적 가능 → §Decision의 "*페이지 단위* 판단" 원칙이 공급사 간에도 갈림을 실증.
+- **추출 = mobile 5 + internet 4 = 9 tariff**, 실 HTML 스냅샷 독립 검증 9/9 일치, **confidence='high'
+  9/9 (low 0% < 20% §검증 방법 임계)**. 셀렉터: plan명 `span.rs-txt-s4`, 가격 `.rs-price-sm`/
+  `.rs-price-promo` + 카드경계 `[class*="panel"]`, 표준 월정액 = mobile "€X as from the 7th month"
+  / internet 패널 내 displayed보다 큰 €X.XX (€180·€240 "web discount"는 소수점 부재로 자동 제외).
+- **ADR-0014 미트리거 유지** (Cheerio 가용). ADR-0008 §T1/§T4/§T5 변경 0.
+- **24h 신선도 게이트(§Decision 3)는 머지 후 프로덕션 트랙**: Vercel/Inngest 프로덕션 IP 실 fetch +
+  Sentry 차단 0건 확인이 잔존 게이트 — 로컬 게이트(typecheck/lint/test:run 679/harness)는 전부 통과.
+
 ### Amendment 3 작성: architect (2026-05-28) — WebFetch 검증 기반, 인증 우회 0

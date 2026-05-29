@@ -11,6 +11,14 @@
 
 ### Changed
 
+- **2026-05-29 — Proximus 실 스크래핑 fetcher (스텁 → 실 데이터)** (PLAN 1.5.6, `feat/1.5.6-proximus-real-scraping`):
+  - **무엇**: `src/fetchers/proximus.ts` 스텁(2026-05-09 수동 추정값) → 실 스크래핑(`method='scraping'`). Telenet(PR #4)에 이은 두 번째 실 데이터 전환.
+  - **현행 URL 정정**: 스텁 URL 3개 모두 HTTP 404 (ADR-0013 Amendment 3 stale URL 함정 재확인) → mobile `www.proximus.be/en/mobile-subscription` + internet `www.proximus.be/en/internet` 로 교정.
+  - **internet = scraping 채택**: ADR-0013 Amendment 3은 internet 정적 가격 부재 시 `method='manual'` 폴백을 예상했으나, builder 첫 fetch 런타임 검증 결과 **정적 가격 존재 확인** → "정적 매칭 성공 시 scraping" 분기 발화. manual 폴백 불필요 (DoD 예상치 "internet 매칭 0" 초과 달성).
+  - **추출**: mobile 5 (Essential/Easy/Smart/Maxi/Unlimited) + internet 4 (Light/Go/Mega/Giga Fiber) = **9 tariff**. 표준 월정액 + 프로모(6개월 mobile / 12개월 internet) 분리, data_gb·다운/업로드 속도·throttle·fair_use 등 attributes 포함. 실 HTML 스냅샷에 실제 fetcher import + fetch 모킹 **독립 검증 9/9 일치**, confidence='high' 9/9 (스텁 low 100% → 0%). `rawPayload.stub===false` → 1.5.6.1 옵션 X "추정값" 배너 자동 비활성.
+  - **검증 (로컬 게이트)**: `pnpm typecheck` 0 · `pnpm lint` 0 · `pnpm test:run` 679 passed (proximus 23 케이스 신규) · `pnpm harness:plan`/`harness:data` 정합.
+  - **남은 게이트 (머지 후 프로덕션)**: Vercel/Inngest **프로덕션 IP** 실 fetch 확인(메모 "Fetcher 프로덕션 IP 함정" — 로컬 성공 ≠ 프로덕션) → 실 Neon DB `tariff_snapshot` 누적 + 24h 신선도 100% 복원 + 프로덕션 confidence='low' < 20% 재확인. 이 게이트 통과가 PLAN 1.5.6 `[x]` 조건.
+
 - **2026-05-17 — 전략 전면 피벗 (ADR-0034 Accepted)** — 베타 모집 게이트 제거 → 사이트 완성 우선 + organic Google SEO 런치:
   - **결정**: ADR-0034 Proposed → Accepted (2026-05-17, 운영자 직접 결정). 베타 모집(ADR-0029) 폐기 → 다국어(EN/FR/NL 공개, KO `src/middleware.ts` basic-auth 운영자 전용) + 실 스크래핑(stub '추정값' 폐기) + 4 공급사(Proximus/Telenet/Orange BE/Voo, 실 fetcher 4개) 동시 빌드. 적용 순서 = 순차 D1→D3→D4→D5. €300 cap 유지(ADR-0004 트리거 발화 시 재평가).
   - **블래스트 반경**: ADR-0003/0004/0013/0016/0023/0033 각 §Amendment 발행(신규 파일 0 — 기존 ADR에 섹션 후속). ADR-0009/0029 DEPRECATED 선언(상단 헤더, 본문 이력 보존). `docs/marketing/beta-recruitment-copy.{kr,reddit,salair,tw}.md` 4파일에 DEPRECATED 헤더(배포 금지). `docs/adr/INDEX.md` 현황표 갱신.
