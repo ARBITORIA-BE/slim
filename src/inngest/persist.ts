@@ -17,11 +17,11 @@
  * 실패 허용* — 다음 cron (또는 seed 재실행) 이 자가 복구.
  */
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, notInArray } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { provider } from '@/db/schema/provider';
-import { tariff } from '@/db/schema/tariff';
+import { tariff, type TariffCategory } from '@/db/schema/tariff';
 import { tariffSnapshot } from '@/db/schema/tariff_snapshot';
 import type { FetchResult } from '@/fetchers';
 
@@ -51,6 +51,10 @@ export async function persistFetchResult(result: FetchResult): Promise<void> {
   }
   const providerId = providerRow.id;
   const fetchedAt = new Date(result.fetchedAt);
+
+  // 이번 fetch 에서 본 tariff id / category 누적 — 아래 단종 처리(ADR-0005 §T5)에 사용.
+  const seenTariffIds: string[] = [];
+  const seenCategories = new Set<TariffCategory>();
 
   for (const input of result.data) {
     // 2a. tariff 마스터 upsert
@@ -137,5 +141,34 @@ export async function persistFetchResult(result: FetchResult): Promise<void> {
       confidenceReason: input.confidenceReason,
       isAnomaly: false,
     });
+
+    seenTariffIds.push(tariffId);
+    seenCategories.add(input.category);
+  }
+
+  // 3. 단종 처리 (ADR-0005 §T5 — "페이지에서 사라진 요금제는 isActive=false").
+  //
+  // 왜 필요? 스텁 → 실 스크래핑 전환 시 slug 가 바뀌면 (예: proximus-internet-essential
+  // → proximus-internet-go-fiber) 구 요금제가 isActive=true 로 잔존한다. 그러면
+  // 24h 신선도 메트릭(admin-metrics getFetcherHealth24h)의 분모(total_active)에는
+  // 남지만 새 snapshot 이 없어 분자(fresh)에는 빠져 ratio 가 영구히 100% 미만이 된다.
+  //
+  // 왜 (provider, category) 스코프? Telenet 처럼 mobile=scraping / internet=manual
+  // 인 fetcher 는 한 번에 mobile 카테고리만 반환할 수 있다. provider 전체를 비활성화하면
+  // 같은 provider 의 manual internet 요금제까지 오삭제된다. 이번 fetch 가 실제로
+  // 커버한 카테고리로만 한정하면 (a) manual 데이터 보호 (b) 한 페이지 일시 스크랩
+  // 실패 시 해당 카테고리 전체가 통째로 사라지는 것을 방지(빈 result 는 함수 상단에서
+  // early-return 되어 애초에 여기 도달하지 않음).
+  if (seenTariffIds.length > 0) {
+    await db
+      .update(tariff)
+      .set({ isActive: false })
+      .where(
+        and(
+          eq(tariff.providerId, providerId),
+          inArray(tariff.category, [...seenCategories]),
+          notInArray(tariff.id, seenTariffIds),
+        ),
+      );
   }
 }
