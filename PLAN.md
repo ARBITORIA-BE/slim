@@ -565,6 +565,31 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     2 fetcher × N tariff 누적 확인 + 24h 신선도 모니터링 게이트 복원 동작 +
     confidence='low' 비율 < 20% (스텁 100%에서 격상) + typecheck/lint/test 0 +
     harness:plan/data 정합.
+  - **진행 — Telenet (2026-05-28, PR #4 머지)**: `src/fetchers/telenet.ts` mobile
+    `method='scraping'` 전환 완료 (www2 host + Cheerio). internet/bundle = manual
+    폴백 대상(1.5.6 follow-up).
+  - **진행 — Proximus (2026-05-29, `feat/1.5.6-proximus-real-scraping`)**:
+    `src/fetchers/proximus.ts` 스텁 → 실 스크래핑 전면 재작성 (`method='scraping'`).
+    **현행 URL 정정** (스텁 URL 3개 모두 HTTP 404 — Amendment 3 stale URL 함정
+    재확인): mobile = `www.proximus.be/en/mobile-subscription`, internet =
+    `www.proximus.be/en/internet`. **internet 런타임 검증 결과 = 정적 가격 존재 →
+    `scraping` 채택** (Amendment 3 "정적 매칭 성공 시 scraping" 분기 발화 — manual
+    폴백 불필요, DoD 예상치 "internet 매칭 0" 초과). 추출 = **mobile 5 + internet 4
+    = 9 tariff**, 실 HTML 스냅샷에 실제 fetcher import 후 fetch 모킹 독립 검증 전부
+    일치 + **confidence='high' 9/9 (low 0% < 20% DoD)** + `rawPayload.stub===false`
+    (1.5.6.1 옵션 X 배너 자동 비활성 신호). 셀렉터: plan명 `span.rs-txt-s4`
+    (mobile "Mobile {Essential…}" / internet "Internet {…} Fiber"), 가격
+    `.rs-price-sm`/`.rs-price-promo` + 카드경계 `[class*="panel"]`, 표준 월정액 =
+    mobile "€X as from the 7th month" / internet 패널 내 displayed보다 큰 €X.XX,
+    promo 개월 mobile=6 / internet=12. 페이지 단위 degrade (한 페이지 실패 시 나머지
+    반환, 양쪽 0개만 ok:false). 로컬 게이트 ✅ typecheck 0 · lint 0 · test:run 679
+    passed (proximus 23 케이스) · harness:plan/data 정합.
+  - **남은 DoD (머지 후 프로덕션 게이트 — 운영자/cron)**: Vercel/Inngest **프로덕션
+    IP** 실 fetch 확인 (메모 "Fetcher 프로덕션 IP 함정" — 로컬 fetch 성공 ≠ 프로덕션
+    성공, 데이터센터 IP 차단 가능). (1) 실 Neon DB `tariff_snapshot` Proximus 9 +
+    Telenet N 누적 (2) 24h 신선도 모니터링 100% 복원 (admin 헬스) (3) 프로덕션
+    confidence='low' < 20% 재확인. **이 게이트 통과 시 1.5.6 `[x]`** (현재 코드/로컬
+    게이트만 완료 → `[ ]` 유지).
 - [x] **1.5.6.1** **옵션 X "추정값" UI 표시** (페이즈 4.6 베타 배포 의존성 —
   ADR-0013 §평가 6 옵션 X + Amendment 1 예정). 1.5.6 본문은 차단 유지(옵션 C);
   본 sub-task 는 *비차단* — 베타 동안 스텁 데이터의 P1/P3 정직성 보강.
