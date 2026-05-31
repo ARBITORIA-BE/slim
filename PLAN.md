@@ -1147,13 +1147,13 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     DoD: `/ship` 에 `harness:load` 등장 + 측정 결과 1회 분이 PLAN/ADR 에 남음.
     검증: 슬래시 커맨드 파일 확인 + 본 항목 주석에 베이스라인 수치 존재.
     ✅ 검증 (2026-05-12): .claude/commands/ship.md 코드 품질 섹션에 `pnpm harness:load` 체크박스 추가(next build && pnpm start 선행 + "베타 직전 1회 권고, CI 게이트 아님" 주석)/harness:all 무변동 확인/ci.yml 무변동 확인/package.json dependency 0 확인.
-- [ ] **3.5.4** **hreflang / 다국어 sitemap 활성 + Google Search Console 소유권 검증**
+- [x] **3.5.4** **hreflang / 다국어 sitemap 활성 + Google Search Console 소유권 검증** — **코드 측 완료 2026-05-31** (PR #10 머지, commit 37cbfe5: buildAlternates 헬퍼 + sitemap 8 paths × 5 locales = 40 hreflang entry + `/r/[shortId]` noindex 회귀 테스트, test:run 723). DoD #3 (Search Console 소유권 = DNS TXT/HTML meta) = **운영자 트랙 인계** — `src/app/layout.tsx` 의 `metadata.verification.google` 1줄에 Search Console 발급 토큰 추가 시 즉시 충족.
   (트랙 D5 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5,
   3.5.2 §범위밖 재개봉). organic SEO 의 *전제* — 다국어 공개 (nl-BE/nl-NL/
   fr-BE/fr-LU/en) 각 고유 URL + `<link rel="alternate" hreflang>` + sitemap
   다국어 항목 (Google localized versions 요구 — ADR-0033 §T1 근거).
   - **hreflang/sitemap 다국어** = ADR-0033 §T1 라우팅 골격(`app/[locale]/`)
-    위에 hreflang `<link>` + `app/sitemap.ts` 다국어 항목 활성 (3.5.2
+    위에 hreflang `<link>` + `src/app/sitemap.ts` 다국어 항목 활성 (3.5.2
     sitemap 단일 출처 확장). `/r/[shortId]` noindex **유지** (ADR-0021 §T8,
     변경 0 — SEO 색인 대상 = `/`,`/compare`,`/data-sources`,`/legal/*`).
     ko = basic-auth 게이트 뒤 (공개 sitemap/hreflang 비포함, ADR-0033 §T2).
@@ -1937,13 +1937,13 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 1.5 | 10 | 7 | 0 | M3 말 + D3/D4 트랙 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-05-17). **1.5.6 차단 해제** (`[!]`→`[ ]`, ADR-0013 Amendment — 옵션 C → 진입). **1.5.8 Orange BE fetcher 신설** + **1.5.9 Voo fetcher 신설** (구 5.0 이동, +2). 1.5.6/1.5.8/1.5.9 선행 = legal 4-provider robots/TOS + GTC 수동 (PLAN 진입 시 호출). 1.5.6.1 옵션 X 자동 비활성 cross-ref (추가 작업 0) | 2026-05-17 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
-| 3.5 | 4 | 3 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3 완료**; 3.5.1.e 비차단 백로그). **3.5.4 신규 (+1)** — hreflang/다국어 sitemap 활성 + Google Search Console 소유권 검증 (DNS TXT/meta, PII 0), 3.5.2 §범위밖 재개봉 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D5). `/r/[shortId]` noindex 유지 (ADR-0021 §T8) | 2026-05-17 |
+| 3.5 | 4 | 4 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3·3.5.4 완료**; 3.5.1.e 비차단 백로그). **3.5.4 코드 측 [x] 2026-05-31** (PR #10 머지 — buildAlternates 헬퍼 + sitemap 8 paths × 5 locales = 40 hreflang entry + `/r/[shortId]` noindex 회귀 테스트, test:run 723); DoD #3 Search Console 소유권 = 운영자 인계. `/r/[shortId]` noindex 유지 (ADR-0021 §T8) | 2026-05-31 |
 | 4 | 12 | 7 | 0 | M8 ~ M10 **어트리뷰션 + 완성** (베타 게이트 제거, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2/D5, 2026-05-17). 4.1~4.5 완료 (5). **4.6 재정의** = ~~베타 모집~~ → organic SEO 런치 준비 (Search Console + hreflang). **4.7 재정의** = ~~베타 피드백~~ → 실 데이터 4 fetcher 검증. **4.8 축소** = PR 매체 → 운영자 SEO 직접 (선택 보조). **4.9 재정의** = ~~베타 NPS 게이트~~ → 완성 게이트 (nl/fr/en 100% + hreflang + legal.* 검수 + ko basic-auth). 합계 10 (**4.10 사업자 식별정보 공개 +1**, 2026-05-23 — ADR-0035) → 11 (**4.11 언어 전환기 +1**, 2026-05-23 — ADR-0036 D3) **→ 12** (**4.12 공개 법적 페이지 terms/privacy + 쿠키 동의 +1**, 2026-05-23 — ADR-0037, track 2 envelope, 공개 전 🔴 법적 블로커 3건 봉합). **4.10 [x] + 4.11 [x] (2026-05-31)** — track 2 envelope 코드 PR #3 머지 + legal 검수 통과(4.10.f). **4.5.j.5 (Zod i18n + harness 확장 + 고아 정리, ADR-0036 D1/D2)** = indented sub-task 신설 — 미카운트. **4.5.j.4.B = metadata i18n 흡수** (ADR-0033 Amd 5/§A2.9) | 2026-05-31 |
 | 4.5 | 3 | 1 | 0 | M10 ~ M11 **운영 평가 (게이트 무관)** — **M16 4-신호 평가 게이트 삭제** ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **4.5.1 어드민 v0 완료 유지** (a/b/c/d 풀). 4.5.3 = 게이트 없는 운영 평가로 재정의 (합계 3 불변). **4.5.i ✅** (D-1 landline, indented — 미카운트) **4.5.j ✅** (D-2 γ next-intl, indented — 미카운트) + **4.5.j.1 ko basic-auth 게이트** / **4.5.j.2 nl·fr·en backfill ([x]→[ ] 정정 2026-05-18 — S2 미완)** / **4.5.j.3 legal.* 검수** / **4.5.j.4(.A/.B) 컴포넌트 t() 소비 마이그레이션 신설 (ADR-0033 Amd 4 / §A2.8 — §T5 under-spec 정정)** (전부 indented sub/sub-sub — 미카운트, 합계 88/58 불변) | 2026-05-18 |
 | 5 | 6 | 0 | 0 | **통신 BE 만 (범위 확정)** — 조건부 게이트 제거 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **구 5.0 Orange BE → 1.5.8 이동 (-1)**. 5.1~5.4 (에너지/모기지/보험/금융) = **보류 / 범위 밖** (통신 외 추가 ❌ 운영자 명시 거부, 진입 시 별도 ADR). 5.5/5.6 공통 인프라 = 통신 깊이 한정 | 2026-05-17 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **92** | **62** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)** → **91→92 (D.8 admin 가드 보안 +1, 2026-05-29 ADR-0038)**; **done 58→59 (D.3 부모 [x], 2026-05-28 — GATE-K 닫힘) → 59→60 (D.8 [x], 2026-05-31 — 프로덕션 5개 locale admin 404 재실측 + 공개 표면 회귀 0) → 60→62 (4.10 + 4.11 [x], 2026-05-31 — track 2 envelope 코드 PR #3 머지 + legal 검수 통과)** | 2026-05-31 |
+| **합계** | **92** | **63** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)** → **91→92 (D.8 admin 가드 보안 +1, 2026-05-29 ADR-0038)**; **done 58→59 (D.3 부모 [x], 2026-05-28 — GATE-K 닫힘) → 59→60 (D.8 [x], 2026-05-31 — 프로덕션 5개 locale admin 404 재실측 + 공개 표면 회귀 0) → 60→62 (4.10 + 4.11 [x], 2026-05-31 — track 2 envelope 코드 PR #3 머지 + legal 검수 통과) → 62→63 (3.5.4 [x], 2026-05-31 — hreflang/다국어 sitemap PR #10 머지, DoD #3 Search Console 운영자 인계)** | 2026-05-31 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
