@@ -1,11 +1,20 @@
 # ADR-0037: 공개 법적 페이지 (terms/privacy) + 쿠키 동의 배너 (ePrivacy opt-in) + PostHog 게이팅
 
 ## 상태
+Accepted — 코드 (2026-05-31, PR #3/#12 머지: terms/privacy/CookieConsent/링크 정합 + 게이트 730 tests + legal 1차 검수 ko/en 본문 통과)
 제안 (2026-05-23, architect — legal 1차 검수 발견 3 블로커 봉합 설계)
 
-> legal 에이전트 본문 검수(terms/privacy 본문 텍스트 + 동의 카피) 통과 시 채택.
-> 본 ADR 은 **구조/항목/법적근거 매핑 + PostHog 게이팅 지점**만 잠근다 — 본문
-> 텍스트는 4.12.f legal 검수 게이트 위임 (헌법 §3 P3 + ADR-0033 §T4 패턴).
+> nl/fr 본문 placeholder + 외부 변호사 검토 (€800) = **운영자 트랙 잔여** —
+> 본 ADR 의 구조/항목/법적근거 매핑은 잠금. 본문 텍스트 4 locale 확정은
+> DeepL Phase B + 베네룩스 변호사 1회 감사 후 별도 라운드 (헌법 §3 P3
+> + ADR-0033 §T4 패턴).
+
+> legal 1차 검수 (2026-05-31, PLAN 4.12.f):
+> - 다크패턴 0 (Accept/Reject 시각적 동등, GBA Reject-all 원칙)
+> - GDPR Art.13 12항목 충족 (gdpr-register.md PA-01~05 + 신설 PA-06 PostHog 쿠키 동의)
+> - Art.6(1)(b) "동의 간주" 표현 4 locale 모두 정합 (ko/en/nl/fr)
+> - PostHog 게이팅 = 동의 게이트 안 dynamic import (무동의 = 번들 로드 0)
+> - PA-04 보안로그(정당이익) ↔ PA-06 분석쿠키(동의) 법적근거 분리
 
 ## 맥락
 

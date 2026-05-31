@@ -128,6 +128,28 @@
 
 ---
 
+### PA-06: 쿠키 동의 기반 분석 (Analytics Cookie Consent)
+
+**근거 ADR:** ADR-0037 (2026-05-23 Accepted)
+**Legal 1차 검토:** PLAN 4.12.f (2026-05-31)
+
+| 항목 | 내용 |
+|---|---|
+| **처리 목적** | 사용자 동의 후 PostHog 분석 도구를 초기화해 페이지뷰·전환 펀널·기능 사용 메트릭 수집 (제품 의사결정 근거 — 비교 페이지 이탈률·CTR 등). 보안 로그(PA-04 정당한 이익) 와 법적 근거 분리 — 본 PA-06 은 명시적 동의 기반. |
+| **합법 근거** | GDPR Art. 6(1)(a) — 명시적 동의(opt-in). ePrivacy Directive Art. 5(3) — 비필수 쿠키 사전 동의. 무동의 시 PostHog SDK init 0 (`CookieConsent.tsx` 게이트). 동의 = `localStorage.slim_cookie_consent === 'accepted'`. |
+| **데이터 카테고리** | PostHog distinct_id (브라우저 fingerprint = `localStorage` 기반 UUID, IP 부분 마스킹 옵션), 페이지뷰 (URL/referrer/timestamp), 클릭 이벤트(상대 좌표/엘리먼트 식별자). 추적 ID 외 PII (이메일/이름/주소) 0. |
+| **데이터 주체** | 쿠키 배너에서 "전부 동의" 클릭한 방문자. |
+| **수령자** | PostHog (EU region 옵션 — `NEXT_PUBLIC_POSTHOG_HOST` 가 `https://eu.posthog.com` 설정 시). PostHog 외 제3자 전송 없음. |
+| **보존 기간** | PostHog 측 기본 보존 정책 — 운영자 설정에 따름 (베타 직전 PostHog 대시보드에서 90~365일 자동 삭제 cron 활성 필요). 동의 철회 시 `posthog.opt_out_capturing()` 즉시 호출 + `localStorage.slim_cookie_consent = 'rejected'`. |
+| **보안 조치** | TLS 전송(PostHog API). 동의 게이트 = `CookieConsent.tsx` client island — PostHog SDK는 `import('posthog-js')` dynamic import 이므로 무동의 시 번들 로드 자체가 발생하지 않음 (fail-safe). |
+| **국외 이전** | EU region 사용 시 없음. US region fallback (PostHog 무료 plan default) 시 SCCs 적용 — 외부 감사 항목 6번 (PostHog DPA) 과 연동. |
+| **데이터 주체 권리** | Art. 7(3) 동의 철회: footer "쿠키 설정" 버튼 → 배너 재오픈 → "거부" 클릭. Art. 15-21 일반 권리: 운영자 이메일(kim.wonmin91@gmail.com) 또는 PostHog dashboard 통해 행사. |
+| **비고** | (1) `NEXT_PUBLIC_POSTHOG_KEY` / `_HOST` env 미등록 시 동의해도 no-op 안전 (PLAN 4.12.c §나). (2) PostHog 외 분석 도구 도입 시 본 PA-06 확장 또는 신규 PA 등재. (3) 베타 직전 PostHog 보존 기간 cron 운영자 확인 필요. |
+
+**TODO:** PostHog env(EU region) 등록 — 운영자 트랙. PostHog 보존 기간 cron 설정 (베타 직전).
+
+---
+
 ## 변경 이력
 
 | 날짜 | 변경 내용 | 담당 |
@@ -136,6 +158,7 @@
 | 2026-05-13 | PA-03 — 4.1.d 구현 후속 검토 완료. 동의 인터스티셜 필수 5항목(EDPB Guidelines 05/2020) 및 VI.99 랭킹 공개 UI 구현 확인. ADR-0026 §검토 2/5/6 통과 판정. 외부 감사 대기 항목 7개 유지 | legal 에이전트 (4.1.d 후속) |
 | 2026-05-13 | PA-03 — 4.3.d 디스클로저 페이지 본문 채움 검토 완료. `/legal/affiliate-disclosure` 가 UCPD 상업적 관계 명시 + VI.99 정렬 기준 공개 + Art. 6(1)(a)/6(1)(c) GDPR cross-ref + 다크패턴 0 충족. 처리 활동 자체(PA-03 내용) 변경 없음 — 디스클로저 노출 사이드 정합 확인만. ADR-0026 §검토 5 sub-blob 추가. 외부 감사 대기 항목 7개 유지 | legal 에이전트 (4.3.d 후속) |
 | 2026-05-13 | PA-05 신설 — 후속 메일 발송 처리 활동 등재. PLAN 4.5.f legal 1차 검토 산출물. 외부 감사 대기 항목 8번(Resend DPA) 신규 추가. 총 외부 감사 대기 항목 8개 | legal 에이전트 (4.5.f) |
+| 2026-05-31 | PA-06 신설 — 쿠키 동의 기반 분석(PostHog) 처리 활동 등재. PLAN 4.12.f legal 1차 검토 산출물 (ADR-0037). PA-04 보안 로그(정당한 이익)과 법적 근거 분리. 외부 감사 대기 항목 6번(PostHog DPA + SCCs)과 cross-ref. 총 외부 감사 대기 항목 8개 유지(PostHog DPA = 기존 6번에 통합). | legal 에이전트 (4.12.f) |
 
 ---
 
