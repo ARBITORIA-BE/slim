@@ -1,6 +1,8 @@
 # ADR-0038: admin 가드 locale-prefix 우회 봉합 — 경로 매칭 일반화
 
 ## 상태
+Accepted (2026-05-31 — PR #7 머지 + 프로덕션 5개 locale admin 경로 404 재실측 +
+공개 표면 회귀 0 확인 완료. PLAN D.8 `[x]`.)
 Proposed (2026-05-29, architect — 프로덕션 실측 취약점 진단)
 
 ## 맥락
@@ -113,6 +115,27 @@ handleAdmin 의 쿠키 set 은 `path: '/admin'` → `path: '/'` 로만 변경하
 - 공개 회귀: `/`·`/compare/mobile`·`/en`·`/fr-BE` 200 유지 (가드 미적용 확인).
 - 게이트: typecheck/lint/test:run/harness:plan/harness:data 0.
 - 프로덕션 머지 후 운영자: `curl /en/admin` → 404 재실측.
+
+### 머지 후 실측 결과 (2026-05-31)
+
+머지: PR #7 (`fix/d8-admin-guard-locale-prefix-bypass`, commits bfcb6cb/05f8e01).
+
+프로덕션 (`https://slim.lu`) curl 실측:
+
+| 경로 | 결과 | 기대 |
+|---|---|---|
+| `/admin` | 404 | 404 ✅ |
+| `/en/admin` | 404 | 404 ✅ |
+| `/nl-NL/admin` | 404 | 404 ✅ |
+| `/fr-BE/admin` | 404 | 404 ✅ |
+| `/fr-LU/admin` | 404 | 404 ✅ |
+| `/` | 200 | 200 ✅ |
+| `/en` | 200 | 200 ✅ |
+| `/fr-BE` | 200 | 200 ✅ |
+| `/compare/mobile` | 307 → `/compare/mobile/postal` | default postal flow 리다이렉트 (정상, 회귀 0) ✅ |
+
+DoD 7항 (PLAN D.8) 전부 통과 → PLAN D.8 `[ ]` → `[x]` + 0.5 행 7→8 + 합계
+59→60 갱신. 본 ADR 상태 Proposed → Accepted.
 
 ## legal 검토 필요 여부
 
