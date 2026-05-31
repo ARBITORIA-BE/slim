@@ -1,18 +1,24 @@
 /**
- * app/sitemap.ts — Next.js App Router 네이티브 sitemap.
+ * app/sitemap.ts — Next.js App Router 네이티브 sitemap (다국어 확장).
  *
  * 왜 이 파일이 필요한가?
  *   검색엔진이 색인 가능한 URL 목록을 /sitemap.xml 로 제공해야 한다.
  *   Next.js 15 App Router 는 app/sitemap.ts 를 빌드 시 /sitemap.xml 로 정적 생성한다.
  *   (next build 출력에 ○ /sitemap.xml 또는 ƒ /sitemap.xml 로 등장 — PLAN 3.5.2.d DoD)
  *
+ * PLAN 3.5.4 확장: Google Localized Versions 사양 —
+ *   각 URL entry 에 alternates.languages (5 locale × 경로) 추가.
+ *   Next.js MetadataRoute.SitemapFile 이 alternates.languages 를 지원한다.
+ *
  * 색인 대상 (포함):
  *   / — 홈 (weekly, 1.0)
  *   /compare — 카테고리 선택 (weekly, 0.8)
  *   /compare/mobile — 모바일 비교 진입 (weekly, 0.8)
  *   /compare/internet_fixed — 고정 인터넷 비교 진입 (weekly, 0.8)
- *   /data-sources — 데이터 출처 투명성 페이지 (monthly, 0.5)
- *   /legal/affiliate-disclosure — 제휴 수수료 공개 (monthly, 0.5)
+ *   /data-sources — 데이터 출처 투명성 페이지 (weekly, 0.5)
+ *   /legal/affiliate-disclosure — 제휴 수수료 공개 (weekly, 0.5)
+ *   /legal/terms — 이용약관 (weekly, 0.5) — PLAN 4.12.a
+ *   /legal/privacy — 개인정보처리방침 (weekly, 0.5) — PLAN 4.12.b
  *
  * 색인 금지 (제외 — 이 sitemap 에 URL 없음):
  *   /r/[shortId] — 개인 비교 결과 (noindex, ADR-0021 §T8).
@@ -29,64 +35,71 @@
  *   bundle_internet_tv 는 아직 fetcher 미구현 → 색인해도 빈 결과.
  *   → sitemap 에는 mobile + internet_fixed 만 포함. 카테고리 추가 시 아래 배열도 갱신.
  *
- * ADR 근거: ADR-0020 §결정 7, ADR-0021 §T8, PLAN 3.5.2.d.
+ * ADR 근거: ADR-0020 §결정 7, ADR-0021 §T8, ADR-0034 D5, PLAN 3.5.2.d, PLAN 3.5.4.
  */
 
 import type { MetadataRoute } from 'next';
 
 import { SITE_ORIGIN } from '@/lib/site';
+import { routing } from '@/i18n/routing';
 
 /**
- * 현재 sitemap 에 포함할 알려진 카테고리 슬러그.
+ * 색인 대상 모든 경로 (locale prefix 제외).
  *
- * TARIFF_CATEGORIES 전체가 아니라 실제 fetcher 가 구현된 카테고리만.
- * 카테고리 추가 시 이 배열도 함께 갱신할 것 (단일 진실 원천은 TARIFF_CATEGORIES,
- * 그러나 색인 가치는 fetcher 구현 여부에 종속 → 명시 배열 유지).
+ * 왜 flat array 인가?
+ *   카테고리는 2개뿐이라 INDEXABLE_CATEGORIES 로 동적 생성해도 무방하지만,
+ *   PLAN 3.5.4 명세가 INDEXABLE_PATHS 배열로 일관 처리를 지정 → 단일 배열 유지.
  */
-const INDEXABLE_CATEGORIES = ['mobile', 'internet_fixed'] as const;
+const INDEXABLE_PATHS = [
+  '/',
+  '/compare',
+  '/compare/mobile',
+  '/compare/internet_fixed',
+  '/data-sources',
+  '/legal/affiliate-disclosure',
+  '/legal/terms',
+  '/legal/privacy',
+] as const;
+
+/**
+ * locale + path → 절대 URL.
+ *
+ * 왜 defaultLocale 만 prefix 없는가?
+ *   localePrefix='as-needed' → defaultLocale(nl-BE) URL prefix 없음 (ADR-0033 §T1).
+ *   suffix === '/' 일 때 SITE_ORIGIN 만 반환 (trailing slash 중복 방지).
+ */
+function localeUrl(locale: string, path: string): string {
+  const suffix = path === '/' ? '' : path;
+  return locale === routing.defaultLocale
+    ? `${SITE_ORIGIN}${suffix}`
+    : `${SITE_ORIGIN}/${locale}${suffix}`;
+}
+
+/**
+ * 경로별 우선순위 결정.
+ *   홈 = 1.0, legal/data-sources = 0.5, 그 외 = 0.8.
+ */
+function priorityFor(path: string): number {
+  if (path === '/') return 1.0;
+  if (path.startsWith('/legal') || path === '/data-sources') return 0.5;
+  return 0.8;
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // 빌드 시각 — 정적 라우트는 빌드마다 갱신 (동적 콘텐츠 아님).
-  // new Date() 는 빌드 시점에 1회 평가 → 정적 sitemap 으로 출력.
   const now = new Date();
 
-  // 카테고리별 비교 진입 URL (/compare/mobile, /compare/internet_fixed)
-  const categoryEntries: MetadataRoute.Sitemap = INDEXABLE_CATEGORIES.map((slug) => ({
-    url: `${SITE_ORIGIN}/compare/${slug}`,
+  return INDEXABLE_PATHS.map((path) => ({
+    // defaultLocale URL 을 entry 대표 URL 로 사용 (Google 권장 — canonical = hreflang 중 하나)
+    url: localeUrl(routing.defaultLocale, path),
     lastModified: now,
-    changeFrequency: 'weekly',
-    priority: 0.8,
+    changeFrequency: 'weekly' as const,
+    priority: priorityFor(path),
+    // Google Localized Versions — 5 locale × path 매트릭스 (ADR-0034 D5)
+    alternates: {
+      languages: Object.fromEntries(
+        routing.locales.map((l) => [l, localeUrl(l, path)]),
+      ),
+    },
   }));
-
-  return [
-    // ─── 홈 ────────────────────────────────────────────────────────────────────
-    {
-      url: `${SITE_ORIGIN}/`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 1.0,
-    },
-    // ─── 카테고리 선택 ────────────────────────────────────────────────────────
-    {
-      url: `${SITE_ORIGIN}/compare`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    // ─── 알려진 카테고리 비교 진입 ─────────────────────────────────────────────
-    ...categoryEntries,
-    // ─── 투명성 / 법적 고지 ────────────────────────────────────────────────────
-    {
-      url: `${SITE_ORIGIN}/data-sources`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_ORIGIN}/legal/affiliate-disclosure`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-  ];
 }

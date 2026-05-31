@@ -28,6 +28,13 @@ vi.mock('@/i18n/navigation', () => ({
   Link: require('next/link').default,
 }));
 
+// ─── next-intl/server mock ──────────────────────────────────────────────────
+// setRequestLocale: PLAN 3.5.4 — generateMetadata/컴포넌트 params 패턴으로 변환.
+// 테스트 환경에서는 no-op.
+vi.mock('next-intl/server', () => ({
+  setRequestLocale: vi.fn(),
+}));
+
 // ─── mock 전략 ─────────────────────────────────────────────────────────────
 
 // vi.mock 은 파일 최상단으로 hoisting 됨.
@@ -44,6 +51,15 @@ vi.mock('@/data/affiliate-rates', () => ({
 
 // page.tsx 가 vi.mock 이후에 import 되어야 mock 된 모듈을 사용
 import AffiliatePage from './page';
+
+// ─── 헬퍼 (RSC async 컴포넌트 렌더) ────────────────────────────────────────
+// PLAN 3.5.4 — AffiliatePage 가 async 컴포넌트(params 수신)가 됨.
+async function renderAffiliatePage(locale = 'nl-BE') {
+  const element = await AffiliatePage({
+    params: Promise.resolve({ locale }),
+  });
+  return render(element);
+}
 
 // ─── 픽스처 ────────────────────────────────────────────────────────────────
 
@@ -107,15 +123,15 @@ describe('AffiliatePage — placeholder-only 상태', () => {
     setRates(PLACEHOLDER_RATES);
   });
 
-  it('알림 배너 표시 (개발용 placeholder 문구)', () => {
-    render(<AffiliatePage />);
+  it('알림 배너 표시 (개발용 placeholder 문구)', async () => {
+    await renderAffiliatePage();
     expect(screen.getByRole('note')).toBeInTheDocument();
     expect(screen.getByRole('note').textContent).toMatch(/개발용 placeholder/);
     expect(screen.getByRole('note').textContent).toMatch(/ADR-0027/);
   });
 
-  it('표 렌더 — 2건 entry 행 존재', () => {
-    render(<AffiliatePage />);
+  it('표 렌더 — 2건 entry 행 존재', async () => {
+    await renderAffiliatePage();
     // 표 자체 존재
     expect(screen.getByRole('table')).toBeInTheDocument();
     // header row 1 + data row 2 = 3
@@ -131,13 +147,13 @@ describe('AffiliatePage — 실 entry 상태', () => {
     setRates(REAL_RATES);
   });
 
-  it('알림 배너 없음', () => {
-    render(<AffiliatePage />);
+  it('알림 배너 없음', async () => {
+    await renderAffiliatePage();
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
   });
 
-  it('표 렌더 — 1건 entry 행 존재', () => {
-    render(<AffiliatePage />);
+  it('표 렌더 — 1건 entry 행 존재', async () => {
+    await renderAffiliatePage();
     const rows = screen.getAllByRole('row');
     // header 1 + data 1 = 2
     expect(rows.length).toBe(2);
@@ -151,15 +167,15 @@ describe('AffiliatePage — 빈 배열', () => {
     setRates([]);
   });
 
-  it('"활성 어필리에이트 계약이 없습니다" 메시지 표시', () => {
-    render(<AffiliatePage />);
+  it('"활성 어필리에이트 계약이 없습니다" 메시지 표시', async () => {
+    await renderAffiliatePage();
     expect(
       screen.getByText(/현재 활성 어필리에이트 계약이 없습니다/),
     ).toBeInTheDocument();
   });
 
-  it('표 없음', () => {
-    render(<AffiliatePage />);
+  it('표 없음', async () => {
+    await renderAffiliatePage();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 });
@@ -167,9 +183,9 @@ describe('AffiliatePage — 빈 배열', () => {
 // ─── 4. EUR 포맷 ──────────────────────────────────────────────────────────
 
 describe('AffiliatePage — EUR 포맷', () => {
-  it('amountCents=5000 → "50" 포함 (nl-BE EUR)', () => {
+  it('amountCents=5000 → "50" 포함 (nl-BE EUR)', async () => {
     setRates(PLACEHOLDER_RATES); // placeholder-proximus-be amountCents=5000
-    render(<AffiliatePage />);
+    await renderAffiliatePage();
     // 단가 셀에 "50" 이 포함됨 (nl-BE: "€ 50" 또는 "€50")
     const cells = screen.getAllByRole('cell');
     const amountCell = cells.find((c) => /€/.test(c.textContent ?? ''));
@@ -196,8 +212,8 @@ describe('AffiliatePage — 컬럼 헤더', () => {
     '만료 일자',
   ];
 
-  it.each(EXPECTED_HEADERS)('컬럼 헤더 "%s" 존재', (header) => {
-    render(<AffiliatePage />);
+  it.each(EXPECTED_HEADERS)('컬럼 헤더 "%s" 존재', async (header) => {
+    await renderAffiliatePage();
     expect(
       screen.getByRole('columnheader', { name: header }),
     ).toBeInTheDocument();
@@ -211,25 +227,25 @@ describe('AffiliatePage — 법적 키 문구', () => {
     setRates(PLACEHOLDER_RATES);
   });
 
-  it('"어필리에이트 수수료를 받는" 문구 존재', () => {
-    render(<AffiliatePage />);
+  it('"어필리에이트 수수료를 받는" 문구 존재', async () => {
+    await renderAffiliatePage();
     expect(screen.getByText(/어필리에이트 수수료를 받는/)).toBeInTheDocument();
   });
 
-  it('"절약액 내림차순" 문구 존재', () => {
-    render(<AffiliatePage />);
+  it('"절약액 내림차순" 문구 존재', async () => {
+    await renderAffiliatePage();
     expect(screen.getByText(/절약액 내림차순/)).toBeInTheDocument();
   });
 
-  it('"어필리에이트 여부 / 수수료 수령 여부는 순위에 영향을 주지 않습니다" 문구 존재', () => {
-    render(<AffiliatePage />);
+  it('"어필리에이트 여부 / 수수료 수령 여부는 순위에 영향을 주지 않습니다" 문구 존재', async () => {
+    await renderAffiliatePage();
     expect(
       screen.getByText(/어필리에이트 여부 \/ 수수료 수령 여부는 순위에 영향을 주지 않습니다/),
     ).toBeInTheDocument();
   });
 
-  it('"compare.isolation.test.ts" 텍스트 존재 (단일 출처 약속)', () => {
-    render(<AffiliatePage />);
+  it('"compare.isolation.test.ts" 텍스트 존재 (단일 출처 약속)', async () => {
+    await renderAffiliatePage();
     expect(
       screen.getByText(/compare\.isolation\.test\.ts/),
     ).toBeInTheDocument();
@@ -245,8 +261,8 @@ describe('AffiliatePage — 다크패턴 부재', () => {
 
   const DARK_PATTERNS = ['지금만', '오늘만', '마감', 'Hurry', 'Limited', '마지막'];
 
-  it.each(DARK_PATTERNS)('다크패턴 문구 "%s" 없음', (pattern) => {
-    render(<AffiliatePage />);
+  it.each(DARK_PATTERNS)('다크패턴 문구 "%s" 없음', async (pattern) => {
+    await renderAffiliatePage();
     expect(document.body.textContent).not.toContain(pattern);
   });
 });

@@ -19,6 +19,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { TARIFF_CATEGORIES, type TariffCategoryInput } from '@/types/comparison-input';
+import { buildAlternates } from '@/lib/alternates';
 
 /**
  * 기존 compare.pageTitle / compare.pageDescription 키 재사용 (§A2.9.2).
@@ -33,12 +34,13 @@ export async function generateMetadata({
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'compare' });
 
+  // hreflang: 5 locale × '/compare' (PLAN 3.5.4, ADR-0034 D5)
+  const alts = buildAlternates(locale, '/compare');
+
   return {
     title: t('pageTitle'),
     description: t('pageDescription'),
-    alternates: {
-      canonical: '/compare',
-    },
+    alternates: alts,
   };
 }
 

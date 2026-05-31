@@ -28,6 +28,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
 import { LEGAL_ENTITY, formatEnterpriseNumber, formatVatNumber } from '@/lib/legal';
+import { buildAlternates } from '@/lib/alternates';
 
 // ─── 메타데이터 ─────────────────────────────────────────────────────────────
 // ADR-0033 Amd5 패턴: generateMetadata + getTranslations.
@@ -41,12 +42,13 @@ export async function generateMetadata({
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'legal.terms' });
 
+  // hreflang: 5 locale × '/legal/terms' (PLAN 3.5.4, ADR-0034 D5)
+  const alts = buildAlternates(locale, '/legal/terms');
+
   return {
     title: t('pageTitle'),
     description: t('pageDescription'),
-    alternates: {
-      canonical: '/legal/terms',
-    },
+    alternates: alts,
   };
 }
 
