@@ -29,6 +29,7 @@
 
 import type { Metadata } from 'next';
 import { eq, sql } from 'drizzle-orm';
+import { setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/db';
 import { provider } from '@/db/schema/provider';
@@ -39,15 +40,30 @@ import { getComparisonStatsByProvider } from '@/engine/comparison-stats';
 import { deriveCaveats } from '@/engine/caveats';
 import type { AffiliateStatus } from '@/db/schema/provider';
 import type { FetcherMetadata } from '@/fetchers/types';
+import { buildAlternates } from '@/lib/alternates';
 
-export const metadata: Metadata = {
-  title: '데이터 출처',
-  description:
-    'Slim이 사용하는 통신 요금 비교 데이터의 출처, 수집 방법, 갱신 주기를 투명하게 공개합니다.',
-  alternates: {
-    canonical: '/data-sources',
-  },
-};
+// ─── 메타데이터 ───────────────────────────────────────────────────────────────
+// 왜 정적 metadata 에서 generateMetadata 로 변환하는가?
+//   hreflang 을 붙이려면 currentLocale 이 필요 — params 에서만 가져올 수 있다.
+//   텍스트 자체는 현재 ko.json 베타 운영이라 @i18n-allow 로 관리 중이므로
+//   title/description 은 하드코딩 유지하고 alternates 만 동적으로 처리한다.
+//   (PLAN 3.5.4, ADR-0034 D5)
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const alts = buildAlternates(locale, '/data-sources');
+
+  return {
+    title: '데이터 출처', // @i18n-allow — 베타 ko 운영 중, 런치(4.9)에서 i18n 교체
+    description:
+      'Slim이 사용하는 통신 요금 비교 데이터의 출처, 수집 방법, 갱신 주기를 투명하게 공개합니다.', // @i18n-allow
+    alternates: alts,
+  };
+}
 
 // ─── ISR 설정 ─────────────────────────────────────────────────────────────
 
@@ -321,7 +337,13 @@ const CATEGORY_LABELS: Record<string, string> = {
  *   registry 메타데이터를 서버에서 합성해 정적 HTML로 클라이언트에 전달한다.
  *   JS 번들 크기 0 추가 (클라이언트 상태 없음).
  */
-export default async function DataSourcesPage() {
+export default async function DataSourcesPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   // ─── 데이터 병렬 페치 ────────────────────────────────────────────────────
   // 왜 Promise.all인가?
   //   세 DB 쿼리 + 통계 쿼리가 독립적 → 병렬 실행으로 응답 시간 단축.

@@ -130,11 +130,14 @@ describe('PrivacyPage — 다크패턴 부재', () => {
 // ─── 7. generateMetadata ─────────────────────────────────────────────────────
 
 describe('generateMetadata', () => {
-  it('pageTitle 과 canonical /legal/privacy 반환', async () => {
+  it('pageTitle 과 canonical 절대 URL 반환 (PLAN 3.5.4 hreflang 확장)', async () => {
     const meta = await generateMetadata({
       params: Promise.resolve({ locale: 'en' }),
     });
     expect(meta.title).toBe('legal.privacy.pageTitle');
-    expect(meta.alternates?.canonical).toBe('/legal/privacy');
+    // PLAN 3.5.4: buildAlternates 가 절대 URL 반환 — en locale prefix 포함
+    expect(meta.alternates?.canonical).toBe('https://slim.lu/en/legal/privacy');
+    // hreflang languages 5 locale + x-default = 6개 포함 검증
+    expect(Object.keys(meta.alternates?.languages ?? {})).toHaveLength(6);
   });
 });

@@ -10,6 +10,7 @@ import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { TARIFF_CATEGORIES, type TariffCategoryInput } from '@/types/comparison-input';
+import { buildAlternates } from '@/lib/alternates';
 
 /**
  * 왜 generateMetadata 인가?
@@ -41,12 +42,13 @@ export async function generateMetadata({
   // §A2.9.2 재사용: compare.categories.<cat>.label
   const label = t(`categories.${cat}.label` as Parameters<typeof t>[0]);
 
+  // hreflang: 5 locale × '/compare/<cat>' (PLAN 3.5.4, ADR-0034 D5)
+  const alts = buildAlternates(locale, `/compare/${cat}`);
+
   return {
     title: label,
     description: t('pageDescription'),
-    alternates: {
-      canonical: `/compare/${cat}`,
-    },
+    alternates: alts,
   };
 }
 

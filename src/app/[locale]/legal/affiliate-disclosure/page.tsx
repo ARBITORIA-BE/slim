@@ -14,19 +14,33 @@
  */
 
 import type { Metadata } from 'next';
+import { setRequestLocale } from 'next-intl/server';
 
 import { affiliateRates } from '@/data/affiliate-rates';
 import { formatEuroCents } from '@/lib/format-eur';
 import { Link } from '@/i18n/navigation';
+import { buildAlternates } from '@/lib/alternates';
 
-export const metadata: Metadata = {
-  title: '제휴 수수료 공개',
-  description:
-    'Slim의 제휴(어필리에이트) 수수료 구조와 비교 결과 순위 알고리즘 독립성을 투명하게 공개합니다.',
-  alternates: {
-    canonical: '/legal/affiliate-disclosure',
-  },
-};
+// ─── 메타데이터 ───────────────────────────────────────────────────────────────
+// 왜 generateMetadata 로 변환하는가?
+//   hreflang alternates 에 currentLocale 필요 — params 에서만 가져올 수 있다.
+//   (PLAN 3.5.4, ADR-0034 D5)
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const alts = buildAlternates(locale, '/legal/affiliate-disclosure');
+
+  return {
+    title: '제휴 수수료 공개', // @i18n-allow — 베타 ko 운영 중
+    description:
+      'Slim의 제휴(어필리에이트) 수수료 구조와 비교 결과 순위 알고리즘 독립성을 투명하게 공개합니다.', // @i18n-allow
+    alternates: alts,
+  };
+}
 
 // ─── 헬퍼 ──────────────────────────────────────────────────────────────────
 
@@ -66,7 +80,13 @@ function isPlaceholderOnly(rates: typeof affiliateRates): boolean {
 
 // ─── 컴포넌트 ─────────────────────────────────────────────────────────────
 
-export default function AffiliatePage() {
+export default async function AffiliatePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const rates = affiliateRates;
   const showPlaceholderBanner = isPlaceholderOnly(rates);
 

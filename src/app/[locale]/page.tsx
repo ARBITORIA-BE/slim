@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
+import { buildAlternates } from '@/lib/alternates';
+
 /**
  * 루트 레이아웃의 title template(`%s · Slim`) 을 사용하지 않고
  * absolute 로 설정한다.
@@ -20,15 +22,16 @@ export async function generateMetadata({
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'home' });
 
+  // hreflang: 5 locale × '/' — Google Localized Versions (PLAN 3.5.4, ADR-0034 D5)
+  const alts = buildAlternates(locale, '/');
+
   return {
     title: {
       // absolute — layout template 무시하고 전체 title 직접 (홈 브랜드 슬로건)
       absolute: t('metaTitle'),
     },
     description: t('metaDescription'),
-    alternates: {
-      canonical: '/',
-    },
+    alternates: alts,
   };
 }
 

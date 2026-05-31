@@ -130,12 +130,15 @@ describe('TermsPage — 다크패턴 부재', () => {
 // ─── 7. generateMetadata ─────────────────────────────────────────────────────
 
 describe('generateMetadata', () => {
-  it('pageTitle 과 canonical /legal/terms 반환', async () => {
+  it('pageTitle 과 canonical 절대 URL 반환 (PLAN 3.5.4 hreflang 확장)', async () => {
     const meta = await generateMetadata({
       params: Promise.resolve({ locale: 'en' }),
     });
     // mock: 'legal.terms.pageTitle'
     expect(meta.title).toBe('legal.terms.pageTitle');
-    expect(meta.alternates?.canonical).toBe('/legal/terms');
+    // PLAN 3.5.4: buildAlternates 가 절대 URL 반환 — en locale prefix 포함
+    expect(meta.alternates?.canonical).toBe('https://slim.lu/en/legal/terms');
+    // hreflang languages 5 locale + x-default = 6개 포함 검증
+    expect(Object.keys(meta.alternates?.languages ?? {})).toHaveLength(6);
   });
 });
