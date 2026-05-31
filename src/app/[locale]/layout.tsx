@@ -27,6 +27,7 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import { SITE_ORIGIN } from '@/lib/site';
 import { routing } from '@/i18n/routing';
 import { SiteFooter } from '@/components/SiteFooter';
+import { CookieConsent } from '@/components/CookieConsent';
 
 import '../globals.css';
 
@@ -106,6 +107,8 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
           {children}
           {/* 전역 footer — 사업자 식별정보 상시 노출 (CDE Art. XII.6, PLAN 4.10.d) */}
           <SiteFooter />
+          {/* 쿠키 동의 배너 — client island, localStorage 게이팅 (PLAN 4.12.c, ADR-0037) */}
+          <CookieConsent />
         </NextIntlClientProvider>
       </body>
     </html>

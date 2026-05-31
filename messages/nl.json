@@ -21,6 +21,8 @@
     "savingsPreviewPending": "Een voorbeeld van de gemiddelde besparing wordt na de bètaperiode getoond",
     "termsNotice": "Bij het opstarten van deze website",
     "termsLink": "Gebruiksvoorwaarden",
+    "termsAndPrivacyConnector": "en",
+    "privacyLink": "[nl] Privacybeleid",
     "termsNoticeEnd": "wordt geacht hiermee akkoord te gaan (AVG art. 6, lid 1, onder b) – de uitvoering van een overeenkomst).",
     "categories": {
       "mobile": {
@@ -312,6 +314,14 @@
     "affiliateDisclosure": {
       "pageTitle": "제휴 수수료 공개"
     },
+    "cookie": {
+      "title": "[nl] Cookie-instellingen",
+      "body": "[nl] Slim gebruikt essentiële cookies voor de werking van de dienst en analytische cookies (PostHog) voor serviceverbetering. Essentiële cookies vereisen geen toestemming. Weigeren van analytische cookies heeft geen invloed op uw gebruik van de dienst.",
+      "essentialCategory": "[nl] Essentieel (dienstverlening) — geen toestemming vereist",
+      "analyticsCategory": "[nl] Analyse (PostHog) — toestemming vereist",
+      "acceptAll": "[nl] Alles accepteren",
+      "rejectAll": "[nl] Weigeren"
+    },
     "terms": {
       "pageTitle": "[nl] Terms of Use",
       "pageDescription": "[nl] Slim terms of use — service definition, disclaimer, governing law, operator identification.",
@@ -440,6 +450,9 @@
     "legalLinksLabel": "Juridisch en transparantie",
     "affiliateDisclosureLink": "Affiliate-vergoeding",
     "dataSourcesLink": "Gegevensbronnen",
+    "termsLink": "[nl] Gebruiksvoorwaarden",
+    "privacyLink": "[nl] Privacybeleid",
+    "cookieSettingsLink": "[nl] Cookie-instellingen",
     "copyright": "© {year} Slim",
     "languageLabel": "Taal"
   },

@@ -21,6 +21,8 @@
     "savingsPreviewPending": "The \"Average Savings\" preview will be available after the beta period.",
     "termsNotice": "Upon launching this site,",
     "termsLink": "Terms of Use",
+    "termsAndPrivacyConnector": "and",
+    "privacyLink": "Privacy Policy",
     "termsNoticeEnd": "You are deemed to have consented (GDPR Art. 6(1)(b) – Necessity for the performance of a contract).",
     "categories": {
       "mobile": {
@@ -312,6 +314,14 @@
     "affiliateDisclosure": {
       "pageTitle": "제휴 수수료 공개"
     },
+    "cookie": {
+      "title": "Cookie settings",
+      "body": "Slim uses essential cookies for service operation and analytics cookies (PostHog) for service improvement. Essential cookies do not require your consent. Refusing analytics cookies does not affect your use of the service.",
+      "essentialCategory": "Essential (service operation) — no consent required",
+      "analyticsCategory": "Analytics (PostHog) — consent required",
+      "acceptAll": "Accept all",
+      "rejectAll": "Reject all"
+    },
     "terms": {
       "pageTitle": "Terms of Use",
       "pageDescription": "Slim terms of use — service definition, disclaimer, governing law, operator identification.",
@@ -440,6 +450,9 @@
     "legalLinksLabel": "Legal & transparency",
     "affiliateDisclosureLink": "Affiliate disclosure",
     "dataSourcesLink": "Data sources",
+    "termsLink": "Terms of Use",
+    "privacyLink": "Privacy Policy",
+    "cookieSettingsLink": "Cookie settings",
     "copyright": "© {year} Slim",
     "languageLabel": "Language"
   },

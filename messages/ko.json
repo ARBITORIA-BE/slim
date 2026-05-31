@@ -20,6 +20,8 @@
     "savingsPreviewPending": "평균 절약액 미리보기는 베타 후 노출 예정",
     "termsNotice": "시작 시 본 사이트의",
     "termsLink": "이용 약관",
+    "termsAndPrivacyConnector": "및",
+    "privacyLink": "개인정보처리방침",
     "termsNoticeEnd": "에 동의한 것으로 간주됩니다 (GDPR Art. 6(1)(b) 계약 본질).",
     "categories": {
       "mobile": {
@@ -338,6 +340,14 @@
       "operatorEmailLabel": "이메일",
       "backLink": "← 데이터 출처로 돌아가기"
     },
+    "cookie": {
+      "title": "쿠키 사용 안내",
+      "body": "Slim은 서비스 운영에 필수 쿠키와 서비스 개선을 위한 분석 쿠키(PostHog)를 사용합니다. 필수 쿠키는 동의 없이도 작동합니다. 분석 쿠키 사용에 동의하지 않아도 서비스 이용에 제한이 없습니다.",
+      "essentialCategory": "필수 (서비스 동작) — 동의 불요",
+      "analyticsCategory": "분석 (PostHog) — 동의 필요",
+      "acceptAll": "전부 동의",
+      "rejectAll": "거부"
+    },
     "privacy": {
       "pageTitle": "개인정보처리방침",
       "pageDescription": "Slim의 GDPR Art.13 개인정보처리방침 — 수집 데이터, 법적 근거, 보존 기간, 정보주체 권리.",
@@ -439,6 +449,9 @@
     "legalLinksLabel": "법무 및 투명성",
     "affiliateDisclosureLink": "제휴 수수료 공개",
     "dataSourcesLink": "데이터 출처",
+    "termsLink": "이용약관",
+    "privacyLink": "개인정보처리방침",
+    "cookieSettingsLink": "쿠키 설정",
     "copyright": "© {year} Slim",
     "languageLabel": "언어"
   },

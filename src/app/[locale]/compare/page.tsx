@@ -113,10 +113,16 @@ export default async function ComparePage({
         })}
       </ul>
 
+      {/* 이용약관 + 개인정보처리방침 동의 간주 문구 (PLAN 4.12.d.(가)) */}
       <footer className="border-t border-fg/10 pt-6 text-xs text-muted">
         {t('termsNotice')}{' '}
         <Link href="/legal/terms" className="underline underline-offset-4 hover:text-fg-soft">
           {t('termsLink')}
+        </Link>{' '}
+        {/* 개인정보처리방침 링크 추가 (PLAN 4.12.d.(가)) — 접속사 i18n */}
+        {t('termsAndPrivacyConnector')}{' '}
+        <Link href="/legal/privacy" className="underline underline-offset-4 hover:text-fg-soft">
+          {t('privacyLink')}
         </Link>{' '}
         {t('termsNoticeEnd')}
       </footer>
