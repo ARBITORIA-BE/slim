@@ -21,6 +21,8 @@
     "savingsPreviewPending": "L'aperçu des économies moyennes sera disponible après la phase bêta",
     "termsNotice": "Au démarrage, ce site",
     "termsLink": "Conditions d'utilisation",
+    "termsAndPrivacyConnector": "et",
+    "privacyLink": "[fr] Politique de confidentialité",
     "termsNoticeEnd": "est réputé avoir donné son consentement (RGPD, art. 6, par. 1, point b) : nature du contrat).",
     "categories": {
       "mobile": {
@@ -312,6 +314,14 @@
     "affiliateDisclosure": {
       "pageTitle": "제휴 수수료 공개"
     },
+    "cookie": {
+      "title": "[fr] Paramètres des cookies",
+      "body": "[fr] Slim utilise des cookies essentiels au fonctionnement du service et des cookies analytiques (PostHog) pour améliorer le service. Les cookies essentiels ne nécessitent pas votre consentement. Refuser les cookies analytiques n'affecte pas votre utilisation du service.",
+      "essentialCategory": "[fr] Essentiels (fonctionnement du service) — sans consentement requis",
+      "analyticsCategory": "[fr] Analytiques (PostHog) — consentement requis",
+      "acceptAll": "[fr] Tout accepter",
+      "rejectAll": "[fr] Refuser"
+    },
     "terms": {
       "pageTitle": "[fr] Conditions d'utilisation",
       "pageDescription": "[fr] Conditions d'utilisation de Slim — définition du service, clause de non-responsabilité, droit applicable, identification de l'opérateur.",
@@ -440,6 +450,9 @@
     "legalLinksLabel": "Mentions légales et transparence",
     "affiliateDisclosureLink": "Rémunération d'affiliation",
     "dataSourcesLink": "Sources de données",
+    "termsLink": "[fr] Conditions d'utilisation",
+    "privacyLink": "[fr] Politique de confidentialité",
+    "cookieSettingsLink": "[fr] Paramètres des cookies",
     "copyright": "© {year} Slim",
     "languageLabel": "Langue"
   },

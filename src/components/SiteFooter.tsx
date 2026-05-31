@@ -25,6 +25,7 @@ import {
   formatVatNumber,
 } from '@/lib/legal';
 import { LocaleSwitcher } from './LocaleSwitcher';
+import { CookieSettingsButton } from './CookieSettingsButton';
 
 export async function SiteFooter() {
   const t = await getTranslations('footer');
@@ -91,12 +92,28 @@ export async function SiteFooter() {
           >
             {t('affiliateDisclosureLink')}
           </Link>
+          {/* 이용약관 링크 (PLAN 4.12.d.(나)) */}
+          <Link
+            href="/legal/terms"
+            className="underline-offset-4 hover:text-fg hover:underline"
+          >
+            {t('termsLink')}
+          </Link>
+          {/* 개인정보처리방침 링크 (PLAN 4.12.d.(나)) */}
+          <Link
+            href="/legal/privacy"
+            className="underline-offset-4 hover:text-fg hover:underline"
+          >
+            {t('privacyLink')}
+          </Link>
           <Link
             href="/data-sources"
             className="underline-offset-4 hover:text-fg hover:underline"
           >
             {t('dataSourcesLink')}
           </Link>
+          {/* 쿠키 설정 재오픈 트리거 — client island (PLAN 4.12.d.(나)) */}
+          <CookieSettingsButton label={t('cookieSettingsLink')} />
         </nav>
 
         {/* ── 언어 전환기 (LocaleSwitcher client 섬, PLAN 4.11.c) ── */}
