@@ -9,7 +9,7 @@
  * 출력:
  *   1. 접속 host + database 이름 (.env.local DATABASE_URL 파싱)
  *   2. Postgres 자체 메타 (current_database, current_user, version)
- *   3. 적용된 테이블 목록 vs 기대 6개
+ *   3. 적용된 테이블 목록 vs 기대 8개
  *   4. provider 행 수 (시드 진행 상태)
  *
  * 사용:
@@ -118,13 +118,17 @@ async function main() {
   console.log('\n═══════════════════════════════════════════════════════════════');
   console.log('📋 적용된 테이블');
   console.log('═══════════════════════════════════════════════════════════════');
+  // ADR-0039 §결정 3 / PLAN D.9: affiliate_click·follow_up_email 누락이 게이트를
+  // 빠져나간 원인 → 마이그레이션 0005/0006 테이블을 기대 목록에 추가해 재발 방지.
   const expected = [
-    'provider',
-    'tariff',
-    'tariff_snapshot',
+    'affiliate_click',
     'comparison_request',
     'comparison_result',
     'comparison_result_item',
+    'follow_up_email',
+    'provider',
+    'tariff',
+    'tariff_snapshot',
   ];
 
   const rows = await sql`
@@ -144,7 +148,7 @@ async function main() {
     console.log('\n  → pnpm db:push 재실행 필요');
     process.exit(1);
   }
-  console.log(`\n  ✅ 6개 기대 테이블 모두 적용됨`);
+  console.log(`\n  ✅ 8개 기대 테이블 모두 적용됨`);
 
   console.log('\n═══════════════════════════════════════════════════════════════');
   console.log('🌱 시드 상태');
