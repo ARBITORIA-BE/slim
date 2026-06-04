@@ -369,6 +369,18 @@
     발생 후 production `affiliate_click` 행 기록 확인 (5) `verify-db.ts`
     기대 테이블 8개로 확장 + typecheck/lint/test:run/harness:plan 0 +
     합계 표 정합 (0.5 행 8→9, 합계 92→93).
+  - **운영자 적용 진행 (2026-06-03, ADR-0039 §적용 절차 정합)**: 인라인
+    `$env:DATABASE_URL` → `pnpm db:push` → 4단계 전부 ADR-0039 절차 그대로 실행
+    완료. **DoD #1 ✅** (verify-db 8 테이블 all-green: affiliate_click ✓
+    comparison_request ✓ comparison_result ✓ comparison_result_item ✓
+    follow_up_email ✓ provider ✓ tariff ✓ tariff_snapshot ✓, 시드 provider 2/2
+    proximus-be·telenet-be 정상) + **DoD #2 ✅** (`slim.lu/en/admin` 월별
+    전환율 카드 = "2026-05 / 비교 22 / 전환 0 / 0.0%" 정상 렌더 — 이전
+    `relation "affiliate_click" does not exist` 에러 해소, Claude_in_Chrome
+    인증 세션 실측 2026-06-03 20:36:17Z) + **DoD #5 ✅** (verify-db.ts 6→8
+    테이블 확장 — PR #14 = `11aa6bf` 기머지). 남은 #3 (cron Failure 0%) +
+    #4 (`affiliate_click` 행 첫 기록) = 외부 이벤트 대기. **5개 중 3개 통과
+    → `[ ]` 유지** (#3+#4 충족 시 `[x]` + ADR-0039 Proposed → Accepted 격상).
 
 **Phase 0.5 검증:** `pnpm harness:plan && pnpm typecheck && pnpm lint &&
 pnpm test` + 위 DoD 모두 충족.
