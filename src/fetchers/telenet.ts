@@ -132,6 +132,12 @@ export const telenet: Fetcher = {
      * ADR-0013 Amendment 3 기준.
      */
     method: 'scraping',
+    /**
+     * Telenet 은 현재 mobile 카테고리만 스크래핑한다.
+     * internet/bundle 은 1.5.6 기준 manual 폴백 대상 — categories 에 미포함.
+     * admin-metrics 의 CASE WHEN 매핑 자동 생성 용 (PLAN 1.5.6).
+     */
+    categories: ['mobile'] as const,
     version: FETCHER_VERSION,
     homepageUrl: 'https://www.telenet.be',
   },

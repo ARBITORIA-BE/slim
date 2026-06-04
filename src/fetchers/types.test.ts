@@ -23,6 +23,7 @@ describe('FetcherMetadata', () => {
       displayName: 'Proximus',
       country: 'BE',
       method: 'scraping',
+      categories: ['mobile', 'internet_fixed'],
       version: 'proximus-be@2026-05-09',
       homepageUrl: 'https://www.proximus.be/en/mobile-subscription',
     };
@@ -230,6 +231,7 @@ describe('Fetcher 인터페이스', () => {
         displayName: 'Proximus',
         country: 'BE',
         method: 'scraping',
+        categories: ['mobile'],
         version: 'proximus-be@2026-05-09-test',
         homepageUrl: 'https://www.proximus.be',
       },

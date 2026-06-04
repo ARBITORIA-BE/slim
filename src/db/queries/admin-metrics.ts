@@ -21,9 +21,12 @@
 import { sql } from 'drizzle-orm';
 
 import { db } from '@/db';
+import { registry } from '@/fetchers/index';
 import {
+  buildMethodCaseExpression,
   computeConversionRate,
   computeFreshnessRatio,
+  type MethodMapping,
 } from './admin-metrics-helpers';
 
 // ─── 공통 ────────────────────────────────────────────────────────────────
@@ -157,47 +160,198 @@ export async function getMonthlyConversionRates12m(): Promise<MonthlyConversionR
 
 // ─── 3. Fetcher 헬스 (24시간 신선도) ─────────────────────────────────────
 
+/**
+ * scraping/stub 그룹용 신선도 분석 결과.
+ * ratio = fresh / total (total === 0 → null).
+ */
+export interface MethodBreakdown {
+  readonly total: number;
+  readonly fresh: number;
+  /** total === 0 → null. 그 외 0..1. */
+  readonly ratio: number | null;
+}
+
+/**
+ * manual 그룹용 분석 결과.
+ * freshness 게이트 완전 제외 — lastSeenAt 최대값만 표시 (PLAN 1.5.6 Q3).
+ */
+export interface ManualBreakdown {
+  readonly total: number;
+  /** 그룹 내 tariff.last_seen_at 최대값 (ISO 8601). 없으면 null. */
+  readonly latestLastSeenAt: string | null;
+}
+
 export interface FetcherHealthResult extends MetricMeta {
+  /** 전체 활성 tariff 합계 (scraping + manual + stub 합산). */
   readonly totalActiveTariffs: number;
-  /** distinct tariff_id whose latest snapshot is within 24h. */
+  /** scraping 그룹의 24h 신선 tariff 수 (= overall 신선 타겟). */
   readonly freshTariffs: number;
-  /** totalActiveTariffs === 0 → null. 그 외 0..1. */
+  /**
+   * overall ratio = byMethod.scraping.ratio (PLAN 1.5.6 Q4).
+   * scraping.total === 0 → null.
+   */
   readonly ratio: number | null;
   /** 가장 최근 snapshot 의 fetched_at (ISO). NULL 가능. */
   readonly latestSnapshotAt: string | null;
+  /** method 별 분석 (PLAN 1.5.6 architect 잠금 명세). */
+  readonly byMethod: {
+    readonly scraping: MethodBreakdown;
+    readonly manual: ManualBreakdown;
+    readonly stub: MethodBreakdown;
+  };
 }
 
-const FETCHER_HEALTH_SQL = `SELECT
-  (SELECT COUNT(*)::int FROM tariff WHERE is_active = true) AS total_active,
-  (SELECT COUNT(DISTINCT tariff_id)::int FROM tariff_snapshot
-    WHERE fetched_at > NOW() - INTERVAL '24 hours') AS fresh,
-  (SELECT MAX(fetched_at) FROM tariff_snapshot) AS latest`;
+/**
+ * registry 에서 scraping fetcher 의 (providerSlug, category) 쌍 추출.
+ *
+ * FetcherMetadata.categories 가 해당 fetcher 의 실제 커버 카테고리를 선언하므로
+ * cartesian product (providerSlug × categories[i]) 로 매핑 생성.
+ * method='scraping' 인 fetcher 만 추출 (manual/stub 은 별도 인자).
+ *
+ * 왜 runtime 빌드인가:
+ *   fetcher 추가/카테고리 변경 시 registry 만 수정하면 SQL 매핑 자동 추종.
+ *   ADR-0008 §T5 — registry = 단일 출처.
+ */
+function buildScrapingMappingsFromRegistry(): readonly MethodMapping[] {
+  const mappings: MethodMapping[] = [];
+  for (const fetcher of registry) {
+    if (fetcher.metadata.method === 'scraping') {
+      for (const category of fetcher.metadata.categories) {
+        mappings.push({ slug: fetcher.metadata.providerSlug, category });
+      }
+    }
+  }
+  return mappings;
+}
+
+/**
+ * FETCHER_HEALTH_SQL 은 런타임에 registry 에서 빌드된 CASE WHEN 을 포함하므로
+ * 상수로 고정 불가 — 함수로 생성한다.
+ *
+ * 이 SQL 이 정의 출처 (헌법 P1) 이므로 `definitionSql` 필드에 그대로 삽입.
+ */
+function buildFetcherHealthSql(methodCaseExpr: string): string {
+  return `SELECT
+  ${methodCaseExpr} AS method,
+  COUNT(DISTINCT t.id)::int        AS total_active,
+  COUNT(DISTINCT CASE
+    WHEN s.fetched_at > NOW() - INTERVAL '24 hours'
+    THEN t.id END)::int            AS fresh_count,
+  MAX(t.last_seen_at)              AS latest_last_seen_at
+FROM tariff t
+JOIN provider p ON p.id = t.provider_id
+LEFT JOIN LATERAL (
+  SELECT fetched_at
+  FROM tariff_snapshot
+  WHERE tariff_id = t.id
+  ORDER BY fetched_at DESC
+  LIMIT 1
+) s ON true
+WHERE t.is_active = true
+GROUP BY method`;
+}
 
 export async function getFetcherHealth24h(): Promise<FetcherHealthResult> {
+  // registry 기반으로 scraping 매핑 추출 — 런타임 빌드 (ADR-0008 §T5).
+  const scrapingMappings = buildScrapingMappingsFromRegistry();
+  // manual 매핑: 1.5.6 기준 0개. 1.5.7+ Telenet internet manual 시드 시 추가.
+  const manualMappings: readonly MethodMapping[] = [];
+
+  const methodCaseExpr = buildMethodCaseExpression(scrapingMappings, manualMappings);
+  const definitionSql = buildFetcherHealthSql(methodCaseExpr);
+
+  // sql 템플릿 태그에 동적 SQL fragment 를 직접 삽입.
+  // 왜 sql.raw() 대신 sql`` + ${} 인가:
+  //   buildMethodCaseExpression 의 assertSafe() 가 slug/category 를 검증하므로
+  //   인젝션 위험 없음. Drizzle 의 sql`` 은 리터럴 부분만 바인딩 — fragment
+  //   삽입은 sql.raw() 또는 sql`` 으로 감싸야 한다.
   const result = await db.execute<{
+    method: string;
     total_active: number;
-    fresh: number;
-    latest: string | null;
-  }>(sql`
-    SELECT
-      (SELECT COUNT(*)::int FROM tariff WHERE is_active = true) AS total_active,
-      (SELECT COUNT(DISTINCT tariff_id)::int FROM tariff_snapshot
-        WHERE fetched_at > NOW() - INTERVAL '24 hours') AS fresh,
-      (SELECT MAX(fetched_at) FROM tariff_snapshot) AS latest
-  `);
-  const raw = extractRows(result);
-  const row = raw[0] ?? { total_active: 0, fresh: 0, latest: null };
-  const totalActiveTariffs = Number(row.total_active);
-  const freshTariffs = Number(row.fresh);
-  const ratio = computeFreshnessRatio(totalActiveTariffs, freshTariffs);
-  const latest = row.latest;
+    fresh_count: number;
+    latest_last_seen_at: string | null;
+  }>(sql.raw(definitionSql));
+
+  const rows = extractRows(result);
+
+  // 그룹별 집계 초기화
+  let scrapingTotal = 0;
+  let scrapingFresh = 0;
+  let manualTotal = 0;
+  let manualLatestLastSeenAt: string | null = null;
+  let stubTotal = 0;
+  let stubFresh = 0;
+
+  for (const row of rows) {
+    const total = Number(row.total_active);
+    const fresh = Number(row.fresh_count);
+    const lastSeen = row.latest_last_seen_at;
+
+    switch (row.method) {
+      case 'scraping':
+        scrapingTotal += total;
+        scrapingFresh += fresh;
+        break;
+      case 'manual':
+        manualTotal += total;
+        if (lastSeen) {
+          const iso = new Date(lastSeen).toISOString();
+          if (!manualLatestLastSeenAt || iso > manualLatestLastSeenAt) {
+            manualLatestLastSeenAt = iso;
+          }
+        }
+        break;
+      case 'stub':
+        stubTotal += total;
+        stubFresh += fresh;
+        break;
+      default:
+        // 예상 외 method 값 — stub 으로 흡수 (방어적 처리)
+        stubTotal += total;
+        stubFresh += fresh;
+        break;
+    }
+  }
+
+  // overall ratio = scraping only (PLAN 1.5.6 Q4)
+  const ratio = computeFreshnessRatio(scrapingTotal, scrapingFresh);
+  const totalActiveTariffs = scrapingTotal + manualTotal + stubTotal;
+
+  // latestSnapshotAt: scraping 그룹의 last_seen_at 최대값 사용
+  // (snapshot 기준 대신 tariff.last_seen_at — scraping 신선도의 운영자 체감값)
+  let latestSnapshotAt: string | null = null;
+  for (const row of rows) {
+    if (row.method === 'scraping' && row.latest_last_seen_at) {
+      const iso = new Date(row.latest_last_seen_at).toISOString();
+      if (!latestSnapshotAt || iso > latestSnapshotAt) {
+        latestSnapshotAt = iso;
+      }
+    }
+  }
+
   return {
     totalActiveTariffs,
-    freshTariffs,
+    freshTariffs: scrapingFresh,
     ratio,
-    latestSnapshotAt: latest ? new Date(latest).toISOString() : null,
+    latestSnapshotAt,
     fetchedAt: nowIso(),
-    definitionSql: FETCHER_HEALTH_SQL,
+    definitionSql,
+    byMethod: {
+      scraping: {
+        total: scrapingTotal,
+        fresh: scrapingFresh,
+        ratio: computeFreshnessRatio(scrapingTotal, scrapingFresh),
+      },
+      manual: {
+        total: manualTotal,
+        latestLastSeenAt: manualLatestLastSeenAt,
+      },
+      stub: {
+        total: stubTotal,
+        fresh: stubFresh,
+        ratio: computeFreshnessRatio(stubTotal, stubFresh),
+      },
+    },
   };
 }
 

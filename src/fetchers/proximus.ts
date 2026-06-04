@@ -481,6 +481,11 @@ export const proximus: Fetcher = {
      * ADR-0013 Amendment 3 기준.
      */
     method: 'scraping',
+    /**
+     * Proximus 는 mobile + internet_fixed 두 카테고리를 커버한다.
+     * admin-metrics 의 CASE WHEN 매핑 자동 생성 용 (PLAN 1.5.6).
+     */
+    categories: ['mobile', 'internet_fixed'] as const,
     version: FETCHER_VERSION,
     homepageUrl: HOMEPAGE_URL,
   },

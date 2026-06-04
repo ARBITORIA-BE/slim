@@ -11,6 +11,14 @@
 
 ### Changed
 
+- **2026-06-03 — D.9 production 마이그레이션 갭 봉합 (운영자 인라인 적용 완료)** (PLAN D.9, [ADR-0039](docs/adr/0039-production-migration-application-procedure.md) §적용 절차):
+  - **무엇**: 운영자가 production Neon에 0005(`affiliate_click`) + 0006(`follow_up_email`) 인라인 `pnpm db:push` 적용. ADR-0039 §적용 절차 5단계(`$env:DATABASE_URL` → `verify-db` pre → `db:push` → `verify-db` post → `Remove-Item`) 정합 실행, ADR-0022 §D4 인라인-only 원칙 보존.
+  - **검증 (DoD #1)**: production `pnpm exec tsx scripts/verify-db.ts` → **8 테이블 all-green** (affiliate_click ✓ comparison_request ✓ comparison_result ✓ comparison_result_item ✓ follow_up_email ✓ provider ✓ tariff ✓ tariff_snapshot ✓). 시드 provider 2/2 (proximus-be, telenet-be) 정상.
+  - **재발 방지 (DoD #5 — PR #14 `11aa6bf` 기머지)**: `scripts/verify-db.ts` 기대 테이블 6→8개 확장. 다음 스키마 추가 누락은 verify:db 게이트가 차단.
+  - **DoD #2 ✅ 확인 (2026-06-03 20:36:17Z, Claude_in_Chrome MCP 인증 세션 실측)**: `slim.lu/en/admin` 월별 전환율 카드 = "2026-05 / 비교 22 / 전환 0 / **0.0%**" 정상 렌더. 이전 `relation "affiliate_click" does not exist` 에러 해소. 일별 비교 수 카드도 정상 (오늘 5건 포함).
+  - **남은 게이트** (외부 이벤트 대기, 2건): (3) Inngest follow-up-email cron 24h Failure 100→0% — 다음 정각 cron 사이클 신 실행 성공으로 1차 검증 + 24h 후 메트릭 완전 복원 / (4) 어필리에이트 클릭 1회 발생 → `affiliate_click` 행 첫 기록. **두 가지 통과 시 PLAN D.9 `[x]` + ADR-0039 Proposed → Accepted 격상.**
+  - **영향**: 어필리에이트 정산 데이터 기록 복원(수익 모델 핵심), follow-up-email 발송 파이프라인 복구. legal 영향 = PII 유출 위험 0 (기록 부재였음 → 침해 아님, 단지 비즈니스 데이터 공백).
+
 - **2026-05-29 — Proximus 실 스크래핑 fetcher (스텁 → 실 데이터)** (PLAN 1.5.6, `feat/1.5.6-proximus-real-scraping`):
   - **무엇**: `src/fetchers/proximus.ts` 스텁(2026-05-09 수동 추정값) → 실 스크래핑(`method='scraping'`). Telenet(PR #4)에 이은 두 번째 실 데이터 전환.
   - **현행 URL 정정**: 스텁 URL 3개 모두 HTTP 404 (ADR-0013 Amendment 3 stale URL 함정 재확인) → mobile `www.proximus.be/en/mobile-subscription` + internet `www.proximus.be/en/internet` 로 교정.

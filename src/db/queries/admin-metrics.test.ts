@@ -1,12 +1,17 @@
 /**
- * admin-metrics pure helpers 단위 테스트.
+ * admin-metrics 단위 테스트.
  *
- * SQL 쿼리 자체는 DB 통합 영역 — comparison.ts 패턴 따라 vitest 단위 외.
+ * - pure helpers (computeConversionRate, computeFreshnessRatio) — DB 없이.
+ * - SQL 정합 검사: buildMethodCaseExpression 이 만드는 SQL 이 올바른 구조인지.
+ *   DB 통합 테스트는 development 브랜치 시드 필요 → PLAN 1.5.6 DoD §4 에 따라
+ *   verifier 가 production 실측으로 검증 (스킵).
+ *
  * E2E (4.5.1.d) 가 라이브 DB 로 메트릭 표시까지 검증.
  */
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildMethodCaseExpression,
   computeConversionRate,
   computeFreshnessRatio,
 } from './admin-metrics-helpers';
@@ -47,5 +52,47 @@ describe('computeFreshnessRatio', () => {
     expect(computeFreshnessRatio(-1, 1)).toBeNull();
     expect(computeFreshnessRatio(Number.NaN, 1)).toBeNull();
     expect(computeFreshnessRatio(10, Number.NaN)).toBeNull();
+  });
+});
+
+// ─── SQL 정합 검사 (DB 없이 문자열 구조만 검증) ──────────────────────────────
+//
+// getFetcherHealth24h 가 만드는 SQL 에 CASE WHEN + GROUP BY method 가 포함되는지.
+// DB 통합 테스트는 development 브랜치 시드 필요 → verifier 가 production 실측으로 검증.
+describe('FETCHER_HEALTH_SQL 구조 (buildMethodCaseExpression 기반)', () => {
+  it('scraping 매핑이 있으면 CASE WHEN ... scraping ... GROUP BY method 구조', () => {
+    const sql = buildMethodCaseExpression(
+      [
+        { slug: 'proximus-be', category: 'mobile' },
+        { slug: 'proximus-be', category: 'internet_fixed' },
+        { slug: 'telenet-be', category: 'mobile' },
+      ],
+      [],
+    );
+
+    // CASE WHEN 구조
+    expect(sql).toContain('CASE');
+    expect(sql).toContain('WHEN');
+    expect(sql).toContain("THEN 'scraping'");
+    // ELSE stub (고아 tariff 격리)
+    expect(sql).toContain("ELSE 'stub'");
+    expect(sql).toContain('END');
+    // manual 없음
+    expect(sql).not.toContain("THEN 'manual'");
+  });
+
+  it('빈 매핑이면 stub 리터럴만 반환 (GROUP BY method 에서 모두 stub 으로)', () => {
+    const sql = buildMethodCaseExpression([], []);
+    expect(sql).toBe(`'stub'`);
+  });
+
+  it('scraping + manual 모두 있으면 두 WHEN 절 포함', () => {
+    const sql = buildMethodCaseExpression(
+      [{ slug: 'proximus-be', category: 'mobile' }],
+      [{ slug: 'telenet-be', category: 'internet_fixed' }],
+    );
+    expect(sql).toContain("THEN 'scraping'");
+    expect(sql).toContain("THEN 'manual'");
+    expect(sql).toContain("ELSE 'stub'");
   });
 });
