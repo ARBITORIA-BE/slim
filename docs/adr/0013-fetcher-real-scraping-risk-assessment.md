@@ -1516,3 +1516,421 @@ builder 첫 fetch(undici raw HTML) 검증 완료 — Amendment 3 §검증 방법
   Sentry 차단 0건 확인이 잔존 게이트 — 로컬 게이트(typecheck/lint/test:run 679/harness)는 전부 통과.
 
 ### Amendment 3 작성: architect (2026-05-28) — WebFetch 검증 기반, 인증 우회 0
+
+---
+
+## Appendix C — Orange BE robots.txt + TOS 본문 검토 (legal 에이전트, 2026-06-04)
+
+**검토 목적**: ADR-0034 D3 §legal 선행조건 + PLAN 1.5.8 선행조건 해소 (잔여 2개 공급사 중 1번).
+Appendix B (2026-05-17) 에서 Orange BE 는 "조건부 진입 가능 🟡, 소비자 TOS PDF 수동 열람 필수"
+판정을 받았다. 본 Appendix C 는 그 잔여 조건에 대한 추가 검토이다.
+
+**검토일**: 2026-06-04 (UTC)
+
+**실행 주체**: legal 에이전트 (1차 검토). 변호사 아님.
+
+---
+
+### C.1 robots.txt — 재확인
+
+- source_url: `https://www.orange.be/robots.txt`
+- fetched_at: 2026-06-04 (WebFetch 직접 확인)
+
+Appendix B §B.3 (2026-05-17) 에서 기록한 Drupal 표준 robots.txt 와 동일 구조가 유지됨.
+금번 fetch 결과:
+
+```
+User-agent: *
+Allow: /core/*.css$
+Allow: /core/*.js$
+[CSS/JS/image Allow 패턴 — Drupal 표준]
+Disallow: /core/
+Disallow: /profiles/
+Disallow: /admin/
+Disallow: /comment/reply/
+Disallow: /filter/tips
+Disallow: /node/add/
+Disallow: /search/
+Disallow: /user/register/
+Disallow: /user/password/
+Disallow: /user/login/
+Disallow: /user/logout/
+[index.php 미러 경로]
+Disallow: /*brand=
+Disallow: /*category_product_type=
+Disallow: /*connectivity=
+Disallow: /*filter_color=
+Disallow: /*filter_special_offer=
+Disallow: /*memory=
+Disallow: /*sp=
+Disallow: /*internet=
+Disallow: /*mobile=
+Disallow: /*option=
+Disallow: /*promocode=
+Disallow: /*tp=
+Disallow: /*filters
+Disallow: /*topic
+Disallow: /*m&tvm=
+Disallow: /*option-
+Disallow: /nl/opties-en-diensten/gsm-en-smartphone/online-instellen/*
+Disallow: /fr/options-et-services/gsm-et-smartphone/configuration-en-ligne/*
+```
+
+- Crawl-delay: **없음**
+- Sitemap: 명시 없음 (Drupal 표준 — Appendix B 동일)
+
+**가격 페이지 경로 Disallow 분석**:
+
+| 스크래핑 대상 경로 | robots.txt 규칙 충돌 여부 |
+|---|---|
+| `/fr/mobile/abonnements-gsm` (모바일 구독 — 정적 HTML 가격 확인됨, 2026-06-04) | **없음** |
+| `/fr/produits-et-services/internet-chez-vous` (인터넷 — 정적 HTML 가격 확인됨) | **없음** |
+| `/fr/produits-et-services/tv` (TV) | **없음** |
+| 쿼리 파라미터 `?internet=`, `?mobile=` | **차단** — 경로 직접 fetch 방식 유지 필수 |
+
+**C.1 결론**: Appendix B §B.3 결론 유지. 가격 경로 Disallow 없음. 쿼리 파라미터 방식만 차단.
+
+---
+
+### C.2 가격 페이지 공개 접근 정찰 — 2026-06-04
+
+본 Appendix 검토 과정에서 실시한 WebFetch 직접 확인 결과 (fetched_at: 2026-06-04):
+
+**모바일 (`/fr/mobile/abonnements-gsm` → 종착지 확인)**:
+- 공개 접근: 로그인 없음. 정적 HTML에 가격 리터럴 존재.
+- 확인된 플랜 및 가격:
+  - Orange Mobile Small: €15/월
+  - Orange Mobile Medium: €23/월 (프로모 €18, 6개월)
+  - Orange Mobile Large: €29/월 (프로모 €20, 12개월)
+  - Orange Mobile Unlimited: €40/월 (프로모 €31, 12개월)
+  - Orange Mobile Child: €5/월
+- **Cheerio 정적 파싱 가능성: 높음** (WebFetch 기준 — raw undici fetch builder 재검증 필수)
+
+**인터넷 (`/fr/produits-et-services/internet-chez-vous`)**:
+- 공개 접근: 로그인 없음. 정적 HTML에 가격 리터럴 존재.
+- 확인된 플랜 및 가격:
+  - Start Internet: €38/월 (프로모, 정규 €53/월)
+  - Zen Internet: €47/월 (프로모, 정규 €62/월)
+  - Giga Internet: €57/월 (프로모, 정규 €72/월)
+- **Cheerio 정적 파싱 가능성: 높음** (동일 조건)
+
+---
+
+### C.3 TOS/GTC 본문 검토 — 웹사이트 방문자 대상 약관
+
+#### C.3.1 약관 허브 페이지 (`/fr/conditions-generales`, fetched_at: 2026-06-04)
+
+- 최종 URL: `https://www.orange.be/fr/conditions-generales`
+- 구조: 소비자 대상 약관 허브. 모든 실제 약관은 PDF 링크로 제공됨.
+- 허브 페이지 HTML 본문에서 자동 접근/스크래핑 명시 금지 조항: **없음**
+- 확인된 PDF 카테고리:
+  - General sales conditions / Subscription terms
+  - Mobile plan terms (Small/Medium/Large/Unlimited/Child)
+  - Internet & TV service terms
+  - Fiber optic service conditions
+  - Insurance terms
+  - Privacy policy
+- **HTML 텍스트 추출 가능 조항**: 없음 (모든 약관은 PDF 링크만 노출)
+
+#### C.3.2 Privacy policy 페이지 (fetched_at: 2026-06-04)
+
+- `/fr/politique-de-confidentialite` — HTTP 404 (URL 구조 변경 가능성)
+- 웹사이트 방문자 대상 별도 이용약관(Website Terms of Use) 독립 페이지: 미발견.
+- Orange BE 는 웹사이트 방문자 대상 이용약관을 GTC PDF 내부에 포함하는 구조로 추정.
+
+#### C.3.3 Orange-business.com 그룹 TOS (Appendix B §B.3 기존 확인 내용 유지)
+
+Appendix B (2026-05-17) 에서 확인한 orange-business.com 그룹 공통 법적정보 페이지의 조항:
+
+- **지적재산권 조항**: "most of the information and data contained herein are protected by
+  legal provisions relating to intellectual property rights" — 그룹 비즈니스 포털 기준.
+- **무단 재현 금지**: "Any representation, reproduction, use, adaptation, or modification
+  in whole or in part...is prohibited without...prior permission of Orange."
+- **개인 사용 제한**: "The use of this site is reserved for the user's strictly personal use."
+
+이 조항들은 `orange-business.com` (B2B 그룹 포털) 의 법적정보 페이지에서 확인됨.
+`orange.be` (소비자 포털) 에 동일하게 적용되는지 여부는 여전히 PDF 수동 확인이 필요.
+
+#### C.3.4 소비자 GTC PDF 상태
+
+- Orange BE 소비자 약관 PDF 들은 WebFetch FlateDecode 압축으로 텍스트 추출 불가 (Appendix B 동일).
+- **운영자 pdftotext 수동 열람**: 본 Appendix C 작성 시점 미완료.
+  → Appendix B Amendment (2026-05-28) 에서 Proximus/Telenet 은 pdftotext 로 완료했음.
+  → Orange BE 소비자 GTC PDF 는 동일 방법으로 운영자가 별도 완료 필요 (Pieter 트랙).
+
+---
+
+### C.4 핵심 미결 리스크 — "strictly personal use" 조항
+
+Appendix B §B.6 및 §B.7 에서 이미 식별된 핵심 미결 리스크:
+
+- **그룹 TOS 확인**: orange-business.com 에서 "strictly personal use" 조항 존재 확인.
+- **소비자 TOS 미확인**: orange.be 소비자 약관 PDF 에 동일 조항 존재 여부 미확인.
+- **CJEU Ryanair v PR Aviation (C-30/14, 2015) 리스크**: 만약 소비자 TOS 에 "utilisation
+  strictement personnelle" 또는 동등 조항이 존재하고, 그것이 상업적 비교 사이트의 자동화
+  가격 수집을 명시 금지하는 맥락에서 사용된다면, 계약적 제한 근거가 될 수 있음.
+- **현재 강도 판정**: 미확인 (소비자 PDF 미열람). Appendix B §B.7 "조건 B" 트리거 잠재.
+
+**중요 관찰 (2026-06-04)**: 소비자 약관 허브 (`/fr/conditions-generales`) HTML 페이지 자체에는
+자동 접근 금지 조항이 없으며, 방문자 이용약관 독립 페이지도 미발견. 이는 Orange BE 가 웹사이트
+방문자 이용 제한을 소비자 GTC PDF 내에 포함하거나 아예 별도 명시하지 않는 구조일 가능성을 시사.
+
+---
+
+### C.5 법적 리스크 프레임워크 — 3층 분석 업데이트
+
+| 분석 층 | Appendix B 판정 | 본 Appendix C 업데이트 |
+|---|---|---|
+| EU DB Directive 96/9/EC | 낮음 — 1일 1회 가격 추출, "substantial part" 기준 미달 가능성 | 유지 — 변경 없음 |
+| CJEU Ryanair v PR Aviation | 중간 — "strictly personal use" 그룹 TOS 확인, 소비자 TOS 미확인 | 유지 — 소비자 GTC PDF 미열람으로 미확인 상태 지속 |
+| CDE Art. VI.99 (BE 불공정경쟁) | TOS 명시 금지 미확인, 리스크 낮음 | 유지 |
+
+---
+
+### C.6 최종 판정
+
+**판정: 🟡 조건부 (Appendix B §B.3 + §B.9 판정 유지)**
+
+- robots.txt: 가격 페이지 경로 차단 없음. **PASS** (B.5 공통 조건 준수 전제)
+- TOS HTML: 자동 접근 명시 금지 조항 없음 (허브 페이지 기준). 단 소비자 GTC PDF 미열람.
+- 가격 페이지: 공개 접근 가능, 정적 HTML 가격 존재 (WebFetch 확인). Cheerio 파싱 가능성 높음.
+- 소비자 GTC PDF "strictly personal use" 조항 여부: **미확인 (핵심 잔여 리스크)**.
+
+**코드 진입 차단 여부**: 차단 아님. 단 GTC PDF 수동 열람이 완료되지 않은 상태이므로 **조건부**.
+
+**차단 조건 (이 중 하나 충족 시 코드 머지 금지)**:
+1. 운영자 pdftotext 수동 열람에서 Orange BE 소비자 GTC에 "utilisation strictement personnelle"
+   또는 동등 수준의 자동화 접근 금지 조항이 **중간 강도 이상**으로 발견될 경우
+2. 발견된 조항이 비교 사이트 상업적 사용에 명시 적용 가능한 경우 → legal 에이전트 즉시 재호출
+3. ADR-0034 §회귀 #5 (cease & desist)
+
+---
+
+### C.7 Pieter 트랙 (병행 필수, ~30분)
+
+**Orange BE 소비자 GTC PDF 수동 열람**:
+
+1. `https://www.orange.be/fr/conditions-generales` 접속 → "Conditions générales de vente"
+   또는 "Conditions générales – Abonnements" PDF 클릭 → 브라우저로 다운로드
+2. 로컬 `pdftotext` 변환 (Appendix B Amendment 2026-05-28 동일 방법)
+3. Ctrl+F 검색 키워드 (우선 순위 순):
+   - 프랑스어: "utilisation strictement personnelle", "automatisé", "robot", "scraping",
+     "extraction automatique", "utilisation commerciale", "usage personnel"
+   - 네덜란드어: "strikt persoonlijk gebruik", "geautomatiseerde", "robot", "automatisch"
+   - 영어 (혹시 EN 버전 있다면): "strictly personal use", "automated", "robot", "scraping"
+4. 발견 시: 조항 번호 + 원문 전달 → legal 에이전트 재호출 (Appendix C Amendment 추가)
+5. 미발견 시: Appendix C Amendment에 "GTC 수동 열람 완료, 자동 접근 명시 금지 없음" 기록
+   → 1.5.8 코드 머지 게이트 OPEN
+
+**본 Appendix C PASS (robots.txt + TOS HTML) + Pieter 트랙 GTC PDF 수동 열람 미발견
+= 1.5.8 코드 진입 허용.**
+
+---
+
+**Appendix C 작성: legal 에이전트 (2026-06-04)**
+
+---
+
+## Appendix D — Voo robots.txt + TOS + 점유율 검토 (legal 에이전트, 2026-06-04)
+
+**검토 목적**: ADR-0034 D3 §legal 선행조건 + PLAN 1.5.9 선행조건 해소 (잔여 2개 공급사 중 2번).
+Appendix B (2026-05-17) §B.4 에서 Voo 는 "조건부 진입 가능 🟡, GTC 수동 열람 선택적" 판정을
+받았다. 본 Appendix D 는 시장 상황 변화(Voo→Orange 합병) 반영 + PLAN 1.5.9 "점유율 미검증"
+해소를 위한 추가 검토이다.
+
+**검토일**: 2026-06-04 (UTC)
+
+**실행 주체**: legal 에이전트 (1차 검토). 변호사 아님.
+
+---
+
+### D.1 시장 상황 변화 — Voo-Orange 합병 (중요)
+
+**WebSearch 확인 (2026-06-04)**:
+
+Voo S.A. 는 Orange Belgium 에 흡수 합병되었다. 주요 사실:
+
+| 항목 | 내용 | 출처 |
+|---|---|---|
+| 합병 완료 | 2025년 10월 1일, Orange Belgium + VOO 단일 법인 | ITdaily.com |
+| 지분 구조 | Orange Belgium 이 Voo 지분 75%-1주 취득, 기업가치 €1.8B | Orange Newsroom |
+| 법인 소멸 | Voo S.A. 법인 소멸. 고정망 자산·고객·영업·부채 → Orange 이전 | telecoms.com |
+| 브랜드 | Orange 가 Voo 브랜드명 2024년에 은퇴 발표. 일부 제품 라벨로는 잔존 | 복수 출처 |
+| 웹사이트 | `voo.be` 도메인은 2026-06-04 현재 여전히 운영 중 (direct WebFetch 확인) | 본 검토 |
+
+**Slim 1.5.9 fetcher 설계 영향**:
+- Voo 가 Orange 브랜드로 통합됨에 따라 `voo.be` 의 가격 구조가 `orange.be` 와 점진 동기화될
+  가능성이 높음. fetcher 타겟이 `voo.be` 에서 `orange.be` (Voo 고객 전용 페이지 또는 통합
+  페이지) 로 이동해야 할 수 있음. 이는 **법적 검토 범위 밖의 아키텍처 결정** — architect
+  재호출 권고 사항으로 기록한다 (§D.7 참조).
+
+---
+
+### D.2 점유율 검토 — PLAN 1.5.9 "점유율 미검증" 해소
+
+**WebSearch 결과 (2026-06-04, source: Mordor Intelligence + WebSearch aggregation)**:
+
+Orange Belgium + Voo 합병 후 벨기에 통신 시장 구조:
+
+| 사업자 | 매출 점유율 (Q1 2025 기준) | 고정 브로드밴드 | 비고 |
+|---|---|---|---|
+| Proximus | ~43% | ~45% | 1위 |
+| Telenet (Liberty Global) | ~32% | - | 2위 |
+| Orange Belgium (+ Voo 통합) | ~22.5% | - | 3위 (Voo 포함) |
+
+- source: Mordor Intelligence Belgium Telecom MNO Market report (WebSearch 2026-06-04 aggregation)
+- fetched_at: 2026-06-04
+
+**Voo 독립 점유율 (합병 전)**:
+- Voo 는 주로 왈로니아(Wallonia) + 브뤼셀 지역 케이블 고정망 사업자.
+- 합병 전 독립 기준 시장점유율 별도 1차 출처(BIPT 공식 분기 보고서) 를 WebSearch + WebFetch 로
+  수집하지 못했음. BIPT Statistics 페이지 (`bipt.be/operators/telecommunications/statistics`)
+  는 링크 확인됐으나 분기별 세부 CSV/수치는 유료/로그인 접근으로 추정.
+- **대안 추정**: Orange + Voo 합산 ~22.5% 에서 Proximus(43%) + Telenet(32%) 제외 시 잔여가
+  Orange+Voo 합산임. Voo 고정망 단독은 약 10-15% 추정 (왈로니아 권역 집중 특성).
+
+**PLAN 1.5.9 "점유율 미검증" 상태 해소 여부**:
+- BIPT 공식 1차 출처 분기 수치 확보: **미달** (공개 무료 데이터 미발견).
+- Mordor Intelligence 집계 기준 Orange+Voo 합산 ~22.5% (Q1 2025): **확보**.
+- Voo 단독 구분 수치: **미확보** (합병으로 별도 보고 종료).
+- 판정: **부분 해소** — 합산 수치는 확보, Voo 독립 수치는 합병으로 소멸. ADR-0009 가
+  Proximus+Telenet ≥75% 가정 위에 있으므로, Orange+Voo 합산 ~22.5% 는 그 가정을 간접 지지함.
+
+---
+
+### D.3 robots.txt — 재확인
+
+- source_url: `https://www.voo.be/robots.txt`
+- fetched_at: 2026-06-04 (WebFetch 직접 확인)
+- 전문:
+
+```
+User-agent: *
+
+Sitemap: https://www.voo.be/sitemap.xml
+```
+
+- Crawl-delay: **없음**
+- Disallow: **단 하나도 없음** (4개 provider 중 가장 관대 — Appendix B §B.4 동일)
+- 변경사항: **없음** (Appendix B 2026-05-17 버전과 동일)
+
+**D.3 결론**: Appendix B §B.4 결론 유지. 어떤 경로도 Disallow 없음.
+
+---
+
+### D.4 가격 페이지 공개 접근 정찰 — 2026-06-04
+
+WebFetch 직접 정찰 결과 (fetched_at: 2026-06-04):
+
+| URL 시도 | 결과 |
+|---|---|
+| `voo.be/fr/internet` | 200 OK. 가격 없음 — "Nos prix à partir du 1 Janvier 2026" 링크(PDF). 정적 HTML 가격 부재 확인. |
+| `voo.be/fr/gsm` | HTTP 404 |
+| `voo.be/fr/tarifs` | HTTP 404 → `voo.be/fr` (홈) 로 리다이렉트 |
+| `voo.be/fr/nos-offres` | HTTP 404 |
+| `voo.be/fr/nos-offres-internet` | HTTP 404 |
+| `voo.be/fr/internet-television-telephonie/` | HTTP 404 |
+| `voo.be/fr/decouvrir/internet` | HTTP 404 |
+| `voo.be/fr/` (홈) | 200 OK. 가격 없음. "Nos prix à partir du 1 Janvier 2026" 링크 (PDF) |
+
+**핵심 관찰**: `voo.be/fr/internet` 에서 인터넷 플랜 설명은 있으나 **가격이 PDF로만 제공됨**
+("Nos prix à partir du 1 Janvier 2026 [PDF 링크]"). 모바일 가격 페이지 URL 도 발견 불가.
+
+이는 **기술 리스크** (Cheerio 정적 파싱 불가 가능성) 이지 법적 리스크가 아니다. 단 fetcher
+구현 시 PDF 파싱 또는 대안 경로가 필요할 수 있음 → architect 에 인계 필요 (§D.7).
+
+---
+
+### D.5 TOS/GTC 본문 검토 — 재확인
+
+#### D.5.1 Conditions générales (`/fr/conditions-generales`, fetched_at: 2026-06-04)
+
+Appendix B §B.4 (2026-05-17) 에서 이미 텍스트 추출 완료한 결과 재확인:
+
+- 자동 접근/스크래핑 명시 금지: **없음** (키워드 검색 완료)
+- 확인된 조항 상세:
+
+  **Art. 7.1 (가격 공개 조항)**: "Details of its current pricing...can be found [here]"
+  — 공개 가격 정보이며 추출 금지 조항 없음. (source: `voo.be/fr/conditions-generales`,
+  fetched_at: 2026-05-17 + 2026-06-04 재확인)
+
+  **Art. 16.1 (지적재산권)**: 방송 프로그램 콘텐츠 보호 조항. 요금제 가격 데이터에 직접
+  적용 불가.
+
+  **Art. 17.2 (사용 제한)**: "서비스 및 콘텐츠는 배타적으로 사적·개인적 사용 목적" —
+  Voo 인터넷 서비스 *가입자*의 서비스 사용 정책. 웹사이트 방문자의 데이터 수집에 적용
+  되는 조항이 아님.
+
+  **인터넷 서비스 사용 조항**: "les offres de service internet illimité de VOO sont
+  conditionnées à un usage privé et personnel du Client" — 마찬가지로 Voo 인터넷 서비스
+  *가입자*의 인터넷 사용 정책. 웹사이트 방문자 스크래핑 스코프 다름.
+
+#### D.5.2 Privacy Policy (`/fr/vie-privee`, fetched_at: 2026-06-04)
+
+- 자동 접근/스크래핑 조항: 없음.
+- 저작권: "Copyright © 2025 VOO. Tous droits réservés." — 일반 저작권 표시만.
+
+#### D.5.3 법적 고지 (`/fr/mentions-legales`)
+
+- HTTP 404. 별도 법적 고지 페이지 없음 (Appendix B §B.4 동일).
+
+**D.5 결론**: Appendix B §B.4 "자동 수집 명시 금지 없음, 가장 낮은 리스크" 판정 **유지**.
+
+---
+
+### D.6 최종 판정
+
+**판정: 🟢 PASS (법적 조건부 해소)**
+
+- robots.txt: Disallow 전무. **PASS**
+- TOS: 자동 접근 명시 금지 없음 (HTML 텍스트 추출 완료). **PASS**
+- GTC PDF 수동 열람: Appendix B §B.4 에서 "선택적 (우선순위 최하위)" 판정. TOS HTML
+  이미 텍스트 추출 완료 — 추가 수동 열람 없이도 판정 가능.
+- 합병 영향: Voo 브랜드는 잔존하나 `voo.be` 가격 체계가 Orange 와 통합 진행 중일 수 있음.
+  이는 법적 리스크가 아닌 **아키텍처 리스크** — 별도 인계.
+
+**외부 변호사 즉시 감사 필요 여부**: **아니오**.
+- ADR-0013 §B.7 조건 A/B/C/D 미충족.
+- ADR-0004 §결정 3 기준에서 현재 진행 가능.
+
+**1.5.9 코드 진입 허용 여부**: B.5 공통 조건 준수 전제로 **허용**.
+단 §D.7 아키텍처 리스크 (가격 페이지 HTML 부재 + Orange 통합 진행) 를 architect 가
+먼저 평가한 후 fetcher URL 확정 권고.
+
+---
+
+### D.7 architect 인계 사항 (법적 범위 밖 — 아키텍처 리스크)
+
+1. **Voo 가격 페이지 HTML 부재**: `voo.be/fr/internet` 에서 가격이 PDF로만 제공됨 (정적
+   HTML 파싱 불가). Cheerio fetcher 구현 전 architect 가 실 URL 정찰 + raw undici fetch
+   검증 필요. PDF 파싱 또는 `method='manual'` 폴백 여부 결정 필요.
+
+2. **Orange-Voo 통합 진행 리스크**: Voo 브랜드가 Orange 로 통합되면 `voo.be` URL 구조가
+   변경되거나 `orange.be` 로 리다이렉트될 수 있음. 1.5.9 fetcher 타겟 URL 안정성이
+   Proximus/Telenet 대비 낮을 수 있음 — fetcher 셀렉터 깨짐 위험 ↑.
+
+3. **fetcher 대안 경로**: `voo.be` 가격 페이지가 완전 불가 시 Orange BE fetcher (1.5.8)
+   확장으로 Voo 고객 대상 Orange BE 요금제를 함께 커버하는 방안 검토 가능.
+
+---
+
+### D.8 Pieter 트랙
+
+**Voo GTC PDF 수동 열람**: Appendix B §B.8 에서 "낮은 우선순위 — TOS HTML 이미 검토됨"
+으로 판정. 본 Appendix D 검토에서도 TOS HTML 재확인 완료 → GTC PDF 추가 수동 열람은
+**선택적** (필수 아님).
+
+단 Orange-Voo 통합으로 인해 향후 Voo TOS 가 Orange 약관으로 대체될 가능성이 있음.
+TOS URL 변경 시 legal 에이전트 재호출 권고.
+
+**Pieter 트랙 (선택적, ~15분)**:
+- `voo.be/fr/conditions-generales` 의 PDF 버전이 별도 존재한다면 다운로드 + pdftotext 확인.
+- 검색 키워드: "automatisé", "robot", "extraction", "scraping", "usage personnel exclusif"
+- 미발견 시: 별도 기록 불필요 (HTML 검토로 충분).
+
+**본 Appendix D PASS (robots.txt 전면 허용 + TOS 자동 수집 금지 없음) = 1.5.9 코드
+진입 허용. 단 architect 가격 페이지 URL 정찰 + 아키텍처 결정 선행 권고 (§D.7).**
+
+---
+
+**Appendix D 작성: legal 에이전트 (2026-06-04)**
