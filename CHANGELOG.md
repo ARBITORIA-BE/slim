@@ -11,6 +11,19 @@
 
 ### Changed
 
+- **2026-06-04 — PLAN 1.5.6 완료 ✅ — freshness method 분해 + 프로덕션 100% 실측 통과** (PR #15 `867eb9f`, ADR-0008 §T5 registry 단일 출처 정합):
+  - **무엇**: `getFetcherHealth24h` 분모를 method 차원으로 분해 (scraping / manual / stub). registry 기반 SQL `CASE WHEN` 으로 DB 스키마 변경 0. Telenet internet/bundle 고아 활성 tariff 가 stub 그룹으로 **자동 격리** → overall scraping ratio 100% 가능 + UI 가시화 (P3 정직성).
+  - **왜**: 6/2 architect 분석 — 매일 06:00 UTC cron 정상이나 신선도 5/29 86.7% → 6/2 **78.6% 악화**. 원인 = 고아 stale 누적 (단종 로직이 fetch 가 반환한 (provider, category) 스코프 만 비활성화 → 고아 영구 stale). 분모 method 분해가 영구 해결책.
+  - **변경 (9 파일)**: `src/db/queries/admin-metrics.ts` (FetcherHealthResult.byMethod 추가 + 1쿼리 통합 SQL LATERAL 조인) + `admin-metrics-helpers.ts` (`buildMethodCaseExpression` 순수 함수 + assertSafe SQL 인젝션 방어 화이트리스트) + `src/fetchers/types.ts` (`FetcherMetadata.categories` 필드 추가) + Proximus (`['mobile', 'internet_fixed']`) / Telenet (`['mobile']`) categories 명시 + `src/app/[locale]/admin/page.tsx` (`MethodBreakdownCard` Tailwind grid 3-column, stub > 0 amber 강조). 신설 테스트 `admin-metrics-helpers.test.ts` 7 케이스 + `admin-metrics.test.ts` SQL 정합 3 케이스 추가.
+  - **DoD ✅ 4/4 + 프로덕션 실측 ✅** (2026-06-04 20:10:06Z, Claude_in_Chrome MCP 인증 세션 `slim.lu/en/admin`):
+    - **SCRAPING: 11 / 11 (100.0%)** — byMethod.scraping.ratio === 1.0, Proximus mobile + internet + Telenet mobile 3 카테고리 24h 신선.
+    - **MANUAL: 0 (—)** — 매핑 빈 배열 정합 (1.5.7+ 시점에 추가 예정).
+    - **STUB: 3 (orphan — run cleanup SQL)** — Telenet internet/bundle 고아 3건 자동 격리 + amber 강조. 운영자 선택적 SQL (PLAN L819-832) 실행 결정 신호 — 미실행 시 분모에서 분리되어 overall 100% 유지.
+    - Top-level 지표 표 = 활성 14 / 24h 신선 11 / 100.0% / 최신 snapshot 2026-06-04 06:02:01Z (= byMethod.scraping 동치, Q4 결정 정합).
+  - **로컬 게이트**: typecheck 0 / lint 0 / test:run 740 (47 files) / harness:plan 93 정합 / harness:data 통과.
+  - **위험 표시 (architect)**: registry 기반 CASE WHEN 은 fetcher slug 변경 시 SQL 자동 추종 (ADR-0008 §T5 registry 단일 출처 정합). SQL 인젝션 = assertSafe slug 화이트리스트 `/^[a-z0-9-]+$/` + category enum 방어.
+  - **영향**: 1.5.6 (Proximus + Telenet 실 스크래핑 fetcher) **풀 종결**. 5/29 86.7% → 6/2 78.6% → 6/4 100.0% 회복. 신선도 게이트가 method 차원으로 정확 측정 → 1.5.8 (Orange BE) / 1.5.9 (Voo) fetcher 추가 시점에 새 매핑만 fetcher metadata 의 categories 에 등재하면 자동 추종.
+
 - **2026-06-03 — D.9 production 마이그레이션 갭 봉합 (운영자 인라인 적용 완료)** (PLAN D.9, [ADR-0039](docs/adr/0039-production-migration-application-procedure.md) §적용 절차):
   - **무엇**: 운영자가 production Neon에 0005(`affiliate_click`) + 0006(`follow_up_email`) 인라인 `pnpm db:push` 적용. ADR-0039 §적용 절차 5단계(`$env:DATABASE_URL` → `verify-db` pre → `db:push` → `verify-db` post → `Remove-Item`) 정합 실행, ADR-0022 §D4 인라인-only 원칙 보존.
   - **검증 (DoD #1)**: production `pnpm exec tsx scripts/verify-db.ts` → **8 테이블 all-green** (affiliate_click ✓ comparison_request ✓ comparison_result ✓ comparison_result_item ✓ follow_up_email ✓ provider ✓ tariff ✓ tariff_snapshot ✓). 시드 provider 2/2 (proximus-be, telenet-be) 정상.

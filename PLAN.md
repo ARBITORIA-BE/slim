@@ -610,7 +610,7 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   *참고 (ADR-0020 §결정 4)*: Vercel runtime의 `EXPECTED_DB_ENDPOINTS`는 미등록
   상태 — 페이즈 4 베타 진입 (GATE-K) 직전 D.3에서 등록 예정. 현 stop-gate는
   로컬에서만 동작.
-- [ ] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
+- [x] **1.5.6** Proximus + Telenet **실 스크래핑 fetcher 구현** (스텁 → 실 데이터
   교체). PLAN 1.8 스텁 fetcher의 후속 부채.
   - **차단 해제 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D3 + [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Amendment)**:
     `[!]` → `[ ]`. 운영자 전략 피벗 — 옵션 C → **진입**. ADR-0013 MEDIUM
@@ -838,6 +838,12 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - **🟢 위험 표시 (architect)**:
       - 경로 2 (Q5 A 단발 스크립트) 는 ADR-0022 §D4 *위반은 아님* (인라인 실행 패턴 정합) 이나 **장기 부채** — 본 명세는 **B 채택** 으로 회피.
       - registry 기반 CASE WHEN (Q2) 은 DB 스키마 변경 없이 깔끔하지만 **fetcher slug 변경 시 SQL 매핑이 자동으로 따라간다** (런타임 빌드). registry 가 단일 출처가 되는 ADR-0008 §T5 정합.
+  - **✅ 프로덕션 실측 통과 (2026-06-04 20:10:06Z, PR #15 머지 후 `slim.lu/en/admin` Claude_in_Chrome MCP 인증 세션 실측)**:
+    - **SCRAPING: 11 / 11 (100.0%)** — DoD #2 통과 (`byMethod.scraping.ratio === 1.0`). Proximus mobile + internet + Telenet mobile 3 카테고리 24h 신선.
+    - **MANUAL: 0 (—)** — 매핑 빈 배열 정합 (1.5.7+ 시점에 추가 예정).
+    - **STUB: 3 (orphan — run cleanup SQL)** — Telenet internet/bundle 고아 3건 자동 격리 + amber 강조 (P3 정직성). 운영자 선택적 SQL (PLAN L819-832) 실행 결정 신호 — 미실행 시 분모에서 분리되어 overall 100% 유지.
+    - **Top-level 지표 표 정합**: 활성 14 / 24h 신선 11 / 신선도 100.0% / 최신 snapshot 2026-06-04 06:02:01Z (= byMethod.scraping 동치, Q4 결정 정합).
+    - DoD #2 통과 → **1.5.6 `[x]` 마킹** (5/29 86.7% → 6/2 78.6% → 6/4 100.0% 회복).
 - [x] **1.5.6.1** **옵션 X "추정값" UI 표시** (페이즈 4.6 베타 배포 의존성 —
   ADR-0013 §평가 6 옵션 X + Amendment 1 예정). 1.5.6 본문은 차단 유지(옵션 C);
   본 sub-task 는 *비차단* — 베타 동안 스텁 데이터의 P1/P3 정직성 보강.
@@ -2108,7 +2114,7 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 9 | 8 | 0 | **D.9 신규 미완** (2026-06-02, [ADR-0039](docs/adr/0039-production-migration-application-procedure.md) — production 0005/0006/0007 미적용, affiliate_click/follow_up_email 부재, follow-up cron Failure 100%; 운영자 인라인 `db:push` 적용 + verify-db 8 테이블 확장 대기). **D.1~D.8 전부 완료** (**D.8 [x] 2026-05-31** — admin 가드 locale-prefix 우회 봉합, [ADR-0038](docs/adr/0038-admin-guard-locale-prefix-bypass.md); 프로덕션 5개 locale admin 경로 404 재실측 + 공개 표면 회귀 0). (D.3 부모 [x] 2026-05-28 — GATE-K 완전 닫힘). D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). **D.3 sub-task 진행도** (c·d 완료 / a·b·e 잔여): D.3.d ✅ slim.lu live (2026-05-14, ADR-0020 §Appendix C 6단계 통과). **D.3.c ✅ 완료 2026-05-14** — INNGEST keys Vercel env + production redeploy `CMBoqXCxm` Ready + Inngest sync (App ID `slim`, SDK 3.54.2, Functions 2, Manual run `01KRM42BW9NNZ4A7NP386H38KJ` Completed) + 어드민 신선도 0.0% → 100.0% (8/8) → **4.6 베타 진입 차단 0 (BLOCKER 해제)** + ADR-0029 §T2 정직성 잠금 해제. **D.3.e ✅ 완료 2026-05-15** — [ADR-0024](docs/adr/0024-neon-vercel-integration.md) Accepted (옵션 C 조건부 잠금), 4.6 베타 진입 blocker 아님. **D.3.b ✅ 결정 잠금 2026-05-15** — [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted (Decision Locked + Execution Deferred — ARBITORIA team 신설 결정 final, O1 Pro plan 결제 실행은 TVA 발급 트리거). **GATE-K 재정의**: 결정 트랙 ✅ 닫힘 (D.3.b + D.3.e), 실행 트랙 ⏸ defer (D.3.a + D.3.b 의 O1~O5). **D.3 완전 종결 (2026-05-28)**: TVA 발급(2026-05-23) → ADR-0032 §Trigger G1 발화 → 운영자 O1~O5 (arbitoria Vercel team 신설 Pro + slim 이관 + Git 재연결 + Billing TVA). V1~V3 통과 (V2 slim이 personal scope에서 사라짐 + slim.lu live / V3 HTTP 200 + verify:db all-green / V1 Billing TVA). D.3.a ✅ + D.3.b ✅ + D.3 부모 [x] → GATE-K 완전 닫힘. MCP arbitoria 재인증은 다음 세션 반영 (선택). D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-28 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 10 | 7 | 0 | M3 말 + D3/D4 트랙 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-05-17). **1.5.6 차단 해제** (`[!]`→`[ ]`, ADR-0013 Amendment — 옵션 C → 진입). **1.5.8 Orange BE fetcher 신설** + **1.5.9 Voo fetcher 신설** (구 5.0 이동, +2). 1.5.6/1.5.8/1.5.9 선행 = legal 4-provider robots/TOS + GTC 수동 (PLAN 진입 시 호출). 1.5.6.1 옵션 X 자동 비활성 cross-ref (추가 작업 0) | 2026-05-17 |
+| 1.5 | 10 | 8 | 0 | M3 말 + D3/D4 트랙 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-05-17). **1.5.6 [x] 2026-06-04** — PR #15 머지 후 프로덕션 `slim.lu/en/admin` 실측 byMethod.scraping 11/11 (100.0%), stub 3 (Telenet internet/bundle 고아 격리), manual 0(—). **1.5.8 Orange BE fetcher 신설** + **1.5.9 Voo fetcher 신설** (구 5.0 이동, +2). 1.5.8/1.5.9 선행 = legal 4-provider robots/TOS + GTC 수동 (PLAN 진입 시 호출). 1.5.6.1 옵션 X 자동 비활성 cross-ref (추가 작업 0) | 2026-06-04 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 4 | 4 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3·3.5.4 완료**; 3.5.1.e 비차단 백로그). **3.5.4 코드 측 [x] 2026-05-31** (PR #10 머지 — buildAlternates 헬퍼 + sitemap 8 paths × 5 locales = 40 hreflang entry + `/r/[shortId]` noindex 회귀 테스트, test:run 723); DoD #3 Search Console 소유권 = 운영자 인계. `/r/[shortId]` noindex 유지 (ADR-0021 §T8) | 2026-05-31 |
@@ -2117,7 +2123,7 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 5 | 6 | 0 | 0 | **통신 BE 만 (범위 확정)** — 조건부 게이트 제거 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **구 5.0 Orange BE → 1.5.8 이동 (-1)**. 5.1~5.4 (에너지/모기지/보험/금융) = **보류 / 범위 밖** (통신 외 추가 ❌ 운영자 명시 거부, 진입 시 별도 ADR). 5.5/5.6 공통 인프라 = 통신 깊이 한정 | 2026-05-17 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **93** | **63** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)** → **91→92 (D.8 admin 가드 보안 +1, 2026-05-29 ADR-0038)** → **92→93 (D.9 production 마이그레이션 갭 +1, 2026-06-02 ADR-0039)**; **done 58→59 (D.3 부모 [x], 2026-05-28 — GATE-K 닫힘) → 59→60 (D.8 [x], 2026-05-31 — 프로덕션 5개 locale admin 404 재실측 + 공개 표면 회귀 0) → 60→62 (4.10 + 4.11 [x], 2026-05-31 — track 2 envelope 코드 PR #3 머지 + legal 검수 통과) → 62→63 (3.5.4 [x], 2026-05-31 — hreflang/다국어 sitemap PR #10 머지, DoD #3 Search Console 운영자 인계)** | 2026-06-02 |
+| **합계** | **93** | **64** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)** → **91→92 (D.8 admin 가드 보안 +1, 2026-05-29 ADR-0038)** → **92→93 (D.9 production 마이그레이션 갭 +1, 2026-06-02 ADR-0039)**; **done 58→59 (D.3 부모 [x], 2026-05-28 — GATE-K 닫힘) → 59→60 (D.8 [x], 2026-05-31 — 프로덕션 5개 locale admin 404 재실측 + 공개 표면 회귀 0) → 60→62 (4.10 + 4.11 [x], 2026-05-31 — track 2 envelope 코드 PR #3 머지 + legal 검수 통과) → 62→63 (3.5.4 [x], 2026-05-31 — hreflang/다국어 sitemap PR #10 머지, DoD #3 Search Console 운영자 인계) → 63→64 (1.5.6 [x], 2026-06-04 — PR #15 머지 후 프로덕션 byMethod.scraping 100.0% + stub 3 격리 실측)** | 2026-06-04 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
