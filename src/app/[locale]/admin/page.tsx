@@ -23,6 +23,8 @@ import {
   type DailyComparisonRow,
   type DailyComparisonsResult,
   type FetcherHealthResult,
+  type ManualBreakdown,
+  type MethodBreakdown,
   type MonthlyConversionResult,
 } from '@/db/queries/admin-metrics';
 
@@ -200,11 +202,81 @@ function MonthlySection({ result }: { readonly result: MetricResult<MonthlyConve
   );
 }
 
+interface MethodBreakdownCardProps {
+  readonly scraping: MethodBreakdown;
+  readonly manual: ManualBreakdown;
+  readonly stub: MethodBreakdown;
+}
+
+/**
+ * method 별 분석 미니 카드 (PLAN 1.5.6 Q6 B 변형).
+ *
+ * scraping: 11 / 11 (100.0%)  |  manual: 0 (—)  |  stub: 0
+ *
+ * stub.total > 0 이면 amber 강조 → 운영자가 고아 tariff 인지 즉시 파악.
+ * admin 라벨은 영어 리터럴 (기존 admin 페이지 코드 관례 따름).
+ */
+function MethodBreakdownCard({ scraping, manual, stub }: MethodBreakdownCardProps) {
+  return (
+    <div className="grid grid-cols-3 gap-4 mb-4 p-3 rounded border border-border bg-bg-warm/20">
+      {/* scraping 열 */}
+      <div className="flex flex-col gap-0.5">
+        <span className="text-xs font-medium text-fg-soft uppercase tracking-wide">
+          scraping
+        </span>
+        <span className="text-sm tabular-nums">
+          {scraping.fresh} / {scraping.total}
+          {' '}
+          <span className={scraping.ratio === 1 ? 'text-green-600' : 'text-amber-600'}>
+            ({formatPercent(scraping.ratio)})
+          </span>
+        </span>
+      </div>
+
+      {/* manual 열 */}
+      <div className="flex flex-col gap-0.5">
+        <span className="text-xs font-medium text-fg-soft uppercase tracking-wide">
+          manual
+        </span>
+        <span className="text-sm tabular-nums">
+          {manual.total}
+          {manual.latestLastSeenAt ? (
+            <span className="ml-1 text-fg-soft text-xs">
+              (last: {formatDateTime(manual.latestLastSeenAt)})
+            </span>
+          ) : (
+            <span className="ml-1 text-fg-soft text-xs">(—)</span>
+          )}
+        </span>
+      </div>
+
+      {/* stub 열 */}
+      <div className="flex flex-col gap-0.5">
+        <span className="text-xs font-medium text-fg-soft uppercase tracking-wide">
+          stub
+        </span>
+        <span className={`text-sm tabular-nums ${stub.total > 0 ? 'text-amber-600 font-medium' : ''}`}>
+          {stub.total}
+          {stub.total > 0 && (
+            <span className="ml-1 text-xs font-normal text-amber-500">(orphan — run cleanup SQL)</span>
+          )}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function FetcherSection({ result }: { readonly result: MetricResult<FetcherHealthResult> }) {
   if (!result.ok) return <ErrorBlock label="Fetcher 헬스" error={result.error} />;
   const fetcher = result.value;
   return (
     <>
+      {/* method breakdown 미니 카드 (PLAN 1.5.6) */}
+      <MethodBreakdownCard
+        scraping={fetcher.byMethod.scraping}
+        manual={fetcher.byMethod.manual}
+        stub={fetcher.byMethod.stub}
+      />
       <Table>
         <TableHeader>
           <TableRow>

@@ -55,6 +55,18 @@ export interface FetcherMetadata {
    */
   readonly method: 'api' | 'scraping' | 'manual' | 'stub';
   /**
+   * 이 fetcher가 실제로 반환하는 tariff 카테고리 목록.
+   *
+   * admin-metrics의 `buildMethodCaseExpression` 이 registry 에서 읽어
+   * SQL CASE WHEN 매핑을 자동 생성한다 (PLAN 1.5.6 architect 잠금 명세).
+   * 한 fetcher가 여러 카테고리를 커버하는 경우 (예: Proximus mobile + internet)
+   * 모두 명시 — SQL 매핑은 (providerSlug, category) 쌍 단위로 생성됨.
+   *
+   * stub fetcher 는 [] 빈 배열 (매핑 불필요 — ELSE 'stub' 에 떨어짐).
+   * manual fetcher 는 직접 manualMappings 인자로 전달.
+   */
+  readonly categories: readonly TariffCategory[];
+  /**
    * 버전 식별자. ADR-0006 §T3 rawPayload.fetcher_version 으로 그대로 미러됨.
    * 권장 형식: "<providerSlug>@<YYYY-MM-DD>" (예: "proximus-be@2026-05-09").
    */
