@@ -772,6 +772,72 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       method 분해 구현 + scraping 100% 또는 (경로 2 병행 시) 분모 정리 후
       실복원 전까지 미충족. builder 인계: `src/db/queries/admin-metrics.ts`
       `getFetcherHealth24h` 분모를 method 차원 분해 + manual 별도 정책.
+  - **🔧 builder 인계 (architect 6/4 잠금)**:
+    6/2 분석을 바탕으로 한 코딩 가능한 명세. 운영자 확인 없이 잠금 — 메인이
+    필요시 묻는다.
+
+    - **결정표 (6 질문)**:
+      | Q | 결정 | 1줄 근거 |
+      |---|---|---|
+      | Q1 반환 shape | **A** — 기존 top-level (totalActiveTariffs/freshTariffs/ratio/latestSnapshotAt) 유지 + `byMethod: { scraping, manual, stub: {total, fresh, ratio} }` 추가 | 호출처 단 1곳(`admin/page.tsx`)이지만 향후 status 페이지 6.6 재사용 대비 + top-level=overall 의미 보존(테스트 안정) |
+      | Q2 method 정의 | **B 변형** — DB 컬럼 없음(provider/tariff/tariff_snapshot 어디에도 method 없음, ADR-0008 §T5는 코드 레지스트리 한정). **fetcher registry 기반 SQL `CASE WHEN`**: `(p.slug, t.category) IN (registry 매핑) → 'scraping' / 'manual' / ELSE 'stub'` | DB 스키마 변경 0 (마이그레이션 회피, P4 + ADR-0022 §D4 부담 회피). 매핑은 `src/fetchers/index.ts` registry 에서 *런타임 빌드* (`buildMethodCase()` helper) — fetcher 추가 시 자동 추종 |
+      | Q3 manual 정책 | **A** — manual 은 freshness gate **완전 제외**. `byMethod.manual.ratio` 는 표시하되 별도 라벨(`lastSeenAt` 최대값 = "운영자 마지막 갱신 N일 전"). overall ratio = scraping 만으로 계산 | 솔로 운영 ~1h/월 (memory: founder_situation) → manual 7d/30d 임계조차 자의적. P3 정직성: "manual 은 cron 대상이 아니다" 를 UI 로 명시 (B/C 는 임계 결정의 임의성을 숨김) |
+      | Q4 DoD #2 재정의 | **A** — "**scraping byMethod.ratio === 1.0** (= scraping 카테고리 24h 신선 100%) + manual breakdown 가시화". overall ratio 는 *없음 또는 scraping 동치* | 측정 가능 + 자가 치유 가능(cron 1회로 회복) + manual 신선도를 scraping 가드에 섞지 않음(P3) |
+      | Q5 경로 2 병행 | **B + 운영자 SQL 1줄** — 단발 스크립트 파일 *만들지 않음*. 대신 PLAN 본문에 운영자 실행용 SQL 인라인 1줄 제공 (Neon Console 또는 §D4 인라인 명령). 경로 1 완료 시 overall ratio 가 scraping-only 라 고아가 분모에서 자연 제외 → 경로 2 *선택적*. 운영자 의사로 즉시 실행 가능 | scripts/migrations/* 단발 파일은 ADR-0022 §D4 위반은 아니나(이미 `scripts/seed-stub-tariffs.ts` 패턴 존재) **장기 부채** (1회용 코드 잔존). 경로 1 이 영구 해결 → 경로 2 스크립트화는 YAGNI |
+      | Q6 Admin UI | **B 변형** — `FetcherSection` 기존 4-row 테이블 유지 + 상단에 method 3분할 미니 카드 (scraping: total/fresh/ratio · manual: total / lastSeenAt 최대값 · stub: total) 1개 row 추가 | P2 5분/5단계 → 카드 분할은 시선 분산. 운영자 의사결정 = "scraping 이 100% 인가" 한 번 확인 + manual 누적 가시화. 카드 단일 유지 |
+
+    - **변경 파일 (5개)**:
+      1. `src/db/queries/admin-metrics.ts`
+         - `FetcherHealthResult` 인터페이스에 `byMethod: { scraping: MethodBreakdown; manual: ManualBreakdown; stub: MethodBreakdown }` 추가 (top-level 4필드 유지 — overall = scraping 동치).
+         - 새 타입 `MethodBreakdown = { total: number; fresh: number; ratio: number | null }`, `ManualBreakdown = { total: number; latestLastSeenAt: string | null }` (manual 은 fresh/ratio 없음 — Q3).
+         - 새 helper: SQL을 1쿼리로 통합 — `CASE WHEN (p.slug, t.category) IN ('proximus','mobile'),('proximus','internet_fixed'),('telenet','mobile') THEN 'scraping' WHEN ... THEN 'manual' ELSE 'stub' END AS method` 형태로 GROUP BY method.
+         - `definitionSql` 도 업데이트 (P1 — 운영자 노출 SQL이 실제 SQL과 일치).
+         - top-level `ratio` = `byMethod.scraping.ratio` (Q4 DoD 정합), `totalActiveTariffs` = 전체 합계 유지.
+      2. `src/db/queries/admin-metrics-helpers.ts`
+         - 새 export: `buildMethodCaseExpression(registry: readonly Fetcher[]): string` — registry 를 받아 `CASE WHEN (p.slug='proximus' AND t.category='mobile') OR ... THEN 'scraping' ... END` SQL fragment 빌드. 순수 함수 (DB 접근 X) → 단위 테스트 가능.
+         - manual 매핑은 명시 인자(`manualMappings: readonly { slug: string; category: TariffCategory }[]`) — 1.5.6 시점 manual은 0개(현 registry 전부 scraping)지만 1.5.7+ Telenet internet manual 시드 시점에 매핑 추가. **경로 2를 안 했으니 고아 internet/bundle 은 자동으로 'stub' 그룹에 떨어진다 → 분모에서 분리되어 운영자에게 가시화** (P3).
+      3. `src/db/queries/admin-metrics-helpers.test.ts` (신설 또는 보강)
+         - `buildMethodCaseExpression` 단위 테스트 3건: (a) registry 1개 + manual 0개 (b) registry 2개 + manual 2개 (c) registry 빈 배열 (모든 활성 = 'stub').
+         - `computeFreshnessRatio` 기존 테스트 유지.
+      4. `src/db/queries/admin-metrics.test.ts` (또는 통합 테스트 신설)
+         - DB 없이 SQL 문자열 정합만 검사: `getFetcherHealth24h` 가 만드는 SQL 에 `CASE WHEN` 절이 등장하고 GROUP BY method 포함되는지.
+         - 가능하면 development 브랜치 시드 데이터로 통합 테스트 1건 (manual 1개 + scraping 1개 + 고아 1개 → ratio 검증).
+      5. `src/app/[locale]/admin/page.tsx`
+         - `FetcherSection` 의 Table 위에 method breakdown row 1개 추가 (Q6 B 변형). 카드 형태:
+           ```
+           scraping: 11 / 11 (100.0%)  manual: 3 (마지막 갱신 N일 전)  stub: 0
+           ```
+         - 기존 4-row table 은 그대로 유지 (DoD 호환). 신규 row 는 *카드 상단* placeholder + Tailwind grid 3-column.
+
+    - **DoD (정량/관측 가능)**:
+      1. `pnpm typecheck` 0 에러.
+      2. `pnpm test:run` 0 실패 (helpers 단위 테스트 추가분 포함).
+      3. 프로덕션 `/admin` Fetcher 헬스 카드:
+         - `byMethod.scraping.ratio === 1.0` (= 100.0%) — Proximus mobile + Proximus internet + Telenet mobile 3개 카테고리 24h 신선.
+         - `byMethod.manual.total >= 0` 표시 + `latestLastSeenAt` ISO 노출 (`—` 가능).
+         - `byMethod.stub.total` 가 *0 이 아니면* 고아 누적 신호 → 운영자 가 SQL 1줄(아래)로 정리 결정.
+      4. 운영자 SQL (경로 2 선택적 즉효, Neon Console 또는 §D4 인라인):
+         ```sql
+         -- 고아 Telenet internet/bundle 비활성화 (mobile 만 fetcher 커버 → 나머지는 1.8 스텁 잔존)
+         UPDATE tariff t
+         SET is_active = false, updated_at = NOW()
+         FROM provider p
+         WHERE t.provider_id = p.id
+           AND p.slug = 'telenet'
+           AND t.category IN ('internet_fixed', 'bundle_internet_tv')
+           AND t.is_active = true
+           AND NOT EXISTS (
+             SELECT 1 FROM tariff_snapshot s
+             WHERE s.tariff_id = t.id AND s.fetched_at > NOW() - INTERVAL '24 hours'
+           );
+         ```
+         실행 후 admin 헬스 = overall ratio 100% 즉시 가시화. 단 경로 1 완료 시점에는 *불필요* (stub 그룹으로 자동 격리됨).
+
+    - **예상 LOC + 소요**: ~150 LOC (admin-metrics 80 + helpers 40 + admin UI 30) + 테스트 ~80 LOC. builder 단일 세션 1-2h.
+
+    - **🟢 위험 표시 (architect)**:
+      - 경로 2 (Q5 A 단발 스크립트) 는 ADR-0022 §D4 *위반은 아님* (인라인 실행 패턴 정합) 이나 **장기 부채** — 본 명세는 **B 채택** 으로 회피.
+      - registry 기반 CASE WHEN (Q2) 은 DB 스키마 변경 없이 깔끔하지만 **fetcher slug 변경 시 SQL 매핑이 자동으로 따라간다** (런타임 빌드). registry 가 단일 출처가 되는 ADR-0008 §T5 정합.
 - [x] **1.5.6.1** **옵션 X "추정값" UI 표시** (페이즈 4.6 베타 배포 의존성 —
   ADR-0013 §평가 6 옵션 X + Amendment 1 예정). 1.5.6 본문은 차단 유지(옵션 C);
   본 sub-task 는 *비차단* — 베타 동안 스텁 데이터의 P1/P3 정직성 보강.
