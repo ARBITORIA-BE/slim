@@ -898,37 +898,47 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   세 번째 헌법 항목 ("escape 안 된 큰따옴표 끼어듦")은 false positive 비율
   과다로 자동 탐지 보류, hook 내 주석에 후속 휴리스틱 진입점 명시.
 
-- [ ] **1.5.8** **Orange BE fetcher 신설** (트랙 D4 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4,
+- [ ] **1.5.8** **Orange BE fetcher 신설 (Voo 흡수)** (트랙 D4 —
+  [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4
+  + **Amendment 1, 2026-06-04**,
   [ADR-0009](docs/adr/0009-scope-cut-fetcher-2-providers.md) DEPRECATED 대체).
-  Orange BE = BE 통신 시장 점유율 22.5% *검증됨* (Telecompaper Q1 2025) → D4
-  순서 **1순위** (Voo 보다 먼저). `src/fetchers/orange-be.ts` +
+  Orange BE = BE 통신 시장 합산 점유율 22.5% (Mordor Intelligence Q1 2025 —
+  **Voo-Orange Belgium 합병 후 합산 수치**, Voo 별도 보고 종료). 본 fetcher
+  는 ADR-0034 Amendment 1 D4 정정에 따라 **합병 후 Voo 잔존 가격 페이지까지
+  흡수** (Voo S.A. 2025-10-01 법인 소멸 → Orange Belgium 흡수, 가격 시스템
+  마이그레이션 2026 진행 중). `src/fetchers/orange-be.ts` +
   `src/fetchers/orange-be.test.ts` 신설 (ADR-0008 인터페이스 그대로 — 변경 0,
-  registry 배열 +1).
-  - **🔒 선행조건**: 1.5.6 §선행조건 (legal 4-provider robots/TOS 일괄 검토
+  registry 배열 +1). `src/fetchers/voo.ts` **신설하지 않음**
+  ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)
+  Amendment 1 §Decision #1).
+  - **🔒 선행조건**: 1.5.6 §선행조건 (legal 3-provider robots/TOS 일괄 검토
     + GTC 수동 열람) 통과 후 진입. Orange BE robots.txt + TOS 는 ADR-0013 이
-    *미검토* → legal 4-provider 트리거에 포함 (PLAN 항목 진입 시 호출).
+    *미검토* → legal 3-provider 트리거에 포함 (PLAN 항목 진입 시 호출). Voo
+    robots/TOS 는 ADR-0013 Appendix B §B.4 가 이미 통과 기록했으나 별도 fetcher
+    없음 — Orange BE fetcher 가 voo.be 도메인 접근 시 동일 정책 재사용 (역사
+    기록 보존).
   - **함의 cross-ref ([ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Amendment 3, 2026-05-28)**:
-    4사 모두 현대 JS 사이트(AEM/React 위젯) 가능성 높음 — *정적 파싱 가용성은
+    3사 모두 현대 JS 사이트(AEM/React 위젯) 가능성 높음 — *정적 파싱 가용성은
     공급사가 아니라 페이지 단위*로 판단해야 함 (Telenet mobile=정적 가능 /
     internet=불가 사례). Orange BE 진입 시 첫 fetch raw HTML 셀렉터 매칭으로
     페이지별 검증 → 실패 페이지는 `method='manual'` 폴백 (1.5.6과 동일 패턴).
     리다이렉트(host 변경) 추적 필수 — stale URL이 정적/JS 판정을 오도할 수 있음.
+  - **URL 정찰 범위 (builder 첫 fetch 단계)**: (1) `orange.be/fr/...` 현
+    Orange 가격 페이지 (2) `voo.be/fr/internet` 잔존 페이지 — Orange 통합
+    페이지로 redirect 하는지 / 독자 페이지로 잔존하는지 raw fetch 로 정찰
+    (3) 모바일/internet 페이지 양쪽. 합병 마이그레이션 2026 진행 중 → URL
+    가변 = 첫 fetch 시 architect 가 잠그지 않음 (ADR-0034 Amendment 1
+    §Decision #2). `voo.be/fr/internet` 현재 "Nos prix à partir du 1 Janvier
+    2026 [PDF]" 안내 = 정적 가격 부재 → builder 정찰 결과에 따라 manual
+    폴백 가능.
+  - **정직성 UI 보조** (builder 후속, 본 항목 DoD 외): `/data-sources` 페이지
+    또는 비교 결과 caveats 에 "Voo 는 2025-10 Orange Belgium 에 합병되어 본
+    fetcher 범위에 포함" 1줄 (ADR-0034 Amendment 1 §Consequences §"잃는 것").
   - DoD: legal Orange BE robots/TOS 통과 + `src/fetchers/orange-be.ts` 실
-    fetch + `src/fetchers/orange-be.test.ts` 단위 1 + registry 등록 + 실 Neon
-    DB `tariff_snapshot` Orange BE N tariff 누적 + confidence='low' < 20% +
-    typecheck/lint/test 0 + harness:plan/data 정합.
-- [ ] **1.5.9** **Voo fetcher 신설** (트랙 D4 — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4).
-  Voo = D4 순서 **2순위** (Orange BE 다음). 점유율 *미검증* → fetcher 신설
-  진입 시 **WebSearch 리서치** 로 점유율/시장 위치 검증 후 진행 (ADR-0034 D4).
-  `src/fetchers/voo.ts` + `src/fetchers/voo.test.ts` 신설 (ADR-0008
-  인터페이스 그대로 — 변경 0, registry 배열 +1).
-  - **🔒 선행조건**: 1.5.6 §선행조건 (legal 4-provider robots/TOS + GTC 수동)
-    + Voo 점유율 WebSearch 리서치 완료. Voo robots.txt + TOS = ADR-0013
-    *미검토* → legal 4-provider 트리거에 포함.
-  - DoD: WebSearch Voo 점유율 기록 + legal Voo robots/TOS 통과 +
-    `src/fetchers/voo.ts` 실 fetch + `src/fetchers/voo.test.ts` 단위 1 +
-    registry 등록 + 실 Neon DB `tariff_snapshot` Voo N tariff 누적 +
-    confidence='low' < 20% + typecheck/lint/test 0 + harness:plan/data 정합.
+    fetch (orange.be + voo.be 양쪽 정찰 결과 반영) + `src/fetchers/orange-be.test.ts`
+    단위 1 + registry 등록 + 실 Neon DB `tariff_snapshot` Orange BE (Voo
+    흡수 포함) N tariff 누적 + confidence='low' < 20% + typecheck/lint/test 0
+    + harness:plan/data 정합.
 
 **Phase 1.5 검증:** verifier — typecheck/lint/test 0 에러 + 신설 runbook 존재.
 
@@ -1746,13 +1756,15 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - 운영자 트랙 (1주 = 4.7 병렬 시작, 3주 경계 평가)
   - DoD (4.6 부모): (1) 4.6.a/b ✅ 완료 (2) ADR-0029 채택 (3) D.3.a/c/d 완료 (4) 운영자 4.6.c **3채널** 배포 +
     slim.lu 방문 가능 (5) PostHog cookieless 방문자 수 집계 활성 (6) 4.7 진입 신호 1주차 = 피드백 0건 이상 수신 → 4.7 [ ] 진입.
-- [ ] **4.7** **실 데이터 4 fetcher 검증** — 4 fetcher 실 스크래핑 정합/신선도 검증
-  - **🔄 재정의 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D3/D4)**:
+- [ ] **4.7** **실 데이터 3 fetcher 검증** — 3 fetcher 실 스크래핑 정합/신선도 검증
+  - **🔄 재정의 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D3/D4)**
+    + **Amendment 1 (2026-06-04, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) Amendment 1 — D4 정정 4→3 fetcher, Voo 흡수)**:
     ~~베타 피드백 1주 + 반영~~ **deprecate** (ADR-0029 DEPRECATED, 베타
-    피드백 신호 0 — §Consequences 명시 부채). **새 4.7 = 실 데이터 4
-    fetcher (Proximus/Telenet/Orange BE/Voo) 검증**:
-    - 4 fetcher 실 Neon DB `tariff_snapshot` 누적 확인 (1.5.6 + 1.5.8 +
-      1.5.9 산출물 통합 검증) + `rawPayload.stub === false` → 1.5.6.1 옵션 X
+    피드백 신호 0 — §Consequences 명시 부채). **새 4.7 = 실 데이터 3
+    fetcher (Proximus/Telenet/Orange BE — Voo 는 Orange BE 가 흡수) 검증**:
+    - 3 fetcher 실 Neon DB `tariff_snapshot` 누적 확인 (1.5.6 + 1.5.8
+      산출물 통합 검증; 구 1.5.9 Voo 별도 fetcher = ADR-0034 Amendment 1
+      §Decision #1 로 취소) + `rawPayload.stub === false` → 1.5.6.1 옵션 X
       배너 자동 비활성 (추가 작업 0) + confidence='low' 비율 < 20%.
     - 24h 신선도 모니터링 게이트 (ADR-0013 Amendment) 동작 + 어드민 헬스
       신선도 비율 (4.5.1.b 메트릭 재사용).
@@ -2035,17 +2047,20 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 
 > **🔄 무조건부 전환 (2026-05-17, ADR-0034 D2)**: ~~ADR-0003 §결정 2 페이즈
 > 4.5 게이트 통과 시에만 진입 (조건부)~~ **무효화** (Amendment 1). 페이즈
-> 5 의 *조건부* 성격 제거 — 게이트 없음. **단 D2 범위 = 통신 BE 4 fetcher
-> 만 깊게** (Proximus/Telenet/Orange BE/Voo, fetcher 작업은 페이즈 1.5
-> 트랙 1.5.6/1.5.8/1.5.9 로 당겨짐). 통신 외 카테고리 추가는 운영자 명시
+> 5 의 *조건부* 성격 제거 — 게이트 없음. **단 D2 범위 = 통신 BE 3 fetcher
+> 만 깊게** (Proximus/Telenet/Orange BE — **Voo 흡수**, fetcher 작업은
+> 페이즈 1.5 트랙 1.5.6/1.5.8 로 당겨짐, [ADR-0034 Amendment 1](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)
+> 2026-06-04 D4 정정 4→3 fetcher). 통신 외 카테고리 추가는 운영자 명시
 > **거부 (범위 밖)** — 진입 시 별도 ADR 트리거 필수.
 
 ### 5.A 카테고리 범위 (D2 확정 — 통신 BE 만)
 
 > **Orange BE fetcher (구 5.0) 이동**: 페이즈 1.5 트랙 **1.5.8** (Orange BE
-> fetcher 신설) 로 당겨짐 + **1.5.9** (Voo fetcher 신설) 동반 — ADR-0034
-> D4 (4 공급사, Orange BE 먼저 → Voo 차순). 구 5.0 항목은 본 재구조화로
-> *삭제* (1.5.8 이 단일 출처).
+> fetcher 신설 + **Voo 흡수**) 로 당겨짐 — ADR-0034 D4 (4 공급사) +
+> [Amendment 1](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)
+> 2026-06-04 (D4 정정 4→3, Voo-Orange Belgium 합병 2025-10-01 완료 → 별도
+> Voo fetcher 불필요). 구 5.0 항목은 본 재구조화로 *삭제* (1.5.8 이 단일
+> 출처). ~~1.5.9 Voo fetcher 동반~~ **취소** (Amendment 1).
 
 - [ ] **5.1** ~~**에너지 BE**~~ — **보류 / 범위 밖** (ADR-0034 D2 — 통신 BE
   만 깊게, 에너지 등 추가 ❌ 운영자 명시 거부). 진입 시 별도 ADR 트리거.
@@ -2065,8 +2080,9 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 - [ ] **5.6** 카테고리간 교차 추천 ("통신 €120 절약하셨네요. 에너지도 비교해볼까요?")
 
 **Phase 5 검증:** 통신 BE ≥ 80% 비교 가능률 (입력 5건 중 4건 이상 결과
-표시) — 4 fetcher (Proximus/Telenet/Orange BE/Voo) 실 데이터 기준. 통신
-외 카테고리 = 범위 밖 (검증 대상 아님).
+표시) — 3 fetcher (Proximus/Telenet/Orange BE — Voo 흡수) 실 데이터 기준
+([ADR-0034 Amendment 1](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)
+2026-06-04). 통신 외 카테고리 = 범위 밖 (검증 대상 아님).
 **Phase 5 현실 일정:** 통신 BE 만 (게이트 무관). 통신 외 카테고리 = 보류
 (별도 ADR 진입 시 재산정).
 
@@ -2114,7 +2130,7 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 0 | 7 | 7 | 0 | M0 (완료) | 2026-05-09 |
 | 0.5 | 9 | 8 | 0 | **D.9 신규 미완** (2026-06-02, [ADR-0039](docs/adr/0039-production-migration-application-procedure.md) — production 0005/0006/0007 미적용, affiliate_click/follow_up_email 부재, follow-up cron Failure 100%; 운영자 인라인 `db:push` 적용 + verify-db 8 테이블 확장 대기). **D.1~D.8 전부 완료** (**D.8 [x] 2026-05-31** — admin 가드 locale-prefix 우회 봉합, [ADR-0038](docs/adr/0038-admin-guard-locale-prefix-bypass.md); 프로덕션 5개 locale admin 경로 404 재실측 + 공개 표면 회귀 0). (D.3 부모 [x] 2026-05-28 — GATE-K 완전 닫힘). D.1 [x] (2026-05-14, a/b/d ✅ + DoD #1·#2 통과 — Vercel `5KZoKk8AI` Ready 34s 실측; D.1.c deferred = Free 플랜 제약, Team $4 전환 트리거 보존 — [ADR-0031](docs/adr/0031-fresh-start-identity-unification.md) §T2). **D.3 sub-task 진행도** (c·d 완료 / a·b·e 잔여): D.3.d ✅ slim.lu live (2026-05-14, ADR-0020 §Appendix C 6단계 통과). **D.3.c ✅ 완료 2026-05-14** — INNGEST keys Vercel env + production redeploy `CMBoqXCxm` Ready + Inngest sync (App ID `slim`, SDK 3.54.2, Functions 2, Manual run `01KRM42BW9NNZ4A7NP386H38KJ` Completed) + 어드민 신선도 0.0% → 100.0% (8/8) → **4.6 베타 진입 차단 0 (BLOCKER 해제)** + ADR-0029 §T2 정직성 잠금 해제. **D.3.e ✅ 완료 2026-05-15** — [ADR-0024](docs/adr/0024-neon-vercel-integration.md) Accepted (옵션 C 조건부 잠금), 4.6 베타 진입 blocker 아님. **D.3.b ✅ 결정 잠금 2026-05-15** — [ADR-0032](docs/adr/0032-vercel-team-scope-arbitoria-creation.md) Accepted (Decision Locked + Execution Deferred — ARBITORIA team 신설 결정 final, O1 Pro plan 결제 실행은 TVA 발급 트리거). **GATE-K 재정의**: 결정 트랙 ✅ 닫힘 (D.3.b + D.3.e), 실행 트랙 ⏸ defer (D.3.a + D.3.b 의 O1~O5). **D.3 완전 종결 (2026-05-28)**: TVA 발급(2026-05-23) → ADR-0032 §Trigger G1 발화 → 운영자 O1~O5 (arbitoria Vercel team 신설 Pro + slim 이관 + Git 재연결 + Billing TVA). V1~V3 통과 (V2 slim이 personal scope에서 사라짐 + slim.lu live / V3 HTTP 200 + verify:db all-green / V1 Billing TVA). D.3.a ✅ + D.3.b ✅ + D.3 부모 [x] → GATE-K 완전 닫힘. MCP arbitoria 재인증은 다음 세션 반영 (선택). D.5 (a/b/c 완료, 2026-05-13). **D.6 [x] (2026-05-14)** — ADR-0030 §Verification 3단(V1·V2·V3) 모두 통과 (V2 2회 누적, 운영자 V1·V3 동일 세션 보고). **D.7 Accepted (2026-05-14, ADR-0031)** — fresh-start 완성, §V6 태그 push ✅ + §V7 §1/§3 ✅ (§2 SKIP Free 잠금) + Vercel `5gJ3bDskj` Ready ✅, slim.lu/compare 200 OK 실측. Phase 11~14 deferred (운영자 트리거). | 2026-05-28 |
 | 1 | 13 | 13 | 0 | M1 ~ M3 | 2026-05-09 |
-| 1.5 | 10 | 8 | 0 | M3 말 + D3/D4 트랙 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-05-17). **1.5.6 [x] 2026-06-04** — PR #15 머지 후 프로덕션 `slim.lu/en/admin` 실측 byMethod.scraping 11/11 (100.0%), stub 3 (Telenet internet/bundle 고아 격리), manual 0(—). **1.5.8 Orange BE fetcher 신설** + **1.5.9 Voo fetcher 신설** (구 5.0 이동, +2). 1.5.8/1.5.9 선행 = legal 4-provider robots/TOS + GTC 수동 (PLAN 진입 시 호출). 1.5.6.1 옵션 X 자동 비활성 cross-ref (추가 작업 0) | 2026-06-04 |
+| 1.5 | 9 | 8 | 0 | M3 말 + D3/D4 트랙 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-05-17 + **Amendment 1, 2026-06-04 — D4 정정 4→3 fetcher, Voo 흡수**). **1.5.6 [x] 2026-06-04** — PR #15 머지 후 프로덕션 `slim.lu/en/admin` 실측 byMethod.scraping 11/11 (100.0%), stub 3 (Telenet internet/bundle 고아 격리), manual 0(—). **1.5.8 Orange BE fetcher 신설 (Voo 흡수)** (구 5.0 이동 +1, Voo-Orange Belgium 합병 2025-10-01 완료 → 별도 Voo fetcher 불필요). ~~1.5.9 Voo fetcher~~ **취소** (ADR-0034 Amendment 1, 2026-06-04). 1.5.8 선행 = legal 3-provider robots/TOS + GTC 수동 (PLAN 진입 시 호출). 1.5.6.1 옵션 X 자동 비활성 cross-ref (추가 작업 0) | 2026-06-04 |
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 4 | 4 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3·3.5.4 완료**; 3.5.1.e 비차단 백로그). **3.5.4 코드 측 [x] 2026-05-31** (PR #10 머지 — buildAlternates 헬퍼 + sitemap 8 paths × 5 locales = 40 hreflang entry + `/r/[shortId]` noindex 회귀 테스트, test:run 723); DoD #3 Search Console 소유권 = 운영자 인계. `/r/[shortId]` noindex 유지 (ADR-0021 §T8) | 2026-05-31 |
@@ -2123,7 +2139,7 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 5 | 6 | 0 | 0 | **통신 BE 만 (범위 확정)** — 조건부 게이트 제거 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **구 5.0 Orange BE → 1.5.8 이동 (-1)**. 5.1~5.4 (에너지/모기지/보험/금융) = **보류 / 범위 밖** (통신 외 추가 ❌ 운영자 명시 거부, 진입 시 별도 ADR). 5.5/5.6 공통 인프라 = 통신 깊이 한정 | 2026-05-17 |
 | 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **93** | **64** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)** → **91→92 (D.8 admin 가드 보안 +1, 2026-05-29 ADR-0038)** → **92→93 (D.9 production 마이그레이션 갭 +1, 2026-06-02 ADR-0039)**; **done 58→59 (D.3 부모 [x], 2026-05-28 — GATE-K 닫힘) → 59→60 (D.8 [x], 2026-05-31 — 프로덕션 5개 locale admin 404 재실측 + 공개 표면 회귀 0) → 60→62 (4.10 + 4.11 [x], 2026-05-31 — track 2 envelope 코드 PR #3 머지 + legal 검수 통과) → 62→63 (3.5.4 [x], 2026-05-31 — hreflang/다국어 sitemap PR #10 머지, DoD #3 Search Console 운영자 인계) → 63→64 (1.5.6 [x], 2026-06-04 — PR #15 머지 후 프로덕션 byMethod.scraping 100.0% + stub 3 격리 실측)** | 2026-06-04 |
+| **합계** | **92** | **64** | **0** | M0 ~ M24 (≈ 18-24개월) — [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 재구조화 (86→88: 1.5.8/1.5.9/3.5.4 +3, 구 5.0 −1; done 58 불변; 차단 2→0 = 1.5.6 해제). 88→89 (4.10 +1, 2026-05-23 ADR-0035) → 89→90 (4.11 언어 전환기 +1, 2026-05-23 ADR-0036) **→ 90→91 (4.12 공개 법적 페이지+쿠키 동의 +1, 2026-05-23 ADR-0037)** → **91→92 (D.8 admin 가드 보안 +1, 2026-05-29 ADR-0038)** → **92→93 (D.9 production 마이그레이션 갭 +1, 2026-06-02 ADR-0039)** → **93→92 (1.5.9 Voo fetcher 취소 −1, 2026-06-04 [ADR-0034 Amendment 1](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4 정정 — Voo-Orange Belgium 합병 2025-10-01 완료 → Orange BE fetcher 가 흡수)**; **done 58→59 (D.3 부모 [x], 2026-05-28 — GATE-K 닫힘) → 59→60 (D.8 [x], 2026-05-31 — 프로덕션 5개 locale admin 404 재실측 + 공개 표면 회귀 0) → 60→62 (4.10 + 4.11 [x], 2026-05-31 — track 2 envelope 코드 PR #3 머지 + legal 검수 통과) → 62→63 (3.5.4 [x], 2026-05-31 — hreflang/다국어 sitemap PR #10 머지, DoD #3 Search Console 운영자 인계) → 63→64 (1.5.6 [x], 2026-06-04 — PR #15 머지 후 프로덕션 byMethod.scraping 100.0% + stub 3 격리 실측)** | 2026-06-04 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에
@@ -2134,7 +2150,7 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 
 ### Scope cut 옵션 (사용자 승인 후 적용)
 
-- 옵션 A: 1.8 fetcher 3개 → 2개 (Proximus + Telenet) — ~~**적용됨 (ADR-0009, 2026-05-09)**~~ → **DEPRECATED (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4 — ADR-0009 DEPRECATED)**: 4 공급사 (Proximus/Telenet/Orange BE/Voo) 로 전면 무효. fetcher 작업 = 1.5.6 (Proximus/Telenet 실 스크래핑) + 1.5.8 (Orange BE) + 1.5.9 (Voo).
+- 옵션 A: 1.8 fetcher 3개 → 2개 (Proximus + Telenet) — ~~**적용됨 (ADR-0009, 2026-05-09)**~~ → **DEPRECATED (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D4 — ADR-0009 DEPRECATED)**: ~~4 공급사 (Proximus/Telenet/Orange BE/Voo)~~ → **3 공급사 (Proximus/Telenet/Orange BE — Voo 흡수)** ([ADR-0034 Amendment 1](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 2026-06-04 D4 정정, Voo-Orange Belgium 합병 2025-10-01 완료) 로 전면 무효. fetcher 작업 = 1.5.6 (Proximus/Telenet 실 스크래핑) + 1.5.8 (Orange BE + Voo 흡수). ~~1.5.9 (Voo)~~ 취소.
 - 옵션 B: 1.12 알려진 케이스 12개 → 6개 — **적용됨 (ADR-0010, 2026-05-09)**
 - 옵션 C: 2.5 OCR을 페이즈 2 → 페이즈 3 결과 페이지 직후로 미룸 — **적용됨
   (ADR-0016 §T6 SC-A, 2026-05-10)**. 별도 ADR (가칭 ADR-OCR) 신설 트리거.
