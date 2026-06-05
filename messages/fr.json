@@ -10,14 +10,14 @@
     "confidenceMedium": "Fiabilité des données comparatives : moyenne ({reason})",
     "confidenceMediumDefaultReason": "Sélecteur « fragile » ou avertissement de parsing",
     "currentTariffConfidence": "Fiabilité des données relatives aux forfaits actuels : {confidence}",
-    "stubEstimate": "Estimations — Données réelles à partir de la phase 5"
+    "stubEstimate": "Estimations — Données réelles disponibles ultérieurement"
   },
   "compare": {
     "pageTitle": "Commencer à comparer les forfaits",
     "pageDescription": "Mobile, Internet, Internet + TV — Choisissez la catégorie que vous souhaitez comparer. 5 étapes, c'est fait en 5 minutes.",
     "heading": "Quel forfait souhaitez-vous comparer ?",
     "stepBadge": "5 étapes · 5 minutes",
-    "supportNote": "Nous proposons actuellement une comparaison des opérateurs télécoms en Belgique (BE). Les Pays-Bas (NL) et le Luxembourg (LU) seront ajoutés lors de la phase 3.",
+    "supportNote": "Nous proposons actuellement une comparaison des opérateurs télécoms en Belgique (BE). Les Pays-Bas (NL) et le Luxembourg (LU) seront ajoutés ultérieurement.",
     "savingsPreviewPending": "L'aperçu des économies moyennes sera disponible après la phase bêta",
     "termsNotice": "Au démarrage, ce site",
     "termsLink": "Conditions d'utilisation",
@@ -55,7 +55,7 @@
     "postal": {
       "title": "Saisir le code postal",
       "heading": "Où habitez-vous ?",
-      "supportNote": "Sélectionnez un pays, puis saisissez votre code postal. Nous proposons actuellement des comparaisons de fournisseurs de télécommunications en Belgique (BE). Il se peut qu'il n'y ait pas de fournisseurs disponibles pour les Pays-Bas (NL) et le Luxembourg (LU) jusqu'à l'ajout de nouveaux fournisseurs lors de la phase 5.",
+      "supportNote": "Sélectionnez un pays, puis saisissez votre code postal. Nous proposons actuellement des comparaisons de fournisseurs de télécommunications en Belgique (BE). Il se peut qu'il n'y ait pas de fournisseurs disponibles pour les Pays-Bas (NL) et le Luxembourg (LU) jusqu'à l'ajout de nouveaux fournisseurs.",
       "countryLabel": "Pays",
       "countryAriaLabel": "Sélectionner un pays",
       "postalCodeLabel": "Code postal",
@@ -69,19 +69,19 @@
         "NL": {
           "label": "Pays-Bas (NL)",
           "placeholder": "Exemple : 1011 ou 1011 AB",
-          "description": "Les codes postaux néerlandais se composent de 4 chiffres (PC4) ou de 4 chiffres suivis d'un espace et de deux lettres majuscules (PC6). Les candidats à comparer seront ajoutés lors de la phase 5."
+          "description": "Les codes postaux néerlandais se composent de 4 chiffres (PC4) ou de 4 chiffres suivis d'un espace et de deux lettres majuscules (PC6). Les candidats à comparer seront ajoutés ultérieurement."
         },
         "LU": {
           "label": "Luxembourg (LU)",
           "placeholder": "Exemple : 1 000",
-          "description": "Les codes postaux luxembourgeois sont composés de quatre chiffres compris entre 1000 et 9999. Les candidats à comparer seront ajoutés lors de la phase 5."
+          "description": "Les codes postaux luxembourgeois sont composés de quatre chiffres compris entre 1000 et 9999. Les candidats à comparer seront ajoutés ultérieurement."
         }
       }
     },
     "household": {
       "title": "Choisir le type de foyer",
       "heading": "Comment allez-vous ?",
-      "supportNote": "Une fois le type de foyer sélectionné, la consommation est estimée sur la base d'une consommation moyenne. La consommation exacte sera automatiquement renseignée lors de la phase 3 grâce à la reconnaissance optique de caractères (OCR) des factures.",
+      "supportNote": "Une fois le type de foyer sélectionné, la consommation est estimée sur la base d'une consommation moyenne. La consommation exacte sera automatiquement renseignée ultérieurement grâce à la reconnaissance optique de caractères (OCR) des factures.",
       "nextButton": "Suivant — Fournisseur actuel",
       "options": {
         "single": {
@@ -110,7 +110,7 @@
       "tariffLabel": "Forfait actuel",
       "tariffPlaceholder": "Choisissez un forfait",
       "tariffAriaLabel": "Choisir un forfait actuel",
-      "tariffNotRegistered": "Les forfaits actifs de ce fournisseur n'ont pas encore été enregistrés (ils seront ajoutés lors de la phase 5).",
+      "tariffNotRegistered": "Les forfaits actifs de ce fournisseur n'ont pas encore été enregistrés (ils seront ajoutés ultérieurement).",
       "tariffUnknown": "Je ne connais pas les tarifs de ce fournisseur (comparaison des fournisseurs uniquement)",
       "nextButton": "Suivant — Facture",
       "skipButton": "Je ne sais pas / Passer — Traiter comme un nouveau client"
@@ -118,7 +118,7 @@
     "bill": {
       "title": "Télécharger la facture",
       "heading": "Souhaitez-vous télécharger votre facture pour que votre consommation soit automatiquement renseignée avec précision ?",
-      "supportNote": "Actuellement en phase bêta — La reconnaissance optique de caractères (OCR) des factures sera ajoutée juste après la page des résultats de la phase 3. Pour l'instant, la comparaison s'effectue à partir d'estimations basées sur la composition du ménage.",
+      "supportNote": "Actuellement en phase bêta — La reconnaissance optique de caractères (OCR) des factures sera ajoutée juste après la page des résultats. Pour l'instant, la comparaison s'effectue à partir d'estimations basées sur la composition du ménage.",
       "skipButton": "Procédure sans facture — Aperçu des résultats"
     },
     "preview": {
@@ -139,15 +139,15 @@
     "pageDescription": "Résultats de la comparaison des forfaits téléphoniques au Benelux — Slim",
     "heading": "Résultats de la comparaison",
     "permanentId": "Identifiant permanent :",
-    "anonymizedNote": "Les hypothèses de base de cette comparaison ont été généralisées à une politique de conservation de 90 jours — les résultats de la comparaison eux-mêmes restent inchangés (ADR-0007 §T9).",
+    "anonymizedNote": "Les hypothèses de base de cette comparaison ont été généralisées à une politique de conservation de 90 jours — les résultats de la comparaison eux-mêmes restent inchangés.",
     "linkLabel": "Lien vers les résultats",
     "noCandidatesHeading": "Il n'y a pas de candidats comparables",
-    "noCandidatesBody": "Il n'y a actuellement aucun fournisseur comparable dans cette catégorie/région. L'ajout du fetcher de fournisseurs NL/LU sera évalué puis mis en œuvre lors de la phase 5 (ADR-0009 § Décision 1).",
+    "noCandidatesBody": "Il n'y a actuellement aucun fournisseur comparable dans cette catégorie/région. L'ajout du fetcher de fournisseurs NL/LU sera évalué puis mis en œuvre ultérieurement.",
     "dataSourcesLink": "Voir les détails sur la page des sources de données →",
     "newCompare": "Lancer une nouvelle comparaison",
     "goHome": "Retour à la page d'accueil",
     "affiliateFooter": "Concernant les commissions d'affiliation :",
-    "affiliateFooterEnd": "(Phase 6.9 à venir). Le classement des résultats de comparaison est basé sur un algorithme et n'est pas influencé par les frais.",
+    "affiliateFooterEnd": "(À venir). Le classement des résultats de comparaison est basé sur un algorithme et n'est pas influencé par les frais.",
     "conclusionCard": {
       "rankLabel": "Recommandation n° 1",
       "monthlyCostLabel": "Coût mensuel (moyenne sur 12 mois)",
@@ -208,7 +208,7 @@
     },
     "calculationDetails": {
       "summary": "Afficher les bases de calcul — Hypothèses utilisées + Formules + Remarques + Version du moteur",
-      "anonymizedWarning": "Ces résultats ont été obtenus 90 jours après l'enregistrement, les données d'origine (code postal, consommation, etc.) n'étant plus disponibles en raison de la politique de conservation des données. Les résultats de la comparaison sont conservés tels quels, et les hypothèses ci-dessous correspondent à des valeurs reconstituées sur la base de la composition des ménages (ADR-0007 §T9).",
+      "anonymizedWarning": "Ces résultats ont été obtenus 90 jours après l'enregistrement, les données d'origine (code postal, consommation, etc.) n'étant plus disponibles en raison de la politique de conservation des données. Les résultats de la comparaison sont conservés tels quels, et les hypothèses ci-dessous correspondent à des valeurs reconstituées sur la base de la composition des ménages.",
       "assumptions": {
         "heading": "Hypothèses retenues",
         "categoryLabel": "Catégorie",
@@ -265,9 +265,9 @@
       },
       "caveatsHeading": "Remarques",
       "triggerHeading": "Conditions de déclenchement des avertissements",
-      "triggerNote": "Nous avons réévalué chaque règle à la lumière des données enregistrées relatives aux forfaits et des hypothèses de consommation (ADR-0010 §T6).",
+      "triggerNote": "Nous avons réévalué chaque règle à la lumière des données enregistrées relatives aux forfaits et des hypothèses de consommation.",
       "engineHeading": "Version du moteur",
-      "engineNote": "Le lien permanent est reproduit dans cette version (ADR-0010 §T7 + ADR-0007 §T9)."
+      "engineNote": "Le lien permanent est reproduit dans cette version."
     },
     "notFound": {
       "linkLabel": "Lien vers les résultats — 404",
@@ -294,11 +294,11 @@
     },
     "excludedProviders": {
       "heading": "Fournisseurs exclus de la comparaison",
-      "body": "Les fournisseurs ci-dessous n'ont pas été inclus dans cette comparaison. Les raisons sont indiquées telles qu'elles figurent dans les données de référence (Constitution, § 3, al. 3). Vous pouvez consulter ces mêmes données sous forme de tableau sur la page /data-sources."
+      "body": "Les fournisseurs ci-dessous n'ont pas été inclus dans cette comparaison. Les raisons sont indiquées telles qu'elles figurent dans les données de référence. Vous pouvez consulter ces mêmes données sous forme de tableau sur la page /data-sources."
     },
     "betaBanner": {
       "heading": "Phase bêta : valeurs estimées",
-      "body": "Le prix est une estimation vérifiée manuellement par l'opérateur le 9 mai 2026. Le prix en temps réel devrait être mis à jour après la phase 5.",
+      "body": "Le prix est une estimation vérifiée manuellement par l'opérateur le 9 mai 2026. Le prix en temps réel devrait être mis à jour ultérieurement.",
       "link": "En savoir plus : /data-sources"
     },
     "affiliateDisclosure": {
@@ -551,7 +551,7 @@
     "freelyGivenNotice": "Même si vous refusez, les résultats de la comparaison resteront inchangés.",
     "followUpHeading": "E-mail de suivi (facultatif)",
     "followUpDescription": "Si vous laissez votre adresse e-mail et cochez la case, nous vous enverrons un « e-mail de suivi Slim » une seule fois, 7 jours plus tard (« Veuillez nous informer si vous avez changé d'avis »).",
-    "followUpAnonymizeNote": "Les e-mails sont anonymisés dès leur envoi (ADR-0007 §T4).",
+    "followUpAnonymizeNote": "Les e-mails sont anonymisés dès leur envoi.",
     "followUpUnsubscribeNote": "Vous pouvez désactiver la fonction « 1-click » dans vos e-mails à tout moment —",
     "followUpCheckbox": "Recevoir un e-mail de suivi (facultatif)",
     "followUpConsentNote": "Si vous refusez, nous ne vous enverrons pas non plus d'e-mails ultérieurs. Si vous n'acceptez pas le consentement à l'attribution, nous ne vous enverrons pas non plus d'e-mails ultérieurs.",

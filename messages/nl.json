@@ -10,14 +10,14 @@
     "confidenceMedium": "Betrouwbaarheid van de vergelijkingsgegevens: gemiddeld ({reason})",
     "confidenceMediumDefaultReason": "Selector 'fragile' of parseerfout",
     "currentTariffConfidence": "Betrouwbaarheid van de data in het huidige tariefplan: {confidence}",
-    "stubEstimate": "Schattingen — Na fase 5 van de feitelijke gegevens"
+    "stubEstimate": "Schattingen — Actuele gegevens worden later beschikbaar"
   },
   "compare": {
     "pageTitle": "Begin met het vergelijken van abonnementen",
     "pageDescription": "Mobiel, internet, internet + tv — kies de categorie die u wilt vergelijken. 5 stappen, binnen 5 minuten klaar.",
     "heading": "Welk abonnement wilt u vergelijken?",
     "stepBadge": "Stap 5 · 5 minuten",
-    "supportNote": "Momenteel ondersteunen we vergelijkingen van telecomaanbieders in België (BE). Nederland (NL) en Luxemburg (LU) worden in fase 3 toegevoegd.",
+    "supportNote": "Momenteel ondersteunen we vergelijkingen van telecomaanbieders in België (BE). Nederland (NL) en Luxemburg (LU) worden later toegevoegd.",
     "savingsPreviewPending": "Een voorbeeld van de gemiddelde besparing wordt na de bètaperiode getoond",
     "termsNotice": "Bij het opstarten van deze website",
     "termsLink": "Gebruiksvoorwaarden",
@@ -55,7 +55,7 @@
     "postal": {
       "title": "Postcode invoeren",
       "heading": "Waar woont u?",
-      "supportNote": "Kies eerst een land en voer vervolgens de postcode in. Momenteel ondersteunen we de vergelijking van telecomproviders in België (BE). Voor Nederland (NL) en Luxemburg (LU) zijn er mogelijk nog geen vergelijkingsopties beschikbaar totdat er in fase 5 nieuwe providers worden toegevoegd.",
+      "supportNote": "Kies eerst een land en voer vervolgens de postcode in. Momenteel ondersteunen we de vergelijking van telecomproviders in België (BE). Voor Nederland (NL) en Luxemburg (LU) zijn er mogelijk nog geen vergelijkingsopties beschikbaar totdat er nieuwe providers worden toegevoegd.",
       "countryLabel": "Land",
       "countryAriaLabel": "Land selecteren",
       "postalCodeLabel": "Postcode",
@@ -69,19 +69,19 @@
         "NL": {
           "label": "Nederland (NL)",
           "placeholder": "Bijvoorbeeld: 1011 of 1011 AB",
-          "description": "Nederlandse postcodes bestaan uit vier cijfers (PC4) of vier cijfers, een spatie en twee hoofdletters (PC6). Vergelijkingskandidaten worden in fase 5 toegevoegd."
+          "description": "Nederlandse postcodes bestaan uit vier cijfers (PC4) of vier cijfers, een spatie en twee hoofdletters (PC6). Vergelijkingskandidaten worden later toegevoegd."
         },
         "LU": {
           "label": "Luxemburg (LU)",
           "placeholder": "Bijvoorbeeld: 1000",
-          "description": "Postcodes in Luxemburg bestaan uit vier cijfers tussen 1000 en 9999. Vergelijkingskandidaten worden in fase 5 toegevoegd."
+          "description": "Postcodes in Luxemburg bestaan uit vier cijfers tussen 1000 en 9999. Vergelijkingskandidaten worden later toegevoegd."
         }
       }
     },
     "household": {
       "title": "Huishoudtype kiezen",
       "heading": "Hoe gaat het met u?",
-      "supportNote": "Als u het type woning selecteert, wordt het gemiddelde verbruik geschat. Het exacte verbruik wordt in fase 3 automatisch ingevuld via OCR-verwerking van de factuur.",
+      "supportNote": "Als u het type woning selecteert, wordt het gemiddelde verbruik geschat. Het exacte verbruik wordt later automatisch ingevuld via OCR-verwerking van de factuur.",
       "nextButton": "Volgende — Huidige leverancier",
       "options": {
         "single": {
@@ -110,7 +110,7 @@
       "tariffLabel": "Huidig abonnement",
       "tariffPlaceholder": "Kies een abonnement",
       "tariffAriaLabel": "Huidige tariefplan selecteren",
-      "tariffNotRegistered": "De actieve tariefplannen van deze leverancier zijn nog niet geregistreerd (worden toegevoegd in fase 5).",
+      "tariffNotRegistered": "De actieve tariefplannen van deze leverancier zijn nog niet geregistreerd (worden later toegevoegd).",
       "tariffUnknown": "Ik weet niet hoe het tarief van deze leverancier in elkaar zit (alleen leveranciers vergelijken)",
       "nextButton": "Volgende — Factuur",
       "skipButton": "Ik weet het niet / Overslaan — Behandelen als nieuwe klant"
@@ -118,7 +118,7 @@
     "bill": {
       "title": "Factuur uploaden",
       "heading": "Wilt u uw factuur uploaden om uw exacte verbruik automatisch in te vullen?",
-      "supportNote": "Momenteel in bètafase — OCR voor facturen wordt toegevoegd direct na de resultatenpagina van fase 3. Voorlopig wordt er vergeleken op basis van schattingen op basis van het huishoudtype.",
+      "supportNote": "Momenteel in bètafase — OCR voor facturen wordt toegevoegd direct na de resultatenpagina. Voorlopig wordt er vergeleken op basis van schattingen op basis van het huishoudtype.",
       "skipButton": "Zonder factuur — met een voorbeeld van het resultaat"
     },
     "preview": {
@@ -139,15 +139,15 @@
     "pageDescription": "Vergelijking van mobiele abonnementen in de Benelux — Slim",
     "heading": "Vergelijkingsresultaten",
     "permanentId": "Permanente ID:",
-    "anonymizedNote": "De uitgangspunten voor deze vergelijking zijn gegeneraliseerd op basis van een bewaartermijn van 90 dagen — de vergelijkingsresultaten zelf blijven ongewijzigd (ADR-0007 §T9).",
+    "anonymizedNote": "De uitgangspunten voor deze vergelijking zijn gegeneraliseerd op basis van een bewaartermijn van 90 dagen — de vergelijkingsresultaten zelf blijven ongewijzigd.",
     "linkLabel": "Link naar de resultaten",
     "noCandidatesHeading": "Er zijn geen vergelijkbare kandidaten",
-    "noCandidatesBody": "Er zijn momenteel geen vergelijkbare leveranciers in deze categorie/regio. Het toevoegen van een fetcher voor leveranciers in NL/LU zal worden geëvalueerd in fase 5 en daarna worden uitgevoerd (ADR-0009 §besluit 1).",
+    "noCandidatesBody": "Er zijn momenteel geen vergelijkbare leveranciers in deze categorie/regio. Het toevoegen van een fetcher voor leveranciers in NL/LU zal later worden geëvalueerd en uitgevoerd.",
     "dataSourcesLink": "Ga naar de pagina met gegevensbronnen voor meer informatie →",
     "newCompare": "Nieuwe vergelijking starten",
     "goHome": "Terug naar de startpagina",
     "affiliateFooter": "Met betrekking tot de affiliatecommissie:",
-    "affiliateFooterEnd": "(Fase 6.9 wordt binnenkort gepubliceerd). De ranglijst in de vergelijkingsresultaten is gebaseerd op een algoritme en wordt niet beïnvloed door transactiekosten.",
+    "affiliateFooterEnd": "(Binnenkort gepubliceerd). De ranglijst in de vergelijkingsresultaten is gebaseerd op een algoritme en wordt niet beïnvloed door transactiekosten.",
     "conclusionCard": {
       "rankLabel": "Aanbeveling nr. 1",
       "monthlyCostLabel": "Maandelijkse kosten (gemiddelde over 12 maanden)",
@@ -208,7 +208,7 @@
     },
     "calculationDetails": {
       "summary": "Berekeningsbasis bekijken — Gebruikte aannames + Formule + Opmerkingen Triggers + Engineversie",
-      "anonymizedWarning": "Deze resultaten zijn 90 dagen na opslag verkregen, aangezien de oorspronkelijke gegevens (postcode, verbruik enz.) niet meer beschikbaar zijn vanwege het bewaarbeleid. De vergelijkingsresultaten zelf blijven behouden; de onderstaande aannames zijn waarden die zijn gereconstrueerd op basis van de huishoudvorm (ADR-0007 §T9).",
+      "anonymizedWarning": "Deze resultaten zijn 90 dagen na opslag verkregen, aangezien de oorspronkelijke gegevens (postcode, verbruik enz.) niet meer beschikbaar zijn vanwege het bewaarbeleid. De vergelijkingsresultaten zelf blijven behouden; de onderstaande aannames zijn waarden die zijn gereconstrueerd op basis van de huishoudvorm.",
       "assumptions": {
         "heading": "Gebruikte aannames",
         "categoryLabel": "Categorie",
@@ -265,9 +265,9 @@
       },
       "caveatsHeading": "Opmerkingen",
       "triggerHeading": "Voorwaarden voor het activeren van de waarschuwing",
-      "triggerNote": "We hebben elke regel opnieuw beoordeeld op basis van de opgeslagen tariefgegevens en verbruiksveronderstellingen (ADR-0010 §T6).",
+      "triggerNote": "We hebben elke regel opnieuw beoordeeld op basis van de opgeslagen tariefgegevens en verbruiksveronderstellingen.",
       "engineHeading": "Motorversie",
-      "engineNote": "De permanente link wordt in deze versie weergegeven (ADR-0010 §T7 + ADR-0007 §T9)."
+      "engineNote": "De permanente link wordt in deze versie weergegeven."
     },
     "notFound": {
       "linkLabel": "Link naar resultaten — 404",
@@ -294,11 +294,11 @@
     },
     "excludedProviders": {
       "heading": "Leveranciers die niet in de vergelijking zijn meegenomen",
-      "body": "De onderstaande leveranciers zijn niet in deze vergelijking opgenomen. De reden hiervoor wordt weergegeven zoals deze in de masterdata staat (Grondwet §3 P3). Op de pagina /data-sources kunt u dezelfde gegevens in tabelvorm bekijken."
+      "body": "De onderstaande leveranciers zijn niet in deze vergelijking opgenomen. De reden hiervoor wordt weergegeven zoals deze in de masterdata staat. Op de pagina /data-sources kunt u dezelfde gegevens in tabelvorm bekijken."
     },
     "betaBanner": {
       "heading": "Bètastadium: schatting",
-      "body": "De prijs is een schatting die op 9 mei 2026 handmatig door de beheerder is geverifieerd. De realtime prijs zal na fase 5 worden bijgewerkt.",
+      "body": "De prijs is een schatting die op 9 mei 2026 handmatig door de beheerder is geverifieerd. De realtime prijs zal later worden bijgewerkt.",
       "link": "Meer informatie: /data-sources"
     },
     "affiliateDisclosure": {
@@ -551,7 +551,7 @@
     "freelyGivenNotice": "Zelfs als u dit weigert, blijven de vergelijkingsresultaten ongewijzigd",
     "followUpHeading": "Vervolgmail (optioneel)",
     "followUpDescription": "Als u uw e-mailadres achterlaat en het vakje aanvinkt, ontvangt u na 7 dagen één 'Slim-opvolgingsmail' ('Laat het ons weten als u iets hebt gewijzigd').",
-    "followUpAnonymizeNote": "E-mails worden onmiddellijk na verzending geanonimiseerd (ADR-0007 §T4).",
+    "followUpAnonymizeNote": "E-mails worden onmiddellijk na verzending geanonimiseerd.",
     "followUpUnsubscribeNote": "De 1-click-optie in e-mails kan altijd worden uitgeschakeld —",
     "followUpCheckbox": "Volgende e-mail ontvangen (optioneel)",
     "followUpConsentNote": "Als u dit weigert, sturen wij ook geen vervolgmails. Als u niet instemt met de attributievoorwaarden, sturen wij ook geen vervolgmails.",

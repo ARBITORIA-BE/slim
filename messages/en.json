@@ -10,14 +10,14 @@
     "confidenceMedium": "Reliability of comparison data: medium ({reason})",
     "confidenceMediumDefaultReason": "Selector \"fragile\" or parsing warning",
     "currentTariffConfidence": "Current plan data reliability: {confidence}",
-    "stubEstimate": "Estimated values — Actual data from Phase 5 onward"
+    "stubEstimate": "Estimated values — Actual data will be available in the future"
   },
   "compare": {
     "pageTitle": "Start comparing plans",
     "pageDescription": "Mobile, Internet, Internet + TV — Select the categories you want to compare. 5 steps, takes 5 minutes.",
     "heading": "Which plan would you like to compare?",
     "stepBadge": "Step 5 · 5 minutes",
-    "supportNote": "We currently support comparisons of telecommunications providers in Belgium (BE). The Netherlands (NL) and Luxembourg (LU) will be added in Phase 3.",
+    "supportNote": "We currently support comparisons of telecommunications providers in Belgium (BE). The Netherlands (NL) and Luxembourg (LU) will be added in the future.",
     "savingsPreviewPending": "The \"Average Savings\" preview will be available after the beta period.",
     "termsNotice": "Upon launching this site,",
     "termsLink": "Terms of Use",
@@ -55,7 +55,7 @@
     "postal": {
       "title": "Enter your ZIP code",
       "heading": "Where do you live?",
-      "supportNote": "Select a country and enter your ZIP code. We currently support comparisons for Belgium (BE). There may be no providers available for comparison in the Netherlands (NL) and Luxembourg (LU) until Phase 5 providers are added.",
+      "supportNote": "Select a country and enter your ZIP code. We currently support comparisons for Belgium (BE). There may be no providers available for comparison in the Netherlands (NL) and Luxembourg (LU) until new providers are added.",
       "countryLabel": "Country",
       "countryAriaLabel": "Select a country",
       "postalCodeLabel": "Zip code",
@@ -69,19 +69,19 @@
         "NL": {
           "label": "Netherlands (NL)",
           "placeholder": "Example: 1011 or 1011 AB",
-          "description": "Dutch postal codes consist of either four digits (PC4) or four digits followed by a space and two uppercase letters (PC6). Comparison candidates will be added in Phase 5."
+          "description": "Dutch postal codes consist of either four digits (PC4) or four digits followed by a space and two uppercase letters (PC6). Comparison candidates will be added in the future."
         },
         "LU": {
           "label": "Luxembourg (LU)",
           "placeholder": "Example: 1000",
-          "description": "Luxembourg postal codes consist of four digits ranging from 1000 to 9999. Comparison candidates will be added in Phase 5."
+          "description": "Luxembourg postal codes consist of four digits ranging from 1000 to 9999. Comparison candidates will be added in the future."
         }
       }
     },
     "household": {
       "title": "Select household type",
       "heading": "How are you doing?",
-      "supportNote": "If you select a household type, we will estimate your average usage. Your exact usage will be automatically entered in Phase 3 using bill OCR.",
+      "supportNote": "If you select a household type, we will estimate your average usage. Your exact usage will be automatically entered in the future using bill OCR.",
       "nextButton": "Next — Current Supplier",
       "options": {
         "single": {
@@ -110,7 +110,7 @@
       "tariffLabel": "Current Plan",
       "tariffPlaceholder": "Select a plan",
       "tariffAriaLabel": "Select your current plan",
-      "tariffNotRegistered": "This provider's active plans have not yet been registered (to be added in Phase 5).",
+      "tariffNotRegistered": "This provider's active plans have not yet been registered (to be added in the future).",
       "tariffUnknown": "I'm not familiar with this provider's rate plan (comparing providers only)",
       "nextButton": "Next — Invoice",
       "skipButton": "I don't know / Skip — Proceed as a new subscriber case"
@@ -118,7 +118,7 @@
     "bill": {
       "title": "Upload bill",
       "heading": "Would you like to upload your bill to automatically enter your exact usage?",
-      "supportNote": "Currently in beta — Invoice OCR will be added immediately after the Phase 3 results page. For now, comparisons are based on estimates derived from household composition.",
+      "supportNote": "Currently in beta — Invoice OCR will be added immediately after the results page. For now, comparisons are based on estimates derived from household composition.",
       "skipButton": "No invoice required — Preview the results"
     },
     "preview": {
@@ -139,15 +139,15 @@
     "pageDescription": "Benelux Mobile Plan Comparison Results — Slim",
     "heading": "Comparison Results",
     "permanentId": "Permanent ID:",
-    "anonymizedNote": "The input assumptions for this comparison have been generalized to a 90-day retention policy—the comparison results themselves remain unchanged (ADR-0007 §T9).",
+    "anonymizedNote": "The input assumptions for this comparison have been generalized to a 90-day retention policy—the comparison results themselves remain unchanged.",
     "linkLabel": "Link to results",
     "noCandidatesHeading": "There are no candidates to compare.",
-    "noCandidatesBody": "There are currently no comparable suppliers in this category/region. The addition of an NL/LU supplier fetcher is scheduled to proceed following an evaluation in Phase 5 (ADR-0009 § Decision 1).",
+    "noCandidatesBody": "There are currently no comparable suppliers in this category/region. The addition of an NL/LU supplier fetcher is scheduled to proceed following a future evaluation.",
     "dataSourcesLink": "View details on the data source page →",
     "newCompare": "Start a new comparison",
     "goHome": "Back to Home",
     "affiliateFooter": "Regarding affiliate commissions:",
-    "affiliateFooterEnd": "(Scheduled for release in Phase 6.9). The ranking in the comparison results is algorithm-based and is not influenced by fees.",
+    "affiliateFooterEnd": "(To be released in the future). The ranking in the comparison results is algorithm-based and is not influenced by fees.",
     "conclusionCard": {
       "rankLabel": "Top Pick",
       "monthlyCostLabel": "Monthly cost (12-month average)",
@@ -208,7 +208,7 @@
     },
     "calculationDetails": {
       "summary": "View calculation basis — Assumptions used + Formula + Notes on triggers + Engine version",
-      "anonymizedWarning": "These results are based on data from 90 days after storage, when the original input (postal codes, usage data, etc.) is no longer available due to retention policies. The comparison results themselves are preserved as is, and the values below have been reconstructed based on household type (ADR-0007 §T9).",
+      "anonymizedWarning": "These results are based on data from 90 days after storage, when the original input (postal codes, usage data, etc.) is no longer available due to retention policies. The comparison results themselves are preserved as is, and the values below have been reconstructed based on household type.",
       "assumptions": {
         "heading": "Assumptions",
         "categoryLabel": "Category",
@@ -265,9 +265,9 @@
       },
       "caveatsHeading": "Important Notes",
       "triggerHeading": "Precautions: Trigger Conditions",
-      "triggerNote": "We re-evaluated each rule based on the stored rate plan data and usage assumptions (ADR-0010 §T6).",
+      "triggerNote": "We re-evaluated each rule based on the stored rate plan data and usage assumptions.",
       "engineHeading": "Engine version",
-      "engineNote": "The permanent link is reproduced in this version (ADR-0010 §T7 + ADR-0007 §T9)."
+      "engineNote": "The permanent link is reproduced in this version."
     },
     "notFound": {
       "linkLabel": "Result link — 404",
@@ -294,11 +294,11 @@
     },
     "excludedProviders": {
       "heading": "Suppliers excluded from the comparison",
-      "body": "The following suppliers were not included in this comparison. The reasons are disclosed as per the master data (Constitution §3 P3). You can view the same data in tabular format on the /data-sources page."
+      "body": "The following suppliers were not included in this comparison. The reasons are disclosed as per the master data. You can view the same data in tabular format on the /data-sources page."
     },
     "betaBanner": {
       "heading": "Beta phase: Estimated values",
-      "body": "The price is an estimate manually verified by the operator on May 9, 2026. Real-time pricing is scheduled to be implemented after Phase 5.",
+      "body": "The price is an estimate manually verified by the operator on May 9, 2026. Real-time pricing is scheduled to be implemented in the future.",
       "link": "Learn more: /data-sources"
     },
     "affiliateDisclosure": {
@@ -551,7 +551,7 @@
     "freelyGivenNotice": "Even if you decline, the comparison results will remain unchanged.",
     "followUpHeading": "Follow-up email (optional)",
     "followUpDescription": "If you enter your email address and check the box, we will send you a single \"Slim follow-up email\" in 7 days (\"Please let us know if you've made any changes\").",
-    "followUpAnonymizeNote": "Emails are anonymized immediately after being sent (ADR-0007 §T4).",
+    "followUpAnonymizeNote": "Emails are anonymized immediately after being sent.",
     "followUpUnsubscribeNote": "You can always disable 1-click in your email —",
     "followUpCheckbox": "Receive follow-up emails (optional)",
     "followUpConsentNote": "If you decline, we will not send any follow-up emails. If you do not consent to attribution, we will not send any follow-up emails.",
