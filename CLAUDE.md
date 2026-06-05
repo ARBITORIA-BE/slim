@@ -86,17 +86,6 @@ Pieter의 한 줄 신조: **"투명성은 내가 가진다. 사용자는 쉽고 
 [6] scribe가 CHANGELOG / ADR 업데이트
 ```
 
-### 4.1 새 fetcher 추가 시 추가 체크리스트 (2026-06-05 부채 회수)
-
-`src/fetchers/<provider>.ts` 신설 PR 머지 *직후* 운영자 트랙:
-
-1. `pnpm exec tsx --env-file=.env.local scripts/seed-providers.ts` 1회 실행
-   (production DATABASE_URL 환경에서 — provider 마스터 행 멱등 INSERT).
-2. 미실행 시 Inngest cron 첫 fetch 가 `provider not found: slug='<provider>'` 로
-   영구 retry hang (1.5.6/1.5.8 사고 패턴). `src/inngest/persist.ts` L47 throw.
-3. 새 provider 추가 시 `scripts/seed-providers.ts` 의 `PROVIDERS_TO_SEED` 배열에
-   해당 행을 *먼저* 추가하고 PR 에 포함. 머지 후 운영자가 스크립트 실행.
-
 ---
 
 ## 5. 기술 스택 (이미 결정됨, 변경 시 ADR 필수)
