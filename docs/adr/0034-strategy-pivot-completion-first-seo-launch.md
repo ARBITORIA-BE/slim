@@ -15,6 +15,14 @@
   잠금값 확정 반영. 영향받는 ADR 의 amend(6)/deprecate(2) + 카피 4파일
   DEPRECATED + INDEX.md 행 갱신 + PLAN.md 전면 재구조화 일괄 적용 (architect,
   본 턴). typecheck/lint/test/harness:plan = verifier 후속 검증.
+- **Amendment 1 (2026-06-04)** — **D4 정정: 4 → 3 fetcher (Voo 흡수)**.
+  legal 에이전트 6/4 보고 + WebSearch 10개 출처 (ITdaily, Marketscreener,
+  Brusselstimes 등) 교차 검증 = **Voo-Orange Belgium 합병이 2025-10-01 완료**
+  (VOO S.A. 법인 소멸, Orange Belgium 흡수). D4 결정 시점(2026-05-17) WebSearch
+  부재로 누락된 외부 사실. 새 잠금: **Proximus/Telenet/Orange BE 3 fetcher**
+  (Orange BE fetcher 가 합병 후 Voo 잔존 가격 페이지까지 자연 흡수). 1.5.9
+  Voo fetcher 항목 **취소** (PLAN 합계 93→92). 상세 = 본문 §Amendment 1
+  (D4 정정) 절. architect 본 턴 적용. 운영자 reject 시 본 Amendment amend 가능.
 
 > 잠금 단 한 건의 미결: **KO 의 운명** (런칭/개발 완료 후 KO 삭제 vs hidden
 > 유지) — 운영자가 *그때 결정* 으로 명시 보류. 본 ADR 은 이것만 미결로 남기고
@@ -233,6 +241,114 @@ ADR-0003 (PLAN 리얼리즘 패스, Accepted 2026-05-09) 은 운영자 현실(�
 
 ---
 
+## Amendment 1 (2026-06-04) — D4 정정: 4 → 3 fetcher (Voo 흡수)
+
+### Context — 누락된 외부 사실
+
+D4 결정(2026-05-17)은 Voo 를 *독립 공급사* 로 가정했다. 본 가정은 **2025-10-01
+완료된 Voo-Orange Belgium 합병** 을 누락 — 결정 시점 architect 가 WebSearch
+수행 부재. legal 에이전트가 2026-06-04 4-provider 점검 도중 발견 + WebSearch
+10개 출처 교차 검증으로 사실 확정:
+
+- **합병 완료 시점**: 2025-10-01 (VOO S.A. 주주 만장일치 승인 → 법인 소멸,
+  Orange Belgium Group 흡수).
+- **합병 경과**: 2023-06 Orange Belgium 의 75% 지분 인수 시작 → 2025-10-01
+  잔여 25% + 법인 해산 완료.
+- **브랜드/고객**: VOO 브랜드 + 기존 요금제는 *고객 영향 0* 으로 유지
+  (Orange 의 명시 정책). 2026 년 동안 시스템 마이그레이션 진행 예정.
+- **가격 페이지 현황** (legal 2026-06-04):
+  - `voo.be/fr/internet` = "Nos prix à partir du 1 Janvier 2026 [PDF]" 안내,
+    **정적 HTML 가격 부재**.
+  - `voo.be` 모바일 가격 페이지 = 유효 URL 미발견.
+  - `voo.be` 도메인 자체는 운영 중이나 가격 구조는 Orange 통합 진행 중.
+- **점유율 정정**: ADR-0034 §Consequences §"얻는 것" 의 "BE 시장 ≥ 97% 점유
+  추정 (Proximus 43 + Telenet 32 + Orange BE 22.5 + Voo)" 수치는 *합병 전*
+  가정. **합병 후 Mordor Intelligence Q1 2025 = Orange Belgium + Voo 합산
+  22.5%** (Voo 별도 보고 종료). 새 합산 추정 = Proximus 43 + Telenet 32 +
+  Orange BE 합산 22.5 = **≥ 97.5%** (수치 자체는 ADR-0009 §외부 사실 기준,
+  D4 의 시장 대표성 주장은 유지 — Voo 가 별도 25% 가 아니라 Orange 의 22.5%
+  내부에 *이미 포함*).
+
+### Decision — D4 정정 잠금값
+
+1. **공급사 = Proximus + Telenet + Orange BE (3 fetcher)**. Voo 별도 fetcher
+   **취소** (PLAN 1.5.9 삭제). `src/fetchers/voo.ts` + `voo.test.ts` 신설
+   계획 폐기.
+2. **Orange BE fetcher 범위 = `orange.be` 가격 페이지 + 합병 후 Voo 잔존
+   가격 페이지 (있을 시) 흡수**. 구체 URL 셋은 builder 단계 첫 fetch 정찰로
+   확정 (architect 가 잠그지 않음 — 합병 마이그레이션이 2026 년 진행 중이라
+   URL/redirect 가 가변). 후보:
+   - `orange.be/fr/...` (현 Orange 가격 페이지)
+   - `voo.be/fr/internet` 등 (Voo 잔존 페이지가 Orange 통합 페이지로 redirect
+     하는지 / 독자 페이지로 잔존하는지 builder 정찰).
+3. **Voo 점유율 WebSearch (구 1.5.9 선행조건) = 불필요**. Voo 별도 시장 보고
+   종료. Orange BE 점유율 22.5% 가 합산 수치 (legal 2026-06-04 + Mordor Q1
+   2025 = 검증된 사실).
+4. **legal 4-provider 트리거 = 3-provider 로 축소**. Voo robots.txt + TOS
+   별도 평가 불필요 (legal 이 이미 ADR-0013 Appendix B §B.4 에서 통과로
+   기록했으나, fetcher 가 없으므로 적용 대상 없음 — 역사적 기록은 보존).
+5. **1.5.6 통과 시 잠금된 옵션 X 자동 비활성 트리거** = Orange BE 단일
+   완성 시 발화 (구 4 fetcher 모두 완성 조건 → 3 fetcher 모두 완성).
+6. **ADR-0009 deprecate 결정 = 유지**. 2 공급사 모델은 여전히 무효 (3 공급사
+   확장이 본 결정). ADR-0009 §결정 1 "Orange BE 페이즈 5 이연" 의 무효는
+   유지 (D4 가 1.5.8 로 당겨옴).
+
+### Consequences — 정정의 트레이드오프
+
+#### ✅ 얻는 것
+
+- **정직성 복원** (CLAUDE.md §2 / §3 P3) — 존재하지 않는 법인(Voo S.A.) 을
+  fetcher 화 하지 않음. ADR-0034 본문이 합병 완료 5개월 후에도 "Voo 독립"
+  을 전제하는 것은 P3 거짓 신호.
+- **솔로 부담 ↓** — fetcher 4 → 3 = ADR-0034 §Consequences §"잃는 것"
+  ADR-0003 §대안 B 거부 사유 재현 강도 부분 완화 (4 → 3 fetcher × 4
+  locale × 실 스크래핑). per-provider 재발 비용 1건 감소 (Voo
+  robots/TOS/GTC/셀렉터 디버깅 부담 0).
+- **시장 대표성 보존** — 합산 점유율 ≥ 97.5% (Proximus 43 + Telenet 32 +
+  Orange BE 합산 22.5) 는 합병 전 *Voo 별도 포함* 가정과 *동일 수준* 으로
+  유지 (Voo 가 Orange 내부로 흡수되었기 때문).
+- **운영 부채 ↓** — 1.5.9 항목 (deferred 또는 별도 트랙) 잔존 시 미래
+  WebSearch 재평가 부담 발생 → 취소로 해소.
+
+#### ⚠️ 잃는 것 / 부채
+
+- **Orange BE fetcher 책임 확장** — Orange BE 단일 fetcher 가 *합병 후 Voo
+  가격 페이지까지* 흡수. 운영 중인 마이그레이션 (2026 년 진행) 동안 URL 변경
+  / redirect / 페이지 통합 시점이 가변 → 셀렉터 깨짐 회귀 빈도 ↑ 가능.
+  builder 정찰 + manual 폴백 (`method='manual'`) 가 안전망.
+- **Voo 브랜드 가격 별도 노출 불가** — 비교 결과에 "Voo X 요금제" 라벨이
+  Orange BE fetcher 산출물 안에 *Orange 라벨* 로 표시될 가능성. 사용자가
+  "Voo 가 비교 대상에 있는가?" 묻는 경우 §정직성 답변 필요 (UI 캐비엇
+  또는 `/data-sources` 페이지에 "Voo 는 2025-10 Orange Belgium 에 합병되어
+  Orange BE fetcher 범위에 포함" 1줄 — builder 후속).
+- **ADR-0034 §Consequences §"잃는 것" #1 (ADR-0003 §대안 B 재현) 강도 ↓ 하나
+  잔존** — 3 fetcher × 4 locale × 실 스크래핑 동시 빌드 부담은 4 → 3 로
+  *경감*. 단 "M16 4-신호 게이트 제거 (D2)" 의 구조적 안전망 상실은 *변경 0*.
+
+### 영향 — PLAN.md / 다른 ADR
+
+- **PLAN 1.5.9 삭제** (취소). 본 Amendment 가 단일 출처.
+- **PLAN 1.5.8 본문 갱신** — Orange BE fetcher 범위에 "합병 후 Voo 잔존
+  가격 페이지 흡수" 원칙 명시. 구체 URL = builder 정찰.
+- **PLAN 4.7 본문 갱신** — "4 fetcher" → "3 fetcher" (Proximus/Telenet/
+  Orange BE).
+- **PLAN 1.5 행 + 합계 표** — 항목 수 10 → 9 / 합계 93 → 92.
+- **ADR-0013 §legal 트리거 4-provider** = 3-provider 로 축소 cross-ref
+  (ADR-0013 본문 변경은 PR #17 트랙 — 본 Amendment 는 cross-ref 만).
+- **ADR-0009 deprecate** = 유지 (변경 0).
+- **INDEX.md** — ADR-0034 행에 "Amendment 1 (2026-06-04 — D4 정정)" 표기.
+
+### 검증 방법
+
+1. **PLAN harness:plan 합계 정합** = 93 → 92 / done 64 불변 / 차단 0 불변.
+2. **1.5.8 진입 시 Orange BE fetcher 첫 fetch** = orange.be 가격 페이지 +
+   voo.be 가격 페이지 (redirect 또는 잔존) 양쪽 정찰 → URL 셋 확정 (builder).
+3. **운영자 거부 트리거** — 운영자가 "Voo 별도 트래킹 필요" 결정 시 본
+   Amendment amend (Voo 별도 fetcher 재개 또는 manual 트랙). 본 Amendment 는
+   architect 가 *합리적 외부 사실 기반* 자율 결정 = 운영자 reject 가능.
+
+---
+
 ## Alternatives Considered (운영자가 거부한 것 — 거부 사유 = 운영자 결정)
 
 > 아래 대안들은 architect 가 "더 안전하다" 고 평가하는 것들이다. 운영자가
@@ -447,7 +563,18 @@ PLAN 재구조화를 일괄 적용. typecheck/lint/test/harness:plan = verifier 
   — Search Console = 자기 사이트 색인/순위 메트릭 (사용자 데이터 전송 아님 —
   D5 §정합 확인, ※ architect 가 §D5 에 명기, 운영자 승인 시 WebFetch 검증 권장)
 - ADR-0009 §외부 사실 — Telecompaper Q1 2025 (Proximus 43 / Telenet 32 /
-  Orange BE 22.5% — Voo 점유율은 D4 진입 시 별도 검증 필요, §D)
+  Orange BE 22.5%). **Amendment 1 정정 (2026-06-04)**: Voo 별도 점유율은
+  Voo-Orange Belgium 합병 (2025-10-01) 후 보고 종료. Orange BE 22.5% =
+  Mordor Intelligence Q1 2025 기준 *합산 수치* (Voo 포함).
 - ADR-0013 §External facts — Proximus/Telenet robots.txt (요금제 페이지 차단
-  X) + Appendix A (GTC PDF 추출 실패). Orange BE/Voo robots.txt+TOS = *미검토*
-  (D4 legal 트리거 — §D)
+  X) + Appendix A (GTC PDF 추출 실패). Orange BE/Voo robots.txt+TOS =
+  Appendix B (legal 2026-05-17) 통과 기록. **Amendment 1 (2026-06-04)**:
+  Voo 별도 fetcher 취소 → Voo robots/TOS 별도 적용 대상 없음 (역사 기록 보존).
+- [ITdaily — Merger of Orange Belgium and Voo Officially Completed](https://itdaily.com/news/network/orange-belgium-voo-merge/)
+  — Voo-Orange 합병 2025-10-01 완료, VOO S.A. 법인 소멸 (Amendment 1
+  외부 사실).
+- [Orange Belgium corporate — VOO acquisition final step](https://corporate.orange.be/en/node/58036)
+  — VOO S.A. fully integrated in Orange Belgium Group, VOO 브랜드/요금제는
+  고객 영향 0 유지, 시스템 마이그레이션 2026 진행 (Amendment 1 외부 사실).
+- [Brussels Times — Orange Belgium completes acquisition of VOO](https://www.brusselstimes.com/533884/orange-belgium-completes-acquisition-of-voo)
+  — 인수 경과 보도 (Amendment 1 cross-check).
