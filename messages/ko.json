@@ -484,7 +484,7 @@
   "dataSources": {
     "heading": "데이터 출처",
     "description": "Slim이 사용하는 비교 데이터의 출처와 수집 방법을 투명하게 공개합니다.",
-    "betaNote": "비교 데이터는 베타 (페이즈 4) 시작 후 누적됩니다.",
+    "betaNote": "비교 데이터는 베타 시작 후 누적됩니다.",
     "affiliateNoticeBody": "어필리에이트 여부는 결과 순위에 영향을 주지 않습니다 — 알고리즘은 절약액 순입니다. 자세한 내용은",
     "affiliateNoticeLink": "/legal/affiliate-disclosure",
     "affiliateNoticeLinkLabel": "/legal/affiliate-disclosure",
@@ -515,7 +515,7 @@
     "colExcludedReason": "제외 사유",
     "orangeBeLabel": "Orange BE",
     "orangeBeCountry": "BE",
-    "orangeBeReason": "페이즈 5에서 평가 후 추가 예정.",
+    "orangeBeReason": "향후 평가 후 추가 예정.",
     "orangeBeCtaAriaLabel": "Orange BE 비교 요청 보내기",
     "orangeBeCta": "Orange BE 비교 요청",
     "footerContact": "데이터 수집 방법 · 공급사 추가 요청 · 오류 신고:",
