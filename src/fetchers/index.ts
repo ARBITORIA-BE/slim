@@ -11,8 +11,9 @@
  * PLAN 1.5.6 (부채): 실 스크래핑 fetcher로 교체.
  *   confidence='low' → 'medium'/'high'로 격상.
  *
- * Orange BE는 ADR-0009 결정으로 페이즈 5에서 평가 후 추가.
- *   신설 시: import orangeBe from './orange-be'; + registry에 1줄 추가.
+ * PLAN 1.5.8 (2026-06-05): Orange BE fetcher 추가.
+ *   - src/fetchers/orange-be.ts — Orange BE (mobile + internet_fixed)
+ *   - ADR-0013 Appendix B Amendment (2026-06-05): GTC 검토 완료, 게이트 OPEN
  *
  * harness:data Rule 1은 `src/fetchers/**\/*.ts` 중 types.ts 제외를 검사하므로
  * 본 파일도 검사 대상 — `FetchResult` 식별자를 export 로 노출해 통과.
@@ -21,6 +22,7 @@
 import type { Fetcher } from './types';
 import { proximus } from './proximus';
 import { telenet } from './telenet';
+import { orangeBe } from './orange-be';
 
 // ─── 타입 재export (외부 import 단일 진입점 + harness:data Rule 1 통과) ──
 
@@ -38,17 +40,13 @@ export type {
 // ─── Registry — 모든 fetcher 인스턴스의 단일 출처 ─────────────────────────
 
 /**
- * 등록된 모든 fetcher. PLAN 1.8 기준 2개 (Proximus + Telenet).
+ * 등록된 모든 fetcher. PLAN 1.5.8 기준 3개 (Proximus + Telenet + Orange BE).
  *
  * 왜 for-loop인가 (cron 호출 패턴)?
  *   cron은 `Promise.all(registry.map(...))` 가 아니라 for-loop를 쓴다.
  *   한 fetcher 폭발이 다른 fetcher의 step.run을 깨지 않도록 (1.9 격리 — ADR-0008 §T7).
- *
- * 페이즈 5에서 Orange BE 추가 시:
- *   import orangeBe from './orange-be';
- *   export const registry: readonly Fetcher[] = [proximus, telenet, orangeBe];
  */
-export const registry: readonly Fetcher[] = [proximus, telenet];
+export const registry: readonly Fetcher[] = [proximus, telenet, orangeBe];
 
 /**
  * Slug로 단일 fetcher를 찾는 helper. 페이즈 4.5+ 어드민 dashboard 에서 "이

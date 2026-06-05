@@ -1934,3 +1934,185 @@ TOS URL 변경 시 legal 에이전트 재호출 권고.
 ---
 
 **Appendix D 작성: legal 에이전트 (2026-06-04)**
+
+---
+
+## Appendix B Amendment (2026-06-05) — 운영자 GTC 수동 열람 완료 (Orange BE)
+
+**실행 주체**: legal 에이전트 (1차 검토). 변호사 아님.
+
+**검토 대상**: Orange BE 3종 소비자 GTC PDF (Proximus/Telenet Amendment = 2026-05-28 완료,
+Orange BE = 본 Amendment 대상).
+
+**기존 Appendix B + Appendix C 본문**: 변경 없음. 본 Amendment는 Appendix C §C.7 Pieter 트랙
+실행 결과를 append한다.
+
+---
+
+### 검토 방식
+
+Appendix B Amendment (2026-05-28, Proximus/Telenet) 와 동일한 pdftotext 트랙 적용.
+운영자가 브라우저로 Orange BE 소비자 GTC PDF 3종을 직접 다운로드한 후 로컬 `pdftotext`
+(poppler) 로 텍스트 추출. 본 Amendment 작성자가 `Read` 도구로 추출 텍스트를 직접 확인하여
+키워드 검색 결과를 대조했다. 이하 조항 분류 및 판정은 **원문 직접 확인 기반**이다.
+
+검토 파일 3종:
+
+| 파일 | 원본 PDF | 발행 | 분량 |
+|---|---|---|---|
+| `C:\Users\kimwo\gtc-review\orange-be-postpaid.txt` | GC_2307006_postpaid_FR_20241015.pdf | Orange Belgium s.a. BE0456.810.810, 10/2024 | 794줄 |
+| `C:\Users\kimwo\gtc-review\orange-be-sales.txt` | gc_2001001_sales_fr.pdf (Annexe 4) | Orange Belgium s.a., 03/2020 | 128줄 |
+| `C:\Users\kimwo\gtc-review\orange-be-fiber.txt` | GC_2307006_Fiber_update_FR_20241022.pdf | Orange Belgium s.a., 09/2023 | 711줄 |
+
+4번째 PDF (Love bundle — Conditions internet et TV 번들)는 Imperva WAF 403 차단으로 운영자가
+다운로드 불가 상태. 단 Appendix B §B.3 에서 기록된 Orange BE robots.txt 의 `Disallow: /*internet=`
+/ `Disallow: /*mobile=` 쿼리 파라미터 패턴이 Love bundle configurer URL을 robots 수준에서 이미
+차단한다. 또한 PLAN 1.5.8 fetcher 범위는 mobile + internet_fixed 단품으로 정의되어 있어 Love
+bundle 페이지는 fetcher 스코프 밖 — **Love PDF WAF 차단은 본 Amendment 판정에 영향 없음**.
+
+---
+
+### 키워드 검색 결과 표
+
+B.8 체크리스트 키워드를 3종 PDF 전문에서 검색한 결과:
+
+자동 접근/스크래핑을 **직접 금지**하는 조항: **0건** (3종 합산).
+
+| 파일 | 매칭 문구 | 원문 위치 | 실제 스코프 | 판정 |
+|---|---|---|---|---|
+| postpaid L473-474 | "Les cartes SIM seront destinées à un usage purement personnel" | §5.1 Usage normal | SIM 카드 개인 사용 목적 — 재판매/rerouting 금지. 웹사이트 접근 스코프 밖 | false positive |
+| postpaid L476-478 | "interdit...commercialiser le Service Orange" | §5.1 Usage normal | Orange 서비스(통신 서비스) 재판매 금지 — 웹사이트 가격 데이터 수집과 무관 | 스코프 밖 |
+| postpaid L524 | "utiliser les services de transmission de données à des fins personnelles et normales" | §5.3.3 Utilisation des services de transmission de données 항목 4 | 데이터 전송 **서비스**(통신 회선) 개인적·정상 사용 요건 — 가입자 AUP. 웹사이트 방문자 스크래핑 스코프 밖 | 스코프 밖 |
+| postpaid L562-577 | §5.5 Logiciels Orange — 소프트웨어/문서 IP 복사·디컴파일 금지 | §5.5.2~5.5.3 | Orange가 가입자에게 제공하는 **앱/모뎀 펌웨어** IP 조항 — 웹사이트 가격 데이터와 무관 | 스코프 밖 |
+| postpaid L303/356 | "processus automatisé de la base de référence centrale" | §4.3.6/§4.4.4 번호 이식 절차 | 번호이식 인프라의 자동화 DB 처리 — false positive (사업자 간 인프라 조항) | false positive |
+| fiber L237 | "n'effectuer aucun démontage, aucune décompilation...de l'Equipement d'Orange" | §7.1.2 Utilisation | 모뎀·디코더 **하드웨어** 개조·디컴파일 금지 — 웹사이트 스크래핑 무관 | 스코프 밖 |
+| fiber L295-300 | "usage normal des Services...exclusivement pour son usage privé et familial...ne pas commercialiser ou transférer les Services" | §9 Obligations et responsabilité du Client | Orange 인터넷·TV **서비스** 가입자 사용 제한 — 웹사이트 방문자의 가격 데이터 수집 스코프 밖 | 스코프 밖 |
+| fiber L309 | "droits d'utilisation des Services d'Orange sont personnels et incessibles" | §9 Obligations | 서비스 사용권 양도불가 조항 — 가입자 서비스 계약 조항 | 스코프 밖 |
+| fiber L639-645 | "Il est impossible de copier des enregistrements" | §1.2 Enregistrement (Services TV) | TV 녹화 복사 금지 (DRM) — 웹사이트 가격 데이터와 무관 | 스코프 밖 |
+| fiber L676-682 | §3 Droit de propriété intellectuelle — "utilisation familiale et privée" + DRM 우회 금지 | §3 Droit de propriété intellectuelle | TV 콘텐츠(디코더 내 방송) DRM 조항 — 가격 페이지 스크래핑 무관 | 스코프 밖 |
+| fiber L686 | "ne peut entreprendre aucune action visant à manipuler, esquiver ou entraver les règles de sécurité et d'utilisation établies par Orange" | §3 동일 | TV DRM 시스템 보안 우회 금지 — 웹사이트 접근 스코프 밖 | 스코프 밖 |
+| sales (전체) | — | 전문 128줄 | 물품 판매 조건 (배송/결제/반품) 전용. 자동 접근/스크래핑 조항 0건 | 해당 없음 |
+
+핵심 부재 키워드 확인:
+
+- `scraping`, `robot`, `crawler`, `spider`, `extraction automatique`, `agrégateur`, `comparateur`:
+  3종 PDF 합산 **0건**.
+- `utilisation strictement personnelle` / `strictly personal use` (Appendix C §C.4 핵심 우려
+  키워드): **0건**. 검색된 "personnel" 매칭은 전부 (a) 개인정보("données à caractère
+  personnel"), (b) 서비스/SIM/장비 사용 제한(계약자 본인용), (c) 직원("personnel d'Orange")
+  3개 유형 중 하나이며 공개 가격 페이지 스크래핑 스코프 밖이다.
+- "automatisé" / "automatique": 번호이식 인프라 DB 처리(false positive) + 계약 자동갱신(false
+  positive) 2건만. 웹사이트 자동 접근 금지 맥락 **0건**.
+
+---
+
+### 조항 강도 판정 — ADR-0013 §B.7 프레임워크 적용
+
+#### Appendix C §C.4 핵심 미결 리스크 해소
+
+Appendix C (2026-06-04) 가 식별한 핵심 미결 리스크: orange-business.com 그룹 TOS의 "strictly
+personal use" 조항이 orange.be 소비자 GTC 에도 동일하게 존재하는지 여부.
+
+본 Amendment 3종 PDF 직접 확인 결과:
+
+- **"utilisation strictement personnelle"** / **"strictly personal use"** / **"strikt persoonlijk
+  gebruik"**: 3종 PDF 전문 합산 **0건** — 소비자 GTC에 해당 문구 또는 동등 조항이 존재하지
+  않음을 원문 직접 확인으로 검증.
+- orange-business.com 그룹 TOS의 "strictly personal use" 조항은 B2B 그룹 포털 특유의 조항으로,
+  orange.be 소비자 GTC 에 이식되지 않았음이 확인된다.
+
+Appendix C §C.4 우려 사항: **해소됨**.
+
+#### Orange BE 매칭 조항 강도 분류
+
+검색된 모든 매칭 항목은 Proximus/Telenet Amendment (2026-05-28) 에서 확립된 분류 기준과
+동일 패턴을 따른다:
+
+1. **가입자 서비스 약관 스코프**: 모든 "personnel" + 서비스 사용 제한 조항은 Orange Belgium
+   서비스 **가입자**("Client")를 적용 당사자로 한다. Slim은 Orange 서비스 가입자가 아니라
+   공개 웹사이트 방문자이므로, CJEU Ryanair v PR Aviation (C-30/14) 관점에서 이 GTC가
+   Slim의 스크래핑 행위에 계약적으로 구속력을 갖는 법적 근거가 없다.
+
+2. **IP/DRM 조항 스코프**: §5.5 Logiciels Orange(앱·펌웨어 IP) + Fiber §3(TV 콘텐츠 DRM)
+   모두 소프트웨어 또는 방송 콘텐츠에 적용되는 IP 조항이며, 공개 가격 페이지의 가격 데이터에
+   직접 적용되지 않는다.
+
+3. **하드웨어 조항 스코프**: Fiber §7.1.2(모뎀 개조 금지)는 Orange가 임대 제공하는 물리
+   장비에 관한 조항이다.
+
+**Orange BE 강도 판정: 약함 (WEAK)** — 자동 접근/스크래핑 직접 금지 0건. 존재하는 조항은
+전부 (a) 가입자 서비스 AUP, (b) 소프트웨어/방송 IP, (c) 하드웨어 사용 제한 중 하나로,
+공개 가격 페이지 스크래핑 스코프 밖이다. §B.9 차단 조건 "중간 강도 이상" **미충족**.
+
+이는 Proximus(WEAK, 2026-05-28) + Telenet(WEAK, 2026-05-28)과 동일 패턴이다.
+
+---
+
+### §B.9 차단 조건 가부 판정
+
+**Orange BE 차단 조건 충족 여부**: **미충족**.
+
+- "utilisation strictement personnelle" 조항 소비자 GTC 존재: **확인되지 않음** (3종 PDF 전문
+  직접 확인). Appendix C §C.4 핵심 우려 해소.
+- "중간 강도 이상 자동접근 금지 조항 발견": **해당 조항 없음**. 차단 조건 미충족.
+
+**결론: 1.5.8 코드 머지 게이트 — OPEN**.
+
+Orange BE GTC 수동 열람 완료 결과, §B.9 차단 조건(중간 강도 이상 자동접근 금지 조항 발견)을
+충족하는 조항이 발견되지 않았다. B.5 공통 조건(일 1회 이하 fetch, 정직한 User-Agent,
+요금제 경로 직접 fetch, 쿼리 파라미터 방식 사용 금지, robots.txt 모니터링, /legal/affiliate-disclosure
+출처 표기, 차단 발생 시 즉시 비활성)을 준수하는 것을 전제로 1.5.8 fetcher 코드 머지를
+차단하지 않는다.
+
+---
+
+### §B.9 표 갱신 — Orange BE 판정 업데이트
+
+기존 §B.9 표 (2026-05-17):
+
+| PLAN 항목 | 대상 Provider | 판정 | 조건 |
+|---|---|---|---|
+| **1.5.8** | Orange BE | 🟡 조건부 진입 가능 | B.5 공통 조건 + 운영자 Orange BE 소비자 TOS PDF 수동 열람 필수 선행 + "strictly personal use" 조항 소비자 TOS 미존재 확인 |
+
+본 Amendment 갱신 후:
+
+| PLAN 항목 | 대상 Provider | 판정 | 조건 |
+|---|---|---|---|
+| **1.5.8** | Orange BE | 🟢 **PASS (선행조건 해소, 2026-06-05)** | B.5 공통 조건 준수 전제. GTC 수동 열람 완료 — "utilisation strictement personnelle" 및 자동접근 직접 금지 조항 0건 확인. Proximus/Telenet과 동일 패턴(WEAK). Love bundle PDF WAF 차단은 fetcher 스코프(단품) 외로 판정에 영향 없음. |
+
+---
+
+### 외부 변호사 필요 여부
+
+**아니오 — 현재 시점 외부 변호사 즉시 감사 불필요.**
+
+ADR-0013 Appendix A §조건 A (운영자 GTC 수동 열람에서 중간 강도 이상 조항 발견) 미충족.
+ADR-0013 §B.7 조건 A/B/C/D 모두 미충족.
+ADR-0004 §결정 3 기준에서 현재 진행 가능.
+
+§B.7 조건 C (어필리에이트 수수료 발생 = 상업 운영 신호) 충족 시점, 즉 베타 진입 후 수익이
+발생하는 시점에 CJEU Ryanair v PR Aviation (C-30/14) 리스크가 격상되므로, 그 시점에 €800
+외부 감사 1회를 권고한다 (ADR-0013 Appendix A §조건 C, Appendix B Amendment 2026-05-28 동일).
+
+---
+
+### 잔여 리스크 및 한계
+
+1. **Love bundle PDF 미열람**: Love bundle (Conditions internet et TV 번들) PDF는 Imperva WAF
+   403 차단으로 운영자가 다운로드 불가. 단 PLAN 1.5.8 fetcher 범위가 mobile + internet_fixed
+   단품으로 정의되어 있고, robots.txt가 해당 URL 패턴을 Disallow하므로 fetcher가 Love bundle
+   페이지를 접근하지 않는 구조. 향후 1.5.8 fetcher가 bundle 페이지를 포함하는 방향으로 범위
+   확장 시 별도 legal 검토 트리거 필요.
+
+2. **GTC 스코프 한계**: 검토한 3종 PDF는 **가입자 서비스 약관**이다. 웹사이트 방문자 대상 별도
+   이용약관(Website Terms of Use)이 추후 신설될 경우 해당 문서가 직접 적용 약관이 된다.
+   robots.txt 월 1회 모니터링(B.5 공통 조건 4)에 TOS 변경 모니터링 병행 권장.
+
+3. **본 검토의 법적 지위**: 이 Amendment는 "1차 법무 검토 의견"이며 "법률 자문"이 아니다.
+   변호사 검토를 대체하지 않는다.
+
+---
+
+**Appendix B Amendment 작성: legal 에이전트 (2026-06-05)**
+**결론**: 1.5.8 (Orange BE fetcher) 코드 머지 게이트 **OPEN** (B.5 공통 조건 준수 전제).
+**직접 금지 0건, false positive만 매칭 — Proximus/Telenet과 동일 패턴.**

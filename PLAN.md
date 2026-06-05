@@ -936,11 +936,13 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)
   Amendment 1 §Decision #1).
   - **🔒 선행조건**: 1.5.6 §선행조건 (legal 3-provider robots/TOS 일괄 검토
-    + GTC 수동 열람) 통과 후 진입. Orange BE robots.txt + TOS 는 ADR-0013 이
-    *미검토* → legal 3-provider 트리거에 포함 (PLAN 항목 진입 시 호출). Voo
-    robots/TOS 는 ADR-0013 Appendix B §B.4 가 이미 통과 기록했으나 별도 fetcher
-    없음 — Orange BE fetcher 가 voo.be 도메인 접근 시 동일 정책 재사용 (역사
-    기록 보존).
+    + GTC 수동 열람) 통과 후 진입. **Orange BE robots.txt + TOS + GTC 수동 열람
+    검토 완료 (2026-06-05, ADR-0013 Appendix B Amendment 2026-06-05, 판정 🟢
+    PASS — 직접 금지 0건, Proximus/Telenet과 동일 패턴, 머지 게이트 OPEN).** Voo
+    robots/TOS 는 ADR-0013 Appendix B §B.4 + Appendix D (2026-06-04) 가 이미 통과
+    기록했으나 별도 fetcher 없음 — Orange BE fetcher 가 voo.be 도메인 접근 시
+    동일 정책 재사용 (역사 기록 보존). cross-ref:
+    [ADR-0013 Appendix B Amendment (2026-06-05)](docs/adr/0013-fetcher-real-scraping-risk-assessment.md#appendix-b-amendment-2026-06-05----운영자-gtc-수동-열람-완료-orange-be)
   - **함의 cross-ref ([ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Amendment 3, 2026-05-28)**:
     3사 모두 현대 JS 사이트(AEM/React 위젯) 가능성 높음 — *정적 파싱 가용성은
     공급사가 아니라 페이지 단위*로 판단해야 함 (Telenet mobile=정적 가능 /
@@ -963,6 +965,8 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     단위 1 + registry 등록 + 실 Neon DB `tariff_snapshot` Orange BE (Voo
     흡수 포함) N tariff 누적 + confidence='low' < 20% + typecheck/lint/test 0
     + harness:plan/data 정합.
+  - **진행 — 코드/로컬 게이트 완료 (2026-06-05)**: legal 선행조건 ✅ ([ADR-0013 Appendix B Amendment 2026-06-05](docs/adr/0013-fetcher-real-scraping-risk-assessment.md#appendix-b-amendment-2026-06-05----운영자-gtc-수동-열람-완료-orange-be) 통과, GTC 3종 PDF 직접 금지 0건). `src/fetchers/orange-be.ts` 실 스크래핑 (`method='scraping'`, `categories: ['internet_fixed']`) + `orange-be.test.ts` 10 케이스 + registry 등록 완료. **scope 정직 표기**: (a) Internet 페이지 (`/fr/produits-et-services/internet-chez-vous`) `.obe-pricebox` × 3 (Start €38/€53, Zen €47/€62, Giga €57/€72) 정적 추출 — 실 HTML 검증 100% 일치, confidence='high' 3/3 (low 0% < 20% DoD). (b) Mobile 페이지는 `<obe-dps-price>` 웹 컴포넌트 JS 렌더링 — 정적 가격 부재로 본 fetcher 미커버, 후속 라운드 (catalog API 발견 또는 manual seed 결정, fetcher 헤더 명시). (c) voo.be 도메인은 PDF-only (`Nos prix à partir du 1 Janvier 2026`) 정적 가격 부재 — fetcher fetch 안 함, ADR-0034 Amendment 1 §Consequences "잃는 것" 그대로 (정직성 UI 보조 = 후속 라운드 `/data-sources` 캐비엇). 로컬 게이트 ✅ typecheck 0 · lint 0 · test:run 749 passed (orange-be 10 케이스) · harness:plan/data 정합.
+  - **남은 DoD (머지 후 프로덕션 게이트 — 운영자/cron, 1.5.6 패턴)**: Vercel/Inngest **프로덕션 IP** 실 fetch 확인 (메모 "Fetcher 프로덕션 IP 함정" — 로컬 fetch 성공 ≠ 프로덕션 성공, 데이터센터 IP Imperva 차단 가능). (1) 실 Neon DB `tariff_snapshot` Orange BE 3 tariff 누적 (2) 24h 신선도 모니터링 (admin 헬스) (3) 프로덕션 confidence='low' < 20% 재확인. **이 게이트 통과 시 1.5.8 `[x]`** (현재 코드/로컬 게이트만 완료 → `[ ]` 유지, ADR-0013 24h 게이트 정합).
 
 **Phase 1.5 검증:** verifier — typecheck/lint/test 0 에러 + 신설 runbook 존재.
 
