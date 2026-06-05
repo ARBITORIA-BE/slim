@@ -2182,11 +2182,10 @@ D2 — ADR-0003 §결정 2 무효화). 어드민 v0 (4.5.1) 유지. 페이즈 5 
     - [x] **4.5.1.d** 테스트 — 단위 (SQL 쿼리 + 토큰 가드) + E2E 1건 (토큰 없이 접근 → 404, 토큰 + 접근 → 200). DoD: `pnpm test` + `pnpm test:e2e` 통과. **2026-05-14 완료** — `constant-time-equal.test.ts` (4건) + `admin-metrics.test.ts` (6건, pure helpers `admin-metrics-helpers.ts` 분리) + `e2e/admin-guard.spec.ts` (4건, 404 음성 2 + 토큰 진입 + 쿠키 재진입). `pnpm test` 493/493 ✅ / `pnpm test:e2e admin-guard` 4/4 ✅.
   - 운영자 follow-up: (1) `.env.local` / `.env.example` / `.env.local.example` 에 `ADMIN_TOKEN=<32+ char nanoid>` 추가 (2) Vercel production/preview env 에 동일 키 등록 — 권한 설정상 Claude 가 `.env*` 편집 불가, 운영자 수동.
 - [ ] **4.5.2** Sentry 알림 + Inngest 실패율 모니터
-  - 코드 작업 ≈ 0 — 운영자 dashboard 설정 중심. Sentry init 은 페이즈 0/1 에서
-    setup 됨 (production 활성 정찰 필요).
+  - 코드 작업 ≈ 0 — 운영자 dashboard 설정 중심. **정찰 결과 (2026-06-05)**: Sentry `@sentry/nextjs ^8.40.0` 패키지 설치됨 (`package.json`)이나 `Sentry.init` 호출 0건 (`instrumentation.ts` / `sentry.*.config.ts` 부재) → **페이즈 0/1 setup 가정은 부정확**, Sentry **미활성** 상태. Inngest 함수 2개 (`dailyFetchAll` / `followUpEmailFn`)는 production 활성 (PR #25 머지 후 invoke 성공 확인).
   - sub-task 분해:
-    - [ ] **4.5.2.a** Sentry init production 활성 정찰 + 알림 룰 명세 — 룰 3종: (1) error rate > 5/min → 운영자 이메일 즉시 (2) 신규 issue 첫 발생 → 즉시 (3) LCP > 5s sample → 일 1회 요약. DoD: `docs/sentry-alert-rules.md` 명세 + Sentry dashboard 룰 ON.
-    - [ ] **4.5.2.b** Inngest 실패율 임계값 설정 — `dailyFetchAll` / `followUpEmail` 함수 실패율 ≥ 10% → 운영자 알림. DoD: Inngest dashboard 알림 룰 ON + `docs/inngest-alert-rules.md` 명세.
+    - [~] **4.5.2.a** Sentry init production 활성 정찰 + 알림 룰 명세 — 룰 3종: (1) error rate > 5/min → 운영자 이메일 즉시 (2) 신규 issue 첫 발생 → 즉시 (3) LCP > 5s sample → 일 1회 요약. DoD: `docs/runbook/sentry-alert-rules.md` 명세 + Sentry dashboard 룰 ON. **2026-06-05 docs 신설 완료** (`docs/runbook/sentry-alert-rules.md` — 정찰 결과 + 룰 3종 명세 + 활성화 절차 잠금). **잔여 = 운영자 트랙**: (i) Sentry 프로젝트 생성 + DSN 발급 + Vercel env 등록 (ii) instrumentation.ts/sentry.*.config.ts 신설 (별 PR) (iii) Sentry dashboard 룰 ON. €300/월 cap 정합 (Developer plan 무료 티어).
+    - [~] **4.5.2.b** Inngest 실패율 임계값 설정 — `dailyFetchAll` / `followUpEmail` 함수 실패율 ≥ 10% → 운영자 알림. DoD: Inngest dashboard 알림 룰 ON + `docs/runbook/inngest-alert-rules.md` 명세. **2026-06-05 docs 신설 완료** (`docs/runbook/inngest-alert-rules.md` — 룰 2종 명세 + SLA 매트릭스 + admin 헬스 cross-ref). **잔여 = 운영자 트랙**: Inngest Cloud 대시보드 → Notifications → 룰 2종 등록.
 - [ ] **4.5.3** **운영 평가 (게이트 무관)** — 6개월 메트릭 추적 (페이즈 5 진입 게이트 아님)
   - **🔄 재정의 (2026-05-17, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2)**:
     **M16 4-신호 평가 게이트 삭제** (ADR-0003 §결정 2 무효화 — Amendment 1).
