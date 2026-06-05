@@ -485,7 +485,7 @@
   "dataSources": {
     "heading": "Bron van de gegevens",
     "description": "We maken de bronnen en verzamelmethoden van de vergelijkingsgegevens die Slim gebruikt op transparante wijze bekend.",
-    "betaNote": "De vergelijkingsgegevens worden verzameld vanaf het begin van de bètafase (fase 4).",
+    "betaNote": "De vergelijkingsgegevens worden verzameld vanaf het begin van de bètafase.",
     "affiliateNoticeBody": "Het feit of u een affiliate bent, heeft geen invloed op de rangschikking van de resultaten — het algoritme rangschikt de resultaten op basis van de besparing. Voor meer informatie",
     "affiliateNoticeLink": "/legal/affiliate-disclosure",
     "affiliateNoticeLinkLabel": "/legal/affiliate-verklaring",
@@ -516,7 +516,7 @@
     "colExcludedReason": "Redenen voor uitsluiting",
     "orangeBeLabel": "Orange BE",
     "orangeBeCountry": "BE",
-    "orangeBeReason": "Wordt na evaluatie in fase 5 toegevoegd.",
+    "orangeBeReason": "Wordt na evaluatie later toegevoegd.",
     "orangeBeCtaAriaLabel": "Verzoek om een vergelijking van Orange BE verzenden",
     "orangeBeCta": "Vergelijkingsaanvraag voor Orange BE",
     "footerContact": "Methoden voor gegevensverzameling · Verzoek om toevoeging van leveranciers · Fouten melden:",

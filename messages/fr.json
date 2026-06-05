@@ -485,7 +485,7 @@
   "dataSources": {
     "heading": "Source des données",
     "description": "Nous divulguons en toute transparence les sources et les méthodes de collecte des données comparatives utilisées par Slim.",
-    "betaNote": "Les données comparatives seront cumulées après le début de la phase bêta (phase 4).",
+    "betaNote": "Les données comparatives seront cumulées après le début de la phase bêta.",
     "affiliateNoticeBody": "Le fait d'être affilié ou non n'a aucune incidence sur le classement des résultats — l'algorithme classe les résultats en fonction des économies réalisées. Pour plus d'informations,",
     "affiliateNoticeLink": "/legal/affiliate-disclosure",
     "affiliateNoticeLinkLabel": "/legal/mentions-légales-affiliation",
@@ -516,7 +516,7 @@
     "colExcludedReason": "Motifs d'exclusion",
     "orangeBeLabel": "Orange BE",
     "orangeBeCountry": "BE",
-    "orangeBeReason": "À ajouter après évaluation lors de la phase 5.",
+    "orangeBeReason": "À ajouter ultérieurement après évaluation.",
     "orangeBeCtaAriaLabel": "Envoyer une demande de comparaison Orange BE",
     "orangeBeCta": "Demande de comparaison avec Orange BE",
     "footerContact": "Méthodes de collecte des données · Demande d'ajout de fournisseurs · Signalement d'erreurs :",
