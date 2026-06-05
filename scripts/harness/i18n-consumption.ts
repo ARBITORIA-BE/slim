@@ -51,18 +51,18 @@ import { readFile, readdir, access } from 'node:fs/promises';
 import * as path from 'node:path';
 
 // ─── Phase B 대기 allowlist ──────────────────────────────────────────────────
-// 4.5.j.4.B 에서 완료 시 아래 파일들을 하나씩 제거하면 전수 GREEN.
+// 4.5.j.4.B 완료: data-sources / go / unsubscribe / affiliate-disclosure 4 파일 제거.
 // allowlist 에 있는 파일은 한글 리터럴 검사를 건너뜀 (단, import 검사도 스킵).
 // NOTE: 경로는 슬래시 기준으로 작성 (path.sep 정규화 후 비교).
-const PHASE_B_ALLOWLIST: readonly string[] = [
-  // 4.5.j.4.B (나) 메타데이터 i18n 완료 후에도 잔류 — (가) 보조 페이지 본문 미완:
-  'src/app/[locale]/data-sources/page.tsx',
-  'src/app/[locale]/go/[shortId]/[itemId]/page.tsx',
-  'src/app/[locale]/unsubscribe/[token]/page.tsx',
+const PHASE_B_ALLOWLIST: readonly string[] = [];
+
+// ─── 운영자 internal 영구 허용 목록 ─────────────────────────────────────────
+// OPERATOR_INTERNAL_ALLOWLIST: 운영자 전용 페이지 — 한국어 단일 사용자, SEO 비대상.
+// harness:i18n Phase B 완료 신호: PHASE_B_ALLOWLIST.length === 0.
+// OPERATOR_INTERNAL_ALLOWLIST 는 별도 변수, 카운트 비대상 (§A2.8 영구 잔존 명시).
+const OPERATOR_INTERNAL_ALLOWLIST: readonly string[] = [
+  // admin/page.tsx: robots: { index: false } + 운영자 한국어 대시보드 — 영구 잔존
   'src/app/[locale]/admin/page.tsx',
-  'src/app/[locale]/legal/affiliate-disclosure/page.tsx',
-  // NOTE: [locale]/layout.tsx 는 metadata i18n 완료 (§A2.9.1) → allowlist 제거됨.
-  //       한글 리터럴 0 확인 후 스캔 대상 복귀.
 ];
 
 // ─── 핵심 라우트 파일 — useTranslations/getTranslations import 존재 필수 ──────
@@ -149,10 +149,12 @@ function toRelative(absolutePath: string, projectRoot: string): string {
 }
 
 /**
- * allowlist 매칭: 상대 경로가 PHASE_B_ALLOWLIST 에 포함되는지 확인.
+ * allowlist 매칭: 상대 경로가 PHASE_B_ALLOWLIST 또는 OPERATOR_INTERNAL_ALLOWLIST 에 포함되는지 확인.
+ * why: Phase B 대기 파일과 운영자 internal 영구 허용 파일 모두 한글 리터럴 검사 스킵.
  */
 function isInAllowlist(relPath: string): boolean {
-  return PHASE_B_ALLOWLIST.some((al) => relPath === al || relPath.endsWith('/' + al));
+  const combined = [...PHASE_B_ALLOWLIST, ...OPERATOR_INTERNAL_ALLOWLIST];
+  return combined.some((al) => relPath === al || relPath.endsWith('/' + al));
 }
 
 /**
@@ -420,11 +422,16 @@ async function main(): Promise<void> {
 
   // ─── 결과 출력 ────────────────────────────────────────────────────────────
   if (violations.length === 0) {
-    const allowlistCount = PHASE_B_ALLOWLIST.length;
+    const phaseBCount = PHASE_B_ALLOWLIST.length;
+    const operatorCount = OPERATOR_INTERNAL_ALLOWLIST.length;
+    const statusMsg = phaseBCount === 0
+      ? `Phase B COMPLETE — PHASE_B_ALLOWLIST = 0.`
+      : `Phase B allowlist: ${phaseBCount}개 파일 대기 중.`;
     console.log(
       `[harness:i18n] GREEN — 한글 리터럴 0 + translations import 정합.\n` +
       `  스캔 범위: [locale](${targetFiles.length}) + components(${componentFiles.length}) + comparison-input.ts(1)\n` +
-      `  Phase B allowlist: ${allowlistCount}개 파일 대기 중 (4.5.j.4.B 완료 시 0 예정).`,
+      `  ${statusMsg}\n` +
+      `  OPERATOR_INTERNAL_ALLOWLIST: ${operatorCount}개 파일 영구 잔존 (admin — 운영자 internal).`,
     );
     process.exit(0);
   }

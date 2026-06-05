@@ -113,25 +113,26 @@ describe('C. Pre-checked 입력 0건', () => {
 // ─────────────────────────────────────────────
 // D. 필수 5항목 문자열 존재 (EDPB Guidelines 05/2020)
 // ─────────────────────────────────────────────
-describe('D. 필수 5항목 문자열 존재', () => {
-  it('항목 3-1: 리다이렉트 흐름 표시 — "Slim → 귀하의 브라우저"', () => {
-    expect(src).toMatch(/Slim → 귀하의 브라우저/);
+describe('D. 필수 5항목 i18n 키 존재 (EDPB Guidelines 05/2020)', () => {
+  // i18n 마이그레이션 후: 소스에 한글 리터럴 대신 t() 키 호출이 있어야 함.
+  it('항목 3-1: 리다이렉트 흐름 — t("dataFlowRedirect") 키 호출 존재', () => {
+    expect(src).toMatch(/t\(['"]dataFlowRedirect['"]/);
   });
 
-  it('항목 3-2: 전송 데이터 없음 — "Slim이 공급사에 전송하는 데이터"', () => {
-    expect(src).toMatch(/Slim이 공급사에 전송하는 데이터/);
+  it('항목 3-2: 전송 데이터 없음 — t("dataFlowNoTransfer") 키 호출 존재', () => {
+    expect(src).toMatch(/t\(['"]dataFlowNoTransfer['"]/);
   });
 
-  it('항목 3-3: 공급사 자체 수집 고지 — "공급사가 자체적으로"', () => {
-    expect(src).toMatch(/공급사가 자체적으로/);
+  it('항목 3-3: 공급사 자체 수집 고지 — t("dataFlowProviderCollects") 키 호출 존재', () => {
+    expect(src).toMatch(/t\(['"]dataFlowProviderCollects['"]/);
   });
 
-  it('항목 4: 동의 철회 방법 — "기록 없이 취소됩니다"', () => {
-    expect(src).toMatch(/기록 없이 취소됩니다/);
+  it('항목 4: 동의 철회 방법 — t("consentWithdrawalBody") 키 호출 존재', () => {
+    expect(src).toMatch(/t\(['"]consentWithdrawalBody['"]/);
   });
 
-  it('항목 5: freely given — "거부해도 비교 결과는 그대로 유지됩니다"', () => {
-    expect(src).toMatch(/거부해도 비교 결과는 그대로 유지됩니다/);
+  it('항목 5: freely given — t("freelyGivenNotice") 키 호출 존재', () => {
+    expect(src).toMatch(/t\(['"]freelyGivenNotice['"]/);
   });
 });
 
@@ -139,8 +140,9 @@ describe('D. 필수 5항목 문자열 존재', () => {
 // E. VI.99 한 줄 존재 (ADR-0026 §검토 5)
 // ─────────────────────────────────────────────
 describe('E. VI.99 랭킹 명시 한 줄 존재', () => {
-  it('"정렬 기준" 또는 "절약액 내림차순" 텍스트 포함', () => {
-    expect(src).toMatch(/정렬 기준|절약액 내림차순/);
+  it('t("rankingNote") 키 호출 존재 (i18n 마이그레이션 후 — ko.json 에 "정렬 기준: 절약액 내림차순" 존재)', () => {
+    // i18n 마이그레이션 후: 소스에 t('rankingNote') 호출이 있어야 함
+    expect(src).toMatch(/t\(['"]rankingNote['"]/);
   });
 });
 
@@ -179,12 +181,14 @@ describe('G. 4.5.c 후속 메일 — pre-checked 0 + Art. 13 카피 존재', () 
     expect(match).not.toBeNull();
   });
 
-  it('Art. 13 — "7일 후" 문구 존재 (ADR-0028 §T4)', () => {
-    expect(src).toMatch(/7일\s*후/);
+  it('Art. 13 — t("followUpDescription") 키 호출 존재 (ADR-0028 §T4)', () => {
+    // i18n 마이그레이션 후: ko.json의 followUpDescription 키에 "7일 후" 내용 존재
+    expect(src).toMatch(/t\(['"]followUpDescription['"]/);
   });
 
-  it('Art. 13 — "익명화" 또는 "발송 직후 익명" 문구 존재 (ADR-0028 §T4)', () => {
-    expect(src).toMatch(/익명화|발송\s*직후\s*익명/);
+  it('Art. 13 — t("followUpAnonymizeNote") 키 호출 존재 (ADR-0028 §T4)', () => {
+    // i18n 마이그레이션 후: ko.json의 followUpAnonymizeNote 키에 "익명화" 내용 존재
+    expect(src).toMatch(/t\(['"]followUpAnonymizeNote['"]/);
   });
 
   it('Art. 13 / Art. 7(3) — "unsubscribe" 또는 "해제" 문구 존재 (ADR-0028 §T4)', () => {

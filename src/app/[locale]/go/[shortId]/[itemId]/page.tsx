@@ -24,6 +24,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getInterstitialData } from '@/db/queries/affiliate-click';
 
@@ -36,9 +37,11 @@ const UUID_PATTERN =
 export default async function GoInterstitialPage({
   params,
 }: {
-  params: Promise<{ shortId: string; itemId: string }>;
+  params: Promise<{ locale: string; shortId: string; itemId: string }>;
 }) {
-  const { shortId, itemId } = await params;
+  const { locale, shortId, itemId } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'affiliateInterstitial' });
 
   // 1. 형식 검증 — 미달 시 즉시 404.
   if (!SHORT_ID_PATTERN.test(shortId) || !UUID_PATTERN.test(itemId)) {
@@ -61,10 +64,10 @@ export default async function GoInterstitialPage({
     <main className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 px-4 py-10 md:px-6">
       <header className="flex flex-col gap-2">
         <span className="text-xs font-medium uppercase tracking-wider text-muted">
-          외부 사이트 이동
+          {t('externalSiteLabel')}
         </span>
         <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
-          {providerName} 사이트로 이동합니다
+          {t('heading', { providerName })}
         </h1>
       </header>
 
@@ -76,47 +79,46 @@ export default async function GoInterstitialPage({
           id="consent-heading"
           className="text-base font-semibold text-fg"
         >
-          이동 전 확인 사항
+          {t('consentHeading')}
         </h2>
 
         {/* 필수 5항목 (EDPB Guidelines 05/2020 on consent) */}
         <dl className="flex flex-col gap-3 text-sm">
           {/* 항목 1 — 받는 회사명 */}
           <div className="flex flex-col gap-0.5">
-            <dt className="font-medium text-fg">받는 회사</dt>
+            <dt className="font-medium text-fg">{t('receiverLabel')}</dt>
             <dd className="text-fg-soft">{providerName}</dd>
           </div>
 
           {/* 항목 2 — 처리 목적 */}
           <div className="flex flex-col gap-0.5">
-            <dt className="font-medium text-fg">Slim 기록 목적</dt>
+            <dt className="font-medium text-fg">{t('slimPurposeLabel')}</dt>
             {/* ADR-0026 §T2 — consentGivenAt NOT NULL 강제 = 동의 없으면 INSERT 0 */}
             <dd className="text-fg-soft">
-              방문 사실이 Slim 서버에 어트리뷰션 목적으로 기록됩니다
+              {t('slimPurposeBody')}
             </dd>
           </div>
 
           {/* 항목 3 — 전송 데이터 3 sub-항목 */}
           <div className="flex flex-col gap-0.5">
-            <dt className="font-medium text-fg">데이터 흐름</dt>
+            <dt className="font-medium text-fg">{t('dataFlowLabel')}</dt>
             <dd className="text-fg-soft">
               <ul className="flex flex-col gap-1">
                 {/* sub 3-1: 리다이렉트 흐름 */}
                 <li>
-                  Slim → 귀하의 브라우저 → {providerName} 사이트로 리다이렉트됩니다
+                  {t('dataFlowRedirect', { providerName })}
                 </li>
                 {/* sub 3-2: Slim이 공급사에 전송하는 데이터 없음 */}
                 <li>
-                  Slim이 공급사에 전송하는 데이터: 없음 (단순 리다이렉트,{' '}
+                  {t('dataFlowNoTransfer')}{' '}
                   <code className="rounded bg-fg/5 px-1 text-xs">
                     ?ref=slim-r-{shortId}
                   </code>{' '}
-                  캠페인 태그만 포함)
+                  {t('dataFlowNoTransferEnd')}
                 </li>
                 {/* sub 3-3: 공급사 자체 수집 고지 */}
                 <li>
-                  공급사가 자체적으로 IP·브라우저 정보를 수집할 수 있습니다
-                  — 공급사의 개인정보처리방침에 따릅니다
+                  {t('dataFlowProviderCollects')}
                 </li>
               </ul>
             </dd>
@@ -124,17 +126,16 @@ export default async function GoInterstitialPage({
 
           {/* 항목 4 — 동의 철회 방법 */}
           <div className="flex flex-col gap-0.5">
-            <dt className="font-medium text-fg">동의 철회</dt>
+            <dt className="font-medium text-fg">{t('consentWithdrawalLabel')}</dt>
             <dd className="text-fg-soft">
-              이 페이지를 닫거나 &apos;비교 결과로 돌아가기&apos;를 누르면
-              기록 없이 취소됩니다
+              {t('consentWithdrawalBody')}
             </dd>
           </div>
         </dl>
 
         {/* 항목 5 — freely given 명시 (단독 줄, 부각) */}
         <p className="rounded-lg bg-fg/5 px-4 py-2.5 text-sm font-medium text-fg">
-          거부해도 비교 결과는 그대로 유지됩니다
+          {t('freelyGivenNotice')}
         </p>
 
         {/*
@@ -167,7 +168,7 @@ export default async function GoInterstitialPage({
               id="follow-up-heading"
               className="text-sm font-semibold text-fg"
             >
-              후속 메일 (선택)
+              {t('followUpHeading')}
             </h3>
 
             {/* Art. 13 정보 제공 카피 (ADR-0028 §T4) */}
@@ -175,14 +176,14 @@ export default async function GoInterstitialPage({
               id="follow-up-help"
               className="text-sm leading-relaxed text-fg-soft"
             >
-              이메일을 남기고 체크하면 7일 후 1회 &apos;Slim 후속 메일&apos;을 보냅니다
-              (&apos;변경하셨다면 알려주세요&apos;).
+              {t('followUpDescription')}
             </p>
             <p className="text-sm leading-relaxed text-fg-soft">
-              이메일은 발송 직후 익명화됩니다 (ADR-0007 §T4 정신 일관).
+              {t('followUpAnonymizeNote')}
             </p>
             <p className="text-sm leading-relaxed text-fg-soft">
-              메일 안 1-click 해제 항상 가능 — <code className="rounded bg-fg/5 px-1 text-xs">/unsubscribe/[token]</code> (4.5.e).
+              {t('followUpUnsubscribeNote')}{' '}
+              <code className="rounded bg-fg/5 px-1 text-xs">/unsubscribe/[token]</code> (4.5.e).
             </p>
 
             {/* 이메일 입력 (선택) */}
@@ -207,12 +208,12 @@ export default async function GoInterstitialPage({
                 defaultChecked={false}
                 className="h-4 w-4 rounded border-fg/20 accent-primary"
               />
-              후속 메일 받기 (선택)
+              {t('followUpCheckbox')}
             </label>
 
             {/* 어트리뷰션 동의 종속 안내 — 오해 방지 (ADR-0028 §T3) */}
             <p className="text-xs leading-relaxed text-fg-soft/70">
-              거부하면 후속 메일도 보내지 않습니다 (어트리뷰션 동의가 후속 메일의 전제 — ADR-0028 §T3 종속).
+              {t('followUpConsentNote')}
             </p>
           </section>
 
@@ -223,7 +224,7 @@ export default async function GoInterstitialPage({
               type="submit"
               className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-bg transition hover:opacity-90"
             >
-              동의하고 이동
+              {t('submitButton')}
             </button>
 
             {/* 거부 경로 — form 밖 링크 (INSERT 0, ?ref 미부착, ADR-0026 §T2) */}
@@ -235,18 +236,17 @@ export default async function GoInterstitialPage({
                 className="inline-flex items-center justify-center rounded-full bg-fg/10 px-6 py-2.5 text-sm font-medium text-fg transition hover:bg-fg/15"
               >
                 {/* Confirmshaming 0: 중립 카피 (ADR-0026 §검토 6) */}
-                동의 없이 외부 링크로 이동{' '}
+                {t('declineButton')}{' '}
                 <span aria-hidden="true" className="ml-1">
                   ↗
                 </span>
-                <span className="sr-only"> (새 창에서 열림)</span>
+                <span className="sr-only"> {t('declineButtonNewTab')}</span>
               </a>
             ) : (
               // provider.website 없음 — 이동 불가 안내 (에러 UI 4.1.d)
               // 사용자 책임이 아님을 명시 — "관리자에게 문의" 류 X
               <p className="text-sm text-fg-soft">
-                이 공급사의 웹사이트 정보가 아직 등록되지 않아 외부 이동이
-                불가합니다. 비교 결과로 돌아가세요.
+                {t('noWebsiteMessage')}
               </p>
             )}
           </div>
@@ -258,7 +258,7 @@ export default async function GoInterstitialPage({
         href={`/r/${shortId}`}
         className="text-sm text-primary underline-offset-4 hover:underline"
       >
-        ← 비교 결과로 돌아가기
+        {t('backToResults')}
       </a>
 
       {/*
@@ -266,7 +266,7 @@ export default async function GoInterstitialPage({
         비교 결과 정렬 기준을 인터스티셜에서도 확인 가능하도록 표시.
       */}
       <p className="text-xs text-muted">
-        정렬 기준: 절약액 내림차순. 제휴 여부는 정렬에 영향 없음.
+        {t('rankingNote')}
       </p>
     </main>
   );

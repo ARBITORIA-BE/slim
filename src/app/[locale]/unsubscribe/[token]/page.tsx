@@ -17,6 +17,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { unsubscribeByToken } from '@/db/queries/follow-up-email';
 import { Link } from '@/i18n/navigation';
@@ -28,9 +29,11 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16}$/;
 export default async function UnsubscribePage({
   params,
 }: {
-  params: Promise<{ token: string }>;
+  params: Promise<{ locale: string; token: string }>;
 }) {
-  const { token } = await params;
+  const { locale, token } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'unsubscribe' });
 
   // 1. 형식 검증 — 16자 nanoid URL-safe alphabet. 불일치 → 404.
   if (!TOKEN_PATTERN.test(token)) {
@@ -57,10 +60,10 @@ export default async function UnsubscribePage({
           - 이모지 없음 (DoD 명세상 허용이나 중립 선택)
         */}
         <span className="text-xs font-medium uppercase tracking-wider text-muted">
-          후속 메일 해제
+          {t('categoryLabel')}
         </span>
         <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
-          Slim 후속 메일 해제 완료
+          {t('heading')}
         </h1>
       </header>
 
@@ -72,7 +75,7 @@ export default async function UnsubscribePage({
           id="unsubscribe-heading"
           className="text-base font-semibold text-fg"
         >
-          해제 내용
+          {t('sectionHeading')}
         </h2>
 
         {/*
@@ -82,21 +85,19 @@ export default async function UnsubscribePage({
           3. 재구독 유도 0 / 마케팅 톤 0 / Confirmshaming 0
         */}
         <p className="text-sm leading-relaxed text-fg-soft">
-          지정하신 이메일 주소를 Slim 후속 메일 명단에서 제외했습니다.
+          {t('removedBody')}
         </p>
         <p className="text-sm leading-relaxed text-fg-soft">
-          어트리뷰션 클릭 기록은 GDPR Art. 6(1)(c) 회계 의무로 유지되며,
-          본 해제는 후속 메일 발송 중단만 의미합니다. 이메일 주소는 즉시 익명화됩니다
-          (ADR-0028 §T5).
+          {t('retentionBody')}
         </p>
       </article>
 
-      {/* 홈 복귀 링크 — DoD §1 "← Slim 홈으로 돌아가기" */}
+      {/* 홈 복귀 링크 — DoD §1 */}
       <Link
         href="/"
         className="text-sm text-primary underline-offset-4 hover:underline"
       >
-        ← Slim 홈으로 돌아가기
+        {t('backToHome')}
       </Link>
     </main>
   );

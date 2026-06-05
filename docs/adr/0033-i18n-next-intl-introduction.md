@@ -388,6 +388,15 @@ prefix 노출. 최종 `localePrefix` 값은 builder 가 next-intl 문서 기준
    - DeepL 누적 실제 사용량: **22,539자** / 1,000,000 (Free 한도 대비 2.3%) — 이번 legal 라운드 +9,927자
    - ICU 변수 안전: legal.* 본문 {var} 0건 실증 (ADR-0040 D5) — var-protection.ts 적용 불요
    - nl/fr/en.json legal.* prefix 0건 / affiliateDisclosure.pageTitle 4 locale 번역 완료 / ko 정본 ↔ 3 locale 키 셋 103개 정합 — DoD 충족
+
+  **§Verification #5 다중 네임스페이스 retarget 실측 (2026-06-05, PLAN 4.5.j.4.B.4):**
+   - 번역 대상: affiliateInterstitial(26) + legal.affiliateDisclosure 본문 확장(32) + dataSources(50) + unsubscribe(6) + metadata.{dataSources,affiliateDisclosure,admin}(5) = **119키** × 3 locale (nl/fr/en) = **342 텍스트 항목** (114키 × 3 — 기존 번역 제외 incremental)
+   - 방식: `scripts/i18n/translate-legal.mjs` 옵션 (a) 확장 — TARGET_NAMESPACES 화이트리스트 다중 지원 + var-protection 인라인 (ICU {var} 4건 실증 대응)
+   - 실행 커맨드: `pnpm tsx --env-file=.env.local scripts/i18n/translate-legal.mjs`
+   - 처리 내용: [nl]/[fr]/[en] prefix 잔존 키 incremental retarget / ICU 변수 encodeVars/decodeVars 공백 보정 적용
+   - ICU 변수 포함 키 4건: `affiliateInterstitial.heading({providerName})`, `affiliateInterstitial.dataFlowRedirect({providerName})`, `dataSources.providerLinkAriaLabel({name})`, `dataSources.comparisonCountRecent({count})` — var-protection 적용, 변수 유실 0건 확인
+   - DeepL 누적 실제 사용량: **31,377자** / 1,000,000 (Free 한도 대비 3.1%) — 이번 라운드 +8,838자 (인코딩 후 7,482 encoded chars 송신)
+   - nl/fr/en.json 대상 네임스페이스 prefix 0건 / 경계 잠금 (legal.terms/privacy/cookie) 침범 0건 / nl-BE/nl-NL/fr-BE delta 0 — DoD 충족
 6. **4.9 런치 게이트** — nl/fr/en 콘텐츠 backfill 100% + hreflang/sitemap
    활성 + `legal.*` legal 에이전트 검수 통과 + `messages/ko.json` 제거.
 
