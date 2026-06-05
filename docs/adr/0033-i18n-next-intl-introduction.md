@@ -379,6 +379,15 @@ prefix 노출. 최종 `localePrefix` 값은 builder 가 next-intl 문서 기준
    - 수동 보정 키 (DeepL 재번역 후에도 부자연): nl `savingYearly`→`Per jaar {amount}`, nl `activationFee` 콤마 공백, nl `positiveSaving` 마침표 공백, fr `savingYearly`→`Par an {amount}`, fr `commissionUnknown` `d'` 패턴, en `savingYearly`→`{amount} / yr`, en `subtitleVoiceMinutes` 뒤 공백
    - `savingYearly "Yeon"` 분류: result.table.savingYearly = **.A.1 41키 집합** (retarget 재번역에서도 "Yeon" 재출력 → 수동 보정 1회 적용, 의미 복원 확인)
    - nl/fr/en.json placeholder 0건 / 기존 비-.A.1 값 무변경 — DoD 충족
+
+  **§Verification #5 legal.* retarget 실측 (2026-06-05, PLAN 4.5.j.3.a — ADR-0040 D1):**
+   - 번역 대상: legal.* 103키 × 3 locale (nl/fr/en) = **309 텍스트 항목**
+   - 방식: `scripts/i18n/translate-legal.mjs` (별도 스크립트 — translate.mjs legal.* 제외 경계 유지)
+   - 실행 커맨드: `pnpm tsx --env-file=.env.local scripts/i18n/translate-legal.mjs`
+   - 처리 내용: [nl]/[fr]/[en] prefix 잔존 키 + affiliateDisclosure.pageTitle 한국어 고정 회귀 retarget
+   - DeepL 누적 실제 사용량: **22,539자** / 1,000,000 (Free 한도 대비 2.3%) — 이번 legal 라운드 +9,927자
+   - ICU 변수 안전: legal.* 본문 {var} 0건 실증 (ADR-0040 D5) — var-protection.ts 적용 불요
+   - nl/fr/en.json legal.* prefix 0건 / affiliateDisclosure.pageTitle 4 locale 번역 완료 / ko 정본 ↔ 3 locale 키 셋 103개 정합 — DoD 충족
 6. **4.9 런치 게이트** — nl/fr/en 콘텐츠 backfill 100% + hreflang/sitemap
    활성 + `legal.*` legal 에이전트 검수 통과 + `messages/ko.json` 제거.
 
