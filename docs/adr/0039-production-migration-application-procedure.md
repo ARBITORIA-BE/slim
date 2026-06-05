@@ -1,7 +1,31 @@
 # ADR-0039: production 마이그레이션 적용 절차 — `db:push` 인라인 + verify-db 확장 + 배포 후 체크리스트
 
 ## 상태
-제안 (2026-06-02, architect — 프로덕션 마이그레이션 갭 실측). 운영자가 0005/0006/0007 production 적용 + 후속 확인 통과 시 Accepted 격상.
+Accepted (2026-06-05). 제안 (2026-06-02, architect — 프로덕션 마이그레이션 갭 실측) → 운영자 인라인 `db:push` 적용 (2026-06-03, ADR-0022 §D4 정합) → DoD 5/5 통과 (2026-06-05, Pieter MCP 실측 + 운영자 Neon 검증).
+
+### Verification (2026-06-05 종결 트레일)
+
+PLAN D.9 DoD 5/5 전부 통과:
+
+- **#1 ✅** `pnpm exec tsx scripts/verify-db.ts` (2026-06-03, 운영자 인라인) — 8 테이블 all-green: `affiliate_click ✓ comparison_request ✓ comparison_result ✓ comparison_result_item ✓ follow_up_email ✓ provider ✓ tariff ✓ tariff_snapshot ✓`, 시드 provider 2/2 (proximus-be / telenet-be).
+- **#2 ✅** `slim.lu/en/admin` 월별 전환율 카드 정상 렌더 (2026-06-03 Claude_in_Chrome 인증 실측 20:36:17Z) — 이전 `relation "affiliate_click" does not exist` 에러 해소.
+- **#3 ✅** Inngest follow-up-email 24h 실측 (2026-06-05 ~08:30Z, Pieter MCP `app.inngest.com/env/production/functions/slim-follow-up-email/runs`) — **24/24 Completed**, Failure rate **0%**, Output `{failed:0, selected:0, sent:0}` (DB 쿼리 정상 / 보낼 대상 0건 = 외부 트래픽 부재). daily-fetch-all 동시 검증 1/1 Completed 49s (cron `0 6 * * *` UTC).
+- **#4 ✅** Pieter MCP 자가 5단계 비교 (`fr-BE/compare/mobile`, postal=1000, Tout seul, current-provider skip, sans facture) → `/r/2vvYzg0EcRu8` 결론 카드 "Modifier" CTA → `/go/2vvYzg0EcRu8/955f3949-4058-4706-8927-d1fc79622d35` interstitial → "동의하고 이동" → `confirm/route.ts:100` `insertAffiliateClick` → proximus.be 리다이렉트. 운영자 Neon Console 검증:
+  ```
+  affiliate_click 1행: id=1e5f621b-616f-483f-95b7-8c7c7c1ae6d1
+  ref_param='slim-r-2vvYzg0EcRu8'
+  conversion_status='pending'
+  consent_given_at=2026-06-05 08:29:15.644+00
+  created_at=    2026-06-05 08:29:15.879+00  (Δ 235ms = 동의→INSERT)
+  result_item_id=955f3949-... (인터스티셜 URL itemId 완전 일치)
+  ```
+  IP / user_agent / referrer / session_id 컬럼 부재 = ADR-0026 §T1 헌법 §8 #1 스키마 잠금 정합.
+- **#5 ✅** `scripts/verify-db.ts` 기대 테이블 6→8 확장 (PR #14 = `11aa6bf` 기머지).
+
+### 부수 발견 (별도 트랙 — D.9 종결 무관)
+
+- **🔴 PLAN 4.5.j.3 우선순위 격상** — fr-BE `/go/<shortId>/<itemId>` interstitial 라이브가 한국어 본문 그대로 노출 ("이동 전 확인 사항" 등). `legal.*` 네임스페이스 fr/nl placeholder = 4.5.j.3 잔여. 4.6 organic SEO 진입 *전* 해소 권장.
+- **🟡 PLAN 6.1 어드민 v1 백로그 +1** — affiliate_click count 카드 추가 (현 admin v0 = converted 카운트만, 클릭 발생 자체 노출 0 → D.9 같은 검증을 매번 Neon Console 의존).
 
 ## 맥락
 2026-06-02 22:11Z 프로덕션 `slim.lu/admin` 실측에서 두 증상:
