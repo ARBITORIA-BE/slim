@@ -11,12 +11,37 @@
 - **Inngest plan**: Free tier (현재) — 5 concurrent steps + 50K function runs/월. 솔로 단계 충분
 - **로그 위치**: Inngest 대시보드 (메모리 `reference_inngest_vercel_logs.md` — Vercel runtime logs에는 DB 에러만)
 
-## 활성화 절차 (운영자 트랙)
+## ⚠️ Inngest 자체 알림 시스템 부재 (2026-06-05 Pieter Chrome MCP 정찰)
 
-1. **Inngest Cloud 대시보드** (app.inngest.com) → ARBITORIA-BE 워크스페이스 → production 환경
-2. **좌측 사이드바 "Notifications" 또는 "Alerts"** 진입
-3. 아래 룰 2종 등록
-4. **수신 채널**: 운영자 이메일 `kim.wonmin91@gmail.com`
+**Hobby/Pro/Enterprise plan 모두 인앱 알림/통지 기능 메뉴 부재**:
+
+| Plan | $/mo | Notifications 기능 |
+|---|---|---|
+| Hobby (현재) | $0 | ❌ 부재 |
+| Pro | $75 | ❌ 부재 (Higher usage limits 만) |
+| Enterprise | Contact | ✅ "Dedicated slack channel" (수동 운영) |
+
+운영자 €300/월 cap 정합 ($75 Pro ≈ €70/월 = cap 1/4, 비용 대비 효익 낮음) → **외부 통합 패턴 채택**.
+
+## 활성화 절차 (운영자 트랙) — 외부 통합 옵션 3종
+
+### 옵션 A — admin 헬스 페이지 모니터링 (현재 채택, 권장)
+- `slim.lu/{locale}/admin` Fetcher 헬스 카드 (PLAN 4.7 통과)
+- SCRAPING/MANUAL/STUB byMethod 분해 + 24h 신선도
+- 운영자 일 1회 수동 확인 (€0/월, ~1분/일)
+- **현 시점 채택 사유**: 베타 전 트래픽 0~10명 단계 + 솔로 cap 정합
+
+### 옵션 B — Webhook 통합 (별 트랙)
+- Function 실패 시 webhook 호출 (코드 내 try/catch)
+- 수신 endpoint = Vercel route `/api/inngest-alert` 또는 Resend API → 이메일
+- Slack/Discord webhook URL 도 가능 (운영자 채널 보유 시)
+
+### 옵션 C — External uptime monitoring (별 트랙)
+- UptimeRobot (무료) / BetterStack / Cronitor
+- HTTP 200 + 응답 본문 키워드 (`100.0%`) 체크
+- 실패 시 운영자 이메일
+
+**현재 채택 = 옵션 A**. 옵션 B/C는 베타 트래픽 증가 시 reactivate.
 
 ## 알림 룰 2종
 
