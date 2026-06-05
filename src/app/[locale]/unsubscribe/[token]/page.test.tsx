@@ -21,6 +21,17 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
+// ─── next-intl/server mock ──────────────────────────────────────────────────
+// getTranslations: 키를 그대로 반환 (i18n 실값 로딩 없이 구조만 검증)
+vi.mock('next-intl/server', () => ({
+  getTranslations: vi.fn().mockImplementation(
+    async ({ namespace }: { namespace: string }) => {
+      return (key: string) => `${namespace}.${key}`;
+    },
+  ),
+  setRequestLocale: vi.fn(),
+}));
+
 // ─── @/i18n/navigation mock ────────────────────────────────────────────────
 // next-intl 의 Link 는 NextIntlClientProvider 컨텍스트를 요구함.
 // 테스트 환경에는 provider 가 없으므로 next/link 의 Link 로 대체.
@@ -61,9 +72,9 @@ import UnsubscribePage from './page';
 /** 유효한 nanoid(16) 형식 토큰 (영숫자 + _-). */
 const VALID_TOKEN = 'AbCd1234_-AbCd12';
 
-/** Promise<{ token: string }> params 래퍼. */
-function makeParams(token: string): Promise<{ token: string }> {
-  return Promise.resolve({ token });
+/** Promise<{ locale: string; token: string }> params 래퍼. */
+function makeParams(token: string): Promise<{ locale: string; token: string }> {
+  return Promise.resolve({ locale: 'ko', token });
 }
 
 beforeEach(() => {
@@ -73,22 +84,25 @@ beforeEach(() => {
 // ─── 1. 유효 토큰, 신규 해제 ───────────────────────────────────────────────
 
 describe('UnsubscribePage — 유효 토큰 신규 해제', () => {
-  it('just-unsubscribed → "해제 완료" 헤딩 렌더', async () => {
+  it('just-unsubscribed → h1 헤딩 렌더 (i18n 키 형식)', async () => {
     mockUnsubscribeByToken.mockResolvedValue({ kind: 'just-unsubscribed' });
 
     render(await UnsubscribePage({ params: makeParams(VALID_TOKEN) }));
 
+    // getTranslations mock 은 "namespace.key" 를 반환
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Slim 후속 메일 해제 완료',
+      'unsubscribe.heading',
     );
   });
 
-  it('just-unsubscribed → "명단에서 제외" 본문 존재', async () => {
+  it('just-unsubscribed → sectionHeading(h2) 렌더', async () => {
     mockUnsubscribeByToken.mockResolvedValue({ kind: 'just-unsubscribed' });
 
     render(await UnsubscribePage({ params: makeParams(VALID_TOKEN) }));
 
-    expect(screen.getByText(/명단에서 제외했습니다/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'unsubscribe.sectionHeading',
+    );
   });
 });
 
@@ -103,9 +117,9 @@ describe('UnsubscribePage — 이미 해제 (idempotency)', () => {
 
     render(await UnsubscribePage({ params: makeParams(VALID_TOKEN) }));
 
-    // 단순화: 동일 확인 페이지 — "해제 완료" 헤딩 그대로
+    // 단순화: 동일 확인 페이지 — h1 헤딩 렌더 확인
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Slim 후속 메일 해제 완료',
+      'unsubscribe.heading',
     );
   });
 });
@@ -220,12 +234,13 @@ describe('UnsubscribePage — 재구독 유도 0', () => {
 // ─── 8. 헌법 §8 #1 — 홈 복귀 링크 존재 + headers/cookies 정적 부재 ──────
 
 describe('UnsubscribePage — 홈 복귀 링크 + §8 #1', () => {
-  it('"← Slim 홈으로 돌아가기" 링크 href="/" 존재', async () => {
+  it('backToHome 링크 href="/" 존재 (i18n 키 형식)', async () => {
     mockUnsubscribeByToken.mockResolvedValue({ kind: 'just-unsubscribed' });
 
     render(await UnsubscribePage({ params: makeParams(VALID_TOKEN) }));
 
-    const link = screen.getByRole('link', { name: /Slim 홈으로 돌아가기/ });
+    // getTranslations mock 은 "unsubscribe.backToHome" 키를 반환
+    const link = screen.getByRole('link', { name: /unsubscribe\.backToHome/ });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', '/');
   });

@@ -29,9 +29,14 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 
 // ─── next-intl/server mock ──────────────────────────────────────────────────
+// getTranslations: 키를 그대로 반환 (i18n 실값 로딩 없이 구조만 검증)
 // setRequestLocale: PLAN 3.5.4 — generateMetadata/컴포넌트 params 패턴으로 변환.
-// 테스트 환경에서는 no-op.
 vi.mock('next-intl/server', () => ({
+  getTranslations: vi.fn().mockImplementation(
+    async ({ namespace }: { namespace: string }) => {
+      return (key: string) => `${namespace}.${key}`;
+    },
+  ),
   setRequestLocale: vi.fn(),
 }));
 
@@ -123,11 +128,11 @@ describe('AffiliatePage — placeholder-only 상태', () => {
     setRates(PLACEHOLDER_RATES);
   });
 
-  it('알림 배너 표시 (개발용 placeholder 문구)', async () => {
+  it('알림 배너 표시 (i18n 키 형식)', async () => {
     await renderAffiliatePage();
     expect(screen.getByRole('note')).toBeInTheDocument();
-    expect(screen.getByRole('note').textContent).toMatch(/개발용 placeholder/);
-    expect(screen.getByRole('note').textContent).toMatch(/ADR-0027/);
+    // getTranslations mock 은 "legal.affiliateDisclosure.placeholderBannerBody" 를 반환
+    expect(screen.getByRole('note').textContent).toMatch(/placeholderBannerBody/);
   });
 
   it('표 렌더 — 2건 entry 행 존재', async () => {
@@ -167,10 +172,11 @@ describe('AffiliatePage — 빈 배열', () => {
     setRates([]);
   });
 
-  it('"활성 어필리에이트 계약이 없습니다" 메시지 표시', async () => {
+  it('noRatesMessage 표시 (i18n 키 형식)', async () => {
     await renderAffiliatePage();
+    // getTranslations mock 은 "legal.affiliateDisclosure.noRatesMessage" 를 반환
     expect(
-      screen.getByText(/현재 활성 어필리에이트 계약이 없습니다/),
+      screen.getByText(/legal\.affiliateDisclosure\.noRatesMessage/),
     ).toBeInTheDocument();
   });
 
@@ -201,18 +207,19 @@ describe('AffiliatePage — 컬럼 헤더', () => {
     setRates(PLACEHOLDER_RATES);
   });
 
+  // getTranslations mock 은 "legal.affiliateDisclosure.tableCol*" 형식을 반환
   const EXPECTED_HEADERS = [
-    '공급사',
-    '유형',
-    '단가',
-    '통화',
-    '출처',
-    '확인 일자',
-    '발효 일자',
-    '만료 일자',
+    'legal.affiliateDisclosure.tableColProvider',
+    'legal.affiliateDisclosure.tableColType',
+    'legal.affiliateDisclosure.tableColRate',
+    'legal.affiliateDisclosure.tableColCurrency',
+    'legal.affiliateDisclosure.tableColSource',
+    'legal.affiliateDisclosure.tableColCheckedAt',
+    'legal.affiliateDisclosure.tableColEffectiveFrom',
+    'legal.affiliateDisclosure.tableColEffectiveTo',
   ];
 
-  it.each(EXPECTED_HEADERS)('컬럼 헤더 "%s" 존재', async (header) => {
+  it.each(EXPECTED_HEADERS)('컬럼 헤더 "%s" 존재 (i18n 키 형식)', async (header) => {
     await renderAffiliatePage();
     expect(
       screen.getByRole('columnheader', { name: header }),
@@ -227,20 +234,18 @@ describe('AffiliatePage — 법적 키 문구', () => {
     setRates(PLACEHOLDER_RATES);
   });
 
-  it('"어필리에이트 수수료를 받는" 문구 존재', async () => {
+  it('commercialRelationBody1 i18n 키 렌더 (상업적 관계 명시)', async () => {
     await renderAffiliatePage();
-    expect(screen.getByText(/어필리에이트 수수료를 받는/)).toBeInTheDocument();
+    // getTranslations mock 은 "legal.affiliateDisclosure.commercialRelationBody1" 반환
+    expect(
+      screen.getByText(/legal\.affiliateDisclosure\.commercialRelationBody1/),
+    ).toBeInTheDocument();
   });
 
-  it('"절약액 내림차순" 문구 존재', async () => {
-    await renderAffiliatePage();
-    expect(screen.getByText(/절약액 내림차순/)).toBeInTheDocument();
-  });
-
-  it('"어필리에이트 여부 / 수수료 수령 여부는 순위에 영향을 주지 않습니다" 문구 존재', async () => {
+  it('rankingAlgorithmBody1 i18n 키 렌더 (순위 알고리즘 독립성)', async () => {
     await renderAffiliatePage();
     expect(
-      screen.getByText(/어필리에이트 여부 \/ 수수료 수령 여부는 순위에 영향을 주지 않습니다/),
+      screen.getByText(/legal\.affiliateDisclosure\.rankingAlgorithmBody1/),
     ).toBeInTheDocument();
   });
 

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import {
   Card,
@@ -43,10 +44,21 @@ async function safe<T>(fn: () => Promise<T>): Promise<MetricResult<T>> {
 // 어드민 대시보드는 매 요청 최신 데이터를 본다 — 캐시 비활성화.
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: '어드민',
-  robots: { index: false, follow: false },
-};
+// 왜 generateMetadata 로 변환하는가?
+//   metadata.admin.title 키 i18n 적용 (B.2). robots: noindex 구조 변경 0.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'metadata' });
+  return {
+    title: t('admin.title'),
+    robots: { index: false, follow: false },
+  };
+}
 
 function formatPercent(value: number | null): string {
   if (value === null) return '—';

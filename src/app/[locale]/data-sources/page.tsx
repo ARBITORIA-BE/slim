@@ -29,7 +29,7 @@
 
 import type { Metadata } from 'next';
 import { eq, sql } from 'drizzle-orm';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/db';
 import { provider } from '@/db/schema/provider';
@@ -43,11 +43,8 @@ import type { FetcherMetadata } from '@/fetchers/types';
 import { buildAlternates } from '@/lib/alternates';
 
 // ─── 메타데이터 ───────────────────────────────────────────────────────────────
-// 왜 정적 metadata 에서 generateMetadata 로 변환하는가?
-//   hreflang 을 붙이려면 currentLocale 이 필요 — params 에서만 가져올 수 있다.
-//   텍스트 자체는 현재 ko.json 베타 운영이라 @i18n-allow 로 관리 중이므로
-//   title/description 은 하드코딩 유지하고 alternates 만 동적으로 처리한다.
-//   (PLAN 3.5.4, ADR-0034 D5)
+// 왜 generateMetadata 인가?
+//   hreflang alternates에 currentLocale 필요 + metadata 텍스트 i18n (B.2).
 export async function generateMetadata({
   params,
 }: {
@@ -56,11 +53,11 @@ export async function generateMetadata({
   const { locale } = await params;
   setRequestLocale(locale);
   const alts = buildAlternates(locale, '/data-sources');
+  const t = await getTranslations({ locale, namespace: 'metadata' });
 
   return {
-    title: '데이터 출처', // @i18n-allow — 베타 ko 운영 중, 런치(4.9)에서 i18n 교체
-    description:
-      'Slim이 사용하는 통신 요금 비교 데이터의 출처, 수집 방법, 갱신 주기를 투명하게 공개합니다.', // @i18n-allow
+    title: t('dataSources.title'),
+    description: t('dataSources.description'),
     alternates: alts,
   };
 }
@@ -127,77 +124,6 @@ async function getAllProviders() {
       excludedReason: provider.excludedReason,
     })
     .from(provider);
-}
-
-// ─── 표시 helper ──────────────────────────────────────────────────────────
-
-/**
- * fetch method → 한국어 사용자 친화 라벨.
- *
- * 왜 별도 함수인가?
- *   ADR-0011 §T2 항목 3 테이블이 정의한 4개 라벨을 단일 출처로 관리.
- *   페이즈 2 i18n 도입 시 이 함수만 교체.
- */
-function formatMethod(method: FetcherMetadata['method']): string {
-  switch (method) {
-    case 'api':
-      return '공식 API';
-    case 'scraping':
-      return '셀렉터 스크래핑';
-    case 'manual':
-      return '수동 입력';
-    case 'stub':
-      return '스텁 (개발 중)';
-  }
-}
-
-/**
- * affiliate_status → 한국어 사용자 친화 라벨.
- *
- * 왜 별도 함수인가?
- *   ADR-0011 §T2 항목 4가 정의한 6개 라벨의 단일 출처.
- *   ADR-0001 enum 6값과 1:1 매핑.
- */
-function formatAffiliateStatus(status: AffiliateStatus): string {
-  switch (status) {
-    case 'none':
-      return '어필리에이트 없음';
-    case 'pending':
-      return '협상 중';
-    case 'active_b2b_intra_eu':
-      return '어필리에이트 활성';
-    case 'active_b2b_domestic_be':
-      return '어필리에이트 활성';
-    case 'paused':
-      return '일시 중단';
-    case 'terminated':
-      return '종료';
-  }
-}
-
-/**
- * Date → 한국어 상대 시간 문자열 (예: "23시간 전").
- *
- * 왜 date-fns/dayjs를 쓰지 않는가?
- *   ADR-0011 §T4 #5: 새 의존성 추가 X (GATE-C). Intl.RelativeTimeFormat으로 충분.
- *   헌법 §3 P3: "23시간 전 기준"류 표시의 단일 출처.
- */
-function formatRelativeTime(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  const rtf = new Intl.RelativeTimeFormat('ko', { numeric: 'auto' });
-
-  if (diffMinutes < 60) {
-    return rtf.format(-diffMinutes, 'minute');
-  } else if (diffHours < 24) {
-    return rtf.format(-diffHours, 'hour');
-  } else {
-    return rtf.format(-diffDays, 'day');
-  }
 }
 
 // ─── caveats 미리보기 (ADR-0011 §T2 항목 6, 옵션 B — page.tsx 인라인) ────
@@ -318,15 +244,6 @@ function getCaveatsPreview(): Record<string, string[]> {
   };
 }
 
-// ─── 카테고리 한국어 라벨 ────────────────────────────────────────────────
-
-// ADR-0005 §Amendment 1 (2026-05-16): landline 제거 → 3값
-const CATEGORY_LABELS: Record<string, string> = {
-  mobile: '모바일',
-  internet_fixed: '고정 인터넷',
-  bundle_internet_tv: '인터넷+TV 번들',
-};
-
 // ─── 페이지 컴포넌트 ──────────────────────────────────────────────────────
 
 /**
@@ -344,6 +261,8 @@ export default async function DataSourcesPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'dataSources' });
+
   // ─── 데이터 병렬 페치 ────────────────────────────────────────────────────
   // 왜 Promise.all인가?
   //   세 DB 쿼리 + 통계 쿼리가 독립적 → 병렬 실행으로 응답 시간 단축.
@@ -366,17 +285,81 @@ export default async function DataSourcesPage({
   // caveats 미리보기 (고정 입력 — ADR-0011 §T2 항목 6)
   const caveatsPreview = getCaveatsPreview();
 
+  // fetch method → i18n 라벨
+  // ADR-0011 §T2 항목 3 테이블이 정의한 4개 라벨 — t() 단일 출처로 관리
+  function formatMethod(method: FetcherMetadata['method']): string {
+    switch (method) {
+      case 'api':
+        return t('methodApi');
+      case 'scraping':
+        return t('methodScraping');
+      case 'manual':
+        return t('methodManual');
+      case 'stub':
+        return t('methodStub');
+    }
+  }
+
+  // affiliate_status → i18n 라벨
+  // ADR-0011 §T2 항목 4가 정의한 6개 라벨의 단일 출처. ADR-0001 enum 6값과 1:1 매핑.
+  function formatAffiliateStatus(status: AffiliateStatus): string {
+    switch (status) {
+      case 'none':
+        return t('affiliateStatusNone');
+      case 'pending':
+        return t('affiliateStatusPending');
+      case 'active_b2b_intra_eu':
+        return t('affiliateStatusActive');
+      case 'active_b2b_domestic_be':
+        return t('affiliateStatusActive');
+      case 'paused':
+        return t('affiliateStatusPaused');
+      case 'terminated':
+        return t('affiliateStatusTerminated');
+    }
+  }
+
+  // Date → 상대 시간 문자열 (Intl.RelativeTimeFormat 사용)
+  // 왜 date-fns/dayjs를 쓰지 않는가?
+  //   ADR-0011 §T4 #5: 새 의존성 추가 X (GATE-C). Intl.RelativeTimeFormat으로 충분.
+  function formatRelativeTime(date: Date): string {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    // locale 기반 상대 시간 포맷
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+
+    if (diffMinutes < 60) {
+      return rtf.format(-diffMinutes, 'minute');
+    } else if (diffHours < 24) {
+      return rtf.format(-diffHours, 'hour');
+    } else {
+      return rtf.format(-diffDays, 'day');
+    }
+  }
+
+  // 카테고리 i18n 라벨 맵
+  // ADR-0005 §Amendment 1 (2026-05-16): landline 제거 → 3값
+  const CATEGORY_LABELS: Record<string, string> = {
+    mobile: t('categoryMobile'),
+    internet_fixed: t('categoryInternetFixed'),
+    bundle_internet_tv: t('categoryBundleInternetTv'),
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       {/* ─── 페이지 헤더 ────────────────────────────────────────────────── */}
       <header className="mb-8">
-        <h1 className="text-2xl font-bold mb-2">데이터 출처</h1>
+        <h1 className="text-2xl font-bold mb-2">{t('heading')}</h1>
         <p className="text-sm text-gray-600 mb-1">
-          Slim이 사용하는 비교 데이터의 출처와 수집 방법을 투명하게 공개합니다.
+          {t('description')}
         </p>
         {/* ADR-0011 §T2 항목 5 운영자 명시 — 베타 전 0 카운트 안내 */}
         <p className="text-sm text-gray-500 italic">
-          비교 데이터는 베타 (페이즈 4) 시작 후 누적됩니다.
+          {t('betaNote')}
         </p>
       </header>
 
@@ -384,40 +367,39 @@ export default async function DataSourcesPage({
       <div
         className="border border-gray-200 rounded p-4 mb-6 text-sm text-gray-700"
         role="note"
-        aria-label="어필리에이트 정책 공지"
+        aria-label={t('affiliateNoticeAriaLabel')}
       >
-        어필리에이트 여부는 결과 순위에 영향을 주지 않습니다 — 알고리즘은 절약액
-        순입니다. 자세한 내용은{' '}
+        {t('affiliateNoticeBody')}{' '}
         <Link
           href="/legal/affiliate-disclosure"
           className="underline hover:text-gray-900"
         >
-          /legal/affiliate-disclosure
+          {t('affiliateNoticeLinkLabel')}
         </Link>{' '}
-        (페이즈 6.9에서 정식 공개 예정)에서 확인하실 수 있습니다.
+        {t('affiliateNoticeEnd')}
       </div>
 
       {/* ─── 비교 가능 공급사 표 ─────────────────────────────────────────── */}
       <section aria-labelledby="providers-heading" className="mb-10">
         <h2 id="providers-heading" className="text-lg font-semibold mb-3">
-          비교 대상 공급사
+          {t('comparableProvidersHeading')}
         </h2>
 
         {comparableProviders.length === 0 ? (
           <p className="text-sm text-gray-500">
-            등록된 공급사가 없습니다.
+            {t('noProvidersMessage')}
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse" aria-label="비교 대상 공급사 목록">
+            <table className="w-full text-sm border-collapse" aria-label={t('tableAriaLabel')}>
               <thead>
                 <tr className="border-b border-gray-300 text-left">
-                  <th scope="col" className="py-2 pr-4 font-medium">공급사</th>
-                  <th scope="col" className="py-2 pr-4 font-medium">국가</th>
-                  <th scope="col" className="py-2 pr-4 font-medium">마지막 수집</th>
-                  <th scope="col" className="py-2 pr-4 font-medium">수집 방법</th>
-                  <th scope="col" className="py-2 pr-4 font-medium">어필리에이트</th>
-                  <th scope="col" className="py-2 font-medium">비교 사용 횟수</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">{t('colProvider')}</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">{t('colCountry')}</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">{t('colLastFetch')}</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">{t('colMethod')}</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">{t('colAffiliate')}</th>
+                  <th scope="col" className="py-2 font-medium">{t('colComparisonCount')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -441,7 +423,7 @@ export default async function DataSourcesPage({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-medium underline hover:text-gray-600"
-                          aria-label={`${p.name} 공식 사이트 (새 탭에서 열림)`}
+                          aria-label={t('providerLinkAriaLabel', { name: p.name })}
                         >
                           {p.name}
                         </a>
@@ -454,7 +436,7 @@ export default async function DataSourcesPage({
                       <td className="py-2 pr-4">
                         <span
                           className="inline-block bg-gray-100 text-gray-700 text-xs px-1.5 py-0.5 rounded font-mono"
-                          title="운영 국가"
+                          title={t('countryBadgeTitle')}
                         >
                           {p.country}
                         </span>
@@ -465,12 +447,12 @@ export default async function DataSourcesPage({
                         {lastFetchedAt ? (
                           <time
                             dateTime={lastFetchedAt.toISOString()}
-                            title={lastFetchedAt.toLocaleString('ko-KR')}
+                            title={lastFetchedAt.toLocaleString(locale)}
                           >
                             {formatRelativeTime(lastFetchedAt)}
                           </time>
                         ) : (
-                          <span className="text-gray-400">아직 없음</span>
+                          <span className="text-gray-400">{t('noFetchYet')}</span>
                         )}
                       </td>
 
@@ -491,11 +473,11 @@ export default async function DataSourcesPage({
                       {/* 항목 5: 비교 사용 횟수 (운영자 GATE-A 명시) */}
                       <td className="py-2 text-gray-600">
                         {comparisonCount === 0 ? (
-                          // ADR-0011 §Status: "0회 — 런칭 초기 (2026년 5월~)" 형식
-                          <span>0회 — 런칭 초기 (2026년 5월~)</span>
+                          // ADR-0011 §Status: 런칭 초기 안내 형식
+                          <span>{t('comparisonCountZero')}</span>
                         ) : (
                           // 페이즈 4 베타 시작 후 자동으로 이쪽으로 분기
-                          <span>최근 30일 {comparisonCount}회</span>
+                          <span>{t('comparisonCountRecent', { count: comparisonCount })}</span>
                         )}
                       </td>
                     </tr>
@@ -510,11 +492,10 @@ export default async function DataSourcesPage({
       {/* ─── 항목 6: caveats 미리보기 (ADR-0011 §T2 항목 6) ─────────────── */}
       <section aria-labelledby="caveats-heading" className="mb-10">
         <h2 id="caveats-heading" className="text-lg font-semibold mb-3">
-          비교 결과 주의사항 예시
+          {t('caveatsPreviewHeading')}
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          비교 결과에 자동으로 붙는 주의사항의 예시입니다. 실제 결과는 공급사와
-          요금제에 따라 달라집니다.
+          {t('caveatsPreviewDescription')}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -540,7 +521,7 @@ export default async function DataSourcesPage({
                   {label}
                 </h3>
                 {preview.length === 0 ? (
-                  <p className="text-xs text-gray-400">주의사항 없음</p>
+                  <p className="text-xs text-gray-400">{t('noCaveatsMessage')}</p>
                 ) : (
                   <ul className="text-xs text-gray-600 space-y-1" role="list">
                     {preview.map((caveat, idx) => (
@@ -560,22 +541,21 @@ export default async function DataSourcesPage({
       {/* ─── 제외 공급사 섹션 (헌법 P3 + ADR-0009 §결정 4) ──────────────── */}
       <section aria-labelledby="excluded-heading" className="mb-8">
         <h2 id="excluded-heading" className="text-lg font-semibold mb-3">
-          비교 제외 공급사
+          {t('excludedProvidersHeading')}
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          아래 공급사는 현재 비교 대상에 포함되지 않습니다.
-          사유를 투명하게 공개합니다 (헌법 §3 P3).
+          {t('excludedProvidersDescription')}
         </p>
 
         {/* DB에 등록된 제외 공급사 */}
         {excludedProviders.length > 0 && (
           <div className="overflow-x-auto mb-6">
-            <table className="w-full text-sm border-collapse" aria-label="제외된 공급사 목록">
+            <table className="w-full text-sm border-collapse" aria-label={t('excludedTableAriaLabel')}>
               <thead>
                 <tr className="border-b border-gray-300 text-left">
-                  <th scope="col" className="py-2 pr-4 font-medium">공급사</th>
-                  <th scope="col" className="py-2 pr-4 font-medium">국가</th>
-                  <th scope="col" className="py-2 font-medium">제외 사유</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">{t('colExcludedProvider')}</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">{t('colExcludedCountry')}</th>
+                  <th scope="col" className="py-2 font-medium">{t('colExcludedReason')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -607,20 +587,20 @@ export default async function DataSourcesPage({
           <div className="border border-gray-200 rounded p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-medium text-sm">Orange BE</p>
-                <p className="text-xs text-gray-500 mt-0.5">BE</p>
+                <p className="font-medium text-sm">{t('orangeBeLabel')}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t('orangeBeCountry')}</p>
                 <p className="text-sm text-gray-600 mt-1">
-                  페이즈 5에서 평가 후 추가 예정 (ADR-0009).
+                  {t('orangeBeReason')}
                 </p>
               </div>
               {/* ADR-0009 §검증 2 CTA — click event는 페이즈 4 PostHog에서 측정 */}
               <a
-                href="mailto:kim.wonmin91@gmail.com?subject=Orange%20BE%20비교%20요청"
+                href="mailto:kim.wonmin91@gmail.com?subject=Orange%20BE%20%EB%B9%84%EA%B5%90%20%EC%9A%94%EC%B2%AD"
                 className="shrink-0 text-xs border border-gray-300 rounded px-3 py-1.5 hover:bg-gray-50 transition-colors"
-                aria-label="Orange BE 비교 요청 보내기"
+                aria-label={t('orangeBeCtaAriaLabel')}
                 data-event="orange-be-cta-click"
               >
-                Orange BE 비교 요청
+                {t('orangeBeCta')}
               </a>
             </div>
           </div>
@@ -630,7 +610,7 @@ export default async function DataSourcesPage({
       {/* ─── 페이지 푸터 ─────────────────────────────────────────────────── */}
       <footer className="border-t border-gray-200 pt-4 text-xs text-gray-400">
         <p>
-          데이터 수집 방법 · 공급사 추가 요청 · 오류 신고:{' '}
+          {t('footerContact')}{' '}
           <a
             href="mailto:kim.wonmin91@gmail.com"
             className="underline hover:text-gray-600"
@@ -639,7 +619,7 @@ export default async function DataSourcesPage({
           </a>
         </p>
         <p className="mt-1">
-          수집 주기: 일 1회 06:00 UTC (ADR-0008 §T6). ISR 캐시: 1시간.
+          {t('footerRevalidate')}
         </p>
       </footer>
     </main>

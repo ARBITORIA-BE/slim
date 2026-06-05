@@ -92,6 +92,17 @@ D.9 §부수 발견 진단을 *정정*:
   버튼 / VI.99 랭킹) = 일반 UI 트랙 (`go.*` 네임스페이스 신설 또는
   `compare.*` 확장 — 4.5.j.4.B builder 결정). 본 ADR 는 *경계만* 확정;
   interstitial 코드 변경 0 (4.5.j.4.B 별 라운드).
+- **4.5.j.4.B architect 잠금 (2026-06-05, PLAN 라인 1689 후속)**:
+  네임스페이스 결정 = **`affiliateInterstitial.*` 신설** (별도 명명, `go.*`
+  는 URL 경로 직역 = 의미 부족, `compare.*` 확장은 비교 결과 본문과 혼동
+  위험 — affiliate consent UI 셸 의미 명시). 신규 키 ≈ 25 ("이동 전 확인
+  사항" / "받는 회사" / "Slim 기록 목적" / "데이터 흐름" / "동의 철회" / Art.13
+  본문 3 + freely given 카피 + 동의/거부 버튼 + 비교 결과 복귀). 4.5.j.4.B.4
+  DeepL retarget 완료 후 *법적 함의 본문* (EDPB Guidelines 05/2020 5항목 /
+  GDPR Art.13 정보 제공 / freely given) = **legal 에이전트 1차 cross-ref
+  권고** (별도 게이트 외, `legal.*` 가 아니므로 운영자 판단 trigger).
+  Critical/Major 0 권장. 외부 변호사 €800 = 본 라운드 *밖* (운영자 트랙,
+  D4 동일).
 - **4.6 organic SEO 진입 영향**: D.9 §부수 발견은 "4.6 진입 *전* 해소
   권장" 신호. 본 ADR D3 = "이 신호는 *4.5.j.3 가 아니라 4.5.j.4.B 로*
   해소" 라는 *경로 정정*. 4.6 진입 전 양 트랙 (4.5.j.3 + 4.5.j.4.B) 동시
