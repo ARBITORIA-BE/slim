@@ -1687,12 +1687,82 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
         - [x] **4.5.j.4.A.1** **신규 추가 키 DeepL 보정 round** (트랙 D1 — 후속 i18n 개선). 4.5.j.4.A 완료 시점의 명시 부채: `messages/{nl,fr,en}.json`의 `[nl]`/`[fr]`/`[en]` prefix placeholder 41 keys 각 locale (총 123 string entries). 출처 = currentProvider.* (10 keys) + result.* (25 keys) + caveats.* (6 keys). 사용자 영향 = result/current provider 화면에서 "다음 보정" 표시. DoD: (1) `scripts/i18n/translate.mjs` 재실행 (`pnpm tsx --env-file=.env.local`, DEEPL_API_KEY 로드 — harness:price 동형) — DeepL로 41 keys 각 locale 문자열 보정 (2) 보정 후 `messages/{nl,fr,en}.json` `[nl]`/`[fr]`/`[en]` prefix 제거 (3) `pnpm test:run` 0 (4) `pnpm harness:i18n` Phase A 유지 + Phase B → Phase A 흡수 (if .B 미완료) 또는 Stage B GREEN 승격 (if .B 완료). **합계 `harness:plan` 88/58 불변** (indented sub-sub는 미카운트).
           ✅ 완료 (2026-05-18, verifier 라운드2 PASS — 라운드1 FAIL[ICU 공백 흡수] 수정 후): `scripts/i18n/var-protection.ts`+`.test.ts`(11 단위) 신설 — encode/decode 시 ko 원문 `{var}` 양옆 공백 규칙 기록·복원(DeepL XML 공백 흡수 보정, 과교정 0). translate.mjs `--retarget` 41키 모드. placeholder prefix 0 / 공백 실수정(en `Data {value} GB` / nl `Gegevens {value} GB` / fr `de {providerName} lors` 등) / `savingYearly` 의미깨짐 "Yeon" → nl `Per jaar {amount}`·fr `Par an {amount}`·en `{amount} / yr` 수동 교정 / ICU 변수 이름·개수 ko↔nl·fr·en 정합 / 기존 비-.A.1 값(Phase B 실번역) 무회귀(diff = messages 41키 국한, ko.json·컴포넌트·routing·request·middleware 무변경). 게이트: typecheck 0 / lint 0 / test:run **534 passed**(523+11) / harness:plan 88·58 불변(sub-sub itemRe 비매치) / harness:data 통과 / harness:i18n GREEN(Phase A). DeepL 누적 **12,612 / 1,000,000 (1.3%)** → ADR-0033 §Verification #5 기록. **4.5.j.4.A "명시 부채 41 keys" 해소.** verifier 라운드2가 PLAN 갱신 누락+오진(이미[x]) → 오케스트레이터 정정 마킹. 4.5.j.4 부모/4.5.j.2 = `[ ]` 유지(.B 미완).
       - [ ] **4.5.j.4.B** **2순위 배치 — 보조 경로 + 메타데이터 i18n** (사용자 직접 critical 아님 — SEO 색인/펀널 비핵심, 단 metadata 는 SEO/탭 노출). 대상 (~5 컴포넌트 + metadata 전수): (가) **보조 페이지** `src/app/[locale]/data-sources/page.tsx` + `go/[shortId]/[itemId]/page.tsx` + `unsubscribe/[token]/page.tsx` + `admin/page.tsx` + `legal/affiliate-disclosure/page.tsx` **비-legal UI 셸만**(헤딩/네비 — `legal.*` 동의/디스클로저 본문 키 = 4.5.j.3 분리, 경계 §A2.8.3). (나) **메타데이터 i18n 전수** ([ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) **Amendment 5 / §A2.9** 패턴 잠금 — `generateMetadata` + `getTranslations`, `'use client'` page 는 부모 layout 담당): `[locale]/layout.tsx`(브랜드 metadata + og:locale 동적) + `page.tsx`(home) + `compare/page.tsx` + `compare/[category]/page.tsx`(CATEGORY_LABELS 한글) + `compare/[category]/{postal,household,bill,preview}/layout.tsx`(4개 step metadata) + `compare/[category]/current-provider/page.tsx` + `r/[shortId]/page.tsx`(generateMetadata 한글 title/desc). `@i18n-allow metadata` 마커 전부 제거 (dev throw `@i18n-allow 개발자 에러 메시지` 마커는 유지 — 사용자 미노출). 루트 `src/app/layout.tsx` = metadata 없음 확인만(브랜드 metadata 는 [locale]/layout.tsx 로 이미 이동). 키 재사용 우선(§A2.9.2 — `compare.<step>.title`/`result.pageTitle`/`compare.pageTitle` 기존 키), 신규 = `home.metaTitle`/`home.metaDescription` + `metadata.*` 네임스페이스(브랜드). canonical/robots/og 구조 무변경(§A2.9.5 — 텍스트만). DoD: (1)~(2) 4.5.j.4.A 동형 (대상=2순위 파일 + metadata) (3) `harness:i18n` GREEN 유지 (전체 `src/app/[locale]/**` 한글 0 — .B 완료 시 비로소 전수 GREEN, `@i18n-allow metadata` 마커 잔존 0) (4) typecheck/lint/`pnpm test:run` 0 (5) `pnpm harness:plan` 88/58 불변 + `pnpm harness:data` 정합 (6) Vercel `/en` 탭 title 영어 + `/fr-BE/compare` description 프랑스어 (한글 0). **완료 시 4.5.j.4 부모 + 4.5.j.2 `[x]`** (S2 전수 완결 = 사용자 대면 i18n 100% 전달, 4.9 완성 게이트 보강). **주의**: Zod 검증 메시지(.ts) + 공유 컴포넌트(`src/components/`) 한국어 = 본 .B 범위 **밖** = 신규 4.5.j.5 ([ADR-0036](docs/adr/0036-i18n-completion-zod-harness-locale-switcher.md)).
-    - [ ] **4.5.j.3** **legal.* 네임스페이스 legal 검수** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T4 + Amendment 2).
+    - [x] **4.5.j.3** **legal.* 네임스페이스 legal 검수** (트랙 D1 — [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T4 + Amendment 2). **2026-06-05 종결** — 4.5.j.3.a (DeepL 103키×3 locale + affiliateDisclosure 회귀 해소) + 4.5.j.3.b (legal 1차 라운드 Critical 6 Major 2 Minor 2 발견 + builder 10건 수동 수정 + 2차 라운드 PASS Critical 0 Major 0). 부수: result.*/formulaLabels.* fr "/ Lundi" + en "/ Mon" 4.5.j.4.A 회귀 동시 해소 (fr→"/ mois" / en→"/ mo", DeepL "월" 동음이의어 오역 광역 정리).
       `legal.*` 네임스페이스 (GDPR 동의/디스클로저/약관 텍스트) 는 일반 UI
       트랙과 분리 — **legal 에이전트 검수 게이트** (오역 = 규제 리스크).
       **본 PLAN 항목 진입 시 legal 에이전트 호출** (ADR-0034 적용 턴에서는
       호출 안 함). DoD: `legal.*` 5 locale 번역 + legal 에이전트 검수 통과
       (Critical/Major 0) + 일반 UI 트랙과 분리 확인 + typecheck/lint/test 0.
+      🔒 **architect 잠금 (2026-06-05, [ADR-0040](docs/adr/0040-legal-namespace-deepl-hybrid-and-interstitial-boundary.md))**:
+      (가) **진입 범위 / 키 인벤토리** = ko.json 정본 기준 `legal.*` 81 키
+      (affiliateDisclosure 1 + terms 27 + cookie 6 + privacy 47). 본 라운드
+      대상 = `messages/{nl,fr,en}.json` 3 locale × 81 키 (243 string entries).
+      `messages/{nl-BE,nl-NL,fr-BE,fr-LU}.json` = `legal.*` block 0
+      (base 100% 상속, delta 0 — 정찰 확인). **경계 잠금**: `compare.*`
+      / `result.*` / `home.*` / `footer.*` / `validation.*` / `dataDisplay.*`
+      = 본 라운드 *밖* (4.5.j.4 / 4.5.j.5 트랙).
+      (나) **회귀 발견**: `legal.affiliateDisclosure.pageTitle` 4 locale
+      (ko/en/nl/fr) 모두 `"제휴 수수료 공개"` 한국어 고정 — 본 라운드 retarget
+      범위 *포함* (ADR-0040 D2).
+      (다) **interstitial 페이지 = 본 라운드 *밖*** (ADR-0040 D3) — D.9
+      §부수 발견 (라인 400-403) "interstitial 한국어 = 4.5.j.3 잔여" 진단
+      *정정*. 코드 정찰: `src/app/[locale]/go/[shortId]/[itemId]/page.tsx`
+      는 `legal.*` 키 0건 소비, 페이지 자체 하드코딩 한국어 25+ 라인 →
+      **4.5.j.4.B 트랙** (보조 페이지 비-legal UI 셸 i18n, 라인 1689 명시
+      대상). 4.6 진입 전 fr 거주 P3 갭 해소 = 본 4.5.j.3 + 4.5.j.4.B 양
+      트랙 *모두* 필요 (필요조건 — 본 4.5.j.3 단독으로는 불충분).
+      (라) **DeepL+legal hybrid** (ADR-0040 D1) — 수동 only/DeepL only
+      거부, 4.5.j.4.A.1 패턴 재사용. 추정 분량 ~7,800 chars 3 locale,
+      DeepL 누적 ~20,400 / 1,000,000 (2.1%).
+      (마) **var-protection 불요** (ADR-0040 D5) — `legal.*` 본문 ICU 변수
+      0건 실증 (`grep "\\{[a-zA-Z_]+\\}" messages/ko.json` legal block 미매치).
+      (바) **legal 1차 검수 vs 외부 변호사 €800 분리** (ADR-0040 D4) — 본
+      라운드 = legal 에이전트 1차 검수 (Critical/Major 0). 외부 변호사
+      €800 = 운영자 트랙 (수익 후/베타 직전 trigger, 4.12.f §미해결 #4 그대로).
+      (사) **harness:i18n 영향 0** — `legal.*` 본문 화이트리스트 정합
+      (4.5.j.5.b 명시), 본 라운드는 placeholder 해소만 = 화이트리스트 변경 0.
+      (아) **harness:plan 92 불변** — sub-task 4.5.j.3.a/b/c 는 4칸 들여쓰기
+      (`^- \[` itemRe 비매치, `expectedTotal=items.length` 카운트 비대상 —
+      §정적 입증).
+      - [x] **4.5.j.3.a** **DeepL retarget — `legal.*` nl/fr/en placeholder
+        해소** (트랙 D1 — 4.5.j.4.A.1 패턴 재사용). 명령 = `pnpm tsx
+        --env-file=.env.local scripts/i18n/translate.mjs --retarget legal`
+        (또는 동등 — namespace 필터 모드 builder 결정). 대상 = `messages/{nl,fr,en}.json`
+        `legal.*` 전 키 (81 × 3 = 243 entries) — `[nl]`/`[fr]`/`[en]` prefix
+        제거 + DeepL 재번역. **포함**: `legal.affiliateDisclosure.pageTitle`
+        4 locale (한국어 고정 회귀 해소 — ADR-0040 D2). **불포함**: ICU
+        var-protection (변수 0건 실증, ADR-0040 D5). DoD: (1) `grep -P
+        "\\[nl\\]|\\[fr\\]|\\[en\\]" messages/{nl,fr,en}.json` legal block
+        0 매치 (2) `legal.affiliateDisclosure.pageTitle` 4 locale ≠
+        `"제휴 수수료 공개"` (3) ko 정본 ↔ nl/fr/en 키 셋 정합 (누락 0)
+        (4) typecheck/lint/`test:run` 0 (5) `harness:plan` 92 불변 +
+        `harness:i18n` GREEN 유지 + `harness:data` 정합 (6) DeepL 누적
+        ADR-0033 §Verification #5 갱신 (~20,400 / 1,000,000).
+      - [x] **4.5.j.3.b** **legal 에이전트 1차 검수 — 신규 nl/fr/en 본문**
+        (트랙 D1 — ADR-0033 §T4 / ADR-0037 §검증). 검수 포인트:
+        (가) GDPR Art.13 §1·§2 12항목 의미 보존 (ko 정본 ↔ nl/fr/en) —
+        ADR-0037 D2 표 정합 (PA-01~05).
+        (나) 다크패턴 0 — 쿠키 동의 거부 동등 비중 ("Tout accepter" ↔
+        "Refuser" / "Alles accepteren" ↔ "Weigeren" — 추가 nudging 0).
+        (다) Art.6(1)(b) 동의 간주 nl/fr 표현 정합 (4.12.f 1차 ko/en 검수
+        통과 표현과 의미 일치).
+        (라) 감독기관 4종 공식 명칭 정합 (APD/GBA/AP/CNPD — supervisoryBE/
+        NL/LU 키).
+        (마) `legal.affiliateDisclosure.pageTitle` 4 locale 의미 정합
+        (한국어 회귀 해소 확인).
+        DoD: (1) Critical/Major 0 (2) 검수 결과 `legal.*` 본문 자체에
+        주석 0 (builder 1차 산출 그대로 채택 또는 legal 명시 수정 patch)
+        (3) 4.5.j.3 부모 `[x]` 격상 가능 신호.
+      - [x] **4.5.j.3.c** **4.12.f cross-ref — nl/fr placeholder 동시 해소**
+        (트랙 D1 — 4.12.f §미해결 #4 연결). 4.12.f 는 ko/en 1차 검수 통과
+        + nl/fr placeholder 잔여 상태 (`[~]`, 2026-05-31). 본 4.5.j.3 완료
+        = 4.12.f §미해결 #4 동시 해소 신호. **운영자 결정 영역** (본
+        sub-task 자동 격상 아님): (a) 4.12.f `[~]` → `[x]` 는 legal 1차
+        검수만으로 충분한가, 외부 변호사 €800 감사 완료까지 대기인가 ←
+        운영자 판단 (4.12.f 본문 표현 그대로). (b) 4.12 부모 `[~]` → `[x]`
+        도 운영자 결정. DoD: (1) 4.12.f §미해결 #4 본문에 4.5.j.3 완료
+        cross-ref 1줄 추가 (scribe 트랙) (2) 4.12.f 상태 변경 = 운영자
+        결정 (본 sub-task 강제 아님).
     - [ ] **4.5.j.5** **Zod 메시지 i18n + harness 범위 확장 + 고아 컴포넌트 정리** (트랙 D1 — [ADR-0036](docs/adr/0036-i18n-completion-zod-harness-locale-switcher.md) D1/D2). 라이브 진단: (a) Zod 검증 메시지가 `.ts` 정적 schema 에 한국어 하드코딩 → `<FormMessage />` (클라이언트) + `/api/compare` issues (서버) 로 공개 nl/fr/en 누출 (b) `harness:i18n` 가 `.ts`/`src/components/` 미스캔 = blind-spot. 4칸 들여쓰기 = `harness:plan` `^- \[` itemRe 비매치 = **88/58 카운트 불변**.
       - [ ] **4.5.j.5.a** **Zod 메시지 → 에러 키 전략** (ADR-0036 D1). `src/types/comparison-input.ts` L59/L70/L79(우편번호 BE/NL/LU regex message) + L107(superRefine `요금제를 선택하려면…`) 의 한국어 message 를 **안정적 키 토큰**(예: `'validation.postal.be'`)으로 치환 (schema = locale-free 유지, ADR-0016 §T7 단일 출처 보존 — schema factory 거부). **클라이언트**: `postal/page.tsx`·`household/page.tsx` 의 `<FormMessage />` 가 `formState.errors.<field>.message`(=키) 를 `useTranslations('validation')` 로 매핑 표시 (래퍼 또는 message→t() 매핑). **서버**(`src/app/api/compare/route.ts:60-63`): `parsed.error.issues` 전체 대신 `{ code(=키), path }` 만 응답(한국어 message 노출 0). `messages/*` 에 `validation.*` 네임스페이스 신규 키(base nl/fr/en + ko). DoD: (1) comparison-input.ts 한국어 0 (2) FormMessage 영어/nl/fr 렌더(키→t()) (3) /api/compare 응답 한글 message 0 (4) `validation.*` 키 base 4파일(ko/nl/fr/en) — nl/fr/en placeholder 허용(다음 DeepL round) (5) typecheck/lint/`test:run` 0 + 기존 RHF 검증 회귀 0.
       - [ ] **4.5.j.5.b** **harness:i18n 범위 확장** (ADR-0036 D2). `scripts/harness/i18n-consumption.ts` 스캔 대상에 **`src/components/**/*.tsx`(`*.test.tsx` 제외)** + **`src/types/comparison-input.ts`** 추가 (`.ts` 화이트리스트 = 이 1파일만 — `src/**/*.ts` 전체 확장 거부, dev throw/주석 오탐 폭증). 기존 필터(주석/JSDoc/JSX 블록 주석/`@i18n-allow`/인라인 주석/dev throw) + 자가검증(그룹별 0파일 FATAL) 유지. metadata Phase B 화이트리스트는 4.5.j.4.B 완료 시 자연 축소(§A2.9.3). DoD: (1) 확장 스캔 GREEN(4.5.j.5.a + 고아 정리 후) (2) 자가검증 그룹별 파일 수 로그 (3) 의도적 한글 주입 시 RED 재현(역검증).
@@ -2000,8 +2070,8 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - [x] **4.12.c** 쿠키 동의 배너 — `src/components/CookieConsent.tsx` 신설 (client island, ePrivacy opt-in). (가) **동의 저장** = `localStorage` 키 `slim_cookie_consent`(`accepted`/`rejected` 또는 `{analytics:boolean}`) — 서버 쿠키 거부(무동의 정적 렌더 회귀 0, ko 오버레이 동형), ko_gate_token 과 별도 키. (나) **PostHog 게이팅 지점** = PostHog 현 미배선(init 0건) → 게이팅 = "동의 게이트 안에서만 init 신설"(fail-safe). `analytics===true` 일 때만 `posthog.init` lazy 호출, 무동의=init 0=쿠키 0. env 키 없으면 게이팅된 채 no-op. (다) **필수 vs 분석 구분** = 필수(ko_gate_token·세션 동작) 동의 불요 / 분석(PostHog) 동의 필요, 배너 카피 명시. (라) **거부/철회** = 거부 1차 레이어 Accept 동등 비중(GBA Reject-all 동등 노출 + 다크패턴 0, 헌법 §8 #3) → `rejected` 저장 + (이미 init 시) `opt_out_capturing` + 쿠키 정리. 철회 = footer "쿠키 설정" 트리거. (마) `legal.cookie.*`(legal 검수) 4 locale, `useTranslations` — harness:i18n 4.5.j.5.b `src/components/**` 확장 스캔 대상(한글 0). (바) layout 배선 = `src/app/[locale]/layout.tsx`(Edit 외과 수정) `<body>` 내 `<CookieConsent />` 1회(SiteFooter 인접). 테스트.
   - [x] **4.12.d** 링크 정합 (ADR-0037 D4). (가) **compare 동의 문구**(`compare/page.tsx:95-101`): terms 신설로 404 해소 + 처리방침 링크 동반 — `compare.privacyLink`(→`/legal/privacy`) 신규 키 + 문구 조정("이용약관 및 개인정보처리방침에 동의 간주", Art.6(1)(b) 표현=legal 검수). (나) **SiteFooter**(`SiteFooter.tsx:82-99` 법무 nav): terms+privacy 2 링크 + 쿠키 설정 트리거 추가 — `footer.termsLink`/`footer.privacyLink`/`footer.cookieSettingsLink` 신규 키(`messages/{ko,nl,fr,en}.json` + delta 상속). footer 본문 RSC 유지(쿠키 설정 버튼만 client — D3 트리거).
   - [x] **4.12.e** 게이트 — `pnpm typecheck`/`lint`/`test:run` 0 + `harness:i18n` GREEN(CookieConsent + terms/privacy 한글 0, legal.* 본문 화이트리스트 정합) + `harness:plan` 90→91 정합 + Vercel 배포 URL `/legal/terms`·`/legal/privacy` 200(4 locale) + compare 동의 링크 200(404 0) + 무동의 PostHog 쿠키 0(DevTools)·동의 후만 발생. (로컬 build 깨짐 — WasmHash, 검증=Vercel URL.) **2026-05-31 통과** (PR #12 머지 — test:run 730, typecheck/lint/harness:plan/i18n GREEN).
-  - [~] **4.12.f** legal 에이전트 검수 — terms/privacy/cookie **본문 텍스트** 4 locale(`legal.*`) Critical/Major 0 + Art.13 12항목 충족(ADR-0037 D2 표) + 쿠키 거부 동등 비중·다크패턴 0 + 동의 간주 법적근거(Art.6(1)(b)) 표현 + gdpr-register.md ↔ 처리방침 정합. 외부 변호사 감사는 베타 직전/수익 후(legal 판단 — 수익0 단계 불요). **2026-05-31 1차 검수 완료** — 다크패턴 0, GDPR Art.13/Art.6(1)(b) 명시 ko/nl/fr/en 4 locale 정합, gdpr-register.md PA-06(PostHog 쿠키 동의) 신설로 PA-04 보안로그(정당이익) 와 법적근거 분리. **Major 잔여 — 운영자 트랙**: (1) nl/fr `legal.*` 본문 placeholder `[nl]`/`[fr]` prefix → DeepL Phase B 번역 + 베네룩스 변호사 검토 (€800 외부 감사). (2) PostHog env(`NEXT_PUBLIC_POSTHOG_KEY`/_HOST` EU region) 미등록 = no-op 안전, 베타 직전 등록.
-  - 미해결: (1) 등록 주소 null(ADR-0035) → 처리방침 컨트롤러 주소 줄 조건부 비노출(LEGAL_ENTITY 동형). (2) PostHog 실 init env(`NEXT_PUBLIC_POSTHOG_KEY`/`_HOST` EU region) = 운영자 트랙(키 없으면 게이팅된 채 no-op). (3) Sentry US SCCs / PostHog DPA = gdpr-register 외부감사 항목 6(베타 직전/수익후) — 처리방침은 "EU 옵션/SCCs" 표기, 외부감사 확정. (4) `legal.terms.*`/`legal.privacy.*`/`legal.cookie.*` 본문 nl/fr placeholder `[nl]`/`[fr]` prefix = DeepL Phase B 번역 + 베네룩스 변호사 검토 (€800 외부 감사) — 운영자 트랙. ko/en 본문 = legal 1차 검수 통과 (다크패턴 0, GDPR Art.13/6(1)(b) 정합, 2026-05-31).
+  - [~] **4.12.f** legal 에이전트 검수 — terms/privacy/cookie **본문 텍스트** 4 locale(`legal.*`) Critical/Major 0 + Art.13 12항목 충족(ADR-0037 D2 표) + 쿠키 거부 동등 비중·다크패턴 0 + 동의 간주 법적근거(Art.6(1)(b)) 표현 + gdpr-register.md ↔ 처리방침 정합. 외부 변호사 감사는 베타 직전/수익 후(legal 판단 — 수익0 단계 불요). **2026-05-31 1차 검수 완료** — 다크패턴 0, GDPR Art.13/Art.6(1)(b) 명시 ko/nl/fr/en 4 locale 정합, gdpr-register.md PA-06(PostHog 쿠키 동의) 신설로 PA-04 보안로그(정당이익) 와 법적근거 분리. **Major 잔여 — 운영자 트랙**: (1) nl/fr `legal.*` 본문 placeholder `[nl]`/`[fr]` prefix → DeepL Phase B 번역 + 베네룩스 변호사 검토 (€800 외부 감사). (2) PostHog env(`NEXT_PUBLIC_POSTHOG_KEY`/_HOST` EU region) 미등록 = no-op 안전, 베타 직전 등록. **[2026-06-05 cross-ref]** nl/fr placeholder 해소 트랙 = **4.5.j.3** ([ADR-0040](docs/adr/0040-legal-namespace-deepl-hybrid-and-interstitial-boundary.md) — DeepL+legal hybrid). 4.5.j.3 완료 = 본 #1 의 DeepL 번역 + legal 1차 검수 부분 해소 (외부 변호사 €800 = 별 트랙 유지). 4.12.f `[~]` → `[x]` 격상 시점 = 운영자 결정.
+  - 미해결: (1) 등록 주소 null(ADR-0035) → 처리방침 컨트롤러 주소 줄 조건부 비노출(LEGAL_ENTITY 동형). (2) PostHog 실 init env(`NEXT_PUBLIC_POSTHOG_KEY`/`_HOST` EU region) = 운영자 트랙(키 없으면 게이팅된 채 no-op). (3) Sentry US SCCs / PostHog DPA = gdpr-register 외부감사 항목 6(베타 직전/수익후) — 처리방침은 "EU 옵션/SCCs" 표기, 외부감사 확정. (4) `legal.terms.*`/`legal.privacy.*`/`legal.cookie.*` 본문 nl/fr placeholder `[nl]`/`[fr]` prefix = DeepL Phase B 번역 + 베네룩스 변호사 검토 (€800 외부 감사) — 운영자 트랙. ko/en 본문 = legal 1차 검수 통과 (다크패턴 0, GDPR Art.13/6(1)(b) 정합, 2026-05-31). **[2026-06-05 #4 부분 해소]** 4.5.j.3 (ADR-0040 DeepL+legal hybrid) 완료로 nl/fr/en `legal.*` 103키 retarget + legal 1차 검수 PASS (Critical 0 / Major 0, 2 라운드: 1차 Critical 6 발견→builder 10건 수동 수정→2차 PASS); 외부 변호사 €800 감사는 별 트랙 유지 (수익 후/베타 직전 트리거).
   - DoD: (1) 4.12.a~f 전부 (2) compare 동의 404 해소 + privacy 노출 + 쿠키 opt-in 동작(무동의 PostHog 쿠키 0) (3) typecheck/lint/test:run 0 + harness:i18n GREEN + harness:plan 91 정합 (4) Vercel 배포 URL terms/privacy 200 + 4 locale 한글 0 (5) legal 검수 pass (6) ADR-0037 §검증 충족.
   - **PLAN 6.5/6.9 cross-ref**: 6.5(쿠키 동의 CookieBot) = 본 4.12.c 로 선반영(자체 구현, 외부 SaaS 거부 — ADR-0037 §대안). 6.9(`/legal/affiliate-disclosure`) = 이미 4.3.d 완료. 6.5 는 본 항목 완료 후 축소/cross-ref(별도 처리, 합계 영향은 별 라운드).
 
