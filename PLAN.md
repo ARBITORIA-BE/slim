@@ -963,6 +963,95 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     단위 1 + registry 등록 + 실 Neon DB `tariff_snapshot` Orange BE (Voo
     흡수 포함) N tariff 누적 + confidence='low' < 20% + typecheck/lint/test 0
     + harness:plan/data 정합.
+  - **🔒 architect 잠금 (2026-06-05)** — builder 명세 + 정찰 결과 잠금.
+    운영자 O2 (Orange BE 소비자 TOS PDF 검수) **통과 시 builder 즉시 진입 가능**.
+    - **정찰 결과 매트릭스 (2026-06-05, WebFetch raw HTML 정찰)**:
+      | URL | HTTP | 정적 가격 | 카테고리 | 카드 수 | 판정 |
+      |---|---|---|---|---|---|
+      | `orange.be/fr/mobile` | 200 | ✅ 정적 5 가격 inline | mobile | 5 | **PASS** |
+      | `orange.be/fr/produits-et-services/internet-chez-vous` | 200 | ✅ 3 정적 가격 inline + Mbps | internet_fixed | 3 (+1 configurator) | **PASS** (3개 추출, All-in 제외) |
+      | `orange.be/fr/produits-et-services/internet-tv-mobile/configurer-votre-pack?...` | 200 | ⚠️ configurator 의존, 정적 기본가 부재 | bundle_internet_tv | 0 정적 | **FAIL — manual 폴백** (1.5.6 패턴 동형) |
+      | `orange.be/fr/internet` | 404 | — | — | — | URL 부재 (stale 가능성) |
+      | `orange.be/fr/packs` | 404 | — | — | — | URL 부재 |
+      | `orange.be/fr/love` | 404 | — | — | — | URL 부재 |
+      | `voo.be/fr/offre` | 200 | ✅ 정적 5 가격 inline (SOLO/Mobile/DUO/TRIO) | mobile + internet_fixed + bundle_internet_tv | 5 | **PASS** (단, 2026-01-01 이후 가격 PDF 안내 = stale 리스크) |
+      | `voo.be/fr/internet` | 200 | ❌ 가격 부재, "Nos prix à partir du 1 Janvier 2026 [PDF]" | — | 0 | **SKIP** |
+      | `voo.be/fr/mobile` | 200 | ❌ 가격 부재, 동일 PDF 안내 | — | 0 | **SKIP** |
+    - **가용 카테고리 + 추정 N 키 (1차 머지 표적)**:
+      - mobile: 5 (orange.be/fr/mobile) + 1 (voo.be/fr/offre Mobile 10GB) = **6 tariff**
+      - internet_fixed: 3 (orange.be internet-chez-vous Start/Zen/Giga) + 1 (voo.be SOLO NET Super Relax) = **4 tariff**
+      - bundle_internet_tv: 3 (voo.be DUO TV/DUO Mobile/TRIO) = **3 tariff** (orange.be configurator 의존 → 제외)
+      - **총 13 tariff 추정** (정적 페이지 단위 합산)
+    - **Voo 흡수 결정**: **독자 페이지 잔존** (voo.be/fr/offre PASS) →
+      Orange BE fetcher 가 *두 sourceUrl 양쪽* fetch:
+      - `https://www.orange.be/fr/mobile`
+      - `https://www.orange.be/fr/produits-et-services/internet-chez-vous`
+      - `https://www.voo.be/fr/offre` (합병 후 흡수)
+      - 셋 모두 동일 `providerSlug='orange-be'` (ADR-0034 Amendment 1 D4 정합).
+      - tariffSlug 네이밍 분리: `orange-mobile-small` / `voo-solo-net-super-relax` (이전 provider 출처 보존, P3 투명성 — `/data-sources` 카피로 명시).
+    - **confidence 휴리스틱 잠금** (Voo 통합 진행 중 = medium 캡):
+      - 셀렉터 매칭 + sanity check + parseWarnings 0건 → 정상 high
+      - Voo-Orange 통합 진행 중 = `parseWarnings` 강제 +1건
+        ("url stability unverified — voo-orange integration in progress")
+        → **computeConfidence 가 자동 medium 캡** (telenet 와 동형 패턴)
+      - voo.be 출처 row 는 추가 +1건 ("voo.be 2026-01-01 PDF pricing notice
+        present — current displayed price may be pre-merger") → 보수
+      - sanity 실패 (€0/음수/€1000+) → low (스냅샷 보존, throw 안 함)
+    - **에러 분류 (ADR-0008 §T4 union 그대로)**:
+      - HTTP 비-2xx/403/429/timeout/abort → `network`
+      - 가격 카드 0건 (셀렉터 깨짐) → `parse`
+      - 음수/0/€1000+ → low (스냅샷 보존, ok=true 유지)
+    - **builder 명세 (`src/fetchers/orange-be.ts` 신설)**:
+      - mirror 대상: `src/fetchers/telenet.ts` (1.5.6 통과 패턴 — cheerio + HTTP
+        fetch + AbortController 25s + STUB_FAIL_ORANGE_BE 환경변수 + 챌린지
+        페이지 감지). Voo fetcher 잠금 블록은 ADR-0034 Amd 1 으로 취소됐으나
+        본 fetcher 가 *동형 패턴* 흡수.
+      - metadata: `providerSlug='orange-be'` / `displayName='Orange'` /
+        `country='BE'` / `method='scraping'` /
+        `categories=['mobile','internet_fixed','bundle_internet_tv'] as const` /
+        `version='orange-be@2026-06-05'` /
+        `homepageUrl='https://www.orange.be'`
+      - fetch flow: 3 URL 순회 HTTP fetch (Accept-Language `fr-BE,fr;q=0.9`) →
+        cheerio 파싱 → tariff 추출 → confidence 계산 → 단일 FetchResult 배열로
+        합산. 한 URL 실패 시 `parseWarnings` 누적 + 다른 URL 진행 (전체
+        실패만 ok=false). bundle_internet_tv = voo.be 단독 추출.
+      - 셀렉터: orange.be/fr/mobile = 5 plan name + €price inline (정찰 시
+        샘플 캡처 → builder 가 첫 fetch 로 셀렉터 확정. 모든 셀렉터 후보는
+        픽스처 + 단위 테스트로 잠금). voo.be/fr/offre = 5 가격 카드 inline.
+      - 테스트 (`src/fetchers/orange-be.test.ts`):
+        - 픽스처 = builder 가 첫 fetch raw HTML 1회 캡처 → 3 sample HTML
+          (orange-mobile.html, orange-internet.html, voo-offre.html).
+        - cheerio 파싱 + 카테고리 분리 + cents 매핑 단언 (예상 13 tariff).
+        - 음성 케이스: HTML 비-매치 → parse error (cards.length === 0).
+        - 음성 케이스: HTTP 403/timeout → network error.
+        - sanity 실패: €0 카드 → low confidence 스냅샷 보존.
+      - registry 등록 (`src/fetchers/index.ts`): `import { orangeBe } from
+        './orange-be';` + `registry: readonly Fetcher[] = [proximus, telenet,
+        orangeBe];` — 1줄 +1.
+    - **정직성 UI 보조** (별도 PR, 본 항목 DoD 외):
+      - `/data-sources` 페이지 또는 결과 caveats 에 "Voo 는 2025-10 Orange
+        Belgium 합병 → 본 fetcher 범위에 포함 (voo.be 잔존 페이지 가격 흡수)"
+        1줄 (ADR-0034 Amendment 1 §Consequences "잃는 것" 정합).
+      - voo.be 출처 row 별 caveat: "Voo 가격은 2026-01-01 이후 변경 예정 —
+        공식 PDF 참조" (정찰 시 PDF 안내 확인 = stale 리스크 명시).
+    - **차단 해제 트리거**: 운영자 O2 (Orange BE 소비자 TOS PDF 검수, 1.5.6
+      §선행조건 트랙) 통과 = builder 호출 가능 신호. PDF 통과 *전* 머지 금지
+      (4.5.j.3/4.5.j.4.B 라운드 모두 legal 가치 입증 — DeepL 단독 미진).
+    - **24h 게이트** (ADR-0013 패턴, 1.5.6 동형):
+      - 머지 → Vercel 배포 → Inngest manual invoke → Inngest 대시보드 확인
+        (Vercel 로그는 DB 에러만, fetcher 로그는 Inngest — `reference_inngest_vercel_logs`).
+      - 프로덕션 IP 차단 가능성 (`project_fetcher_prod_ip` 메모) →
+        24h 게이트 핵심. 차단 발견 시 `method='manual'` 폴백 즉시 결정.
+      - 첫 fetch 성공 후 24h 내 Neon DB `tariff_snapshot` Orange BE N≥10
+        누적 + confidence='low' < 20% 확인.
+    - **cross-ref**:
+      [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)
+      Amendment 1 D4 / [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)
+      Appendix B §B.4 (Voo TOS PASS) + Appendix C/D (Orange BE TOS PDF =
+      운영자 O2 트랙) + Amendment 3 (페이지 단위 정적 판정) /
+      [ADR-0008](docs/adr/0008-fetcher-interface-and-cron.md) (인터페이스 그대로) /
+      [ADR-0005](docs/adr/0005-tariff-master-schema.md) Amd 1 + [ADR-0006](docs/adr/0006-tariff-snapshot-timeseries-schema.md)
+      (3 카테고리 enum + BIGINT cents + confidence enum).
 
 **Phase 1.5 검증:** verifier — typecheck/lint/test 0 에러 + 신설 runbook 존재.
 
