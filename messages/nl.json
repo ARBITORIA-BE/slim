@@ -16,9 +16,14 @@
     "pageTitle": "Begin met het vergelijken van abonnementen",
     "pageDescription": "Mobiel, internet, internet + tv — kies de categorie die u wilt vergelijken. 5 stappen, binnen 5 minuten klaar.",
     "heading": "Welk abonnement wilt u vergelijken?",
+    "headingFriendly": "Welk tarief wilt u nu vergelijken?",
     "stepBadge": "Stap 5 · 5 minuten",
+    "stepBadgeReduced": "Stap 1/4 · circa 4 minuten",
     "supportNote": "Momenteel ondersteunen we vergelijkingen van telecomaanbieders in België (BE). Nederland (NL) en Luxemburg (LU) worden later toegevoegd.",
+    "supportNoteShort": "Belgische telecom — mobiel, internet, bundel (mobiel+internet+tv). Nederland/Luxemburg komt later.",
+    "exampleCheapestLabel": "bijv. {provider} {tariff} {price}/maand",
     "savingsPreviewPending": "Een voorbeeld van de gemiddelde besparing wordt na de bètaperiode getoond",
+    "priceSourceAriaLabel": "Databron: {sourceUrl}",
     "termsNotice": "Bij het opstarten van deze website",
     "termsLink": "Gebruiksvoorwaarden",
     "termsAndPrivacyConnector": "en",
@@ -48,7 +53,6 @@
         "postal": "Postcode",
         "household": "Meubelvorm",
         "current-provider": "Huidige leverancier",
-        "bill": "Factuur",
         "preview": "Voorbeeld van het resultaat"
       }
     },
@@ -112,14 +116,8 @@
       "tariffAriaLabel": "Huidige tariefplan selecteren",
       "tariffNotRegistered": "De actieve tariefplannen van deze leverancier zijn nog niet geregistreerd (worden later toegevoegd).",
       "tariffUnknown": "Ik weet niet hoe het tarief van deze leverancier in elkaar zit (alleen leveranciers vergelijken)",
-      "nextButton": "Volgende — Factuur",
+      "nextButton": "Volgende — Resultatenvoorbeeld",
       "skipButton": "Ik weet het niet / Overslaan — Behandelen als nieuwe klant"
-    },
-    "bill": {
-      "title": "Factuur uploaden",
-      "heading": "Wilt u uw factuur uploaden om uw exacte verbruik automatisch in te vullen?",
-      "supportNote": "Momenteel in bètafase — OCR voor facturen wordt toegevoegd direct na de resultatenpagina. Voorlopig wordt er vergeleken op basis van schattingen op basis van het huishoudtype.",
-      "skipButton": "Zonder factuur — met een voorbeeld van het resultaat"
     },
     "preview": {
       "title": "Resultaten worden voorbereid",
@@ -459,11 +457,16 @@
     "staleData": "{relative} (verouderd)"
   },
   "home": {
-    "headline": "Slank.",
-    "tagline": "Vergelijken gaat gemakkelijk, besparen levert flink op.",
-    "ctaButton": "Nu vergelijken",
-    "metaTitle": "Slim — Vergelijk eenvoudig, bespaar flink",
-    "metaDescription": "Vergelijk telecomabonnementen in België, Nederland en Luxemburg. In 5 minuten de slimste keuze."
+    "headline": "Telecomvergelijking Benelux, in 5 minuten",
+    "subheading": "Vergelijk Belgische mobiele, internet- en bundeltarieven tegen officiële prijzen.",
+    "providersCaption": "Belgische top 3 telecoms met ≥ 97,5% marktaandeel (Mordor Intelligence Q1 2025)",
+    "providersUpdatedAtLabel": "Prijs bijgewerkt: {date}",
+    "savingsExamplePending": "Voorbeeldbesparing — bèta-data wordt verzameld",
+    "trustNoAds": "0 advertenties · Vergelijkingsresultaten zijn 100% algoritmisch",
+    "trustAffiliateDisclosure": "Affiliatecommissies openbaar",
+    "trustExcluded": "Uitgesloten aanbieders openbaar",
+    "metaTitle": "Slim — Telecomvergelijking Benelux, in 5 minuten",
+    "metaDescription": "Vergelijk Belgische mobiele, internet- en bundeltarieven van Proximus, Telenet en Orange BE. 0 advertenties, 100% transparante attributie."
   },
   "metadata": {
     "defaultTitle": "Slim — Vergelijk eenvoudig, bespaar flink",

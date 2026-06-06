@@ -16,9 +16,14 @@
     "pageTitle": "Commencer à comparer les forfaits",
     "pageDescription": "Mobile, Internet, Internet + TV — Choisissez la catégorie que vous souhaitez comparer. 5 étapes, c'est fait en 5 minutes.",
     "heading": "Quel forfait souhaitez-vous comparer ?",
+    "headingFriendly": "Quel forfait voulez-vous comparer ?",
     "stepBadge": "5 étapes · 5 minutes",
+    "stepBadgeReduced": "Étape 1/4 · environ 4 minutes",
     "supportNote": "Nous proposons actuellement une comparaison des opérateurs télécoms en Belgique (BE). Les Pays-Bas (NL) et le Luxembourg (LU) seront ajoutés ultérieurement.",
+    "supportNoteShort": "Télécom belge — mobile, internet, bundle (mobile+internet+TV). Pays-Bas/Luxembourg à venir.",
+    "exampleCheapestLabel": "ex. {provider} {tariff} {price}/mois",
     "savingsPreviewPending": "L'aperçu des économies moyennes sera disponible après la phase bêta",
+    "priceSourceAriaLabel": "Source de données : {sourceUrl}",
     "termsNotice": "Au démarrage, ce site",
     "termsLink": "Conditions d'utilisation",
     "termsAndPrivacyConnector": "et",
@@ -48,7 +53,6 @@
         "postal": "Code postal",
         "household": "Types de meubles",
         "current-provider": "Fournisseurs actuels",
-        "bill": "Facture",
         "preview": "Aperçu des résultats"
       }
     },
@@ -112,14 +116,8 @@
       "tariffAriaLabel": "Choisir un forfait actuel",
       "tariffNotRegistered": "Les forfaits actifs de ce fournisseur n'ont pas encore été enregistrés (ils seront ajoutés ultérieurement).",
       "tariffUnknown": "Je ne connais pas les tarifs de ce fournisseur (comparaison des fournisseurs uniquement)",
-      "nextButton": "Suivant — Facture",
+      "nextButton": "Suivant — Aperçu des résultats",
       "skipButton": "Je ne sais pas / Passer — Traiter comme un nouveau client"
-    },
-    "bill": {
-      "title": "Télécharger la facture",
-      "heading": "Souhaitez-vous télécharger votre facture pour que votre consommation soit automatiquement renseignée avec précision ?",
-      "supportNote": "Actuellement en phase bêta — La reconnaissance optique de caractères (OCR) des factures sera ajoutée juste après la page des résultats. Pour l'instant, la comparaison s'effectue à partir d'estimations basées sur la composition du ménage.",
-      "skipButton": "Procédure sans facture — Aperçu des résultats"
     },
     "preview": {
       "title": "Résultats en préparation",
@@ -459,11 +457,16 @@
     "staleData": "{relative} (données anciennes)"
   },
   "home": {
-    "headline": "Slim.",
-    "tagline": "Des comparaisons faciles, des économies substantielles.",
-    "ctaButton": "Comparer maintenant",
-    "metaTitle": "Slim — Comparez facilement, économisez davantage",
-    "metaDescription": "Comparez les forfaits télécom en Belgique, aux Pays-Bas et au Luxembourg. Le meilleur choix en 5 minutes."
+    "headline": "Comparaison télécom Benelux en 5 minutes",
+    "subheading": "Comparez les forfaits mobiles, internet et bundle belges aux tarifs officiels.",
+    "providersCaption": "Les 3 grands opérateurs belges avec ≥ 97,5 % de parts de marché (Mordor Intelligence T1 2025)",
+    "providersUpdatedAtLabel": "Prix mis à jour : {date}",
+    "savingsExamplePending": "Économies illustratives — données bêta en cours de collecte",
+    "trustNoAds": "0 publicité · Résultats de comparaison 100 % algorithmiques",
+    "trustAffiliateDisclosure": "Commissions d'affiliation publiées",
+    "trustExcluded": "Fournisseurs exclus publiés",
+    "metaTitle": "Slim — Comparaison télécom Benelux en 5 minutes",
+    "metaDescription": "Comparez les forfaits mobiles, internet et bundle belges de Proximus, Telenet et Orange BE. 0 publicité, attribution 100 % transparente."
   },
   "metadata": {
     "defaultTitle": "Slim — Comparez facilement, économisez davantage",

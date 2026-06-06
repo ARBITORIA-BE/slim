@@ -6,8 +6,11 @@
   --color-fg: #1A2E29;
   --color-fg-soft: #4A5C57;
   --color-primary: #2D5A4F;
-  --color-accent: #E97462;
-  --color-accent-dark: #B8412F;
+  /* ADR-0041 Amendment 4 D19 — 그린골드 팔레트 잠금 (2026-06-06).
+   * accent: 코랄 #E97462 → Old Gold #C9A227 (차분 럭셔리, ADR-0029 §T2 정직성 토큰 정합).
+   * accent-dark: #B8412F → Bronze Gold #A98307 (WCAG AA ≈ 4.5:1 vs bg). */
+  --color-accent: #C9A227;
+  --color-accent-dark: #A98307;
   --color-muted: #5F6864;
   --font-display: "Fraunces", ui-serif, serif;
   --font-body: "Pretendard Variable", system-ui, sans-serif;

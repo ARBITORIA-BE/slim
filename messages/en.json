@@ -16,9 +16,14 @@
     "pageTitle": "Start comparing plans",
     "pageDescription": "Mobile, Internet, Internet + TV — Select the categories you want to compare. 5 steps, takes 5 minutes.",
     "heading": "Which plan would you like to compare?",
+    "headingFriendly": "What plan do you want to compare?",
     "stepBadge": "Step 5 · 5 minutes",
+    "stepBadgeReduced": "Step 1/4 · about 4 minutes",
     "supportNote": "We currently support comparisons of telecommunications providers in Belgium (BE). The Netherlands (NL) and Luxembourg (LU) will be added in the future.",
+    "supportNoteShort": "Belgium telecom — mobile, internet, bundle (mobile+internet+TV). Netherlands/Luxembourg coming later.",
+    "exampleCheapestLabel": "e.g. {provider} {tariff} {price}/month",
     "savingsPreviewPending": "The \"Average Savings\" preview will be available after the beta period.",
+    "priceSourceAriaLabel": "Data source: {sourceUrl}",
     "termsNotice": "Upon launching this site,",
     "termsLink": "Terms of Use",
     "termsAndPrivacyConnector": "and",
@@ -48,7 +53,6 @@
         "postal": "Zip code",
         "household": "Furniture styles",
         "current-provider": "Current Suppliers",
-        "bill": "Invoice",
         "preview": "Preview Results"
       }
     },
@@ -112,14 +116,8 @@
       "tariffAriaLabel": "Select your current plan",
       "tariffNotRegistered": "This provider's active plans have not yet been registered (to be added in the future).",
       "tariffUnknown": "I'm not familiar with this provider's rate plan (comparing providers only)",
-      "nextButton": "Next — Invoice",
+      "nextButton": "Next — Preview results",
       "skipButton": "I don't know / Skip — Proceed as a new subscriber case"
-    },
-    "bill": {
-      "title": "Upload bill",
-      "heading": "Would you like to upload your bill to automatically enter your exact usage?",
-      "supportNote": "Currently in beta — Invoice OCR will be added immediately after the results page. For now, comparisons are based on estimates derived from household composition.",
-      "skipButton": "No invoice required — Preview the results"
     },
     "preview": {
       "title": "Results being prepared",
@@ -459,11 +457,16 @@
     "staleData": "{relative} (stale data)"
   },
   "home": {
-    "headline": "Slim.",
-    "tagline": "Compare easily, save big.",
-    "ctaButton": "Compare Now",
-    "metaTitle": "Slim — Compare easily, save big",
-    "metaDescription": "Compare telecom plans in Belgium, the Netherlands and Luxembourg. Make the smartest choice in 5 minutes."
+    "headline": "Benelux telecom comparison, in 5 minutes",
+    "subheading": "Compare Belgian mobile, internet, and bundle plans at official prices.",
+    "providersCaption": "Belgium's top 3 telecoms with ≥ 97.5% market share (Mordor Intelligence Q1 2025)",
+    "providersUpdatedAtLabel": "Price updated: {date}",
+    "savingsExamplePending": "Example savings — beta data being collected",
+    "trustNoAds": "0 ads · Comparison results are 100% algorithmic",
+    "trustAffiliateDisclosure": "Affiliate commissions disclosed",
+    "trustExcluded": "Excluded providers disclosed",
+    "metaTitle": "Slim — Benelux telecom comparison, in 5 minutes",
+    "metaDescription": "Compare Belgian mobile, internet, and bundle plans from Proximus, Telenet, and Orange BE. 0 ads, 100% transparent attribution."
   },
   "metadata": {
     "defaultTitle": "Slim — Compare easily, save big",
