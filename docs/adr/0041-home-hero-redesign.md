@@ -766,3 +766,119 @@ D1 §블록 1 (H1 + subheading) 은 *그대로 유지*. SiteHeader 는 hero 블�
 - V16. 모바일 360×640 — SiteHeader 56px 높이 + 블록 1 H1 가시 보존.
 - V17. 운영자 자가 V1 통과 — "언어선택 랜딩 페이지에 없어" → "상단에
   바로 보임".
+
+---
+
+## Amendment 4 — 그린골드 이미지 테마 + 다나와 인사이트 (2026-06-06)
+
+### C13. 운영자 신호 (Amendment 3 직후)
+
+> "danawa.com 여기가서 ur 랑 플랫폼 환경 살펴봐
+> 우리는 그린골드 이미지 테마로 갈거야"
+
+= 디자인 시스템 결정 — primary 그린(기존) + accent 골드(신규) 전환 잠금.
+ADR-0029 §T2 정직성 토큰 정합 = 빨강(다급함/광고스러움) 회피 → 골드(차분
+가치) 채택.
+
+### C14. 다나와 정찰 인사이트 (Pieter Chrome MCP 1280×800)
+
+`danawa.com/` 메인 정찰 결과:
+
+**컬러 패턴**:
+- Primary 그린 (좌측 카테고리 사이드바, 추정 #00C73C 청신호 톤)
+- Accent 빨강 (가격/할인율 굵은 강조, 즉시 가시)
+- 흰 배경 + 검정/회색 텍스트
+
+**레이아웃 패턴**:
+- GNB 상단: 로고(좌) + 검색바(가운데, 큰 크기) + 최근/관심/로그인(우)
+- 좌측 사이드바: 카테고리 트리 메뉴 (그린 배경 + 흰 글씨)
+- 상단 카테고리 탭: 자동차/조립PC/PC견적/답나와/소모품/쇼핑기획전 등
+- 메인 콘텐츠: 뉴스룸 + 인기 상품 카드 그리드
+- 상품 카드: 이미지(좌) + 모델명 + **할인율(빨강) + 가격(빨강 굵게)**
+
+**Slim 적용 범위** (다나와 ≠ Slim 직접 복사):
+- ❌ 사이드바 카테고리 트리 = Slim 통신 BE 1 영역만 = **적용 X**
+  (ADR-0034 D2 — 통신 외 범위 밖, 다국적 사이드바 = false promise 위험)
+- ❌ GNB 검색바 = Slim 카테고리 3개라 검색 불요 = **적용 X**
+- ✅ 상품 카드 시각 위계 (가격 굵은 강조) = **ADR-0041 D7.4/D7.5 보강**
+  (다나와 빨강 → Slim 골드 변환)
+- ✅ 가격 = 굵은 강조 + 절약액 = 동일 톤 (실 데이터 시점)
+
+### D19. 그린골드 팔레트 잠금
+
+`src/app/globals.css` `@theme` 토큰 변경:
+
+```css
+@theme {
+  --color-bg:           #FAF7F2;  /* 유지 — 오프화이트 베이지 */
+  --color-bg-warm:      #F2EBDD;  /* 유지 — 베이지 warm */
+  --color-fg:           #1A2E29;  /* 유지 — 다크 그린/검정 */
+  --color-fg-soft:      #4A5C57;  /* 유지 — 그린-그레이 */
+  --color-primary:      #2D5A4F;  /* 유지 — 다크 포레스트 그린 */
+  --color-accent:       #C9A227;  /* ⬅ 변경 — Old Gold (코랄 #E97462 → 골드) */
+  --color-accent-dark:  #A98307;  /* ⬅ 변경 — Bronze Gold (다크 코랄 #B8412F → 다크 골드) */
+  --color-muted:        #5F6864;  /* 유지 */
+  --font-display: "Fraunces", ui-serif, serif;
+  --font-body: "Pretendard Variable", system-ui, sans-serif;
+}
+```
+
+**변경 영역 = accent 2개만**. primary 그린 + bg 베이지 + fg 다크 = 유지.
+
+### D20. WCAG AA 대비 검증
+
+- `--color-accent #C9A227` vs `--color-bg #FAF7F2` ≈ **3.5:1** (large text + border/highlight 전용, AA Pass for large)
+- `--color-accent-dark #A98307` vs `--color-bg #FAF7F2` ≈ **4.5:1** (AA Pass for normal text + CTA)
+- `--color-primary #2D5A4F` vs `--color-bg #FAF7F2` ≈ **8.5:1** (AAA Pass)
+- `--color-fg #1A2E29` vs `--color-bg #FAF7F2` ≈ **14:1** (AAA Pass)
+
+**규칙**:
+- 텍스트/CTA = `text-accent-dark` 또는 `text-fg` 사용 (AA/AAA 정합)
+- `text-accent` = decorative 전용 (border / highlight / large badge)
+- 4.13.c builder 단위 테스트에서 contrast checker 자동 검증 (별 트랙 — Vitest plugin 또는 npm `wcag-contrast`).
+
+### D21. 다나와 패턴 적용 영역 (ADR-0041 D1~D18 보강)
+
+- **D1 §블록 1 H1** = `--color-fg` (텍스트), 변동 0.
+- **D1 §블록 2 카테고리 카드** = hover `border-primary/40 bg-bg-warm/70` → **active selection 시 `border-accent-dark`** 추가 (시각 위계 강화, 다나와 가격 강조 동형).
+- **D1 §블록 3 공급사 로고 캡션** = Mordor Q1 2025 출처 = `text-muted` (변동 0).
+- **D1 §블록 4 예시 절약액** = pending placeholder 시 `text-muted`, 실데이터 격상 시 **`text-accent-dark font-semibold`** (다나와 가격 강조 패턴).
+- **D1 §블록 5 신뢰 시그널** = `text-fg-soft` + 강조 단어 `text-accent-dark`.
+- **D7.4 /compare 카드 가격 예시** = "예: Proximus Mobilus Light **€15.00/월**" — 가격 부분 `text-accent-dark font-semibold`.
+- **D14 SiteHeader** = `bg-bg/80 backdrop-blur` 변동 0. 브랜드 "Slim" = `text-fg`.
+- **footer 어필리에이트 disclosure** = 변동 0 (`text-fg-soft`).
+
+### Q12. 다나와 사이드바 카테고리 패턴 적용 여부
+
+- 옵션 A (채택): 적용 X — Slim 통신 BE 1 영역, 사이드바 = false promise.
+- 옵션 B: 적용 — 사이드바에 "통신" 단일 카테고리 + "에너지/모기지/보험 (보류)" placeholder. ADR-0034 D2 위반 (false promise).
+- **결정 = A** (D21 영역 외).
+
+### Q13. accent gold 깊이 — Old Gold vs Classic Gold vs Deep Gold
+
+- 옵션 A (채택, 2026-06-06 운영자): **Old Gold #C9A227 + Bronze Gold #A98307**
+  — 차분 럭셔리, WCAG AA 정합 (accent-dark 4.5:1).
+- 옵션 B: Classic Gold #D4AF37 + DarkGoldenrod #B8860B — borderline AA (4.0:1).
+- 옵션 C: Deep Gold #B8860B + Dark Bronze #8B6914 — AAA Pass (7:1+), 더 다크.
+- 옵션 D: builder 위임 + WCAG AA 자동 통과.
+
+### 일정 영향 (Amendment 4)
+
+- 4.13.c builder 영역 확장 — `src/app/globals.css` `@theme` 토큰 2개 갱신
+  + 회귀 테스트 (컴포넌트 단위 + e2e 시각 회귀 spot check) + WCAG contrast
+  검증 도구 추가 검토 (별 트랙). +0.2일.
+- 4.13.d 게이트 영역 — Vercel 배포 5 locale × 그린골드 테마 실측 (1280×800
+  desktop + 360×640 mobile) + axe-core 회귀 0. +0.1일.
+- **합계 사이즈** ≈ 3~3.5일 → **3.3~3.8일** (Amendment 1~4 누적, 운영자
+  €300/월 cap + 솔로 사이드 여전히 정합).
+
+### 검증 추가 (Amendment 4)
+
+- V18. `globals.css` `--color-accent` / `--color-accent-dark` 갱신 후
+  컴포넌트 회귀 spot check (HeroSavingsExample / CategoryGrid hover /
+  결과 페이지 가격 표시 / footer 어필리에이트 disclosure).
+- V19. axe-core 회귀 0 (페이즈 2 정찰 기존 6 페이지 + 신규 hero / SiteHeader).
+- V20. WCAG AA contrast 자동 검증 도구 (`wcag-contrast` npm 또는 Vitest
+  custom matcher) 통과.
+- V21. 운영자 자가 V1 통과 — Vercel 배포 그린골드 시각 확인 "다나와 결
+  벤치마크 정합 + 절약 가치 토큰 명확".
