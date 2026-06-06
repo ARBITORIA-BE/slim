@@ -24,7 +24,7 @@ vi.mock('@/db/queries/cheapest-tariff', () => ({
 
 // next-intl/server mock
 vi.mock('next-intl/server', () => ({
-  getTranslations: vi.fn().mockResolvedValue((key: string, params?: Record<string, string>) => {
+  getTranslations: vi.fn().mockImplementation(async () => {
     const map: Record<string, string> = {
       'categories.mobile.label': 'Mobiel',
       'categories.internet_fixed.label': 'Internet',
@@ -32,7 +32,6 @@ vi.mock('next-intl/server', () => ({
       'categories.mobile.description': '€15–€35 per maand',
       'categories.internet_fixed.description': '€35–€70 per maand',
       'categories.bundle_internet_tv.description': '€60–€100 per maand',
-      ariaStart: params?.label ? `${params.label} vergelijking starten` : 'vergelijking starten',
       headingFriendly: 'Welk tarief wilt u nu vergelijken?',
       stepBadgeReduced: 'Stap 1/4 · circa 4 minuten',
       supportNoteShort: 'Belgische telecom',
@@ -40,7 +39,17 @@ vi.mock('next-intl/server', () => ({
       exampleCheapestLabel: 'bijv. {provider} {tariff} {price}/maand',
       priceSourceAriaLabel: 'Databron: {sourceUrl}',
     };
-    return map[key] ?? key;
+    // why: next-intl t 함수는 callable + .raw 메소드. 둘 다 mock 필요.
+    const t = ((key: string, params?: Record<string, string>): string => {
+      if (key === 'ariaStart') {
+        return params?.label ? `${params.label} vergelijking starten` : 'vergelijking starten';
+      }
+      return map[key] ?? key;
+    }) as ((key: string, params?: Record<string, string>) => string) & {
+      raw: (key: string) => string;
+    };
+    t.raw = (key: string) => map[key] ?? key;
+    return t;
   }),
 }));
 

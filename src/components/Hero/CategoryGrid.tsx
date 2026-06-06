@@ -138,9 +138,12 @@ export async function CategoryGrid({
       ? 'text-xl font-display'
       : 'font-display text-lg';
 
-  const exampleLabel = t('exampleCheapestLabel');
+  // why: ICU placeholder가 있는 메시지는 t() 호출 시 변수를 전달해야 한다.
+  // 카드별로 가격 데이터가 다르므로 호출 시점에 변수 전달이 어렵다 → t.raw() 로 raw string
+  // 반환 후 PriceExample 안에서 수동 .replace 치환. (next-intl 표준 패턴, FORMATTING_ERROR 회피)
+  const exampleLabel = t.raw('exampleCheapestLabel') as string;
   const pendingLabel = t('savingsPreviewPending');
-  const priceSourceAriaLabel = t('priceSourceAriaLabel');
+  const priceSourceAriaLabel = t.raw('priceSourceAriaLabel') as string;
 
   return (
     <section aria-label={t(headingKey as Parameters<typeof t>[0])}>
