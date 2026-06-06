@@ -1,4 +1,5 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 
 // ADR-0033 §T1: next-intl plugin 배선.
@@ -18,4 +19,21 @@ const config: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
 };
 
-export default withNextIntl(config);
+// PLAN 4.5.2.a: Sentry 래핑. SENTRY_AUTH_TOKEN 부재 시 source map upload 자동 skip
+// (운영자 트랙 — DSN 발급 + env 등록 후 source map 활성).
+// tunnelRoute = client → server proxy (광고 차단기 회피 + US Sentry 직접 노출 가드,
+// ADR-0037 §6.1 처리방침 §3국 이전).
+const sentryOrg = process.env.SENTRY_ORG;
+const sentryProject = process.env.SENTRY_PROJECT;
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
+
+export default withSentryConfig(withNextIntl(config), {
+  ...(sentryOrg ? { org: sentryOrg } : {}),
+  ...(sentryProject ? { project: sentryProject } : {}),
+  ...(sentryAuthToken ? { authToken: sentryAuthToken } : {}),
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  tunnelRoute: '/monitoring/sentry-tunnel',
+  hideSourceMaps: true,
+  disableLogger: true,
+});
