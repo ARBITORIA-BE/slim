@@ -538,3 +538,116 @@ ISR `revalidate = 3600` (1h) — admin 메트릭과 동일 신선도.
   헌법 P1 source/fetched_at 노출).
 - V8. 운영자 자가 V1 통과 — "비교 페이지 시각적으로 너무 어려워" → "이제
   뭘 비교하는지 한눈에 보임".
+
+---
+
+## Amendment 2 — /compare/[category]/bill 페이지 제거 (2026-06-06)
+
+### C9. 운영자 신호 (PR #34 머지 후 5단계 흐름 정찰)
+
+운영자 본인이 `/compare/mobile/bill` (4/5 단계) 페이지에서:
+
+> "이거 어디에 업로드 해달라는거야?"
+
+= **헌법 §3 P3 (투명성) 위반** 직접 진단. 페이지 heading "Would you like to
+upload your bill to automatically enter your exact usage?" 이 *업로드 가능*
+시그널을 주지만 페이지 본문 = Skip 버튼 1개 + 업로드 영역 0. 사용자는
+"어디에 업로드?"라고 묻게 됨 = **빈 약속**.
+
+### C10. 실측 진단 — bill 페이지 코드 (`src/app/[locale]/compare/[category]/bill/page.tsx` 68줄)
+
+- L4~7 페이지 주석: "페이즈 2 1차: OCR 미구현, '청구서 없이 진행' 단일
+  버튼만. 페이즈 3 결과 페이지 직후 OCR 도입 별도 ADR (ADR-OCR 가칭)"
+- L50~67 본문: `<CompareLayout step="bill">` + `<header>` + `<Button>{skipButton}</Button>` 단일
+- file input / drag&drop zone / FormData handler = **0개**
+- i18n 카피 `compare.bill.heading`, `compare.bill.supportNote`, `compare.bill.skipButton` 3종이 사용자에게 "업로드 가능 → 미구현 → 스킵" 3단계 인지 부하 강요
+
+ADR-0016 §T6 SC-A 결정 "OCR 을 페이즈 3 결과 페이지 직후로 미룸" 은
+2026-06-06 기준 *결과 페이지 직후도 미구현*. = 페이지 존재 가치 0.
+
+### D9. 결정 — `/compare/[category]/bill` 라우트 제거
+
+`src/app/[locale]/compare/[category]/bill/{page.tsx,layout.tsx}` 2 파일 삭제.
+사용자 흐름 단축:
+
+```
+변경 전 (5 단계):
+postal → current-provider → household → bill → preview
+
+변경 후 (4 단계):
+postal → current-provider → household → preview
+```
+
+ADR-0016 §T1 Amendment 3 동반 (5→4단계 골격 변경).
+
+### D10. 라우팅 정합
+
+`useCompareSession` 의 `step` enum 에서 `'bill'` 제거. `household.tsx`
+완료 후 `setStep('preview')` 로 직진. `progress bar` 단계 카운트
+`'1/5'~'5/5'` → `'1/4'~'4/4'` 자동 갱신 (component 내부 array 길이 기반).
+
+`useCompareSession.ts` 의 `STEP_ORDER` 또는 유사 enum 단순 조정.
+
+### D11. i18n 키 제거
+
+`compare.bill.heading` / `compare.bill.supportNote` / `compare.bill.skipButton` /
+`compare.bill.uploadButton` (사용 시) — `compare.bill.*` 네임스페이스 4종 ×
+5 locale = **20 entries 삭제**.
+
+### D12. 미래 OCR 활성화 시 재추가
+
+OCR backend 구현 (S3 / Vercel Blob 업로드 + AWS Textract / Google Cloud
+Vision 호출 + tariff_attributes 자동 추출) 트리거 시:
+
+- 별 ADR (ADR-OCR 가칭) 신설
+- `src/app/[locale]/compare/[category]/bill/page.tsx` 재추가 (file input +
+  upload handler + OCR 결과 → input_attributes JSONB 자동 채움)
+- ADR-0016 Amendment N (4→5단계 골격 복원)
+- 트리거 조건 = (a) OCR 비용 효익 정합 (b) 운영자 €300/월 cap 여유 + 베타
+  사용자 ≥ 100명 (실데이터 정확성 요구)
+
+= 본 Amendment 는 *임시 제거* 가 아닌 *현 시점 적정 단순화*. 미래 재추가는
+명확한 트리거 조건 잠금.
+
+### D13. 사용자 흐름 단축 — 총 6 → 4 단계
+
+ADR-0041 D2 (홈 → /compare 카테고리 선택 흡수) + Amendment 2 D9 (bill 제거)
+누적:
+
+```
+변경 전: 홈 → /compare → postal → current-provider → household → bill → preview → /r/{shortId} = 7 페이지
+변경 후: 홈 (카테고리 선택) → postal → current-provider → household → preview → /r/{shortId} = 5 페이지
+```
+
+P2 5분 / 5단계 예산 → 4단계 = **마진 1단계 확보** (사용자 실수 / 추가 입력
+복잡도 흡수 여유).
+
+### 일정 영향 (Amendment 2)
+
+- 4.13.c builder 영역 확장 — bill 라우트 2 파일 삭제 + `useCompareSession`
+  step enum 정정 + i18n 4 키 × 5 locale = 20 entries 삭제 + 회귀 테스트
+  (compare-flow.e2e.spec.ts step='bill' assertion 제거 / preview 직진
+  assertion 추가). 추정 +0.5일.
+- 4.13.d 게이트 영역 — Vercel 배포 URL 5 locale 5단계 흐름 → 4단계 실측
+  Chrome MCP (postal → preview 직진 확인). +0.25일.
+- **합계 사이즈** ≈ 2~2.5일 → **2.5~3일** (Amendment 1 + Amendment 2 누적,
+  운영자 €300/월 cap + 솔로 사이드 여전히 정합).
+
+### 운영자 결정 영역 추가 (Amendment 2)
+
+#### Q9. bill 페이지 처리 방식
+
+- 옵션 A: 카피만 정정 (heading → "추정값으로 결과 미리보기 진행할까요?")
+  — 1~2h, 페이지 잔존. 빈 약속만 봉합.
+- 옵션 B (채택안): 페이지 자체 제거 + ADR-0016 Amendment 3 (5→4단계).
+  헌법 P3 완전 정합 + 사용자 흐름 단축.
+- 옵션 C: OCR 실제 구현 — 5~10일 + 별 ADR. €300/월 cap + 솔로 무리.
+- 운영자 결정 = **B (2026-06-06 잠금)**.
+
+### 검증 추가 (Amendment 2)
+
+- V9. `/compare/[category]/bill` 라우트 404 확인 (Vercel 배포 URL).
+- V10. `useCompareSession` step 'bill' enum 부재 (typecheck 통과).
+- V11. e2e compare-flow spec → household → preview 직진 (skip bill assertion).
+- V12. Progress bar `'1/4'~'4/4'` 표기 (Vercel 실측 5 locale).
+- V13. i18n `compare.bill.*` 키 5 locale 모두 삭제 (`harness:i18n` 정합).

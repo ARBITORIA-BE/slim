@@ -23,6 +23,20 @@ ko = 운영자 전용 hidden, 구현 = `src/middleware.ts` basic-auth + env 1개
 보존 (회귀 0)**. SC-E 는 폐기 아닌 *재정의* (운영 모델만). 본 문서 끝
 §Amendment 2 참조 (해당 절 없으면 본 Status 블록이 단일 출처).
 
+**Amendment 3 (2026-06-06, [ADR-0041](0041-home-hero-redesign.md) Amendment 2)**
+— **§T1/§T6 5단계 → 4단계 골격 변경 (`/bill` 페이지 제거)**. 운영자 PR #34
+머지 직후 Pieter Chrome MCP 실측 신호: "[bill 페이지] 이거 어디에 업로드
+해달라는거야?" — 헌법 §3 P3 (투명성) 위반 진단: heading "Would you like to
+upload your bill..." 카피가 *빈 약속* (OCR 미구현 + 페이지 본문 = Skip 버튼
+1개 + 업로드 영역 0). SC-A 결정 "OCR 을 페이즈 3 결과 페이지 직후로 미룸"
+은 *결과 페이지 직후도 미구현* (2026-06-06 기준). 빈 페이지 = 사용자 4/5
+이탈 위험 + P3 위반 진행 중. **결정**: `/compare/[category]/bill` 라우트
+삭제 + 단계 골격 5→4 (postal → current-provider → household → preview).
+`compare.bill.*` i18n 키 4종 × 5 locale = 20 entries 삭제. OCR 미래 활성화
+시 별 ADR (ADR-OCR 가칭) + 본 페이지 재추가. **본 Amendment 후 §T1~§T9
+전반 일부 영향**: §T1 URL 구조 5→4 / §T6 SC-A "없이 진행" 단일 버튼 결정
+= *deprecated* (페이지 자체 부재). 본 문서 끝 §Amendment 3 참조.
+
 **격상 이력**:
 - Proposed (2026-05-10) — T1~T10 10 결정 + SC-A/B/C/D + 신규 SC-E
 - Accepted (2026-05-10) — 운영자 GATE-J 통과, T9 옵션 A + T10 SC-E
@@ -30,6 +44,8 @@ ko = 운영자 전용 hidden, 구현 = `src/middleware.ts` basic-auth + env 1개
   D-1·D-2, ADR-0033 신설)
 - Amendment 2 (2026-05-17) — §T10 SC-E 운영 모델 = EN/FR/NL 공개 + ko
   basic-auth 게이트 (ADR-0034 D1, §T1~§T9 보존)
+- Amendment 3 (2026-06-06) — §T1/§T6 5단계 → 4단계 골격 (`/bill` 제거,
+  ADR-0041 Amendment 2 동반, 운영자 P3 위반 신호)
 
 본 ADR 은 **결정 + 인계 명세** 만 담는다. 옵션 A 채택의 직접 후속 = RHF +
 resolvers 2 dep 추가 (next-intl / shadcn/ui 등 페이즈 0 dep는 변동 0). shadcn
@@ -135,6 +151,12 @@ App Router URL 구조:
 /compare/[category]/bill                    # 단계 4: 청구서 — SC-A "없이 진행" (T6)
 /compare/[category]/preview                 # 단계 5: 결과 미리보기 (T7)
 ```
+
+> **→ Amendment 3 (2026-06-06) 참조**: `/compare/[category]/bill` *제거*
+> → 5단계 → 4단계. 새 URL 구조 = postal → current-provider → household
+> → preview (단계 1~4). T6 SC-A 결정 deprecated (페이지 자체 부재). 헌법
+> §3 P3 (투명성) 정합 — 빈 약속 봉합. ADR-0041 Amendment 2 동반 (홈
+> hero/`/compare` 페이지 재설계 + bill 제거).
 
 `[category]` = `mobile` / `internet_fixed` / `bundle_internet_tv` / `landline`
 (ADR-0005 §T6 enum 4값). 잘못된 category → 404.
