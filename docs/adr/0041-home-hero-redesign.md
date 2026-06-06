@@ -651,3 +651,118 @@ P2 5분 / 5단계 예산 → 4단계 = **마진 1단계 확보** (사용자 실�
 - V11. e2e compare-flow spec → household → preview 직진 (skip bill assertion).
 - V12. Progress bar `'1/4'~'4/4'` 표기 (Vercel 실측 5 locale).
 - V13. i18n `compare.bill.*` 키 5 locale 모두 삭제 (`harness:i18n` 정합).
+
+---
+
+## Amendment 3 — SiteHeader 신설 + LocaleSwitcher above-the-fold (2026-06-06)
+
+### C11. 운영자 신호 (Amendment 2 직후)
+
+> "언어선택 랜딩 페이지에 없어"
+
+= 베네룩스 다국어 시장 (BE/NL/LU 4언어 nl/fr/de/en) 진입 차단. 신규
+방문자가 자기 언어 선택 못 하면 즉시 이탈.
+
+### C12. 실측 진단 — LocaleSwitcher 노출 위치
+
+- `src/components/LocaleSwitcher.tsx` (PLAN 4.11 [x] 2026-05-31, ADR-0036
+  D3) 존재.
+- `src/components/SiteFooter.tsx` L120 — `<LocaleSwitcher />` 임베드.
+- `src/app/[locale]/layout.tsx` L109 — `<SiteFooter />` 모든 페이지 노출.
+- **문제**: 메인 페이지 `<main className="min-h-screen flex flex-col
+  items-center justify-center">` = 100vh + 가운데 정렬 → SiteFooter 가
+  *fold 아래로 밀려남*. Pieter Chrome MCP 1280×800 실측 (2026-06-06)
+  스크린샷에서 footer 영역 0 (스크롤 0 가정).
+- `/compare` 페이지도 동일 — `max-w-3xl` 짧은 컨텐츠 + footer 아래
+  배치 = above-the-fold 에 LocaleSwitcher 없음.
+
+### D14. 결정 — SiteHeader 신설 + 전 페이지 sticky 배치
+
+`src/components/SiteHeader.tsx` 신설 (RSC):
+
+```tsx
+// SiteHeader — 전 페이지 상단 sticky.
+// LocaleSwitcher above-the-fold + 브랜드 "Slim" 로고 좌측.
+// ADR-0041 D14, PLAN 4.13.c Amendment 3.
+
+<header className="sticky top-0 z-40 w-full border-b border-fg/10 bg-bg/80 backdrop-blur">
+  <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 md:px-6">
+    <Link href="/" className="font-display text-lg font-semibold tracking-tight">
+      Slim
+    </Link>
+    <LocaleSwitcher />
+  </div>
+</header>
+```
+
+### D15. layout.tsx 통합
+
+`src/app/[locale]/layout.tsx` 갱신 (L106 `<NextIntlClientProvider>` 안에
+추가):
+
+```tsx
+<NextIntlClientProvider messages={messages}>
+  <SiteHeader />        {/* ← 신규 */}
+  {children}
+  <SiteFooter />
+  <CookieConsent />
+</NextIntlClientProvider>
+```
+
+### D16. SiteFooter 정합 — LocaleSwitcher 중복 제거 vs 유지
+
+옵션:
+- A (채택): SiteFooter `<LocaleSwitcher />` *유지* — header 와 footer 양쪽.
+  Trade-off: 중복 노출 vs scroll bottom 도달 사용자 편의. footer 의
+  LocaleSwitcher 는 long-scroll 페이지 (legal/privacy 등) 의 fallback 역할.
+- B: SiteFooter `<LocaleSwitcher />` 제거 — header 단일 출처. 코드 simpler.
+
+builder 결정 위임. 디폴트 = A (양쪽 유지, 사용자 편의 우선).
+
+### D17. 모바일 우선 — sticky header 정합
+
+- 360×640 mobile: header 높이 ≤ 56px (`py-3` + `text-lg` 정합) → 콘텐츠
+  영역 ≥ 584px 확보.
+- 브랜드 로고 가시 + LocaleSwitcher dropdown 우측 정렬.
+- backdrop-blur = scroll 시 콘텐츠 가독성 보존.
+
+### D18. ADR-0041 D1 §블록 1 영향
+
+D1 §블록 1 (H1 + subheading) 은 *그대로 유지*. SiteHeader 는 hero 블록
+*위* 에 배치 (above blocks 1~5). 블록 1 fold 안 가시는 SiteHeader 높이
+56px 만큼만 밀림 — 모바일 360×640 viewport 시 블록 1 H1 가시 보존
+(`Hero` 컨테이너 `pt-0` → `pt-4` 약한 조정 필요).
+
+### 일정 영향 (Amendment 3)
+
+- 4.13.c builder 영역 확장 — SiteHeader 신설 + layout.tsx 통합 + 단위
+  테스트 1 (Vitest, mock LocaleSwitcher). +0.3일.
+- 4.13.d 게이트 영역 — Vercel 5 locale × sticky header 가시 실측
+  (1280×800 desktop + 360×640 mobile 시뮬레이션). +0.15일.
+- **합계 사이즈** ≈ 2.5~3일 → **3~3.5일** (Amendment 1+2+3 누적, 운영자
+  €300/월 cap + 솔로 사이드 여전히 정합).
+
+### 운영자 결정 영역 추가 (Amendment 3)
+
+#### Q10. SiteFooter LocaleSwitcher 처리
+
+- 옵션 A (채택안): footer LocaleSwitcher 유지 (header + footer 양쪽).
+  long-scroll 페이지 fallback.
+- 옵션 B: footer LocaleSwitcher 제거 (header 단일 출처).
+- builder 결정 위임. 디폴트 = A.
+
+#### Q11. SiteHeader 브랜드 로고 표시
+
+- 옵션 A (채택안): 텍스트 "Slim" (font-display, 좌측). ADR-0035 사업자
+  식별정보는 SiteFooter 유지.
+- 옵션 B: SVG 로고 (별 디자인 작업 필요). 4.13 범위 밖.
+- 디폴트 = A (텍스트 단순).
+
+### 검증 추가 (Amendment 3)
+
+- V14. SiteHeader 5 locale 모두 sticky 렌더 (Vercel 실측 1280×800).
+- V15. LocaleSwitcher dropdown 정합 — 5 locale 모두 노출 + 클릭 시 라우팅
+  정상 (e2e spec 신설 또는 기존 LocaleSwitcher.test 확장).
+- V16. 모바일 360×640 — SiteHeader 56px 높이 + 블록 1 H1 가시 보존.
+- V17. 운영자 자가 V1 통과 — "언어선택 랜딩 페이지에 없어" → "상단에
+  바로 보임".
