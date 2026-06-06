@@ -399,3 +399,142 @@ i18n 트랙).
 - 4.13.c builder 구현 (5 컴포넌트 + i18n 11 키 5 locale + 테스트, ≈ 1일).
 - 4.13.d 게이트 + PR (≈ 0.5일).
 - **합계 ≈ 1.5~2일** (운영자 €300/월 cap + 솔로 사이드 정합).
+
+---
+
+## Amendment 1 — /compare 페이지 동기 재설계 (2026-06-06)
+
+### C7. 운영자 추가 신호 (Pieter MCP 실측 정찰 후)
+
+PR #34 머지 직후 slim.lu/en 데스크탑 1280×800 실측 정찰 (Chrome MCP)에서
+운영자가 추가 신호 명시:
+
+> "비교 페이지 시각적으로 너무 어려워 조금더 쉽게 볼수있는 디자인 필요해"
+
+= `/compare` (카테고리 선택 페이지) 디자인 시각 난이도 위기. 운영자가 메인
+페이지(C1)뿐 아니라 `/compare`도 시각적 어려움을 느낌. 본 Amendment 는 4.13
+범위를 *홈 hero + /compare 페이지 동기 재설계* 로 확장한다.
+
+### C8. /compare 실측 진단 (slim.lu/en/compare, 1280×800)
+
+`src/app/[locale]/compare/page.tsx` (132줄) 실측 렌더링 6가지 문제:
+
+1. **너무 추상적 질문** — "Which plan would you like to compare?" — 사용자
+   첫 반응은 "어느 회사 (Proximus/Telenet/Orange)?" 인데, 카테고리 선택은
+   추상.
+2. **가격 범위만 표시** (€15~€35) — 자기 케이스 매핑 어려움. 실 가격은
+   5단계 끝까지 가야 알 수 있음.
+3. **평균 절약액 placeholder** ("after beta period") = "왜 비교해야 하는지"
+   근거 부재 (ADR-0029 §T2 정직성 토큰 정합이지만, 사용자 시선은 "정보 없음").
+4. **카드 그리드 `md:grid-cols-2` 어색** — 카드 3개인데 마지막
+   (Internet+TV) 이 좌측 가운데 떨어짐. 우측 빈 자리 = 결정 신호 0.
+5. **거대한 빈 우측 영역** — 데스크탑 1568px 캡쳐에 `max-w-3xl` (좁은
+   컬럼) → 시각 균형 깨짐 (우측 50% 빈 공간).
+6. **시각 위계 약함** — 아이콘 작음 + 카테고리명/설명/caveats 무게 비슷 →
+   결정 시그널 미발생.
+
+### D7. /compare 페이지 동기 재설계 명세
+
+D1 (홈 hero) 의 5블록 구조와 *시각 언어 정합*. 운영자 €300/월 cap + 솔로
+사이드 정합 추가 ≤ 0.5일 사이즈.
+
+#### D7.1. 컨테이너 폭 확장
+
+- `max-w-3xl` → `max-w-5xl` (우측 빈 공간 해소).
+- 모바일 단일 컬럼 유지 (`px-4 md:px-6` 정합).
+
+#### D7.2. 카드 그리드 3 컬럼
+
+- `md:auto-rows-fr md:grid-cols-2` → `md:auto-rows-fr md:grid-cols-3`.
+- 3 카드 모두 데스크탑에서 한 줄에 가시. 마지막 카드 빈 자리 회피.
+- mobile: `grid-cols-1` 유지 (세로 스택).
+
+#### D7.3. 카피 친근화
+
+- H1 (현 `compare.heading` = "Which plan would you like to compare?") →
+  **"지금 비교할 요금이 뭔가요?"** 평어 (i18n 키 재정의).
+- subheading (현 `compare.supportNote` = "We currently support comparisons
+  of telecommunications providers in Belgium (BE)...") → 단축 +
+  카테고리별 분기 시그널 ("벨기에 통신 — 모바일 / 인터넷 / 번들 + TV.
+  NL/LU 는 추후 지원").
+
+#### D7.4. 카드 정보 강화 (헌법 P1 정합)
+
+각 카드에 *실 예시 가격 1~2개* 추가 (admin SCRAPING 14/14 실 데이터 활용,
+헌법 P1 `source` + `fetched_at`):
+
+- Mobile 카드: "예: Proximus Mobilus Light €15.00/월" (1개 예시) +
+  `source: Proximus mobile fetcher` + `fetched_at: <ts>` tooltip.
+- Internet 카드: "예: Telenet One €54.00/월" (1개 예시).
+- Bundle 카드: "예: Proximus Tadaam €60.00/월" (1개 예시).
+
+가격 데이터 = `provider_tariffs` 테이블 cheapest active tariff per category.
+ISR `revalidate = 3600` (1h) — admin 메트릭과 동일 신선도.
+
+#### D7.5. 시각 위계 강화
+
+- 아이콘 `h-12 w-12` → `h-14 w-14` (살짝 크게).
+- 카테고리명 `font-display` `text-lg` (현재) → `text-xl` (강조).
+- 카드 호버 = 현재 `hover:border-primary/40 hover:bg-bg-warm/70` 유지.
+- "Step 5 · 5 minutes" 배지 → **"1/4 단계 · 약 4분"** (홈 카테고리 흡수
+  반영, D2 정합 단축 표기).
+
+#### D7.6. 데이터 소스 fallback
+
+실 데이터 부재 시 (provider seed 누락 / fetcher 실패) — 가격 표시 placeholder
+("가격 데이터 갱신 중" + `confidence='low'` 표기, ADR-0011 §T2 항목 5 동형).
+
+### D8. 컴포넌트 재사용 정합
+
+`src/components/Hero/CategoryGrid.tsx` (D5 컴포넌트) 와 `/compare/page.tsx`
+가 *공유 컴포넌트* 사용:
+
+- `<CategoryGrid variant="hero" />` — 홈 (D1 §블록 2) — 가격 예시 1개 / 컴팩트.
+- `<CategoryGrid variant="full" />` — `/compare` (D7) — 가격 예시 2개 + caveats
+  + 친근화 카피.
+
+또는 단일 컴포넌트 + props 분기 (`showExamples`, `density`). 4.13.c builder
+구현 시 결정 (둘 다 가능, 컴포넌트 분리 vs 통합 = 작은 트레이드오프).
+
+### 일정 영향
+
+- D7 명세 (architect 본 Amendment): 완료 (2026-06-06).
+- 4.13.c builder 구현 사이즈 ≈ 1일 → **≈ 1.5일** (CategoryGrid 통합 +
+  /compare 페이지 재설계 + i18n 키 2~4 추가 재정의).
+- 4.13.d 게이트 + PR 사이즈 0.5일 → **0.5~0.75일** (Vercel 실측 추가
+  /compare 페이지 5 locale).
+- **합계 ≈ 2~2.5일** (운영자 €300/월 cap + 솔로 사이드 여전히 정합).
+
+### 운영자 결정 영역 추가 (Amendment 1)
+
+#### Q6. /compare 카피 친근화 강도
+
+- 옵션 A (채택안): "지금 비교할 요금이 뭔가요?" 평어 + 단축.
+- 옵션 B: 현 카피 유지 ("Which plan would you like to compare?") + 카드만
+  재설계.
+- 옵션 C: 더 강한 친근 ("Proximus 쓰세요? Telenet? 뭘 바꾸고 싶으세요?") —
+  공급사 직접 언급, ADR-0034 D2 정합 (BE 통신 3사).
+- 운영자 결정 영역. 디폴트 = A.
+
+#### Q7. 카드 가격 예시 표시 방식
+
+- 옵션 A (채택안): 카테고리당 1 예시 (cheapest active tariff, 헌법 P1
+  source/fetched_at tooltip).
+- 옵션 B: 카테고리당 2~3 예시 (정보 밀도 ↑, 디자인 부담 ↑).
+- 옵션 C: 가격 예시 제거 + 가격 범위만 유지 (현 패턴 보존, 정보 갱신 부담 0).
+- 운영자 결정 영역. 디폴트 = A.
+
+#### Q8. CategoryGrid 컴포넌트 통합 vs 분리
+
+- 옵션 A (채택안): 단일 컴포넌트 + props 분기 (`variant`/`showExamples`).
+- 옵션 B: 컴포넌트 2개 분리 (`HeroCategoryGrid` vs `CompareCategoryGrid`).
+- builder 결정 위임. 디폴트 = A (DRY 원칙).
+
+### 검증 추가 (Amendment 1)
+
+- V6. `/compare` 페이지 Vercel 배포 URL 5 locale 1280×800 실측 — D7.1~D7.5
+  6가지 문제 봉합 시각 확인.
+- V7. 가격 예시 표시 = 실 데이터 (admin SCRAPING 14/14 데이터 동일 경로,
+  헌법 P1 source/fetched_at 노출).
+- V8. 운영자 자가 V1 통과 — "비교 페이지 시각적으로 너무 어려워" → "이제
+  뭘 비교하는지 한눈에 보임".
