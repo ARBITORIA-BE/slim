@@ -125,8 +125,9 @@ function ZeroProvidersFallback({
       <div className="rounded-2xl border border-fg/10 bg-bg-warm/40 p-4 text-sm text-fg-soft">
         {fallbackText}
       </div>
+      {/* ADR-0016 Amendment 3: bill 제거 → preview 직진 */}
       <Link
-        href={`/compare/${category}/bill`}
+        href={`/compare/${category}/preview`}
         className="inline-flex items-center justify-center self-start rounded-full bg-fg px-6 py-3 text-sm font-medium text-bg transition hover:bg-primary"
       >
         {skipText}

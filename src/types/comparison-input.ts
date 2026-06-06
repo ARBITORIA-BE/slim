@@ -159,7 +159,8 @@ export const SESSION_STATE_VERSION = 1;
 export const sessionStateSchema = z.object({
   version: z.literal(SESSION_STATE_VERSION),
   category: tariffCategorySchema,
-  step: z.enum(['postal', 'household', 'current-provider', 'bill', 'preview']),
+  // ADR-0016 Amendment 3: 'bill' 단계 제거 (ADR-0041 Amendment 2 D9, 2026-06-06).
+  step: z.enum(['postal', 'household', 'current-provider', 'preview']),
   data: z.object({
     // postalCountry: ADR-0021 §T10 NL/LU 추가로 신설. 기존 v1 sessionStorage
     // 는 postalCountry 부재 → optional, 복원 시 default 'BE' (UI 단계에서 처리).

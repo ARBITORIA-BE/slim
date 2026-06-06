@@ -92,10 +92,11 @@ export function CurrentProviderForm({
     [tariffs, selectedProviderId],
   );
 
+  // ADR-0016 Amendment 3: bill 제거 → preview 직진
   const proceedSkip = () => {
     updateData({ currentProviderId: null, currentTariffId: null });
-    setStep('bill');
-    router.push(`/compare/${category}/bill`);
+    setStep('preview');
+    router.push(`/compare/${category}/preview`);
   };
 
   const proceedWithSelection = () => {
@@ -103,8 +104,8 @@ export function CurrentProviderForm({
       currentProviderId: selectedProviderId,
       currentTariffId: tariffUnknown ? null : selectedTariffId,
     });
-    setStep('bill');
-    router.push(`/compare/${category}/bill`);
+    setStep('preview');
+    router.push(`/compare/${category}/preview`);
   };
 
   // "다음" 버튼 활성 조건:

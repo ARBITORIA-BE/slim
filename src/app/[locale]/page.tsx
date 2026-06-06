@@ -1,16 +1,32 @@
+/**
+ * 홈 메인 페이지 — 5블록 hero 구조 (ADR-0041, PLAN 4.13.c).
+ *
+ * RSC 컴포지션 컨테이너. 67줄 → ≤80줄.
+ * 블록 구조 (위→아래):
+ *   1. HeroHeader   — H1 + subheading (정체성)
+ *   2. CategoryGrid — 카테고리 카드 3개 (CTA 통합, 홈→postal 직진)
+ *   3. ProviderLogos — Proximus/Telenet/Orange BE (신뢰 시그널 1)
+ *   4. SavingsExample — 예시 절약액 placeholder (가치 제안)
+ *   5. TrustSignals — 광고0/수수료공개/제외공개 (신뢰 시그널 2)
+ *
+ * ADR-0041 D2: 단일 CTA "지금 비교하기" 삭제 (Q5 옵션 B). 카드 자체가 CTA.
+ * ADR-0041 D3: 모바일 우선 세로 스택. 블록 2 md:grid-cols-3 (3카드 한 줄).
+ * i18n: generateMetadata + getTranslations (RSC) — 'home' 네임스페이스.
+ */
+
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { buildAlternates } from '@/lib/alternates';
+import { HeroHeader } from '@/components/Hero/HeroHeader';
+import { CategoryGrid } from '@/components/Hero/CategoryGrid';
+import { ProviderLogos } from '@/components/Hero/ProviderLogos';
+import { SavingsExample } from '@/components/Hero/SavingsExample';
+import { TrustSignals } from '@/components/Hero/TrustSignals';
 
 /**
- * 루트 레이아웃의 title template(`%s · Slim`) 을 사용하지 않고
- * absolute 로 설정한다.
- * 홈은 브랜드 슬로건 전체가 title 이어야 탭에서 의미가 있다.
- *
- * i18n: generateMetadata + getTranslations (RSC) — 'home' 네임스페이스.
- * ADR-0033 §A2.9.1 — locale 명시 전달 패턴.
+ * absolute title — layout template('%s · Slim') 무시.
+ * ADR-0041 D4: metaTitle 재정의 "베네룩스 통신 비교" 정체성 반영.
  */
 export async function generateMetadata({
   params,
@@ -26,10 +42,7 @@ export async function generateMetadata({
   const alts = buildAlternates(locale, '/');
 
   return {
-    title: {
-      // absolute — layout template 무시하고 전체 title 직접 (홈 브랜드 슬로건)
-      absolute: t('metaTitle'),
-    },
+    title: { absolute: t('metaTitle') },
     description: t('metaDescription'),
     alternates: alts,
   };
@@ -43,24 +56,27 @@ export default async function Home({
   const { locale } = await params;
   // next-intl v3 static rendering 활성화 (RSC 컴포넌트 내부)
   setRequestLocale(locale);
-  // why: RSC 이므로 getTranslations 사용 (await 필요).
-  // 'home' 네임스페이스 = ko.json "home" 키 블록.
-  const t = await getTranslations('home');
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-6 p-8">
-      <h1 className="font-display text-5xl font-medium tracking-tight">
-        {t('headline')}<span className="text-accent">.</span>
-      </h1>
-      <p className="text-fg-soft text-lg max-w-md text-center">
-        {t('tagline')}
-      </p>
-      <Link
-        href="/compare"
-        className="rounded-full bg-fg px-6 py-3 text-sm font-medium text-bg transition hover:bg-primary"
-      >
-        {t('ctaButton')}
-      </Link>
+    <main className="mx-auto flex max-w-5xl flex-col items-center gap-10 px-4 py-10 md:px-6 md:py-16">
+      {/* 블록 1: H1 + subheading */}
+      <HeroHeader />
+
+      {/* 블록 2: 카테고리 카드 3개 (홈→postal 직진 CTA) */}
+      <div className="w-full">
+        <CategoryGrid variant="hero" showExamples density="compact" />
+      </div>
+
+      {/* 블록 3: 공급사 로고 3개 + 시장 점유율 캡션 (신뢰 시그널 1) */}
+      <ProviderLogos />
+
+      {/* 블록 4: 예시 절약액 placeholder (ADR-0029 §T2 정직성 토큰) */}
+      <div className="w-full max-w-md">
+        <SavingsExample />
+      </div>
+
+      {/* 블록 5: 광고0/수수료공개/제외공개 (헌법 P3, 신뢰 시그널 2) */}
+      <TrustSignals />
     </main>
   );
 }

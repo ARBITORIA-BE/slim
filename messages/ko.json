@@ -15,9 +15,14 @@
     "pageTitle": "요금제 비교 시작",
     "pageDescription": "모바일, 인터넷, 인터넷+TV — 비교할 카테고리를 선택하세요. 5단계, 5분 안에 완료.",
     "heading": "어떤 요금제를 비교하시겠어요?",
+    "headingFriendly": "지금 비교할 요금이 뭔가요?",
     "stepBadge": "5단계 · 5분",
+    "stepBadgeReduced": "1/4 단계 · 약 4분",
     "supportNote": "현재 벨기에(BE) 통신 비교를 지원합니다. 네덜란드(NL) / 룩셈부르크(LU)는 향후 추가 예정입니다.",
+    "supportNoteShort": "벨기에 통신 — 모바일, 인터넷, 번들 (모바일+인터넷+TV). 네덜란드/룩셈부르크는 추후 지원.",
+    "exampleCheapestLabel": "예: {provider} {tariff} {price}/월",
     "savingsPreviewPending": "평균 절약액 미리보기는 베타 후 노출 예정",
+    "priceSourceAriaLabel": "데이터 출처: {sourceUrl}",
     "termsNotice": "시작 시 본 사이트의",
     "termsLink": "이용 약관",
     "termsAndPrivacyConnector": "및",
@@ -47,7 +52,6 @@
         "postal": "우편번호",
         "household": "가구 형태",
         "current-provider": "현재 공급사",
-        "bill": "청구서",
         "preview": "결과 미리보기"
       }
     },
@@ -111,14 +115,8 @@
       "tariffAriaLabel": "현재 요금제 선택",
       "tariffNotRegistered": "이 공급사의 활성 요금제가 아직 등록되지 않았습니다 (향후 추가 예정).",
       "tariffUnknown": "이 공급사 요금제는 모르겠어요 (공급사만 비교)",
-      "nextButton": "다음 — 청구서",
+      "nextButton": "다음 — 결과 미리보기",
       "skipButton": "모르겠어요 / 스킵 — 신규 가입자 케이스로 진행"
-    },
-    "bill": {
-      "title": "청구서 업로드",
-      "heading": "청구서를 업로드해 정확한 사용량을 자동 입력하시겠어요?",
-      "supportNote": "현재 베타 진행 중 — 청구서 OCR은 결과 페이지 직후 추가됩니다. 지금은 가구 형태 기반 추정값으로 비교합니다.",
-      "skipButton": "청구서 없이 진행 — 결과 미리보기로"
     },
     "preview": {
       "title": "결과 준비 중",
@@ -458,11 +456,16 @@
     "staleData": "{relative} 데이터"
   },
   "home": {
-    "headline": "Slim.",
-    "tagline": "비교는 쉽게, 절약은 두툼하게.",
-    "ctaButton": "지금 비교하기",
-    "metaTitle": "Slim — 비교는 쉽게, 절약은 두툼하게",
-    "metaDescription": "벨기에 · 네덜란드 · 룩셈부르크에서 5분 안에 통신 요금을 비교하고 매달 더 영리한 선택을 하세요."
+    "headline": "베네룩스 통신 비교, 5분 안에",
+    "subheading": "벨기에 모바일 · 인터넷 · 번들 요금을 공식 가격 그대로 비교하세요.",
+    "providersCaption": "벨기에 통신 3대 공급사 시장 점유 ≥ 97.5% (Mordor Intelligence Q1 2025 기준)",
+    "providersUpdatedAtLabel": "가격 갱신: {date}",
+    "savingsExamplePending": "예시 절약액 — 베타 데이터 수집 중",
+    "trustNoAds": "광고 0 · 비교 결과는 100% 알고리즘",
+    "trustAffiliateDisclosure": "제휴 수수료 공개",
+    "trustExcluded": "비교에서 제외된 공급사 공개",
+    "metaTitle": "Slim — 베네룩스 통신 비교, 5분 안에",
+    "metaDescription": "벨기에 모바일 · 인터넷 · 번들 요금을 Proximus, Telenet, Orange BE 3사 가격으로 비교. 광고 0, 어트리뷰션 100% 공개."
   },
   "metadata": {
     "defaultTitle": "Slim — 비교는 쉽게, 절약은 두툼하게",

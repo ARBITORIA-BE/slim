@@ -22,7 +22,9 @@ import {
   type TariffCategoryInput,
 } from '@/types/comparison-input';
 
-const STEPS = ['postal', 'household', 'current-provider', 'bill', 'preview'] as const;
+// ADR-0016 Amendment 3 (ADR-0041 Amendment 2 D9): 'bill' 단계 제거 (2026-06-06).
+// household 완료 후 → preview 직진 (5단계 → 4단계 골격).
+const STEPS = ['postal', 'household', 'current-provider', 'preview'] as const;
 export type CompareStep = (typeof STEPS)[number];
 
 function storageKey(category: TariffCategoryInput): string {

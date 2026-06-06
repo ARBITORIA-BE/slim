@@ -77,7 +77,7 @@ const CORE_ROUTE_FILES: readonly string[] = [
   'src/app/[locale]/compare/[category]/postal/page.tsx',
   'src/app/[locale]/compare/[category]/household/page.tsx',
   'src/app/[locale]/compare/[category]/current-provider/page.tsx',
-  'src/app/[locale]/compare/[category]/bill/page.tsx',
+  // bill page.tsx 제거: ADR-0016 Amendment 3 (ADR-0041 Amendment 2 D9, 2026-06-06)
   'src/app/[locale]/compare/[category]/preview/page.tsx',
   'src/app/[locale]/r/[shortId]/_components/ResultConclusionCard.tsx',
   'src/app/[locale]/r/[shortId]/_components/ComparisonTable.tsx',

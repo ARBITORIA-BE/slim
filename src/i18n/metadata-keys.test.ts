@@ -79,9 +79,8 @@ describe('metadata i18n 키 정합성 (ADR-0033 §A2.9.2)', () => {
       expect(messages.compare.household.title).toBeTruthy();
     });
 
-    it.each(locales)('%s: compare.bill.title 존재', (_locale, messages) => {
-      expect(messages.compare.bill.title).toBeTruthy();
-    });
+    // ADR-0016 Amendment 3: compare.bill.* 제거 (2026-06-06)
+    // bill.title 테스트 삭제 — bill 페이지 + i18n 키 제거됨
 
     it.each(locales)('%s: compare.preview.title 존재', (_locale, messages) => {
       expect(messages.compare.preview.title).toBeTruthy();
