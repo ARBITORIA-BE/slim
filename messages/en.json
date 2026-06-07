@@ -58,37 +58,15 @@
       "cancel": "Cancel",
       "stepProgressAriaLabel": "Step {current}/{total} completed",
       "steps": {
-        "postal": "Zip code",
-        "household": "Furniture styles",
-        "current-provider": "Current Suppliers",
-        "preview": "Preview Results"
+        "household": "Household type",
+        "current-provider": "Current provider",
+        "preview": "Preview results"
       }
     },
-    "postal": {
-      "title": "Enter your ZIP code",
-      "heading": "Where do you live?",
-      "supportNote": "Select a country and enter your ZIP code. We currently support comparisons for Belgium (BE). There may be no providers available for comparison in the Netherlands (NL) and Luxembourg (LU) until new providers are added.",
-      "countryLabel": "Country",
-      "countryAriaLabel": "Select a country",
-      "postalCodeLabel": "Zip code",
-      "nextButton": "Next — Types of Furniture",
-      "countries": {
-        "BE": {
-          "label": "Belgium (BE)",
-          "placeholder": "Example: 1000",
-          "description": "Belgian postal codes consist of four digits ranging from 1000 to 9999."
-        },
-        "NL": {
-          "label": "Netherlands (NL)",
-          "placeholder": "Example: 1011 or 1011 AB",
-          "description": "Dutch postal codes consist of either four digits (PC4) or four digits followed by a space and two uppercase letters (PC6). Comparison candidates will be added in the future."
-        },
-        "LU": {
-          "label": "Luxembourg (LU)",
-          "placeholder": "Example: 1000",
-          "description": "Luxembourg postal codes consist of four digits ranging from 1000 to 9999. Comparison candidates will be added in the future."
-        }
-      }
+    "carrierAvailability": {
+      "notice": "Telenet is only available in Flanders and Brussels. Users in Wallonia and Luxembourg can choose Proximus or Orange BE.",
+      "sourceLabel": "Source: Telenet official coverage page",
+      "verifiedAt": "Verified: 2026-06-08"
     },
     "household": {
       "title": "Select household type",
@@ -133,7 +111,7 @@
       "supportNote": "We are generating a permalink for the comparison results based on the information you entered. Once complete, you will be automatically redirected to the results page.",
       "submittingMessage": "Calling the comparison engine... (usually takes less than 1 second)",
       "errorTitle": "Failed to generate results",
-      "inputIncomplete": "Your entry is incomplete. Please return to the ZIP code or household type step.",
+      "inputIncomplete": "Your entry is incomplete. Please return to the household type step.",
       "networkError": "A network error has occurred. Please try again.",
       "serverError": "{status}",
       "retry": "Try again",
