@@ -38,9 +38,7 @@ import type { SnapshotJoinRow } from './comparison-helpers';
 
 export interface InsertComparisonRequestArgs {
   readonly category: TariffCategory;
-  // ADR-0043 §D2: postal_code nullable — 통신 카테고리 ZIP 단계 제거.
-  // null = postal 입력 없이 비교 요청 (BE carrier 전국 동일가).
-  readonly postalCode: string | null;
+  readonly postalCode: string;
   readonly householdType: 'single' | 'couple' | 'family_3_plus';
   readonly currentProviderId: string | null;
   /** ADR-0021 §T10 country / 사용량 키 모두 흡수 (JSONB). */

@@ -222,20 +222,7 @@ describe('tariffCategorySchema (ADR-0042 §D1 Amendment 2: 5값)', () => {
 });
 
 describe('comparisonInputSchema (ADR-0016 §T7 preview 진입 검증)', () => {
-  it('postal 없이 3단계 입력 통과 (ADR-0043 — ZIP 단계 제거)', () => {
-    // ADR-0043: postal optional → 통신 카테고리는 postal 없이 비교 가능.
-    const input = {
-      category: 'mobile',
-      householdType: 'single',
-      currentProviderId: null,
-      currentTariffId: null,
-      inputAttributes: {},
-    };
-    expect(comparisonInputSchema.safeParse(input).success).toBe(true);
-  });
-
-  it('postal 포함 입력도 통과 (미래 카테고리 reverse 호환 — ADR-0043 §D2)', () => {
-    // postal .optional() 이므로 제공해도 통과 — DB 컬럼 nullable 보존 정합.
+  it('5단계 마친 정상 입력 통과', () => {
     const input = {
       category: 'mobile',
       postal: { country: 'BE', postalCode: '1000' },
@@ -250,6 +237,7 @@ describe('comparisonInputSchema (ADR-0016 §T7 preview 진입 검증)', () => {
   it('inputAttributes default = 빈 객체 (ADR-0016 §T4 매핑 부재 대응)', () => {
     const input = {
       category: 'internet_fixed',
+      postal: { country: 'BE', postalCode: '9000' },
       householdType: 'couple',
       currentProviderId: null,
       currentTariffId: null,
@@ -261,8 +249,7 @@ describe('comparisonInputSchema (ADR-0016 §T7 preview 진입 검증)', () => {
     }
   });
 
-  it('postal 제공 시 형식 검증도 작동 (잘못된 우편번호 거부)', () => {
-    // postal optional이지만 제공되면 schema 검증 적용.
+  it('우편번호 검증이 누적 schema에서도 작동', () => {
     const input = {
       category: 'mobile',
       postal: { country: 'BE', postalCode: '0001' },
@@ -276,9 +263,8 @@ describe('comparisonInputSchema (ADR-0016 §T7 preview 진입 검증)', () => {
 });
 
 describe('stepSchemas (RHF resolver 단계별 호출)', () => {
-  it('ADR-0043: postal 키 제거 — household + current-provider 2개만 노출', () => {
-    // postal 단계 제거 (ADR-0043) → stepSchemas 키 2개로 축소.
-    expect(Object.keys(stepSchemas)).toEqual(['household', 'current-provider']);
+  it('각 단계 키 노출', () => {
+    expect(Object.keys(stepSchemas)).toEqual(['postal', 'household', 'current-provider']);
   });
 
   it('household step schema 단독 검증', () => {
@@ -300,24 +286,6 @@ describe('sessionStateSchema (ADR-0016 §T8 sessionStorage 직렬화)', () => {
       updatedAt: '2026-05-10T12:34:56.000Z',
     };
     expect(sessionStateSchema.safeParse(state).success).toBe(true);
-  });
-
-  it('ADR-0043: 기존 v1 sessionStorage step=postal → safeParse 실패 (안전 fallback 트리거)', () => {
-    // 기존 사용자 sessionStorage 에 step='postal' 이 있으면 새 schema로 복원 불가.
-    // useCompareSession 의 safeParse 실패 → emptyState 복원 (회귀 0).
-    // postalCountry/postalCode 데이터 키는 data 안에 optional이라 영향 없음.
-    const oldState = {
-      version: SESSION_STATE_VERSION,
-      category: 'mobile',
-      step: 'postal', // 구 단계 — 새 enum 에 없음
-      data: {
-        postalCountry: 'BE',
-        postalCode: '1000',
-      },
-      updatedAt: '2026-05-10T12:34:56.000Z',
-    };
-    // safeParse 실패 → useCompareSession 이 emptyState 로 fallback (안전)
-    expect(sessionStateSchema.safeParse(oldState).success).toBe(false);
   });
 
   it('version 미스매치 거부 (마이그레이션 트리거)', () => {

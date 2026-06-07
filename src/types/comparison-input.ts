@@ -1,20 +1,17 @@
 /**
- * Comparison input — 3단계 입력 플로우의 Zod schema 단일 출처.
+ * Comparison input — 5단계 입력 플로우의 Zod schema 단일 출처.
  *
- * ADR-0016 §T4 (household) + §T5 (current-provider) + §T7 (preview) 에서
- * 정의된 모든 입력 모양을 한 파일에 모은다. RHF resolver +
+ * ADR-0016 §T3 (postal) + §T4 (household) + §T5 (current-provider) + §T6 (bill SC-A)
+ * + §T7 (preview) 에서 정의된 모든 입력 모양을 한 파일에 모은다. RHF resolver +
  * 서버 액션 재검증(ADR-0016 §T7 클라이언트 우회 방어) 둘 다 본 schema 사용.
  *
- * ADR-0043 Amendment (2026-06-08): 통신 카테고리에서 ZIP 단계 제거.
- *   postal 입력이 비교 가격에 영향 없음 (BE carrier 전국 동일가) →
- *   postal 단계 삭제, postal 필드는 DB 컬럼 보존을 위해 .optional() 유지.
- *   POSTAL_COUNTRIES / postalCountrySchema / postalCodeSchema = DEPRECATED in 통신,
- *   미래 카테고리 reverse 트리거 시 재활성 (ADR-0043 §D2).
+ * 페이즈 2 1차 (SC-B 적용): BE 우편번호만. NL/LU 는 페이즈 3 진입 직전 추가
+ * (ADR-0016 §T3). 추가 시 본 파일의 postalCodeSchema 만 갱신 — UI/서버는 그대로.
  *
  * 카테고리별 사용량 추정 매핑 (T4) 은 페이즈 2 후반 또는 페이즈 3 진입 시 결정 —
  * 현재는 inputAttributes 빈 객체 default.
  *
- * 결정 근거: docs/adr/0016-phase-2-input-flow-design.md + ADR-0043
+ * 결정 근거: docs/adr/0016-phase-2-input-flow-design.md
  */
 
 import { z } from 'zod';
@@ -33,9 +30,6 @@ export const tariffCategorySchema = z.enum(TARIFF_CATEGORIES);
 export type TariffCategoryInput = z.infer<typeof tariffCategorySchema>;
 
 // ─── 우편번호 (ADR-0016 §T3 + ADR-0021 §T10) ─────────────────────────────
-// ADR-0043 §D2 — DEPRECATED in 통신, 미래 카테고리 reverse 트리거.
-// 에너지/모기지/보험 등 지역 가격 차이가 있는 카테고리 진입 시 별 ADR로 재활성.
-// DB 컬럼 (comparison_request.postal_code nullable) + 이 schema는 그대로 보존.
 
 /**
  * 베네룩스 3국 우편번호 — country discriminator + 국가별 regex.
@@ -51,7 +45,7 @@ export type TariffCategoryInput = z.infer<typeof tariffCategorySchema>;
  * "공급사 추가 예정" 정직 안내 (ADR-0021 §T10 본문).
  *
  * 결정 근거: ADR-0016 §T3 (SC-B BE 1차) + ADR-0021 §T10 (페이즈 3 진입 직전
- * NL/LU 확장) + ADR-0043 §D2 (통신 deprecated, DB 보존).
+ * NL/LU 확장).
  */
 export const POSTAL_COUNTRIES = ['BE', 'NL', 'LU'] as const;
 export const postalCountrySchema = z.enum(POSTAL_COUNTRIES);
@@ -121,20 +115,16 @@ export const currentProviderSchema = z
   );
 export type CurrentProviderInput = z.infer<typeof currentProviderSchema>;
 
-// ─── 3단계 누적 입력 (preview 단계 = ADR-0016 §T7) ──────────────────────
+// ─── 5단계 누적 입력 (preview 단계 = ADR-0016 §T7) ──────────────────────
 
 /**
- * 3단계 모두 마친 시점의 *전체* 입력. preview 단계가 서버 액션
+ * 5단계 모두 마친 시점의 *전체* 입력. preview 단계가 서버 액션
  * `POST /api/compare` 호출 직전에 한 번 더 safeParse 로 검증 (클라이언트 우회
  * 방어 — ADR-0016 §T7).
  *
- * ADR-0043 §D2: postal 필드 .optional() 격상 — DB 컬럼 nullable 보존.
- *   통신 카테고리는 postal 입력 없이 비교 가능 (BE carrier 전국 동일가).
- *   미래 카테고리(에너지 등) reverse 시 postal 필드 재활성 — schema 변경 minimal.
- *
  * 매핑 → ADR-0007 §T2 `comparison_request` 컬럼:
  *   category            → comparison_request.category
- *   postal?.postalCode  → comparison_request.postal_code (nullable, ADR-0043 §D2)
+ *   postal.postalCode   → comparison_request.postal_code
  *   householdType       → comparison_request.household_type
  *   currentProviderId   → comparison_request.current_provider_id
  *   inputAttributes     → comparison_request.input_attributes (JSONB)
@@ -142,8 +132,7 @@ export type CurrentProviderInput = z.infer<typeof currentProviderSchema>;
  */
 export const comparisonInputSchema = z.object({
   category: tariffCategorySchema,
-  // ADR-0043 §D2: postal optional — 통신 카테고리 ZIP 단계 제거, DB nullable 보존.
-  postal: postalCodeSchema.optional(),
+  postal: postalCodeSchema,
   householdType: householdTypeSchema,
   currentProviderId: z.string().uuid().nullable(),
   currentTariffId: z.string().uuid().nullable(),
@@ -152,9 +141,9 @@ export const comparisonInputSchema = z.object({
 export type ComparisonInput = z.infer<typeof comparisonInputSchema>;
 
 // ─── 단계별 schema 묶음 (RHF resolver 단계별 호출용) ──────────────────────
-// ADR-0043: postal 키 제거 — 통신 카테고리 3단계 흐름 (household → current-provider → preview).
 
 export const stepSchemas = {
+  postal: postalCodeSchema,
   household: z.object({ householdType: householdTypeSchema }),
   'current-provider': currentProviderSchema,
 } as const;
@@ -173,10 +162,7 @@ export const sessionStateSchema = z.object({
   version: z.literal(SESSION_STATE_VERSION),
   category: tariffCategorySchema,
   // ADR-0016 Amendment 3: 'bill' 단계 제거 (ADR-0041 Amendment 2 D9, 2026-06-06).
-  // ADR-0043 (2026-06-08): 'postal' 단계 제거 — 통신 카테고리 3단계.
-  // 'postal' enum 값 제거. 기존 v1 sessionStorage 에 'postal' step 이 있으면
-  // safeParse 실패 → emptyState 복원 (useCompareSession 안전 fallback).
-  step: z.enum(['household', 'current-provider', 'preview']),
+  step: z.enum(['postal', 'household', 'current-provider', 'preview']),
   data: z.object({
     // postalCountry: ADR-0021 §T10 NL/LU 추가로 신설. 기존 v1 sessionStorage
     // 는 postalCountry 부재 → optional, 복원 시 default 'BE' (UI 단계에서 처리).

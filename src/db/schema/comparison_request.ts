@@ -97,9 +97,7 @@ export const comparisonRequest = pgTable(
      * **GDPR 정책 (T4)**: 90일 후 1.5.2 cron이 PC2 (앞 2자리, 지역 단위) 로
      * 일반화. quasi-identifier 위험 완화 (ADR-0007 §외부 사실 — Koot 2010).
      */
-    // ADR-0043 §D2: nullable 격상 — 통신 카테고리 ZIP 단계 제거.
-    // 미래 카테고리(에너지 등) 진입 시 postal 제출 재개 가능 (nullable 보존).
-    postalCode: text('postal_code'),
+    postalCode: text('postal_code').notNull(),
 
     /** 가구 형태 (PLAN 2.3) — 사용량 추정 fallback 의 핵심 변수. */
     householdType: householdTypeEnum('household_type').notNull(),

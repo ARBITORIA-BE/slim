@@ -23,9 +23,8 @@ import {
 } from '@/types/comparison-input';
 
 // ADR-0016 Amendment 3 (ADR-0041 Amendment 2 D9): 'bill' 단계 제거 (2026-06-06).
-// ADR-0043 (2026-06-08): 'postal' 단계 제거 — 통신 BE carrier 전국 동일가, ZIP 무의미.
-// 3단계 골격: household → current-provider → preview.
-const STEPS = ['household', 'current-provider', 'preview'] as const;
+// household 완료 후 → preview 직진 (5단계 → 4단계 골격).
+const STEPS = ['postal', 'household', 'current-provider', 'preview'] as const;
 export type CompareStep = (typeof STEPS)[number];
 
 function storageKey(category: TariffCategoryInput): string {
