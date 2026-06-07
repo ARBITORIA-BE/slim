@@ -74,7 +74,8 @@ export function snapshotRowToTariffLike(
 
 export interface BuildLockedInputsArgs {
   readonly postalCountry: PostalCountry;
-  readonly postalCode: string;
+  // ADR-0043 §D2: postal_code nullable — 통신 ZIP 단계 제거, DB 컬럼 보존.
+  readonly postalCode: string | null;
   readonly householdType: HouseholdTypeInput;
   readonly currentProviderId: string | null;
   readonly currentTariffId: string | null;

@@ -52,12 +52,11 @@ export default function PreviewPage({
     setStatus('submitting');
     setErrorMessage(null);
 
-    // ADR-0021 §T10 — postalCountry sessionStorage 키 신설. 기존 v1 세션
-    // 호환을 위해 fallback 'BE' (페이즈 2 1차는 BE 단일).
-    const country = state.data.postalCountry ?? 'BE';
+    // ADR-0043: postal 단계 제거 → postal 없이 비교 요청 (optional 필드, undefined).
+    // 기존 sessionStorage 에 postalCountry/postalCode 가 있어도 전달하지 않는다.
+    // DB 컬럼 (comparison_request.postal_code nullable) — 서버가 null 처리.
     const candidate = {
       category,
-      postal: { country, postalCode: state.data.postalCode ?? '' },
       householdType: state.data.householdType,
       currentProviderId: state.data.currentProviderId ?? null,
       currentTariffId: state.data.currentTariffId ?? null,
@@ -138,7 +137,7 @@ export default function PreviewPage({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push(`/compare/${category}/postal`)}
+              onClick={() => router.push(`/compare/${category}/household`)}
             >
               {t('goToStart')}
             </Button>

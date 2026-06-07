@@ -106,15 +106,22 @@ async function runCompareFlow(input: ComparisonInput): Promise<string> {
     inputAttributes,
   } = input;
 
+  // ADR-0043: postal optional — 통신 카테고리는 postal 없이 비교 가능.
+  // postalCode = null (DB 컬럼 nullable 보존), country = postal?.country ?? 'BE'.
+  // 'BE' fallback: 현 단계 통신 fetcher 는 BE 전용 (ADR-0034 D2, 페이즈 5 이전).
+  // 페이즈 5 NL/LU 진입 시 country fallback 제거 + postal 필드 재활성 → 별 ADR.
+  const postalCountry = postal?.country ?? 'BE';
+  const postalCode = postal?.postalCode ?? null;
+
   // 2. comparison_request INSERT — postalCountry 는 input_attributes 안에 봉인
   //    (스키마 컬럼 신설 회피, ADR-0021 §T10 호환).
   const storedInputAttributes: Record<string, unknown> = {
     ...inputAttributes,
-    postalCountry: postal.country,
+    postalCountry,
   };
   const { id: requestId } = await insertComparisonRequest({
     category,
-    postalCode: postal.postalCode,
+    postalCode,
     householdType,
     currentProviderId,
     inputAttributes: storedInputAttributes,
@@ -122,7 +129,7 @@ async function runCompareFlow(input: ComparisonInput): Promise<string> {
 
   // 3 + 4. 후보 + 현재 요금제 병렬 SELECT
   const [candidateRows, currentRow] = await Promise.all([
-    getCandidateSnapshots(category, postal.country),
+    getCandidateSnapshots(category, postalCountry),
     currentTariffId
       ? getCurrentTariffSnapshot(currentTariffId)
       : Promise.resolve(null),
@@ -147,8 +154,8 @@ async function runCompareFlow(input: ComparisonInput): Promise<string> {
   // 6. shortId + result + items INSERT
   const shortId = nanoid(12);
   const lockedInputs = buildLockedInputs({
-    postalCountry: postal.country,
-    postalCode: postal.postalCode,
+    postalCountry,
+    postalCode,
     householdType,
     currentProviderId,
     currentTariffId,
