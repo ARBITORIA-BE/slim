@@ -1227,3 +1227,137 @@ canonical 경로는 locale prefix 를 next-intl `getPathname` 가 처리 (3.5.3 
 `openGraph.url`/`alternates` 구조 무변경 (b) `revalidate`(r/[shortId] ISR 3600)
 무변경 (c) noindex 정책(입력 step layout robots index:false) 무변경. **텍스트만**.
 
+---
+
+## Amendment 6 (2026-06-07) — §T2 locale 5→3 축소 + defaultLocale 변경 (PLAN 4.15, 운영자 결정)
+
+> 본 절은 §T2 (5 locale 목록) 의 **본문 갱신** 이다. ADR-0036 D3 (LocaleSwitcher
+> 5 풀 노출) Amendment 1 + ADR-0034 D5 (hreflang/sitemap 다국어) cross-ref 동반 갱신.
+> §T1 라우팅 골격 (`[locale]` 세그먼트 + `localePrefix:'as-needed'`) 은 **보존 — 회귀 0**.
+
+### A6.1 — 운영자 결정 (2026-06-07, slim.lu prod 자가 진단)
+
+운영자 Pieter slim.lu prod 실측 후 신호: **"랜딩페이지 언어 프랑스어 lu 프랑스어
+be 같은 프랑스어, 네덜란드어도 nl 이랑 be 통합으로 영어 프랑스어 네덜란드어
+세개만 표기"**. 결정 = **locale 5→3 통합 (en / fr / nl)**.
+
+**왜 (4.13/4.14 후속 신호)**:
+- 헌법 §3 P2 (Easy & Fast) — LocaleSwitcher 5 옵션 = 인지 부하 (사용자 nl-BE/nl-NL
+  차이 모름 → ADR-0036 §대안 D3-region "과밀" 예측 실증).
+- ADR-0034 D2 (통신 BE 만) — 페이즈 5 NL/LU 진입 보류 = nl-NL/fr-LU 구분은
+  현 단계 매출 0 (사용자 단가에 영향 0, 인지 부하 ↑).
+- 4.13.c builder 구현 (SiteHeader sticky + LocaleSwitcher above-the-fold) 후
+  5 옵션 노출이 hero 첫 fold 시각 비중 ↑ → 정체성 카드 3개 (mobile/internet/bundle)
+  와 시각 경합.
+
+### A6.2 — §T2 갱신 — `locales` 3값 + `defaultLocale` 재선정
+
+**기존 §T2 (Amendment 2 후)**:
+```ts
+locales: ['nl-BE', 'nl-NL', 'fr-BE', 'fr-LU', 'en']
+defaultLocale: 'nl-BE'
+```
+
+**Amendment 6 갱신**:
+```ts
+locales: ['nl', 'fr', 'en']
+defaultLocale: 'nl'
+```
+
+**defaultLocale 재선정 = `nl`** (옵션 비교):
+- 옵션 A — `nl` (채택): ADR-0034 D2 통신 BE 만 + ADR-0009 BE ≥ 75% (베네룩스 1차)
+  + Belgium 인구 약 60% nl 사용 + Netherlands 흡수 시 nl 1차 = 정합. nl-BE 슬롯이
+  지금까지 default 였던 연속성 보존 (회귀 0).
+- 옵션 B — `fr`: BE 약 40% fr 사용 + LU 다수 = NL/LU 통합 후 비중 감소. 거부.
+- 옵션 C — `en`: SEO 중립이나 베네룩스 1차 시장 정합 0 (ADR-0034 D2 위배). 거부.
+
+`localePrefix:'as-needed'` 유지 → defaultLocale `nl` URL = prefix 없음.
+**4.13/4.14 잠금된 URL 구조 회귀 0** (기존 nl-BE 무프리픽스 = 새 nl 무프리픽스로
+대응, 사용자 체감 0). 핵심 trade-off = §A6.4 (기존 prefix URL 301 redirect).
+
+### A6.3 — CLAUDE.md §5 i18n 행 갱신 영역
+
+CLAUDE.md §5 "i18n 행" = `next-intl / nl-BE / nl-NL / fr-BE / fr-LU / en` →
+**`next-intl / nl / fr / en`** 갱신. 변경 시 ADR 필수 (CLAUDE.md §5 잠금) — 본
+Amendment 가 ADR 트랙. PLAN 4.15.b 가 CLAUDE.md §5 외과적 편집 흡수.
+
+### A6.4 — 기존 5 prefix URL 보존 전략 — **301 redirect 채택**
+
+4.6 organic SEO 런치 (2026-06-05 발효, ADR-0034 D5) 후 Google Search Console
+sitemap.xml 제출 (8 paths × 5 locales = 40 entries) → Google 색인 진행 중.
+locale 5→3 통합 시 기존 `/nl-BE/`/`/nl-NL/`/`/fr-BE/`/`/fr-LU/`/`/en/` URL = 색인
+대상 → 변경 시 **SEO 자산 손실 위험**.
+
+**옵션 비교**:
+- 옵션 X.1 — **301 redirect (채택)**: `/nl-BE/*` → `/*` (nl 무프리픽스), `/nl-NL/*`
+  → `/*`, `/fr-BE/*` → `/fr/*`, `/fr-LU/*` → `/fr/*`, `/en/*` → `/en/*` (유지).
+  middleware (`src/middleware.ts`) 가드 1겹 추가. 장점: SEO link equity 보존 +
+  사용자 bookmarked URL 동작 유지. 단점: middleware 분기 1겹 + 6개월~1년 유지.
+- 옵션 X.2 — 410 Gone: 색인 즉시 제거 신호. 장점: 깨끗. 단점: link equity 0 +
+  사용자 bookmark 깨짐. 거부.
+- 옵션 X.3 — noindex 메타: Google 재크롤 후 자연 탈락. 장점: 단순. 단점: 사용자
+  bookmark 작동하나 깨진 URL 노출 + 색인 탈락 수개월. 거부.
+
+**채택 = X.1 (301 redirect)**. middleware 구현 = `routing.locales` 단일 출처 검사
+전 단계 (next-intl 진입 전) 에 deprecated prefix 매칭 + 301 redirect. 6개월 유지 후
+Google Search Console "Index" 보고 deprecated URL 0 확인 시 분기 제거 (별 PLAN
+trigger, 본 4.15 범위 밖).
+
+### A6.5 — 페이즈 5 NL/LU 진입 BC compatibility 트리거
+
+ADR-0034 D2 "통신 BE 만" → 페이즈 5 진입 시 NL/LU 카테고리 확장 가능성 보존.
+NL/LU 별 locale variant 다시 필요 시:
+- **옵션 a — locale 5값 재신설**: routing.locales 다시 5값. 본 Amendment 6 reverse.
+  새 ADR 필수 (CLAUDE.md §5 변경). 트리거 = 통신 NL/LU 별 가격 차이가 사용자
+  체감 ≥ 10% 또는 NL/LU 별 fetcher 신설 시.
+- **옵션 b — URL param/cookie 분기**: `nl?region=NL` 또는 cookie `region`. 장점:
+  routing 변경 0 + hreflang/sitemap 유지. 단점: SEO 색인 region 별 분리 어려움.
+
+**트리거 조건 (잠금)**: 페이즈 5 진입 + NL/LU 가격 격차 신호 둘 다 만족 시
+별도 ADR 트리거. 그 전엔 본 Amendment 6 (3 locale) 유지. **Amendment 6 = BE 단계
+통합, 페이즈 5 reverse 가능성 명시 기록**.
+
+### A6.6 — messages/ 파일 정리 + legal 검수 영향
+
+- **messages/nl-BE.json / nl-NL.json / fr-BE.json / fr-LU.json**: delta 패턴
+  파일. PLAN 4.15.d 가 **삭제 채택** — 이유 = (1) 페이즈 5 reverse 시 옵션 a
+  (5값 재신설) 시 별 ADR + DeepL hybrid 재 round 으로 backfill 가능 (2) 현
+  단계 nl/fr/en base 파일만 단일 출처 (3) 운영 부채 ↓.
+- **messages/ko.json**: ADR-0033 §A2.3 ko 운영자 hidden 트랙 = 영향 0 (locale
+  목록 비포함 잠금 유지).
+- **legal 네임스페이스 (ADR-0033 §T4 + ADR-0037 + ADR-0040)**: 검수 트랙은 이미
+  ko/en/nl/fr 4 locale 단일 검수 (locale variant 검수 X) = **본 Amendment 6 영향
+  0**. 4.12.f 잠금된 legal 1차 검수 PASS 유지 + 4.5.j.3 (ADR-0040 DeepL hybrid)
+  retarget 결과 유지.
+
+### A6.7 — 잠금 envelope (위배 금지)
+
+본 Amendment 가 갱신하는 영역만 변경. 그 외 §T1 (라우팅 골격) / §T3 (DeepL)
+/ §T4 (legal 네임스페이스) / §T5 (키화 우선순위) / Amendment 2~5 본문 = **모두
+유지** (회귀 0). 변경:
+- (a) §T2 `locales` 5값 → 3값
+- (b) §T2 `defaultLocale` `nl-BE` → `nl`
+- (c) middleware ADMIN_LOCALE_PREFIXES 도출 = `routing.locales` 단일 출처 = 자동
+  4 prefix → 2 prefix 갱신 (하드코딩 0, 회귀 0). admin 가드 보안 영향 0 (ADR-0038
+  잠금 envelope 보존).
+- (d) **추가 middleware 1겹** = deprecated prefix 301 redirect (§A6.4 옵션 X.1).
+  routing.ts + middleware.ts 두 파일만. admin 가드 / ko 게이트 / next-intl
+  middleware 실행 순서 (ADR-0033 §A2.5 D2) 보존 — 신규 redirect 단계는 가장
+  먼저 (admin 가드 전).
+
+### A6.8 — 검증
+
+- §V1 Vercel 배포 URL `slim.lu/` (nl 무프리픽스) + `/fr/*` + `/en/*` 3 locale
+  모두 200 정상.
+- §V2 deprecated URL 4건 (`/nl-BE/compare`, `/nl-NL/compare`, `/fr-BE/compare`,
+  `/fr-LU/compare`) curl `-I` → 301 Location 정확 매핑 (`nl-BE`/`nl-NL` → `/compare`,
+  `fr-BE`/`fr-LU` → `/fr/compare`). `/en/compare` = 유지 (200, redirect 대상 아님).
+- §V3 LocaleSwitcher (footer + SiteHeader) = NL/FR/EN 3 옵션 노출 (5 → 3 회귀 0).
+- §V4 hreflang = 8 paths × 3 locale + x-default = 25 entries (40→25), Search
+  Console 4 deprecated URL "Crawled - currently not indexed" 또는 "Redirect"
+  분류 6개월 내.
+- §V5 typecheck/lint/test:run 0 + harness:i18n GREEN (3 locale 한글 0) +
+  harness:plan 95 정합 + harness:data 통과.
+- §V6 admin 가드 + ko 게이트 + e2e 회귀 0 (4.13/4.14 잠금된 URL 골격 보존 확인).
+
+
