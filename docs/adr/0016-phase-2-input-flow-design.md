@@ -23,6 +23,18 @@ ko = 운영자 전용 hidden, 구현 = `src/middleware.ts` basic-auth + env 1개
 보존 (회귀 0)**. SC-E 는 폐기 아닌 *재정의* (운영 모델만). 본 문서 끝
 §Amendment 2 참조 (해당 절 없으면 본 Status 블록이 단일 출처).
 
+**Amendment 4 (2026-06-07, [ADR-0043](0043-telecom-flow-zip-removal-data-model-preservation.md))**
+— **§T1/§T3/§T6 4단계 → 3단계 골격 변경 (`/postal` 페이지 제거 + 데이터 모델
+보존 + carrier availability caveats)**. 운영자 자가 진단 ("zip code 는 가격
+변동 비교요인에 영향을 안줘") + architect 시장 정찰 (BE/NL/LU 통신 가격 지역
+무관). 새 URL 구조 = `current-provider → household → preview` 3단계.
+`postalCountry`/`postalCode` Zod schema + DB 컬럼 + sessionStateSchema 모두
+보존 (미래 카테고리 진입 시 reverse 트리거 — ADR-0043 §D4). carrier availability
+caveats (`<CarrierAvailabilityNotice />` 별 섹션) = 결과 페이지 `/r/{shortId}`
+신설, ADR-0011 §T2 패턴 재사용. **본 Amendment 후 §T1~§T9 전반 일부 영향**: §T1
+URL 구조 4→3 / §T3 결정 = *DEPRECATED but data model preserved* / §T6 step
+indicator `1/4` → `1/3`. 본 문서 끝 §Amendment 4 참조.
+
 **Amendment 3 (2026-06-06, [ADR-0041](0041-home-hero-redesign.md) Amendment 2)**
 — **§T1/§T6 5단계 → 4단계 골격 변경 (`/bill` 페이지 제거)**. 운영자 PR #34
 머지 직후 Pieter Chrome MCP 실측 신호: "[bill 페이지] 이거 어디에 업로드
@@ -46,6 +58,9 @@ upload your bill..." 카피가 *빈 약속* (OCR 미구현 + 페이지 본문 = 
   basic-auth 게이트 (ADR-0034 D1, §T1~§T9 보존)
 - Amendment 3 (2026-06-06) — §T1/§T6 5단계 → 4단계 골격 (`/bill` 제거,
   ADR-0041 Amendment 2 동반, 운영자 P3 위반 신호)
+- Amendment 4 (2026-06-07) — §T1/§T3/§T6 4단계 → 3단계 골격 (`/postal` 제거 +
+  데이터 모델 보존 + carrier availability caveats, ADR-0043 동반, 운영자 자가
+  진단 + 시장 정찰 사실)
 
 본 ADR 은 **결정 + 인계 명세** 만 담는다. 옵션 A 채택의 직접 후속 = RHF +
 resolvers 2 dep 추가 (next-intl / shadcn/ui 등 페이즈 0 dep는 변동 0). shadcn
@@ -1043,3 +1058,85 @@ D1). 본 절은 §Status Amendment 2 블록의 본문 확정판.
 
 - ADR-0033 §Amendment 2 §A2.5 D1~D6 (PLAN 4.5.j.1 DoD) 와 통합.
 - `pnpm harness:plan` 정합 (PLAN 항목 수 불변 — 본 amend 본문만).
+
+## Amendment 3 (2026-06-06) — §T1/§T6 5단계 → 4단계 (`/bill` 제거, [ADR-0041](0041-home-hero-redesign.md) Amendment 2)
+
+### 상태
+
+**Accepted (2026-06-06)** — 운영자 PR #34 머지 직후 자가 신호 봉합. 본 절은
+§Status Amendment 3 블록의 본문 확정판 (ADR-0041 Amendment 2 동반).
+
+### 변경 골격
+
+- 라우팅 5→4: `/compare/[category]/bill` 페이지 제거 → `postal → current-provider
+  → household → preview` 4단계.
+- progress bar `1/5~5/5` → `1/4~4/4` 자동 갱신.
+- §T6 SC-A "없이 진행" 단일 버튼 결정 = *deprecated* (페이지 자체 부재).
+
+### 결과 + 검증
+
+- ADR-0041 §검증 V1~V4 와 통합. 운영자 자가 V1 통과.
+
+## Amendment 4 (2026-06-07) — §T1/§T3/§T6 4단계 → 3단계 (`/postal` 제거, [ADR-0043](0043-telecom-flow-zip-removal-data-model-preservation.md))
+
+### 상태
+
+**Accepted (2026-06-07)** — 운영자 자가 진단 ("zip code 는 가격 변동 비교요인에
+영향을 안줘") + architect 정찰 (시장 사실, ADR-0043 Context §3) + 옵션 D 잠금.
+본 절은 §Status Amendment 4 블록의 본문 확정판 ([ADR-0043](0043-telecom-flow-zip-removal-data-model-preservation.md)
+D5 동반).
+
+### (a) §T1 라우팅 4→3단계 변경
+
+```
+/compare                                    # 카테고리 선택 (§T2 그대로)
+/compare/[category]                         # = /compare/[category]/current-provider redirect (변경)
+/compare/[category]/current-provider        # 단계 1 (구 단계 2, §T5)
+/compare/[category]/household               # 단계 2 (구 단계 3, §T4)
+/compare/[category]/preview                 # 단계 3 (구 단계 4, §T7)
+```
+
+- 삭제: `/compare/[category]/postal` 라우트 (구 단계 1, §T3)
+- redirect: `/compare/[category]` → `postal` → **`current-provider`** (단일 진입 hop)
+
+### (b) §T3 = `DEPRECATED but data model preserved`
+
+- §T3 결정 (postal Zod schema + UI 컴포넌트) = *통신 흐름* 에서 폐기.
+- 단, **데이터 모델 보존** ([ADR-0043 §D2](0043-telecom-flow-zip-removal-data-model-preservation.md)):
+  - `POSTAL_COUNTRIES` / `postalCountrySchema` / `postalCodeSchema` (`src/types/comparison-input.ts`
+    §32-87) = **보존**
+  - `comparison_request.postal_code` DB 컬럼 (ADR-0007 §T2) = **보존** (nullable)
+  - `sessionStateSchema.data.postalCountry/postalCode` = 이미 `.optional()` (변경 0)
+  - `comparisonInputSchema.postal` = `.optional()` 격상 (통신 흐름 미제출, 미래
+    카테고리 제출)
+- **미래 카테고리 reverse 트리거** (ADR-0043 §D4): 에너지 BE / 모기지 BE / 보험 BE
+  진입 시 별 ADR (ADR-NNNN-zip-reintroduction) 로 재신설 가능.
+
+### (c) §T6 step indicator 4→3 갱신
+
+- progress bar `n/4` → `n/3`
+- step badge `1/4 단계 · 약 4분` → **`1/3 단계 · 약 3분`** (P2 5분 예산 마진 +1)
+- sessionStateSchema `step` enum (line 165 of `src/types/comparison-input.ts`):
+  `['postal', 'household', 'current-provider', 'preview']` →
+  `['current-provider', 'household', 'preview']`
+- `stepSchemas` (line 145-149) `postal` 키 제거 → `StepName` 자동 축소
+
+### (d) §T8 sessionStorage 호환성
+
+- 기존 v1 sessionStorage 키 (`postalCountry` / `postalCode`) = 이미 `.optional()`
+  → 복원 시 자동 통과 (회귀 0). version bump 불필요.
+
+### 결과
+
+- ✅ 4→3단계 골격 명문화 (운영자 자가 진단 봉합)
+- ✅ §T3 데이터 모델 보존 (미래 카테고리 reverse 가능)
+- ✅ 헌법 §3 P2 5분 예산 마진 +1단계 확보
+- ✅ 헌법 §3 P3 투명성 — carrier availability caveats (ADR-0043 §D3) 신설
+- 🔁 §T1 / §T3 / §T6 의 *5단계 가정* 일부 본문은 amendment 본문이 권위 (충돌 시 본 절 우선)
+
+### 검증
+
+- ADR-0043 §검증 V1~V5 와 통합 (PLAN 4.16 DoD)
+- `pnpm test:e2e` — `compare-flow.spec.ts` 3-step flow 통과
+- `pnpm harness:plan` 정합 (PLAN 4.16 +1)
+- Vercel 배포 URL 5 locale Pieter Chrome MCP 실측 (운영자 자가 V5)
