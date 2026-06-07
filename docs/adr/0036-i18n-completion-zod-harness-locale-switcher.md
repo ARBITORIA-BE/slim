@@ -87,3 +87,58 @@
 - Vercel 배포 URL `/en/compare/mobile/postal` 에서 우편번호 빈 제출 → 영어 에러 메시지 렌더 (한국어 0).
 - Vercel `/en` footer 에서 NL/FR/EN 전환 클릭 → 현재 경로 유지하며 locale 교체 + `aria-current` 정합.
 - `POST /api/compare` 잘못된 body → 응답 issues 에 한국어 message 0 (키 토큰만).
+
+---
+
+## Amendment 1 (2026-06-07) — D3 LocaleSwitcher 5→3 옵션 통합 (PLAN 4.15, ADR-0033 Amd 6 동반)
+
+### A1.1 — 결정
+
+D3 (LocaleSwitcher) 의 **대상 locale = 5 풀 노출** → **3 풀 노출 (NL/FR/EN)**
+로 갱신. ADR-0033 Amendment 6 (`locales` 5→3 통합) 동반.
+
+기존 D3 본문 "대상 locale = nl-BE / nl-NL / fr-BE / fr-LU / en (routing.locales
+단일 출처에서 도출 — 하드코딩 금지). … 단, 5개를 다 노출하면 UX 과밀 → **언어
+(NL/FR/EN) 3 토글 + 지역 변이는 현 region 유지** 권고" 와 §대안 D3-region
+"3 언어 토글 권고" 가 ADR-0036 채택 시 명시했던 **권고 방향이 실 잠금으로 발화**.
+
+### A1.2 — 갱신 본문
+
+**Amendment 1 갱신 D3 대상 locale**:
+```
+대상 locale = nl / fr / en (3개, routing.locales 단일 출처 — ADR-0033 Amd 6 §A6.2).
+ko 제외 (운영자 hidden 트랙 = locale 비포함, §T2 잠금 유지).
+```
+
+**LOCALE_ENDONYMS 맵 갱신** (`src/components/LocaleSwitcher.tsx`):
+```ts
+const LOCALE_ENDONYMS: Record<(typeof routing.locales)[number], string> = {
+  nl: 'Nederlands',
+  fr: 'Français',
+  en: 'English',
+};
+```
+
+- 이유: BE/LU/NL region suffix 제거 → "Nederlands (BE)" / "Nederlands (NL)" /
+  "Français (BE)" / "Français (LU)" 4 endonym → 2 endonym (단일 nl + fr) 으로
+  단순화. 운영자 결정 카피 = "영어 프랑스어 네덜란드어 세개만 표기" 직접 정합.
+- 4.13.c builder 잠금된 SiteHeader sticky `<LocaleSwitcher />` 재사용 + SiteFooter
+  `<LocaleSwitcher />` 재사용 = 동일 컴포넌트 1 곳 갱신 → 두 위치 자동 반영
+  (ADR-0041 Amd 3 §Q10 옵션 A 양쪽 노출 보존).
+
+### A1.3 — 결과 갱신
+
+- ✅ 인지 부하 ↓ — 5 옵션 → 3 옵션 (헌법 §3 P2 Easy & Fast).
+- ✅ 운영자 신호 직접 봉합 (2026-06-07 slim.lu prod 자가 진단).
+- ⚠️ nl-BE/nl-NL 또는 fr-BE/fr-LU region variant URL 사용자 = ADR-0033 Amd 6 §A6.4
+  301 redirect 로 보존 (LocaleSwitcher 영향 0 — switcher 는 새 prefix 만 발화).
+- ⚠️ 페이즈 5 NL/LU 재신설 시 LocaleSwitcher 도 5 옵션 reverse 가능성 (ADR-0033
+  Amd 6 §A6.5 트리거).
+
+### A1.4 — 검증
+
+- LocaleSwitcher 단위 테스트 갱신 — 3 옵션 렌더 확인 (5→3 회귀).
+- Vercel 배포 URL `/` (nl 무프리픽스) footer + SiteHeader 둘 다 NL/FR/EN 3 링크
+  노출 + `aria-current` 정합.
+- a11y axe-core 0 violations 회귀 (nav aria-label 정합 유지).
+- harness:i18n GREEN — LocaleSwitcher LOCALE_ENDONYMS 단일 출처 (한국어 0).
