@@ -1,3 +1,0 @@
-{
-  "_comment": "nl-NL override delta — nl base(nl.json) 대비 네덜란드 지역 차이만 (ADR-0033 §T3 + §A2.7 G3). Phase A: 빈 delta (nl base fallback). Phase B (DeepL): 지역 차이 키만 채움 (통화/우편번호/지역 표현 등)."
-}

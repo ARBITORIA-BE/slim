@@ -101,7 +101,7 @@ Pieter의 한 줄 신조: **"투명성은 내가 가진다. 사용자는 쉽고 
 | 결제/추적 | Stripe + 자체 어트리뷰션 | 제휴 수수료 정산 |
 | 배포 | Vercel + Neon Postgres | 베네룩스 엣지 가까움 (FRA1) |
 | 모니터링 | Sentry + PostHog | 에러 + 펀널 |
-| i18n | next-intl | nl-BE / nl-NL / fr-BE / fr-LU / en |
+| i18n | next-intl | nl / fr / en (베네룩스 3 언어 — ADR-0033 Amd 6) |
 
 ---
 

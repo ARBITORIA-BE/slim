@@ -14,7 +14,7 @@
  *   각 locale 은 자기 언어로 자기 이름을 표시한다 (endonym).
  *   정적 맵 — i18n 메시지 키가 아님 (번역 필요 없음, Latin 문자 — harness 통과).
  *
- * 5 locale 전체 순회:
+ * 3 locale 전체 순회 (ADR-0033 Amd 6 5→3 통합):
  *   routing.locales 단일 출처. 하드코딩 금지 (ADR-0036 D3).
  *   ko 는 routing.locales 비포함이라 자동 제외 (별도 필터 불요).
  */
@@ -26,12 +26,14 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 
-/** locale → 자기 언어 표시명 (endonym, 정적 맵) */
+/**
+ * locale → 자기 언어 표시명 (endonym, 정적 맵).
+ * 5 locale → 3 locale 통합 (ADR-0033 Amd 6 + ADR-0036 Amd 1, 2026-06-07).
+ * UI 세부 교체는 4.15.c 트랙 — 여기서는 타입 정합만 보장.
+ */
 const LOCALE_ENDONYMS: Record<(typeof routing.locales)[number], string> = {
-  'nl-BE': 'Nederlands (BE)',
-  'nl-NL': 'Nederlands (NL)',
-  'fr-BE': 'Français (BE)',
-  'fr-LU': 'Français (LU)',
+  nl: 'Nederlands',
+  fr: 'Français',
   en: 'English',
 };
 

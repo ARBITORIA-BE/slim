@@ -1,23 +1,22 @@
 /**
  * next-intl getRequestConfig (ADR-0033 §T1 배선).
  *
- * 메시지 로드 전략 — Phase A (ADR-0033 §A2.7 G3 + G1-a):
+ * 메시지 로드 전략 — locale 3-통합 후 (ADR-0033 Amd 6, 2026-06-07):
  *
- *   [G3] base+delta 얕은 병합 (§T3 결정 구현):
- *     - nl-BE/nl-NL → nl base(nl.json) + region delta(nl-BE.json/nl-NL.json) 병합
- *     - fr-BE/fr-LU → fr base(fr.json) + region delta 병합
- *     - en           → en.json 독립 (base 없음)
- *     - 우선순위: region delta > base > en > 키 그대로 (γ fallback)
- *     왜 병합인가: nl-BE ↔ nl-NL 은 지역 표현만 다름 — 전량 재번역은 DeepL
- *     분량 낭비. base 1회 + delta(차이만)로 ~40% 절약 (ADR-0033 §A2.7 G3).
+ *   [단일 locale 로드] (ADR-0033 Amd 6 §A6.7(c) "routing.locales 단일 출처"):
+ *     - routing.locales = ['nl', 'fr', 'en'] → 각 locale 이 단독 파일을 가짐.
+ *     - nl-BE/nl-NL → nl 통합, fr-BE/fr-LU → fr 통합 → base+delta 분리 무의미.
+ *     - 단일 loadMessages(locale) 호출로 충분.
+ *     왜 base+delta 제거인가: ADR-0033 Amd 6 이전에는 5-locale 구조에서 region delta
+ *     병합이 필요했으나, 3-locale 통합 후 nl/fr/en 각각이 완전한 파일 → dead code.
  *
  *   [G1-a] ko 오버레이 쿠키 (§A2.7 G1-a):
  *     - 요청 쿠키 `ko_gate_token` 이 env `KO_GATE_TOKEN` 과 constantTimeEqual
  *       일치 시 → locale 무관하게 messages/ko.json 로드 (메시지만 ko 스왑).
- *     - URL/hreflang/sitemap/lang 속성은 nl-BE 등 그대로 — "메시지 소스 스왑"만.
- *     - 무쿠키/불일치 → 위 base+delta 병합 그대로 (공개 경로 정적 렌더 불변).
- *     왜 쿠키 오버레이인가: 게이트 해제(nl-BE 무프리픽스 공개) 이후에도 운영자가
- *     공개 사이트 위에서 한국어로 검증 가능 — "편집자 모드처럼" (ADR-0033 §A2.7).
+ *     - URL/hreflang/sitemap/lang 속성은 nl 등 그대로 — "메시지 소스 스왑"만.
+ *     - 무쿠키/불일치 → 단일 locale 로드 (공개 경로 정적 렌더 불변).
+ *     왜 쿠키 오버레이인가: 게이트 해제 이후에도 운영자가 공개 사이트 위에서
+ *     한국어로 검증 가능 — "편집자 모드처럼" (ADR-0033 §A2.7).
  *     새 env 없음 — 4.5.j.1 게이트 토큰 재사용 (KO_GATE_TOKEN).
  *     무쿠키 정적 렌더 회귀 0: 쿠키 없는 요청(검색 봇 포함)은 스왑 0 → 공개 locale.
  */
@@ -28,23 +27,6 @@ import type { AbstractIntlMessages } from 'next-intl';
 
 import { constantTimeEqual } from '@/lib/constant-time-equal';
 import { routing } from './routing';
-
-// ─── base locale 매핑 ────────────────────────────────────────────────────────
-
-/**
- * region locale → base locale 매핑.
- * ADR-0033 §T3: nl-BE/nl-NL → nl base, fr-BE/fr-LU → fr base, en → 독립.
- * 하드코딩이지만 routing.ts 변경 없이 locale 이 추가될 일은 ADR 필요 — 여기 수정도 동반.
- *
- * @internal — 테스트 가능하도록 export (request.logic.test.ts).
- */
-export const BASE_LOCALE_MAP: Record<string, string | undefined> = {
-  'nl-BE': 'nl',
-  'nl-NL': 'nl',
-  'fr-BE': 'fr',
-  'fr-LU': 'fr',
-  en: undefined, // en 은 독립 (base 없음)
-};
 
 // ─── 메시지 파일 로드 헬퍼 ──────────────────────────────────────────────────
 
@@ -70,27 +52,6 @@ export async function loadMessages(locale: string): Promise<AbstractIntlMessages
   }
 }
 
-// ─── 얕은 병합 ───────────────────────────────────────────────────────────────
-
-/**
- * 두 메시지 객체를 얕게 병합한다. override 가 우선.
- * ADR-0033 §A2.7 G3: region delta > base 순서.
- *
- * 왜 얕은 병합인가:
- *   next-intl 메시지는 네임스페이스(최상위 키) 단위로 분리된다.
- *   region override 는 보통 특정 네임스페이스 내 개별 키를 바꾸지만,
- *   Phase A 에서 delta 는 거의 비어 있어 base 전체가 노출된다.
- *   깊은 병합은 복잡도만 증가 — 얕은 병합으로 네임스페이스 단위 override 가능.
- *
- * @internal — 테스트 가능하도록 export.
- */
-export function shallowMerge(
-  base: AbstractIntlMessages,
-  override: AbstractIntlMessages,
-): AbstractIntlMessages {
-  return { ...base, ...override };
-}
-
 // ─── ko 오버레이 판정 ────────────────────────────────────────────────────────
 
 /**
@@ -100,7 +61,7 @@ export function shallowMerge(
  * @internal — 테스트 가능하도록 export.
  * @param cookieToken 요청 쿠키 `ko_gate_token` 값 (없으면 undefined).
  * @param envToken KO_GATE_TOKEN env 값 (없으면 undefined).
- * @returns true = ko.json 로드, false = 공개 locale 병합.
+ * @returns true = ko.json 로드, false = 공개 locale 로드.
  */
 export function shouldOverrideKo(
   cookieToken: string | undefined,
@@ -145,23 +106,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
     // 이 경우 스왑 없이 공개 locale 메시지 사용 — 무쿠키 정적 렌더 회귀 0.
   }
 
-  // ── [G3] base+delta 얕은 병합 ──────────────────────────────────────────
-  const baseLocale = BASE_LOCALE_MAP[locale];
-
-  let messages: AbstractIntlMessages = {};
-
-  if (baseLocale !== undefined) {
-    // nl 계열 / fr 계열: base → delta 얕은 병합 (delta 가 우선)
-    const baseMessages = await loadMessages(baseLocale);
-    const regionMessages = await loadMessages(locale);
-    messages = shallowMerge(baseMessages, regionMessages);
-  } else {
-    // en: 독립 전체키 (base 없음)
-    messages = await loadMessages(locale);
-  }
-
-  return {
-    locale,
-    messages,
-  };
+  // ── 단일 locale 로드 ────────────────────────────────────────────────────
+  // ADR-0033 Amd 6: locale 5→3 통합 후 base+delta 분리 무의미.
+  // nl/fr/en 각각이 완전한 메시지 파일을 가짐 → 단일 loadMessages 호출.
+  const messages = await loadMessages(locale);
+  return { locale, messages };
 });

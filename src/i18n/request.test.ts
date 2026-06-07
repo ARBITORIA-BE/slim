@@ -1,12 +1,15 @@
 /**
- * request.ts 순수 함수 단위 테스트 (PLAN 4.5.j.2 Phase A DoD — G1 누수 0 + G3 병합).
+ * request.ts 순수 함수 단위 테스트 (PLAN 4.5.j.2 Phase A DoD + 4.15.b 정합).
  *
  * 왜 getRequestConfig 를 직접 호출하지 않는가:
  *   getRequestConfig 는 next-intl 서버 전용 래퍼 — Vitest(Node/클라이언트 환경)에서
  *   호출하면 "not supported in Client Components" 오류 발생.
- *   대신 핵심 로직(shouldOverrideKo, shallowMerge, loadMessages, BASE_LOCALE_MAP)을
- *   독립 export 로 분리하여 직접 테스트한다 (기존 ko-gate.test.ts 의 미들웨어 모킹
- *   패턴과 동일 정신 — 행동만 검증).
+ *   대신 핵심 로직(shouldOverrideKo, loadMessages)을 독립 export 로 분리하여
+ *   직접 테스트한다 (기존 ko-gate.test.ts 의 미들웨어 모킹 패턴과 동일 정신).
+ *
+ * ADR-0033 Amd 6 (2026-06-07): locale 5→3 통합 → BASE_LOCALE_MAP / shallowMerge 제거.
+ *   제거된 테스트 케이스: (iv)~(xi) BASE_LOCALE_MAP + shallowMerge 어설션.
+ *   이유: 두 함수가 request.ts 에서 삭제됨 — dead code 테스트는 불필요.
  *
  * 검증 케이스:
  *   (A) G1-a ko 오버레이 — shouldOverrideKo():
@@ -14,16 +17,11 @@
  *     (ii)  무쿠키 → false (공개 locale 그대로, 정적 렌더 회귀 0)
  *     (iii) 잘못된 토큰 → false (constant-time, ko 누출 0)
  *     (viii) env 미설정 → false (쿠키 있어도 스왑 없음)
- *   (B) G3 base+delta 병합 — shallowMerge() + BASE_LOCALE_MAP:
- *     (iv)  nl-BE → nl base locale 매핑 확인
- *     (v)   nl-NL → nl base locale 매핑 확인
- *     (vi)  fr-BE → fr base locale 매핑 확인
- *     (vii) fr-LU → fr base locale 매핑 확인
- *     (ix)  en → base 없음 (undefined)
- *     (x)   shallowMerge: delta 가 base 를 override (delta 우선)
- *     (xi)  shallowMerge: delta 가 비어 있으면 base 그대로
- *   (C) loadMessages — fallback:
- *     (xii) 존재하지 않는 locale → 빈 객체 (γ fallback, 에러 없음)
+ *   (B) loadMessages — 3-locale + fallback:
+ *     (i)   nl 로드 → nl.json 키 반환
+ *     (ii)  fr 로드 → fr.json 키 반환
+ *     (iii) en 로드 → en.json 키 반환
+ *     (iv)  unknown locale → 빈 객체 (γ fallback, 에러 없음)
  */
 
 import { describe, expect, it, vi, afterEach } from 'vitest';
@@ -31,7 +29,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest';
 // ─── messages/*.json 모킹 ───────────────────────────────────────────────────
 // dynamic import `../../messages/${locale}.json` 를 가로채서
 // in-memory fixture 객체를 반환한다.
-// 실제 파일 읽기 없이 병합 로직만 검증.
+// 실제 파일 읽기 없이 로드 로직만 검증.
 
 const MESSAGE_FIXTURES: Record<string, Record<string, unknown>> = {
   ko: {
@@ -42,23 +40,9 @@ const MESSAGE_FIXTURES: Record<string, Record<string, unknown>> = {
     home: { headline: 'NL headline', ctaButton: 'NL cta', tagline: 'NL tagline' },
     caveats: { commitment: 'NL commitment' },
   },
-  'nl-BE': {
-    // delta: nl-BE 는 nl 과 거의 같지만 home 네임스페이스만 다르다고 가정
-    home: { tagline: 'NL-BE tagline override' },
-  },
-  'nl-NL': {
-    // delta: nl-NL 은 빈 delta (nl base 그대로)
-  },
   fr: {
     home: { headline: 'FR headline', ctaButton: 'FR cta', tagline: 'FR tagline' },
     caveats: { commitment: 'FR commitment' },
-  },
-  'fr-BE': {
-    // delta: 빈 delta
-  },
-  'fr-LU': {
-    // delta: fr-LU 특수 override
-    home: { tagline: 'FR-LU tagline override' },
   },
   en: {
     home: { headline: 'EN headline', ctaButton: 'EN cta', tagline: 'EN tagline' },
@@ -68,18 +52,16 @@ const MESSAGE_FIXTURES: Record<string, Record<string, unknown>> = {
 
 vi.mock('../../messages/ko.json', () => ({ default: MESSAGE_FIXTURES['ko'] }));
 vi.mock('../../messages/nl.json', () => ({ default: MESSAGE_FIXTURES['nl'] }));
-vi.mock('../../messages/nl-BE.json', () => ({ default: MESSAGE_FIXTURES['nl-BE'] }));
-vi.mock('../../messages/nl-NL.json', () => ({ default: MESSAGE_FIXTURES['nl-NL'] }));
 vi.mock('../../messages/fr.json', () => ({ default: MESSAGE_FIXTURES['fr'] }));
-vi.mock('../../messages/fr-BE.json', () => ({ default: MESSAGE_FIXTURES['fr-BE'] }));
-vi.mock('../../messages/fr-LU.json', () => ({ default: MESSAGE_FIXTURES['fr-LU'] }));
 vi.mock('../../messages/en.json', () => ({ default: MESSAGE_FIXTURES['en'] }));
 
-// routing 모킹 — request.ts 가 import 함
+// routing 모킹 — ADR-0033 Amd 6: 3-locale (nl/fr/en)
+// 왜 모킹인가: request.ts 가 routing 을 import 하므로, 테스트 환경에서
+// 실제 next-intl defineRouting 를 실행하지 않기 위해.
 vi.mock('./routing', () => ({
   routing: {
-    locales: ['nl-BE', 'nl-NL', 'fr-BE', 'fr-LU', 'en'],
-    defaultLocale: 'nl-BE',
+    locales: ['nl', 'fr', 'en'],
+    defaultLocale: 'nl',
     localePrefix: 'as-needed',
   },
 }));
@@ -99,7 +81,7 @@ vi.mock('next/headers', () => ({
 
 // ─── 순수 함수 import ────────────────────────────────────────────────────────
 
-import { shouldOverrideKo, shallowMerge, loadMessages, BASE_LOCALE_MAP } from './request';
+import { shouldOverrideKo, loadMessages } from './request';
 
 // ─── 테스트 ──────────────────────────────────────────────────────────────────
 
@@ -110,7 +92,7 @@ afterEach(() => {
 describe('G1-a ko 오버레이 — shouldOverrideKo() (PLAN 4.5.j.2 DoD (3))', () => {
   /**
    * 케이스 (i): 유효 쿠키 + env 일치 → true (ko 스왑).
-   * 운영자가 nl-BE 경로에서도 ko 텍스트로 검증 가능.
+   * 운영자가 nl 경로에서도 ko 텍스트로 검증 가능.
    */
   it('(i) 유효 쿠키 + env 일치 → true (ko 스왑)', () => {
     const result = shouldOverrideKo('secret-token', 'secret-token');
@@ -150,97 +132,41 @@ describe('G1-a ko 오버레이 — shouldOverrideKo() (PLAN 4.5.j.2 DoD (3))', (
   });
 });
 
-describe('G3 base+delta 병합 — BASE_LOCALE_MAP (PLAN 4.5.j.2 DoD (5))', () => {
-  it('(iv) nl-BE → nl base', () => {
-    expect(BASE_LOCALE_MAP['nl-BE']).toBe('nl');
-  });
-
-  it('(v) nl-NL → nl base', () => {
-    expect(BASE_LOCALE_MAP['nl-NL']).toBe('nl');
-  });
-
-  it('(vi) fr-BE → fr base', () => {
-    expect(BASE_LOCALE_MAP['fr-BE']).toBe('fr');
-  });
-
-  it('(vii) fr-LU → fr base', () => {
-    expect(BASE_LOCALE_MAP['fr-LU']).toBe('fr');
-  });
-
-  it('(ix) en → base 없음 (undefined)', () => {
-    expect(BASE_LOCALE_MAP['en']).toBeUndefined();
-  });
-});
-
-describe('G3 base+delta 병합 — shallowMerge()', () => {
+describe('loadMessages — 3-locale + fallback (ADR-0033 Amd 6)', () => {
   /**
-   * 케이스 (x): delta 가 base 를 override (delta 우선).
-   * 학습자 코멘트:
-   *   얕은 병합은 최상위 키(네임스페이스) 단위로 override 한다.
-   *   nl-BE.home = { tagline: 'NL-BE ...' } 이면 home 네임스페이스 전체가 대체된다.
-   *   Phase B 에서 delta 가 특정 하위 키만 바꾸려면 깊은 병합이 필요하나,
-   *   Phase A 에서 delta 가 거의 비어 있으므로 얕은 병합으로 충분.
+   * ADR-0033 Amd 6: locale 5→3 통합 후 각 locale 이 완전한 파일을 가짐.
+   * base+delta 병합 없이 단일 loadMessages 호출만 검증한다.
    */
-  it('(x) delta 가 base 를 네임스페이스 단위로 override', () => {
-    const base = { home: { headline: 'base headline', tagline: 'base tagline' } };
-    const delta = { home: { tagline: 'delta tagline' } }; // headline 은 없음
-    const merged = shallowMerge(base, delta);
+  it('(i) nl 로드 → nl.json 키 반환', async () => {
+    const result = await loadMessages('nl');
+    // @ts-expect-error — 동적 fixture 객체
+    expect(result.home.headline).toBe('NL headline');
+  });
 
-    // 얕은 병합: home 전체가 delta.home 으로 교체 (base.home.headline 소실)
+  it('(ii) fr 로드 → fr.json 키 반환', async () => {
+    const result = await loadMessages('fr');
     // @ts-expect-error — 동적 fixture 객체
-    expect(merged.home.tagline).toBe('delta tagline');
-    // 얕은 병합의 한계: base.home.headline 은 소실됨
+    expect(result.home.headline).toBe('FR headline');
+  });
+
+  it('(iii) en 로드 → en.json 키 반환', async () => {
+    const result = await loadMessages('en');
     // @ts-expect-error — 동적 fixture 객체
-    expect(merged.home.headline).toBeUndefined();
+    expect(result.home.headline).toBe('EN headline');
   });
 
   /**
-   * 케이스 (xi): delta 가 비어 있으면 base 그대로.
-   * nl-NL/fr-BE = Phase A 빈 delta → nl/fr base 100% 노출.
+   * (iv) unknown locale → 빈 객체 γ fallback.
+   * 미번역 파일 접근 시 에러 없이 빈 객체 반환.
    */
-  it('(xi) 빈 delta → base 그대로', () => {
-    const base = { home: { headline: 'base headline', tagline: 'base tagline' } };
-    const delta = {}; // 빈 delta
-    const merged = shallowMerge(base, delta);
-
-    // @ts-expect-error — 동적 fixture 객체
-    expect(merged.home.headline).toBe('base headline');
-    // @ts-expect-error — 동적 fixture 객체
-    expect(merged.home.tagline).toBe('base tagline');
-  });
-
-  it('(xi-b) delta 가 base 에 없는 키를 추가', () => {
-    const base = { home: { headline: 'base headline' } };
-    const delta = { result: { heading: 'delta result heading' } };
-    const merged = shallowMerge(base, delta);
-
-    // @ts-expect-error — 동적 fixture 객체
-    expect(merged.home.headline).toBe('base headline'); // base 보존
-    // @ts-expect-error — 동적 fixture 객체
-    expect(merged.result.heading).toBe('delta result heading'); // delta 추가
-  });
-});
-
-describe('G3 base+delta — loadMessages() fallback (PLAN 4.5.j.2 DoD (5))', () => {
-  /**
-   * 케이스 (xii): 존재하지 않는 locale → 빈 객체 (γ fallback, 에러 없음).
-   * 미번역 파일 접근 시 에러 없이 빈 객체 반환 — γ 미번역 허용.
-   */
-  it('(xii) 존재하지 않는 locale → 빈 객체 fallback (에러 throw 안 함)', async () => {
-    // 'xx-XX' 는 mock 에 없는 locale — dynamic import 실패 → 빈 객체
+  it('(iv) 존재하지 않는 locale → 빈 객체 fallback (에러 throw 안 함)', async () => {
     const result = await loadMessages('xx-XX');
     expect(result).toEqual({});
   });
 
-  it('nl 로드 → MESSAGE_FIXTURES["nl"] 반환', async () => {
-    const result = await loadMessages('nl');
-    // @ts-expect-error — 동적 fixture
-    expect(result.home.headline).toBe('NL headline');
-  });
-
-  it('ko 로드 → MESSAGE_FIXTURES["ko"] 반환', async () => {
+  it('ko 로드 → ko.json 키 반환 (G1-a 오버레이 경로)', async () => {
     const result = await loadMessages('ko');
-    // @ts-expect-error — 동적 fixture
+    // @ts-expect-error — 동적 fixture 객체
     expect(result.home.headline).toBe('KO headline');
   });
 });

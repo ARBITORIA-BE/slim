@@ -1,23 +1,26 @@
 /**
- * 통합 middleware (ADR-0033 §T1 + PLAN 4.5.1.a admin 가드 + PLAN 4.5.j.1 ko 게이트).
+ * 통합 middleware (ADR-0033 §T1 + Amd 6 + PLAN 4.5.1.a admin 가드 + PLAN 4.5.j.1 ko 게이트).
  *
- * 세 역할 통합:
+ * 네 역할 통합:
+ *   0. deprecated locale prefix 301 redirect (ADR-0033 Amd 6 §A6.4 옵션 X.1)
  *   1. next-intl locale routing — createMiddleware(routing)
  *   2. /admin 접근 가드 — ADMIN_TOKEN 쿠키/쿼리 검증
- *   3. ko 게이트 — KO_GATE_TOKEN 으로 nl-BE 무프리픽스 경로 보호 (ADR-0033 §A2.2 옵션 b)
+ *   3. ko 게이트 — KO_GATE_TOKEN 으로 nl 무프리픽스 경로 보호 (ADR-0033 §A2.2 옵션 b)
  *
- * 실행 순서 (ADR-0033 §A2.5 D2 — admin → ko 게이트 → intl):
- *   (a) /admin 경로(locale prefix 정규화 포함) → admin 가드 먼저. 미인증 시 404 즉시 반환.
- *       '/en/admin', '/nl-NL/admin' 등 prefixed 경로도 isAdminPath() 로 동일 처리
+ * 실행 순서 (ADR-0033 Amd 6 §A6.7 (d) — redirect → admin 가드 → ko 게이트 → intl):
+ *   (a) deprecated locale prefix (/nl-BE, /nl-NL, /fr-BE, /fr-LU) → 301 redirect 먼저.
+ *       SEO link equity 보존 + 북마크/외부링크 소프트 마이그레이션.
+ *   (b) /admin 경로(locale prefix 정규화 포함) → admin 가드. 미인증 시 404 즉시 반환.
+ *       '/en/admin', '/fr/admin' 등 prefixed 경로도 isAdminPath() 로 동일 처리
  *       (ADR-0038 §결정 — locale prefix 우회 봉합).
- *   (b) locale prefix 없는 경로 → ko 게이트. 미인증 시 401 반환.
- *   (c) 그 외 (공개 locale prefix) → next-intl middleware에 위임.
+ *   (c) locale prefix 없는 경로 → ko 게이트. 미인증 시 401 반환.
+ *   (d) 그 외 (공개 locale prefix) → next-intl middleware에 위임.
  *
  * API 라우트 제외 (ADR-0033 §Migration):
  *   /api/ 는 locale 무관 — next-intl 개입 없음 (matcher 제외).
  *
  * localePrefix = 'as-needed' (ADR-0033 §T1):
- *   defaultLocale(nl-BE) URL은 prefix 없음 → 기존 URL 구조 100% 보존.
+ *   defaultLocale(nl) URL은 prefix 없음 → 기존 URL 구조 100% 보존.
  *
  * admin 가드 정책 (PLAN 4.5.1.a):
  *   1. 쿠키 `admin_token` = ADMIN_TOKEN env → 통과.
@@ -26,13 +29,13 @@
  *
  * ko 게이트 정책 (PLAN 4.5.j.1 → 4.5.j.2 Phase A — ADR-0033 §A2.5 + §A2.7):
  *   [4.5.j.1] handleKoGate: KO_GATE_TOKEN 쿠키/쿼리 검증 (admin 동형).
- *   [4.5.j.2] isKoGateTarget 해제: nl-BE 무프리픽스 경로를 게이트 비대상으로 전환.
+ *   [4.5.j.2] isKoGateTarget 해제: nl 무프리픽스 경로를 게이트 비대상으로 전환.
  *     isKoGateTarget 이 항상 false → handleKoGate 호출 안 됨 → intl 직접 위임.
  *     handleKoGate env 미설정 pass-through (핫픽스 10dee59) 와 수렴 = 정상 상태.
  *     ko 보호 1차선 = request.ts G1-a 오버레이 쿠키 (constantTimeEqual).
  *   게이트 대상 = 없음 (게이트 해제, Phase A 이후).
- *   게이트 비대상 = 전체 (공개 locale prefix + nl-BE 무프리픽스 모두).
- *   prefix 집합은 routing.locales에서 defaultLocale 제외 4개로 도출 — 하드코딩 금지.
+ *   게이트 비대상 = 전체 (공개 locale prefix + nl 무프리픽스 모두).
+ *   prefix 집합은 routing.locales에서 defaultLocale 제외 2개로 도출 — 하드코딩 금지.
  */
 
 import createIntlMiddleware from 'next-intl/middleware';
@@ -41,19 +44,84 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { constantTimeEqual } from '@/lib/constant-time-equal';
 import { routing } from './i18n/routing';
 
+// ─── deprecated locale prefix 301 redirect ────────────────────────────────────
+
+/**
+ * 구 5-locale 에서 신 3-locale 으로의 URL 매핑 (ADR-0033 Amd 6 §A6.4).
+ *
+ * 왜 301(영구) redirect 인가:
+ *   검색엔진 link equity 를 새 URL 로 완전 이전 (308 도 동일하나 GET 변환 보장 불필요).
+ *   302/307 = 임시 redirect → 검색엔진이 구 URL 을 계속 인덱싱할 수 있음.
+ *
+ * 매핑 규칙:
+ *   nl-BE → '' (nl 슬롯 = defaultLocale, 무프리픽스)
+ *   nl-NL → '' (동상)
+ *   fr-BE → 'fr'
+ *   fr-LU → 'fr'
+ *
+ * 단일 출처 원칙: 이 상수만 수정하면 handleDeprecatedLocaleRedirect 가 자동 반영.
+ */
+const DEPRECATED_LOCALE_MAP: Record<string, string> = {
+  'nl-BE': '', // /nl-BE/* → /* (무프리픽스 nl 슬롯)
+  'nl-NL': '', // /nl-NL/* → /*
+  'fr-BE': 'fr', // /fr-BE/* → /fr/*
+  'fr-LU': 'fr', // /fr-LU/* → /fr/*
+};
+
+/**
+ * deprecated locale prefix 301 redirect 헬퍼 (ADR-0033 Amd 6 §A6.7 (d) 실행 순서 1번).
+ *
+ * pathname 첫 세그먼트가 DEPRECATED_LOCALE_MAP 키와 정확히 일치하면 301 반환.
+ * 그 외 = null (호출자가 다음 단계 진행).
+ *
+ * 학습자 'why' 코멘트:
+ *   null 반환 패턴 = "내가 처리 안 함 → 다음 핸들러로". handleAdmin 과 동형.
+ *   NextResponse.redirect 가 Location 헤더 + searchParams 를 자동 보존함.
+ */
+function handleDeprecatedLocaleRedirect(req: NextRequest): NextResponse | null {
+  const { pathname } = req.nextUrl;
+
+  // 첫 세그먼트 추출: '/nl-BE/compare' → 'nl-BE'
+  // pathname 은 항상 '/' 로 시작 → split('/')[1] 이 첫 세그먼트.
+  const firstSegment = pathname.split('/')[1] ?? '';
+
+  if (!(firstSegment in DEPRECATED_LOCALE_MAP)) return null;
+
+  const newPrefix = DEPRECATED_LOCALE_MAP[firstSegment]!;
+  // 나머지 경로: '/nl-BE/compare/internet' → '/compare/internet'
+  // '/nl-BE' 정확히일 때: rest = '' → '/'
+  const rest = pathname.slice(firstSegment.length + 1); // +1 for leading '/'
+
+  let newPathname: string;
+  if (newPrefix === '') {
+    // nl 슬롯 (무프리픽스): rest 가 '' 이면 '/', 아니면 rest 그대로
+    newPathname = rest || '/';
+  } else {
+    // fr 슬롯: '/' + newPrefix + rest
+    newPathname = `/${newPrefix}${rest}`;
+  }
+
+  const target = req.nextUrl.clone();
+  target.pathname = newPathname;
+
+  // 301 = 영구 redirect — SEO link equity 이전 (ADR-0033 Amd 6 §A6.4 옵션 X.1)
+  return NextResponse.redirect(target, { status: 301 });
+}
+
 // ─── admin 가드 ───────────────────────────────────────────────────────────────
 
 const ADMIN_COOKIE_NAME = 'admin_token';
 const ADMIN_MAX_AGE = 60 * 60 * 24 * 30; // 30일
 
 /**
- * locale prefix 집합 (무프리픽스 defaultLocale nl-BE 제외).
+ * locale prefix 집합 (무프리픽스 defaultLocale nl 제외).
  * 왜 routing.ts 에서 도출하는가: 하드코딩하면 locale 추가 시 여기도 바꿔야 해서
  * 단일 출처 원칙 위반 — routing.ts 만 수정하면 자동 반영됨 (ADR-0038 §결정).
+ * 5→3 통합 후: ['/fr', '/en'] (4 prefix → 2 prefix 자동 반영).
  */
 const ADMIN_LOCALE_PREFIXES = routing.locales
   .filter((l) => l !== routing.defaultLocale)
-  .map((l) => `/${l}`); // ['/nl-NL', '/fr-BE', '/fr-LU', '/en']
+  .map((l) => `/${l}`); // ['/fr', '/en']
 
 /**
  * pathname 에서 known locale prefix 를 1회 벗겨 canonical 경로로 정규화.
@@ -222,8 +290,14 @@ const intlMiddleware = createIntlMiddleware(routing);
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
 
-  // (1) /admin 경로 — admin 가드 선처리 (ADR-0033 §A2.5 D2 실행 순서)
-  // isAdminPath 는 locale prefix(/en, /nl-NL 등)를 벗긴 canonical 경로 기준으로
+  // (1) Deprecated locale prefix 301 redirect (ADR-0033 Amd 6 §A6.4 옵션 X.1)
+  //     실행 순서 최우선: redirect → admin 가드 → ko 게이트 → next-intl (§A6.7 (d))
+  //     nl-BE/nl-NL → / (무프리픽스 nl), fr-BE/fr-LU → /fr/*
+  const redirectResult = handleDeprecatedLocaleRedirect(req);
+  if (redirectResult !== null) return redirectResult;
+
+  // (2) /admin 경로 — admin 가드 선처리 (ADR-0033 §A2.5 D2 실행 순서)
+  // isAdminPath 는 locale prefix(/en, /fr 등)를 벗긴 canonical 경로 기준으로
   // 판정 — '/en/admin' 도 '/admin' 과 동일하게 가드에 걸림 (ADR-0038 §결정).
   if (isAdminPath(pathname)) {
     const adminResult = handleAdmin(req);
@@ -232,7 +306,7 @@ export function middleware(req: NextRequest): NextResponse {
     return intlMiddleware(req);
   }
 
-  // (2) ko 게이트 대상 — locale prefix 없는 경로 전체 (nl-BE 슬롯 = ko 콘텐츠)
+  // (3) ko 게이트 대상 — locale prefix 없는 경로 전체 (nl 슬롯 = ko 콘텐츠)
   if (isKoGateTarget(pathname)) {
     const koResult = handleKoGate(req);
     if (koResult !== null) return koResult;
@@ -240,7 +314,7 @@ export function middleware(req: NextRequest): NextResponse {
     return intlMiddleware(req);
   }
 
-  // (3) 공개 locale prefix 경로 — 게이트 없이 next-intl에 위임
+  // (4) 공개 locale prefix 경로 — 게이트 없이 next-intl에 위임
   return intlMiddleware(req);
 }
 
