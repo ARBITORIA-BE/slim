@@ -44,7 +44,6 @@ import { SITE_ORIGIN } from '@/lib/site';
 
 import { BetaEstimatedBanner } from './_components/BetaEstimatedBanner';
 import { CalculationDetails } from './_components/CalculationDetails';
-import { CarrierAvailabilityNotice } from './_components/CarrierAvailabilityNotice';
 import { ComparisonControls } from './_components/ComparisonControls';
 import { ComparisonTable } from './_components/ComparisonTable';
 import { ExcludedProvidersSection } from './_components/ExcludedProvidersSection';
@@ -237,10 +236,6 @@ export default async function ResultPage({
       )}
 
       <ExcludedProvidersSection providers={excludedProviders} />
-
-      {/* ADR-0043 §D5 — carrier 가용성 안내 (P1 source/verifiedAt 내포).
-          ExcludedProvidersSection 과 인접하되 별 섹션 — 의미 분리 (ADR-0043 Q2). */}
-      <CarrierAvailabilityNotice />
 
       <CalculationDetails
         category={view.category}

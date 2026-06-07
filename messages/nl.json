@@ -58,15 +58,37 @@
       "cancel": "Annuleren",
       "stepProgressAriaLabel": "Stap {current}/{total} voltooid",
       "steps": {
+        "postal": "Postcode",
         "household": "Meubelvorm",
         "current-provider": "Huidige leverancier",
         "preview": "Voorbeeld van het resultaat"
       }
     },
-    "carrierAvailability": {
-      "notice": "Telenet is alleen beschikbaar in Vlaanderen en Brussel. Gebruikers in Wallonië en Luxemburg kunnen kiezen voor Proximus of Orange BE.",
-      "sourceLabel": "Bron: Telenet officiële dekkingspagina",
-      "verifiedAt": "Geverifieerd op: 2026-06-08"
+    "postal": {
+      "title": "Postcode invoeren",
+      "heading": "Waar woont u?",
+      "supportNote": "Kies eerst een land en voer vervolgens de postcode in. Momenteel ondersteunen we de vergelijking van telecomproviders in België (BE). Voor Nederland (NL) en Luxemburg (LU) zijn er mogelijk nog geen vergelijkingsopties beschikbaar totdat er nieuwe providers worden toegevoegd.",
+      "countryLabel": "Land",
+      "countryAriaLabel": "Land selecteren",
+      "postalCodeLabel": "Postcode",
+      "nextButton": "Volgende — Vorm van het meubelstuk",
+      "countries": {
+        "BE": {
+          "label": "België (BE)",
+          "placeholder": "Bijvoorbeeld: 1000",
+          "description": "Postcodes in België bestaan uit vier cijfers tussen 1000 en 9999."
+        },
+        "NL": {
+          "label": "Nederland (NL)",
+          "placeholder": "Bijvoorbeeld: 1011 of 1011 AB",
+          "description": "Nederlandse postcodes bestaan uit vier cijfers (PC4) of vier cijfers, een spatie en twee hoofdletters (PC6). Vergelijkingskandidaten worden later toegevoegd."
+        },
+        "LU": {
+          "label": "Luxemburg (LU)",
+          "placeholder": "Bijvoorbeeld: 1000",
+          "description": "Postcodes in Luxemburg bestaan uit vier cijfers tussen 1000 en 9999. Vergelijkingskandidaten worden later toegevoegd."
+        }
+      }
     },
     "household": {
       "title": "Huishoudtype kiezen",
@@ -111,7 +133,7 @@
       "supportNote": "Op basis van de door u ingevoerde gegevens wordt er een permanente link naar de vergelijkingsresultaten aangemaakt. Zodra dit is voltooid, wordt u automatisch doorgestuurd naar de resultatenpagina.",
       "submittingMessage": "Vergelijkingsengine wordt opgeroepen… (meestal minder dan 1 seconde)",
       "errorTitle": "Het genereren van de resultaten is mislukt",
-      "inputIncomplete": "De gegevens zijn onvolledig. Ga terug naar de stap 'Huishoudtype'.",
+      "inputIncomplete": "De gegevens zijn onvolledig. Ga terug naar de stap 'Postcode' of 'Huishoudtype'.",
       "networkError": "Er is een netwerkfout opgetreden. Probeer het nog eens.",
       "serverError": "Serverfout ({status})",
       "retry": "Opnieuw proberen",
