@@ -204,20 +204,24 @@ describe('ko 게이트 — Phase A 게이트 해제 후 정합 (PLAN 4.5.j.2 A3)
     expect(res.status).toBe(200);
   });
 
-  it('(iv-b) /nl-NL/compare/internet → 게이트 없이 통과 (200)', async () => {
+  it('(iv-b) /fr/compare/internet → 게이트 없이 통과 (200)', async () => {
+    // [ADR-0033 Amd 6] /nl-NL 은 deprecated → 301 redirect.
+    // 현행 locale prefix /fr 로 교체 (3-locale 통합).
     vi.stubEnv('KO_GATE_TOKEN', 'secret-token-abc');
 
-    const req = makeFakeRequest({ pathname: '/nl-NL/compare/internet' });
+    const req = makeFakeRequest({ pathname: '/fr/compare/internet' });
     // @ts-expect-error — duck-typed fake request
     const res = middleware(req);
 
     expect(res.status).toBe(200);
   });
 
-  it('(iv-c) /fr-BE 경로 → 게이트 없이 통과 (200)', async () => {
+  it('(iv-c) /fr 경로 → 게이트 없이 통과 (200)', async () => {
+    // [ADR-0033 Amd 6] /fr-BE 는 deprecated → 301 redirect.
+    // 현행 locale prefix /fr 로 교체 (3-locale 통합).
     vi.stubEnv('KO_GATE_TOKEN', 'secret-token-abc');
 
-    const req = makeFakeRequest({ pathname: '/fr-BE' });
+    const req = makeFakeRequest({ pathname: '/fr' });
     // @ts-expect-error — duck-typed fake request
     const res = middleware(req);
 

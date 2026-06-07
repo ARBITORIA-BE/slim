@@ -138,7 +138,7 @@ describe('generateMetadata', () => {
     expect(meta.title).toBe('legal.terms.pageTitle');
     // PLAN 3.5.4: buildAlternates 가 절대 URL 반환 — en locale prefix 포함
     expect(meta.alternates?.canonical).toBe('https://slim.lu/en/legal/terms');
-    // hreflang languages 5 locale + x-default = 6개 포함 검증
-    expect(Object.keys(meta.alternates?.languages ?? {})).toHaveLength(6);
+    // hreflang languages 3 locale + x-default = 4개 포함 검증 (ADR-0033 Amd 6 5→3 통합)
+    expect(Object.keys(meta.alternates?.languages ?? {})).toHaveLength(4);
   });
 });

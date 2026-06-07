@@ -1,16 +1,18 @@
 /**
  * app/sitemap.ts 단위 테스트 (PLAN 3.5.4 DoD #2).
  *
+ * [ADR-0033 Amd 6 + ADR-0036 Amd 1 갱신 — 5→3 locale 통합]:
+ *
  * 검증 범위:
- *   1. 8 경로 × 5 locale = 40 hreflang entry (alternates.languages)
+ *   1. 8 경로 × 3 locale = hreflang entry (alternates.languages)
  *   2. 색인 금지 URL (/r/...) 미포함
  *   3. 홈(/) priority = 1.0
  *   4. legal/data-sources priority = 0.5
  *   5. compare priority = 0.8
- *   6. nl-BE(defaultLocale) entry URL 에 locale prefix 없음
- *   7. nl-NL entry URL 에 /nl-NL prefix 있음
+ *   6. nl(defaultLocale) entry URL 에 locale prefix 없음
+ *   7. fr entry URL 에 /fr prefix 있음
  *   8. /legal/terms + /legal/privacy 포함 (PLAN 4.12.a/b)
- *   9. 각 entry 의 alternates.languages 에 5 locale 전부 있음
+ *   9. 각 entry 의 alternates.languages 에 3 locale 전부 있음
  */
 
 import { describe, expect, it } from 'vitest';
@@ -52,14 +54,16 @@ describe('sitemap — 홈 entry', () => {
     }
   });
 
-  it('nl-BE 홈 URL = SITE_ORIGIN (prefix 없음)', () => {
+  it('nl 홈 URL = SITE_ORIGIN (prefix 없음 — defaultLocale)', () => {
+    // [ADR-0033 Amd 6] nl = defaultLocale → 무프리픽스 (as-needed)
     const langs = homeEntry?.alternates?.languages ?? {};
-    expect(langs['nl-BE']).toBe(SITE_ORIGIN);
+    expect(langs['nl']).toBe(SITE_ORIGIN);
   });
 
-  it('nl-NL 홈 URL = SITE_ORIGIN/nl-NL', () => {
+  it('fr 홈 URL = SITE_ORIGIN/fr', () => {
+    // [ADR-0033 Amd 6] fr = non-default locale → /fr prefix
     const langs = homeEntry?.alternates?.languages ?? {};
-    expect(langs['nl-NL']).toBe(`${SITE_ORIGIN}/nl-NL`);
+    expect(langs['fr']).toBe(`${SITE_ORIGIN}/fr`);
   });
 });
 
@@ -109,23 +113,24 @@ describe('sitemap — PLAN 4.12 페이지 포함', () => {
   });
 });
 
-describe('sitemap — 5 locale × 8 경로 매트릭스', () => {
-  it('모든 entry 가 5 locale alternates.languages 를 가짐', () => {
+describe('sitemap — 3 locale × 8 경로 매트릭스 (ADR-0033 Amd 6 5→3 통합)', () => {
+  it('모든 entry 가 3 locale alternates.languages 를 가짐', () => {
     for (const entry of entries) {
       const langs = entry.alternates?.languages ?? {};
       expect(Object.keys(langs)).toHaveLength(routing.locales.length);
     }
   });
 
-  it('nl-NL 경로에 /nl-NL prefix 있음 (홈 제외)', () => {
+  it('fr 경로에 /fr prefix 있음 (홈 제외)', () => {
+    // [ADR-0033 Amd 6] nl-NL/fr-BE prefix → /nl 무프리픽스//fr 통합
     const compareEntry = entries.find((e) => e.url === `${SITE_ORIGIN}/compare`);
     const langs = compareEntry?.alternates?.languages ?? {};
-    expect(langs['nl-NL']).toBe(`${SITE_ORIGIN}/nl-NL/compare`);
+    expect(langs['fr']).toBe(`${SITE_ORIGIN}/fr/compare`);
   });
 
-  it('fr-BE 경로에 /fr-BE prefix 있음', () => {
+  it('en 경로에 /en prefix 있음', () => {
     const compareEntry = entries.find((e) => e.url === `${SITE_ORIGIN}/compare`);
     const langs = compareEntry?.alternates?.languages ?? {};
-    expect(langs['fr-BE']).toBe(`${SITE_ORIGIN}/fr-BE/compare`);
+    expect(langs['en']).toBe(`${SITE_ORIGIN}/en/compare`);
   });
 });

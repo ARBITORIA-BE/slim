@@ -1,8 +1,10 @@
 /**
  * LocaleSwitcher 단위 테스트 (PLAN 4.11.a DoD).
  *
+ * [ADR-0033 Amd 6 + ADR-0036 Amd 1 갱신 — 5→3 locale 통합]:
+ *
  * 검증:
- *   (1) routing.locales 5개 링크 전부 렌더
+ *   (1) routing.locales 3개 링크 전부 렌더 (nl / fr / en)
  *   (2) 현재 locale 링크에 aria-current="true" + font-semibold 클래스
  *   (3) 비활성 locale 링크에 aria-current 없음
  *   (4) 모든 링크의 href 가 현재 pathname 을 보존
@@ -19,7 +21,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 const FIXED_PATHNAME = '/compare/mobile';
-const FIXED_CURRENT_LOCALE = 'fr-BE';
+const FIXED_CURRENT_LOCALE = 'fr';
 
 // next-intl mock — useLocale/useTranslations
 vi.mock('next-intl', () => ({
@@ -64,36 +66,30 @@ vi.mock('@/i18n/navigation', () => ({
 import { LocaleSwitcher } from './LocaleSwitcher';
 
 describe('LocaleSwitcher', () => {
-  it('5 locale 링크 전부 렌더', () => {
+  it('3 locale 링크 전부 렌더 (ADR-0033 Amd 6 5→3 통합)', () => {
     render(<LocaleSwitcher />);
-    // endonym 텍스트로 5개 링크 확인
+    // endonym 텍스트로 3개 링크 확인 (nl / fr / en)
     expect(
-      screen.getByRole('link', { name: 'Nederlands (BE)' }),
+      screen.getByRole('link', { name: 'Nederlands' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: 'Nederlands (NL)' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: 'Français (BE)' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: 'Français (LU)' }),
+      screen.getByRole('link', { name: 'Français' }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'English' }),
     ).toBeInTheDocument();
   });
 
-  it('현재 locale(fr-BE) 링크에 aria-current="true"', () => {
+  it('현재 locale(fr) 링크에 aria-current="true"', () => {
     render(<LocaleSwitcher />);
-    const frBeLink = screen.getByRole('link', { name: 'Français (BE)' });
-    expect(frBeLink).toHaveAttribute('aria-current', 'true');
+    const frLink = screen.getByRole('link', { name: 'Français' });
+    expect(frLink).toHaveAttribute('aria-current', 'true');
   });
 
   it('비활성 locale 링크에는 aria-current 없음', () => {
     render(<LocaleSwitcher />);
-    const nlBeLink = screen.getByRole('link', { name: 'Nederlands (BE)' });
-    expect(nlBeLink).not.toHaveAttribute('aria-current');
+    const nlLink = screen.getByRole('link', { name: 'Nederlands' });
+    expect(nlLink).not.toHaveAttribute('aria-current');
     const enLink = screen.getByRole('link', { name: 'English' });
     expect(enLink).not.toHaveAttribute('aria-current');
   });
@@ -106,11 +102,11 @@ describe('LocaleSwitcher', () => {
     }
   });
 
-  it('각 링크의 data-locale 이 routing.locales 순서대로', () => {
+  it('각 링크의 data-locale 이 routing.locales 순서대로 (nl / fr / en)', () => {
     render(<LocaleSwitcher />);
     const links = screen.getAllByRole('link');
     const locales = links.map((l) => l.getAttribute('data-locale'));
-    expect(locales).toEqual(['nl-BE', 'nl-NL', 'fr-BE', 'fr-LU', 'en']);
+    expect(locales).toEqual(['nl', 'fr', 'en']);
   });
 
   it('nav aria-label 이 t("languageLabel") 값("Langue") 으로 렌더', () => {
@@ -120,7 +116,7 @@ describe('LocaleSwitcher', () => {
 
   it('현재 locale 링크에 font-semibold 클래스 포함', () => {
     render(<LocaleSwitcher />);
-    const frBeLink = screen.getByRole('link', { name: 'Français (BE)' });
-    expect(frBeLink.className).toContain('font-semibold');
+    const frLink = screen.getByRole('link', { name: 'Français' });
+    expect(frLink.className).toContain('font-semibold');
   });
 });
