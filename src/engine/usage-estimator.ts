@@ -13,10 +13,13 @@
  * 카테고리별 기본 프로파일:
  *   - mobile: 회선당 평균 (가구 형태와 회선 수는 직교)
  *   - internet_fixed: 가구 동시 디바이스 + 스트리밍 강도
- *   - bundle_internet_tv: internet_fixed + TV 시청
+ *   - bundle_mobile_internet: internet_fixed + 모바일 (TV 없음, cord-cutter) — ADR-0042 §D1
+ *   - bundle_internet_tv: internet_fixed + TV 시청 (모바일 없음 — 의미 명확화)
+ *   - bundle_mobile_internet_tv: internet_fixed + TV + 모바일 (triple play) — ADR-0042 §D1
  *
  * `landline` 제거 (ADR-0005 §Amendment 1, 2026-05-16): 베타 미시작, 데이터 0건.
  * exhaustive switch + `never` 체크로 격상 (P4 타입 안전 강화 — ADR-0010 §Amendment 1).
+ * ADR-0042 §D1 (2026-06-07): enum 3→5 — bundle_mobile_internet / bundle_mobile_internet_tv 분기 추가.
  *
  * **검증 4 (ADR-0021)**: 베타 사용자 청구서 5건 수집 후 본 매핑 정확도 ≤ 60%
  * 시 Amendment 1 트리거. 페이즈 5 OCR (별도 ADR-OCR) 진입 시 inputAttributes
@@ -114,7 +117,22 @@ export function deriveUsageProfile(
         streaming_4k: pickBoolean(inputAttributes, 'streaming_4k', base.streaming_4k),
       };
     }
+    case 'bundle_mobile_internet': {
+      // ADR-0042 §D1: mobile+internet 듀얼 (TV 없음, cord-cutter).
+      // internet_fixed 기본 프로파일 재사용 — TV 필드 없음 (tv_channels_needed / tv_4k_needed X).
+      const base = INTERNET_DEFAULTS[ht];
+      return {
+        householdType: ht,
+        download_mbps_needed: pickNumber(inputAttributes, 'download_mbps_needed', base.download_mbps_needed),
+        household_devices: pickNumber(inputAttributes, 'household_devices', base.household_devices),
+        streaming_4k: pickBoolean(inputAttributes, 'streaming_4k', base.streaming_4k),
+        // 모바일 사용량도 추정 (cord-cutter는 모바일 사용 패턴)
+        data_gb_used: pickNumber(inputAttributes, 'data_gb_used', MOBILE_DEFAULTS[ht].data_gb_used),
+        eu_roaming_needed: pickBoolean(inputAttributes, 'eu_roaming_needed', MOBILE_DEFAULTS[ht].eu_roaming_needed),
+      };
+    }
     case 'bundle_internet_tv': {
+      // ADR-0042 §D1 의미 명확화: TV-only 듀얼 (모바일 없음).
       const base = BUNDLE_DEFAULTS[ht];
       return {
         householdType: ht,
@@ -123,6 +141,21 @@ export function deriveUsageProfile(
         streaming_4k: pickBoolean(inputAttributes, 'streaming_4k', base.streaming_4k),
         tv_channels_needed: pickNumber(inputAttributes, 'tv_channels_needed', base.tv_channels_needed),
         tv_4k_needed: pickBoolean(inputAttributes, 'tv_4k_needed', base.tv_4k_needed),
+      };
+    }
+    case 'bundle_mobile_internet_tv': {
+      // ADR-0042 §D1: 트리플 플레이 (모바일 + 인터넷 + TV).
+      // BUNDLE_DEFAULTS 기본값 재사용 + 모바일 사용량 추가.
+      const base = BUNDLE_DEFAULTS[ht];
+      return {
+        householdType: ht,
+        download_mbps_needed: pickNumber(inputAttributes, 'download_mbps_needed', base.download_mbps_needed),
+        household_devices: pickNumber(inputAttributes, 'household_devices', base.household_devices),
+        streaming_4k: pickBoolean(inputAttributes, 'streaming_4k', base.streaming_4k),
+        tv_channels_needed: pickNumber(inputAttributes, 'tv_channels_needed', base.tv_channels_needed),
+        tv_4k_needed: pickBoolean(inputAttributes, 'tv_4k_needed', base.tv_4k_needed),
+        data_gb_used: pickNumber(inputAttributes, 'data_gb_used', MOBILE_DEFAULTS[ht].data_gb_used),
+        eu_roaming_needed: pickBoolean(inputAttributes, 'eu_roaming_needed', MOBILE_DEFAULTS[ht].eu_roaming_needed),
       };
     }
     default: {

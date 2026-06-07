@@ -12,7 +12,8 @@
  *   T3. `commitment_months` INT (0 = 약정없음) + `early_termination_fee_cents` NULL
  *   T4. 프로모는 평탄화 (`promo_price_cents`, `promo_months`) — 별도 테이블 YAGNI
  *   T5. `tariff` = 마스터 (현재 판매 중 여부). 시계열은 1.3 `tariff_snapshot`이 담당
- *   T6. `tariff_category` enum — `mobile`, `internet_fixed`, `bundle_internet_tv` (3값, ADR-0005 §Amendment 1)
+ *   T6. `tariff_category` enum — 5값 (ADR-0042 §D1 Amendment 2, 2026-06-07): `mobile`, `internet_fixed`,
+ *       `bundle_mobile_internet`, `bundle_internet_tv`, `bundle_mobile_internet_tv`
  */
 
 import { relations } from 'drizzle-orm';
@@ -39,16 +40,28 @@ import { provider } from './provider';
  *
  * - `mobile`: 모바일 요금제 (음성/SMS/데이터). Proximus, Orange BE, Telenet 등.
  * - `internet_fixed`: 가정용 고정 인터넷 (속도/데이터). Telenet, VOO, Proximus.
- * - `bundle_internet_tv`: 인터넷+TV 묶음. Telenet ONE, Proximus Flex 등.
+ * - `bundle_mobile_internet`: 모바일 + 인터넷 듀얼 (TV 없음, cord-cutter).
+ *   ADR-0042 §Context 2 시장 정찰 — Orange Love Duo / Proximus Flex+ dual 매핑.
+ * - `bundle_internet_tv`: 인터넷 + TV 듀얼 (모바일 없음). Proximus Flex+ Internet+TV
+ *   (이중 거주지용), Orange Love Trio without mobile.
+ *   ADR-0042 §Context 2 시장 정찰 — TV-only dual 매핑 (의미 명확화).
+ * - `bundle_mobile_internet_tv`: 트리플 플레이 (모바일 + 인터넷 + TV).
+ *   ADR-0042 §Context 2 시장 정찰 — Proximus Flex+ Go/Mega/Giga/Ultra, Telenet ONE up
+ *   (legacy, DISCONTINUED 2026-05-15), Orange Love Trio + Mobile 매핑.
  *
  * `landline` 제거 (ADR-0005 §Amendment 1, 2026-05-16): 베타 미시작, 데이터 0건,
  * 흔적 제거(D-1). 페이즈 5에서 `energy_electricity`, `energy_gas`, `mortgage`,
  * `insurance_*` 추가 예정. 추가는 항상 ADR + `ALTER TYPE ADD VALUE` 마이그레이션으로.
+ *
+ * ADR-0042 §D1 (Amendment 2, 2026-06-07): enum 3→5. ALTER TYPE ADD VALUE 2회
+ * (`bundle_mobile_internet`, `bundle_mobile_internet_tv`) — ADD only, DROP 없음.
  */
 export const tariffCategoryEnum = pgEnum('tariff_category', [
   'mobile',
   'internet_fixed',
+  'bundle_mobile_internet',
   'bundle_internet_tv',
+  'bundle_mobile_internet_tv',
 ]);
 
 /**
@@ -71,7 +84,7 @@ export const tariff = pgTable(
       .notNull()
       .references(() => provider.id, { onDelete: 'restrict' }),
 
-    /** 요금제 카테고리. 페이즈 1은 3값(통신, ADR-0005 §Amendment 1). */
+    /** 요금제 카테고리. 페이즈 1은 5값(통신, ADR-0042 §D1 Amendment 2). */
     category: tariffCategoryEnum('category').notNull(),
 
     /** 표시용 요금제 이름 (예: "Mobile Smart", "ONE up"). */

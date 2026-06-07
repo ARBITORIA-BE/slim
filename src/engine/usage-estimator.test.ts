@@ -72,7 +72,7 @@ describe('deriveUsageProfile (ADR-0021 §T3 §5)', () => {
     });
   });
 
-  describe('bundle_internet_tv 카테고리', () => {
+  describe('bundle_internet_tv 카테고리 (TV-only 듀얼 — 의미 명확화 ADR-0042)', () => {
     it('couple — TV 80 채널 + 4K', () => {
       const profile = deriveUsageProfile('bundle_internet_tv', 'couple', {});
       expect(profile.tv_channels_needed).toBe(80);
@@ -85,6 +85,47 @@ describe('deriveUsageProfile (ADR-0021 §T3 §5)', () => {
       const profile = deriveUsageProfile('bundle_internet_tv', 'single', {});
       expect(profile.tv_channels_needed).toBe(50);
       expect(profile.tv_4k_needed).toBe(false);
+    });
+  });
+
+  describe('bundle_mobile_internet 카테고리 (cord-cutter — ADR-0042 §D1 신설)', () => {
+    it('single — 인터넷 + 모바일 기본값 (TV 없음)', () => {
+      const profile = deriveUsageProfile('bundle_mobile_internet', 'single', {});
+      // internet_fixed 기본값 상속
+      expect(profile.download_mbps_needed).toBe(50);
+      expect(profile.household_devices).toBe(3);
+      expect(profile.streaming_4k).toBe(false);
+      // 모바일 기본값 포함
+      expect(profile.data_gb_used).toBe(5);
+      expect(profile.eu_roaming_needed).toBe(false);
+      // TV 필드 없음
+      expect(profile.tv_channels_needed).toBeUndefined();
+      expect(profile.tv_4k_needed).toBeUndefined();
+    });
+
+    it('couple — internet_fixed couple 기본값 + 모바일', () => {
+      const profile = deriveUsageProfile('bundle_mobile_internet', 'couple', {});
+      expect(profile.download_mbps_needed).toBe(100);
+      expect(profile.streaming_4k).toBe(true);
+    });
+  });
+
+  describe('bundle_mobile_internet_tv 카테고리 (triple play — ADR-0042 §D1 신설)', () => {
+    it('couple — TV + 인터넷 + 모바일 모두', () => {
+      const profile = deriveUsageProfile('bundle_mobile_internet_tv', 'couple', {});
+      // BUNDLE_DEFAULTS couple 기반
+      expect(profile.tv_channels_needed).toBe(80);
+      expect(profile.tv_4k_needed).toBe(true);
+      expect(profile.download_mbps_needed).toBe(100);
+      // 모바일 기본값
+      expect(profile.data_gb_used).toBe(5);
+    });
+
+    it('family_3_plus — 트리플 플레이 최대', () => {
+      const profile = deriveUsageProfile('bundle_mobile_internet_tv', 'family_3_plus', {});
+      expect(profile.tv_channels_needed).toBe(100);
+      expect(profile.download_mbps_needed).toBe(200);
+      expect(profile.data_gb_used).toBe(10);
     });
   });
 

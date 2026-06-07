@@ -342,11 +342,13 @@ export default async function DataSourcesPage({
   }
 
   // 카테고리 i18n 라벨 맵
-  // ADR-0005 §Amendment 1 (2026-05-16): landline 제거 → 3값
+  // ADR-0042 §D1 (2026-06-07): enum 3→5 — bundle_mobile_internet / bundle_mobile_internet_tv 추가
   const CATEGORY_LABELS: Record<string, string> = {
     mobile: t('categoryMobile'),
     internet_fixed: t('categoryInternetFixed'),
+    bundle_mobile_internet: t('categoryBundleMobileInternet'),
     bundle_internet_tv: t('categoryBundleInternetTv'),
+    bundle_mobile_internet_tv: t('categoryBundleMobileInternetTv'),
   };
 
   return (
@@ -504,6 +506,7 @@ export default async function DataSourcesPage({
               'mobile',
               'internet_fixed',
               'bundle_internet_tv',
+              // ADR-0042 §D1: 신규 카테고리 — 실 데이터 0건이므로 caveats 미리보기도 0건 (ADR-0011 §T2 정직 표시)
             ] as const
           ).map((cat) => {
             const preview = caveatsPreview[cat] ?? [];

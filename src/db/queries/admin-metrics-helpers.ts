@@ -51,10 +51,13 @@ export interface MethodMapping {
  *   사용되는 한 입력 신뢰를 가정하지 않는 것이 P4 원칙에 부합한다.
  */
 const SLUG_RE = /^[a-z0-9-]+$/;
+// ADR-0042 §D1 (2026-06-07): enum 3→5. 화이트리스트 동기 갱신.
 const VALID_CATEGORIES = new Set<string>([
   'mobile',
   'internet_fixed',
+  'bundle_mobile_internet',
   'bundle_internet_tv',
+  'bundle_mobile_internet_tv',
 ]);
 
 function assertSafe(slug: string, category: string): void {

@@ -16,12 +16,14 @@
 
 import { z } from 'zod';
 
-// ─── 카테고리 (ADR-0005 §T6 enum 3값 — Amendment 1, 2026-05-16) ──────────
+// ─── 카테고리 (ADR-0042 §D1 enum 5값 — Amendment 2, 2026-06-07) ──────────
 
 export const TARIFF_CATEGORIES = [
   'mobile',
   'internet_fixed',
-  'bundle_internet_tv',
+  'bundle_mobile_internet',       // [신설] Love Duo, Flex+ dual, Telenet KLIK+Internet 등 — mobile+internet 듀얼 (TV 없음, cord-cutter)
+  'bundle_internet_tv',           // [의미 명확화] Internet+TV 듀얼 (mobile 없음) — Proximus Flex+ Internet+TV (이중 거주지), Orange Love Trio without mobile
+  'bundle_mobile_internet_tv',    // [신설] Triple play — Proximus Flex+ Go/Mega/Giga/Ultra, Telenet ONE up (legacy), Orange Love Trio + Mobile
 ] as const;
 
 export const tariffCategorySchema = z.enum(TARIFF_CATEGORIES);

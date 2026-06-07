@@ -194,11 +194,13 @@ describe('currentProviderSchema (ADR-0016 §T5, 선택적 + 스킵 동등)', () 
   });
 });
 
-describe('tariffCategorySchema (ADR-0005 §T6 정합 — Amendment 1: 3값)', () => {
-  it('3 카테고리 enum 통과', () => {
+describe('tariffCategorySchema (ADR-0042 §D1 Amendment 2: 5값)', () => {
+  it('5 카테고리 enum 통과', () => {
     expect(tariffCategorySchema.safeParse('mobile').success).toBe(true);
     expect(tariffCategorySchema.safeParse('internet_fixed').success).toBe(true);
+    expect(tariffCategorySchema.safeParse('bundle_mobile_internet').success).toBe(true);
     expect(tariffCategorySchema.safeParse('bundle_internet_tv').success).toBe(true);
+    expect(tariffCategorySchema.safeParse('bundle_mobile_internet_tv').success).toBe(true);
   });
 
   it('landline 제거됨 — 범주 외로 거부 (ADR-0005 §Amendment 1, D-1)', () => {
@@ -208,6 +210,14 @@ describe('tariffCategorySchema (ADR-0005 §T6 정합 — Amendment 1: 3값)', ()
   it('범주 외 거부', () => {
     expect(tariffCategorySchema.safeParse('energy').success).toBe(false);
     expect(tariffCategorySchema.safeParse('').success).toBe(false);
+  });
+
+  it('bundle_mobile_internet — cord-cutter 카테고리 (ADR-0042 §D1 신설)', () => {
+    expect(tariffCategorySchema.safeParse('bundle_mobile_internet').success).toBe(true);
+  });
+
+  it('bundle_mobile_internet_tv — triple play 카테고리 (ADR-0042 §D1 신설)', () => {
+    expect(tariffCategorySchema.safeParse('bundle_mobile_internet_tv').success).toBe(true);
   });
 });
 

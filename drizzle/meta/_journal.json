@@ -57,6 +57,13 @@
       "when": 1778926000808,
       "tag": "0007_loose_justin_hammer",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780813125710,
+      "tag": "0008_tan_mandrill",
+      "breakpoints": true
     }
   ]
 }
