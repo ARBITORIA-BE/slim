@@ -75,6 +75,16 @@ describe('buildMethodCaseExpression', () => {
     expect(result).not.toContain('END');
   });
 
+  it('(d) bundle_mobile_internet / bundle_mobile_internet_tv 신규 카테고리 허용 (ADR-0042)', () => {
+    const scraping: readonly MethodMapping[] = [
+      { slug: 'orange-be', category: 'bundle_mobile_internet' },
+      { slug: 'proximus-be', category: 'bundle_mobile_internet_tv' },
+    ];
+    const result = buildMethodCaseExpression(scraping, []);
+    expect(result).toContain("t.category = 'bundle_mobile_internet'");
+    expect(result).toContain("t.category = 'bundle_mobile_internet_tv'");
+  });
+
   it('unsafe slug 는 에러를 던진다', () => {
     const bad: readonly MethodMapping[] = [
       // @builder-justification: 타입 강제 캐스트로 런타임 방어 테스트 — SQL injection guard

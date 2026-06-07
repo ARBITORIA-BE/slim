@@ -38,9 +38,17 @@
         "label": "internet",
         "description": "€ 35 tot € 70 per maand, glasvezel/kabel voor thuisgebruik"
       },
+      "bundle_mobile_internet": {
+        "label": "Mobiel + Internet",
+        "description": "Mobiel en vast internet zonder tv — voor cord-cutters (bijv. Orange Love Duo)"
+      },
       "bundle_internet_tv": {
         "label": "Internet + tv",
-        "description": "€ 60 tot € 100 per maand, bundelaanbieding"
+        "description": "Internet en tv zonder mobiel — tv-only dubbel abonnement (bijv. tweede verblijf)"
+      },
+      "bundle_mobile_internet_tv": {
+        "label": "Mobiel + Internet + tv",
+        "description": "Volledig triple-play bundel — alle drie de diensten (bijv. Proximus Flex+)"
       }
     },
     "ariaStart": "{label} Vergelijking starten",
@@ -225,7 +233,9 @@
       "categoryLabels": {
         "mobile": "mobiel",
         "internet_fixed": "internet",
-        "bundle_internet_tv": "Internet + tv"
+        "bundle_mobile_internet": "Mobiel + Internet",
+        "bundle_internet_tv": "Internet + tv",
+        "bundle_mobile_internet_tv": "Mobiel + Internet + tv"
       },
       "usageHeading": "verbruiksgegevens",
       "usageEmpty": "Geen gegevens over het gebruik beschikbaar (er is gebruikgemaakt van schattingen op basis van het type huishouden).",
@@ -535,7 +545,9 @@
     "affiliateStatusTerminated": "Einde",
     "categoryMobile": "mobiel",
     "categoryInternetFixed": "Vast internet",
-    "categoryBundleInternetTv": "Internet- en tv-bundel"
+    "categoryBundleMobileInternet": "Mobiel + Internet dubbel",
+    "categoryBundleInternetTv": "Internet- en tv-bundel",
+    "categoryBundleMobileInternetTv": "Triple play (Mobiel + Internet + tv)"
   },
   "affiliateInterstitial": {
     "externalSiteLabel": "Naar een externe website gaan",

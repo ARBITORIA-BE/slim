@@ -165,10 +165,13 @@ export function deriveCaveatTriggers(
     // undefined → 정보 부재. 거짓 정보 회피 (P1) — 행 생성 X.
   }
 
-  // 6. 4K 권장 속도 (규칙 6) — internet_fixed / bundle_internet_tv.
+  // 6. 4K 권장 속도 (규칙 6) — internet_fixed / bundle_* (인터넷 포함 카테고리).
+  // ADR-0042 §D1: bundle_mobile_internet / bundle_mobile_internet_tv 추가.
   if (
     input.category === 'internet_fixed' ||
-    input.category === 'bundle_internet_tv'
+    input.category === 'bundle_internet_tv' ||
+    input.category === 'bundle_mobile_internet' ||
+    input.category === 'bundle_mobile_internet_tv'
   ) {
     if (input.usageProfile.streaming_4k === true) {
       const mbps = input.attributes['download_mbps'];

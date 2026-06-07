@@ -30,9 +30,11 @@
  *   /sitemap.xml, /robots.txt — 자기 참조 금지.
  *
  * 카테고리 슬러그 선택 근거:
- *   TARIFF_CATEGORIES = ['mobile','internet_fixed','bundle_internet_tv'] (3값, ADR-0005 §Amendment 1)
+ *   TARIFF_CATEGORIES = ['mobile','internet_fixed','bundle_mobile_internet','bundle_internet_tv','bundle_mobile_internet_tv']
+ *   (5값, ADR-0042 §D1 Amendment 2, 2026-06-07)
  *   현재 실제 fetcher + 비교 결과가 존재하는 카테고리: mobile, internet_fixed (2개).
- *   bundle_internet_tv 는 아직 fetcher 미구현 → 색인해도 빈 결과.
+ *   bundle_* 3 카테고리는 fetcher 별 PR 트랙(Q2.A 잠금) — 실 데이터 0건이므로 sitemap 제외.
+ *   ADR-0011 §T2: 실 데이터 0건 카테고리는 비교 진입 가능하되 "후보 없음" 정직 표시.
  *   → sitemap 에는 mobile + internet_fixed 만 포함. 카테고리 추가 시 아래 배열도 갱신.
  *
  * ADR 근거: ADR-0020 §결정 7, ADR-0021 §T8, ADR-0034 D5, PLAN 3.5.2.d, PLAN 3.5.4.

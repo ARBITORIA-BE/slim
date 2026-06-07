@@ -38,9 +38,17 @@
         "label": "Internet",
         "description": "Entre 35 et 70 € par mois, fibre optique/câble pour les particuliers"
       },
+      "bundle_mobile_internet": {
+        "label": "Mobile + Internet",
+        "description": "Mobile et internet fixe sans télévision — pour cord-cutters (ex. Orange Love Duo)"
+      },
       "bundle_internet_tv": {
         "label": "Internet + Télévision",
-        "description": "Entre 60 et 100 € par mois, offre groupée avec engagement"
+        "description": "Internet et TV sans mobile — offre duo TV uniquement (ex. résidence secondaire)"
+      },
+      "bundle_mobile_internet_tv": {
+        "label": "Mobile + Internet + TV",
+        "description": "Offre triple play complète — les trois services (ex. Proximus Flex+)"
       }
     },
     "ariaStart": "{label} Lancer la comparaison",
@@ -225,7 +233,9 @@
       "categoryLabels": {
         "mobile": "Mobile",
         "internet_fixed": "Internet",
-        "bundle_internet_tv": "Internet + Télévision"
+        "bundle_mobile_internet": "Mobile + Internet",
+        "bundle_internet_tv": "Internet + Télévision",
+        "bundle_mobile_internet_tv": "Mobile + Internet + TV"
       },
       "usageHeading": "Chiffres relatifs à l'utilisation",
       "usageEmpty": "Aucune donnée sur la consommation (estimation basée sur la composition des ménages).",
@@ -535,7 +545,9 @@
     "affiliateStatusTerminated": "Fin",
     "categoryMobile": "Mobile",
     "categoryInternetFixed": "Internet fixe",
-    "categoryBundleInternetTv": "Offre groupée Internet + TV"
+    "categoryBundleMobileInternet": "Duo Mobile + Internet",
+    "categoryBundleInternetTv": "Offre groupée Internet + TV",
+    "categoryBundleMobileInternetTv": "Triple play (Mobile + Internet + TV)"
   },
   "affiliateInterstitial": {
     "externalSiteLabel": "Accéder à un site externe",

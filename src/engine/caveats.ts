@@ -155,14 +155,17 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
     caveats.push('EU 로밍 미포함');
   }
 
-  // ─── 6. 4K 스트리밍 권장 속도 (internet_fixed / bundle_internet_tv) ────
+  // ─── 6. 4K 스트리밍 권장 속도 (internet_fixed / bundle_* 모두) ─────────
   // 왜 100 Mbps 임계인가?
   //   업계 권장 4K UHD 스트리밍 = 25 Mbps/스트림. 가구 동시 다중 (2-4 stream)
   //   고려 시 100 Mbps 가 안전 floor. 임계는 페이즈 5 OCR + 사용자 데이터 후
   //   재조정 가능 (Amendment).
+  // ADR-0042 §D1: bundle_mobile_internet / bundle_mobile_internet_tv 추가 — 인터넷 포함 카테고리 전체.
   if (
     (candidate.category === 'internet_fixed' ||
-      candidate.category === 'bundle_internet_tv') &&
+      candidate.category === 'bundle_internet_tv' ||
+      candidate.category === 'bundle_mobile_internet' ||
+      candidate.category === 'bundle_mobile_internet_tv') &&
     usageProfile.streaming_4k === true
   ) {
     const downloadMbps = candidate.attributes['download_mbps'];

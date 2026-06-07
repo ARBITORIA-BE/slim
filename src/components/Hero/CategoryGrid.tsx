@@ -12,7 +12,7 @@
  */
 
 import Link from 'next/link';
-import { Smartphone, Tv, Wifi, type LucideIcon } from 'lucide-react';
+import { Package2, Smartphone, Tv, TvMinimalPlay, Wifi, type LucideIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,10 +33,16 @@ export interface CategoryGridProps {
 
 type CategoryIconKey = TariffCategoryInput;
 
+// ADR-0042 §D4: 5 카드 동일 시각 무게 — "추천" 라벨 0, 헌법 §8 #3.
+// bundle_mobile_internet = Package2 (Smartphone+Wifi 조합 의미, cord-cutter)
+// bundle_internet_tv = Tv (TV-only 듀얼)
+// bundle_mobile_internet_tv = TvMinimalPlay (triple play — TV+모바일 강조)
 const CATEGORY_ICONS: Record<CategoryIconKey, LucideIcon> = {
   mobile: Smartphone,
   internet_fixed: Wifi,
+  bundle_mobile_internet: Package2,
   bundle_internet_tv: Tv,
+  bundle_mobile_internet_tv: TvMinimalPlay,
 };
 
 // TARIFF_CATEGORIES enum 정합성 자가 점검 (개발자 안전망)
@@ -160,7 +166,9 @@ export async function CategoryGrid({
         </header>
       )}
 
-      <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* ADR-0042 §D4: 3→5 카드. 데스크탑 lg:grid-cols-5 (5열) / md: 3열 wrap / 모바일 1열.
+          모바일 fold 정합: 첫 4카드 2×2 우선 노출 + 5번째 fold 밖 허용 (ADR-0041 모바일 우선). */}
+      <ul className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5">
         {TARIFF_CATEGORIES.map((category) => {
           const Icon = CATEGORY_ICONS[category];
           const label = t(`categories.${category}.label` as Parameters<typeof t>[0]);

@@ -1,0 +1,2 @@
+ALTER TYPE "public"."tariff_category" ADD VALUE 'bundle_mobile_internet' BEFORE 'bundle_internet_tv';--> statement-breakpoint
+ALTER TYPE "public"."tariff_category" ADD VALUE 'bundle_mobile_internet_tv';

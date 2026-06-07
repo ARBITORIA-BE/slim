@@ -38,9 +38,17 @@
         "label": "Internet",
         "description": "€35–€70 per month, home fiber/cable"
       },
+      "bundle_mobile_internet": {
+        "label": "Mobile + Internet",
+        "description": "Mobile and home internet without TV — for cord-cutters (e.g. Orange Love Duo)"
+      },
       "bundle_internet_tv": {
         "label": "Internet + TV",
-        "description": "€60–€100 per month, with a contract"
+        "description": "Internet and TV without mobile — TV-only dual (e.g. second residence)"
+      },
+      "bundle_mobile_internet_tv": {
+        "label": "Mobile + Internet + TV",
+        "description": "Full triple-play bundle — all three services (e.g. Proximus Flex+)"
       }
     },
     "ariaStart": "{label} Start comparison",
@@ -225,7 +233,9 @@
       "categoryLabels": {
         "mobile": "Mobile",
         "internet_fixed": "Internet",
-        "bundle_internet_tv": "Internet + TV"
+        "bundle_mobile_internet": "Mobile + Internet",
+        "bundle_internet_tv": "Internet + TV",
+        "bundle_mobile_internet_tv": "Mobile + Internet + TV"
       },
       "usageHeading": "Usage figures",
       "usageEmpty": "No usage data available (estimated household type used).",
@@ -535,7 +545,9 @@
     "affiliateStatusTerminated": "End",
     "categoryMobile": "Mobile",
     "categoryInternetFixed": "Fixed-line Internet",
-    "categoryBundleInternetTv": "Internet + TV Bundle"
+    "categoryBundleMobileInternet": "Mobile + Internet Dual",
+    "categoryBundleInternetTv": "Internet + TV Bundle",
+    "categoryBundleMobileInternetTv": "Triple Play (Mobile + Internet + TV)"
   },
   "affiliateInterstitial": {
     "externalSiteLabel": "Go to an external site",

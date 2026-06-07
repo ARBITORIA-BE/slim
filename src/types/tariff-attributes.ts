@@ -66,12 +66,43 @@ export const internetFixedAttributesSchema = z.object({
   wifi_booster_included: z.boolean(),
 });
 
+// ─── D2 JSONB 후방 호환 레인 — bundle_* 카테고리 공통 권장 키 ──────────────
+
+/**
+ * 모든 bundle_* 카테고리 공통 권장 키 (ADR-0042 §D2 JSONB 후방 호환 레인).
+ *
+ * 왜 선택적(optional)인가?
+ *   fetcher가 점진적으로 추가. 비교 엔진(ADR-0010)은 현 단계 무시 — hot path는
+ *   카테고리 exact match 유지. 미래 모듈식 카탈로그 격상(옵션 C 트리거) 시 이
+ *   필드가 채워져 있어 backfill 없이 진행 가능.
+ *
+ * ADR-0042 §D2: "fetcher가 공식 페이지의 분류를 그대로 직렬화 가능"
+ *   예: Orange Love Duo → { mobile: true, internet: true, tv: false, landline: false }
+ */
+export const includedServicesSchema = z
+  .object({
+    /** mobile subscription 포함 여부 */
+    mobile: z.boolean().optional(),
+    /** fixed internet 포함 여부 */
+    internet: z.boolean().optional(),
+    /** digital TV 포함 여부 */
+    tv: z.boolean().optional(),
+    /** fixed telephony 포함 여부 */
+    landline: z.boolean().optional(),
+  })
+  .optional();
+
+export type IncludedServices = z.infer<typeof includedServicesSchema>;
+
 /**
  * 인터넷 + TV 번들 요금제 attributes.
  *
  * 왜 internet_fixed 키를 상속하는가?
  *   번들 요금제도 인터넷 속도가 비교 엔진 입력이다. 중복 정의하면 두 스키마의
  *   일관성을 유지하기 어려워진다. z.object로 extend하면 단일 출처 유지됨.
+ *
+ * ADR-0042 §D2: included_services 후방 호환 레인 추가.
+ * ADR-0042 §D1 의미 명확화: TV-only 듀얼 (모바일 없음).
  */
 export const bundleInternetTvAttributesSchema = internetFixedAttributesSchema
   .omit({ category: true })
@@ -84,10 +115,63 @@ export const bundleInternetTvAttributesSchema = internetFixedAttributesSchema
     /** DVR 녹화 용량 (시간). null = DVR 없음 또는 미상. */
     dvr_hours: z.number().nonnegative().nullable().optional(),
     /**
-     * 번들에 포함된 모바일 회선 수. 0 = 모바일 없음 (인터넷+TV만).
-     * Telenet ONE up 등은 모바일 회선이 번들에 포함됨.
+     * 번들에 포함된 모바일 회선 수. 0 = 모바일 없음 (인터넷+TV-only 듀얼).
+     * ADR-0042 §D1: bundle_internet_tv = TV-only dual, mobile_lines_included = 0이어야 함.
      */
     mobile_lines_included: z.number().nonnegative(),
+    /** ADR-0042 §D2 JSONB 후방 호환 레인 — fetcher가 점진 추가. */
+    included_services: includedServicesSchema,
+  });
+
+/**
+ * 모바일 + 인터넷 듀얼 번들 요금제 attributes (신설 — ADR-0042 §D1).
+ *
+ * TV 없는 cord-cutter 대상. Orange Love Duo, Proximus Flex+ dual 등.
+ * internet_fixed 키 상속 — 인터넷 속도가 비교 엔진 입력.
+ *
+ * ADR-0042 §D2: included_services 후방 호환 레인 추가.
+ */
+export const bundleMobileInternetAttributesSchema = internetFixedAttributesSchema
+  .omit({ category: true })
+  .extend({
+    category: z.literal('bundle_mobile_internet'),
+    /** 데이터 한도 (GB). 'unlimited' = 무제한. */
+    data_gb: z.union([z.number().nonnegative(), z.literal('unlimited')]).optional(),
+    /** 음성 통화 포함 분. 'unlimited' = 무제한. */
+    voice_minutes: z.union([z.number().nonnegative(), z.literal('unlimited')]).optional(),
+    /** EU 로밍 기본 포함 여부. */
+    eu_roaming_included: z.boolean().optional(),
+    /** ADR-0042 §D2 JSONB 후방 호환 레인 — fetcher가 점진 추가. */
+    included_services: includedServicesSchema,
+  });
+
+/**
+ * 트리플 플레이 요금제 attributes (신설 — ADR-0042 §D1).
+ *
+ * 모바일 + 인터넷 + TV 풀 번들. Proximus Flex+ Go/Mega/Giga/Ultra,
+ * Telenet ONE up (DISCONTINUED 2026-05-15), Orange Love Trio + Mobile.
+ * internet_fixed + TV 키 + 모바일 키 모두 포함.
+ *
+ * ADR-0042 §D2: included_services 후방 호환 레인 추가.
+ */
+export const bundleMobileInternetTvAttributesSchema = internetFixedAttributesSchema
+  .omit({ category: true })
+  .extend({
+    category: z.literal('bundle_mobile_internet_tv'),
+    /** 포함된 TV 채널 수. */
+    tv_channels: z.number().nonnegative(),
+    /** 4K 화질 TV 포함 여부. */
+    tv_4k_included: z.boolean(),
+    /** DVR 녹화 용량 (시간). null = DVR 없음 또는 미상. */
+    dvr_hours: z.number().nonnegative().nullable().optional(),
+    /** 데이터 한도 (GB). 'unlimited' = 무제한. */
+    data_gb: z.union([z.number().nonnegative(), z.literal('unlimited')]).optional(),
+    /** 음성 통화 포함 분. 'unlimited' = 무제한. */
+    voice_minutes: z.union([z.number().nonnegative(), z.literal('unlimited')]).optional(),
+    /** EU 로밍 기본 포함 여부. */
+    eu_roaming_included: z.boolean().optional(),
+    /** ADR-0042 §D2 JSONB 후방 호환 레인 — fetcher가 점진 추가. */
+    included_services: includedServicesSchema,
   });
 
 // ─── Discriminated union ───────────────────────────────────────────────────
@@ -99,18 +183,23 @@ export const bundleInternetTvAttributesSchema = internetFixedAttributesSchema
  * 왜 discriminated union인가?
  *   parseTariffAttributes가 category 하나만으로 올바른 스키마를 선택하도록.
  *   switch문이 exhaustive 체크를 컴파일러가 보장 → 새 카테고리 추가 시 자동 에러.
+ *
+ * ADR-0042 §D1 (Amendment 2, 2026-06-07): enum 3→5 — 2개 신규 스키마 추가.
  */
-// ADR-0005 §Amendment 1 (2026-05-16): landline 제거 → 3값 union
 export const tariffAttributesSchema = z.discriminatedUnion('category', [
   mobileAttributesSchema,
   internetFixedAttributesSchema,
+  bundleMobileInternetAttributesSchema,
   bundleInternetTvAttributesSchema,
+  bundleMobileInternetTvAttributesSchema,
 ]);
 
 export type TariffAttributes = z.infer<typeof tariffAttributesSchema>;
 export type MobileAttributes = z.infer<typeof mobileAttributesSchema>;
 export type InternetFixedAttributes = z.infer<typeof internetFixedAttributesSchema>;
+export type BundleMobileInternetAttributes = z.infer<typeof bundleMobileInternetAttributesSchema>;
 export type BundleInternetTvAttributes = z.infer<typeof bundleInternetTvAttributesSchema>;
+export type BundleMobileInternetTvAttributes = z.infer<typeof bundleMobileInternetTvAttributesSchema>;
 
 // ─── Parse helper (cron persist step에서 사용) ────────────────────────────
 

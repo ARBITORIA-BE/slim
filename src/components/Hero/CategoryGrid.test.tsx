@@ -1,12 +1,12 @@
 // __SAFE_PRICE_DISPLAY__: 테스트 픽스처 — 가격 숫자는 실제 UI 표시 아님 (mock 데이터).
 /**
- * CategoryGrid 단위 테스트 (PLAN 4.13.c DoD, ADR-0041 D1 §블록 2 + Amendment 1 D7~D8).
+ * CategoryGrid 단위 테스트 (PLAN 4.13.c DoD + PLAN 4.14.c, ADR-0041 D1 §블록 2 + ADR-0042 §D1).
  *
  * 검증:
- *   (1) 카테고리 3개 링크 렌더 (/compare/{category}/postal 경로)
+ *   (1) 카테고리 5개 링크 렌더 (/compare/{category}/postal 경로) — ADR-0042 §D1
  *   (2) showExamples=false 시 가격 예시 없음
  *   (3) showExamples=true + cheapest data 있음 → 가격 텍스트 포함
- *   (4) showExamples=true + cheapest data 없음 → pending placeholder 노출
+ *   (4) showExamples=true + cheapest data 없음 → pending placeholder 노출 (5개)
  *
  * Mock 전략:
  *   - next-intl/server, next/link, lucide-react: 각 의존성 mock
@@ -29,9 +29,13 @@ vi.mock('next-intl/server', () => ({
       'categories.mobile.label': 'Mobiel',
       'categories.internet_fixed.label': 'Internet',
       'categories.bundle_internet_tv.label': 'Internet + TV',
+      'categories.bundle_mobile_internet.label': 'Mobiel + Internet',
+      'categories.bundle_mobile_internet_tv.label': 'Mobiel + Internet + TV',
       'categories.mobile.description': '€15–€35 per maand',
       'categories.internet_fixed.description': '€35–€70 per maand',
       'categories.bundle_internet_tv.description': '€60–€100 per maand',
+      'categories.bundle_mobile_internet.description': '€50–€90 per maand',
+      'categories.bundle_mobile_internet_tv.description': '€70–€120 per maand',
       headingFriendly: 'Welk tarief wilt u nu vergelijken?',
       stepBadgeReduced: 'Stap 1/4 · circa 4 minuten',
       supportNoteShort: 'Belgische telecom',
@@ -63,11 +67,13 @@ vi.mock('next/link', () => ({
   }) => <a href={href} className={className} aria-label={ariaLabel}>{children}</a>,
 }));
 
-// lucide-react mock
+// lucide-react mock — ADR-0042 §D1: Package2 + TvMinimalPlay 신규 아이콘 포함
 vi.mock('lucide-react', () => ({
   Smartphone: () => <span data-icon="smartphone" />,
   Wifi: () => <span data-icon="wifi" />,
   Tv: () => <span data-icon="tv" />,
+  Package2: () => <span data-icon="package2" />,
+  TvMinimalPlay: () => <span data-icon="tv-minimal-play" />,
 }));
 
 // shadcn/ui card mock
@@ -93,20 +99,30 @@ describe('CategoryGrid', () => {
     mockGetCheapest.mockResolvedValue({});
   });
 
-  it('카테고리 3개 링크가 /compare/{category}/postal 경로로 렌더됨 (variant=hero)', async () => {
+  it('카테고리 5개 링크가 /compare/{category}/postal 경로로 렌더됨 (ADR-0042 §D1)', async () => {
     const Component = await CategoryGrid({ variant: 'hero' });
     render(Component);
-    expect(screen.getByRole('link', { name: /mobiel/i })).toHaveAttribute(
+    // 기존 3개 — exact aria-label 매칭 (substring 충돌 방지)
+    expect(screen.getByRole('link', { name: 'Mobiel vergelijking starten' })).toHaveAttribute(
       'href',
       '/compare/mobile/postal',
     );
-    expect(screen.getByRole('link', { name: /internet vergelijking/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Internet vergelijking starten' })).toHaveAttribute(
       'href',
       '/compare/internet_fixed/postal',
     );
-    expect(screen.getByRole('link', { name: /internet \+ tv vergelijking/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Internet + TV vergelijking starten' })).toHaveAttribute(
       'href',
       '/compare/bundle_internet_tv/postal',
+    );
+    // 신규 2개 (ADR-0042 §D1)
+    expect(screen.getByRole('link', { name: 'Mobiel + Internet vergelijking starten' })).toHaveAttribute(
+      'href',
+      '/compare/bundle_mobile_internet/postal',
+    );
+    expect(screen.getByRole('link', { name: 'Mobiel + Internet + TV vergelijking starten' })).toHaveAttribute(
+      'href',
+      '/compare/bundle_mobile_internet_tv/postal',
     );
   });
 
@@ -117,13 +133,13 @@ describe('CategoryGrid', () => {
     expect(screen.queryByText(/voorbeeldbesparing/i)).not.toBeInTheDocument();
   });
 
-  it('showExamples=true + 데이터 없음 → pending placeholder 표시', async () => {
+  it('showExamples=true + 데이터 없음 → pending placeholder 5개 표시 (ADR-0042 §D1)', async () => {
     mockGetCheapest.mockResolvedValue({});
     const Component = await CategoryGrid({ variant: 'hero', showExamples: true });
     render(Component);
-    // 3 카테고리 모두 placeholder
+    // 5 카테고리 모두 placeholder
     const pendingItems = screen.getAllByText(/voorbeeldbesparing/i);
-    expect(pendingItems.length).toBe(3);
+    expect(pendingItems.length).toBe(5);
   });
 
   it('showExamples=true + mobile cheapest 데이터 있음 → 가격 포함', async () => {

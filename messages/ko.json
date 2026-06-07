@@ -37,9 +37,17 @@
         "label": "인터넷",
         "description": "월 €35~€70, 가정용 광/케이블"
       },
+      "bundle_mobile_internet": {
+        "label": "모바일 + 인터넷",
+        "description": "TV 없는 모바일+인터넷 듀얼 (cord-cutter, 예: Orange Love Duo)"
+      },
       "bundle_internet_tv": {
         "label": "인터넷 + TV",
-        "description": "월 €60~€100, 번들 약정"
+        "description": "모바일 없는 인터넷+TV 듀얼 (이중 거주지 등)"
+      },
+      "bundle_mobile_internet_tv": {
+        "label": "모바일 + 인터넷 + TV",
+        "description": "통신 3종 풀 번들 — 트리플 플레이 (예: Proximus Flex+)"
       }
     },
     "ariaStart": "{label} 비교 시작",
@@ -264,7 +272,9 @@
       "categoryLabels": {
         "mobile": "모바일",
         "internet_fixed": "인터넷",
-        "bundle_internet_tv": "인터넷 + TV"
+        "bundle_mobile_internet": "모바일 + 인터넷",
+        "bundle_internet_tv": "인터넷 + TV",
+        "bundle_mobile_internet_tv": "모바일 + 인터넷 + TV"
       },
       "usageHeading": "사용량 수치",
       "usageEmpty": "사용량 정보 없음 (가구 형태 추정값 사용).",
@@ -534,7 +544,9 @@
     "affiliateStatusTerminated": "종료",
     "categoryMobile": "모바일",
     "categoryInternetFixed": "고정 인터넷",
-    "categoryBundleInternetTv": "인터넷+TV 번들"
+    "categoryBundleMobileInternet": "모바일+인터넷 듀얼",
+    "categoryBundleInternetTv": "인터넷+TV 번들",
+    "categoryBundleMobileInternetTv": "트리플 플레이 (모바일+인터넷+TV)"
   },
   "affiliateInterstitial": {
     "externalSiteLabel": "외부 사이트 이동",

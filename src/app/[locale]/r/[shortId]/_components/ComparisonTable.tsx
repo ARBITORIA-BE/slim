@@ -58,17 +58,28 @@ function formatSubtitle(
     else if (typeof v === 'number') parts.push(t('subtitleVoiceMinutes', { value: v }));
   } else if (
     category === 'internet_fixed' ||
-    category === 'bundle_internet_tv'
+    category === 'bundle_internet_tv' ||
+    category === 'bundle_mobile_internet' ||
+    category === 'bundle_mobile_internet_tv'
   ) {
+    // ADR-0042 §D1: bundle_mobile_internet / bundle_mobile_internet_tv 추가
     const down = attrs['download_mbps'];
     if (typeof down === 'number') parts.push(`${down} Mbps`);
     if (attrs['unlimited_data'] === true) parts.push(t('subtitleDataUnlimited'));
-    if (category === 'bundle_internet_tv') {
+    // TV 채널 — TV 포함 카테고리만
+    if (category === 'bundle_internet_tv' || category === 'bundle_mobile_internet_tv') {
       const tv = attrs['tv_channels'];
       if (typeof tv === 'number') parts.push(t('subtitleTvChannels', { value: tv }));
     }
+    // 모바일 데이터 — 모바일 포함 번들
+    if (category === 'bundle_mobile_internet' || category === 'bundle_mobile_internet_tv') {
+      const d = attrs['data_gb'];
+      if (d === 'unlimited') parts.push(t('subtitleDataUnlimited'));
+      else if (typeof d === 'number') parts.push(t('subtitleDataGb', { value: d }));
+    }
   }
   // ADR-0005 §Amendment 1 (2026-05-16): landline 분기 제거
+  // ADR-0042 §D1 (2026-06-07): bundle_mobile_internet / bundle_mobile_internet_tv 추가
   return parts.join(' · ');
 }
 
