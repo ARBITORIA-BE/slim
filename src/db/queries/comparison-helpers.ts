@@ -73,8 +73,10 @@ export function snapshotRowToTariffLike(
 // ─── lockedInputs 직렬화 (ADR-0007 §T9) ────────────────────────────────────
 
 export interface BuildLockedInputsArgs {
-  readonly postalCountry: PostalCountry;
-  readonly postalCode: string;
+  // ADR-0043 §D2: postalCountry/postalCode optional — 통신 흐름은 undefined.
+  // 미래 카테고리(에너지 등) 진입 시 제공됨.
+  readonly postalCountry: PostalCountry | undefined;
+  readonly postalCode: string | undefined;
   readonly householdType: HouseholdTypeInput;
   readonly currentProviderId: string | null;
   readonly currentTariffId: string | null;

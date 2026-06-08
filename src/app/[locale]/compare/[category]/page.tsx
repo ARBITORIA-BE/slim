@@ -1,5 +1,8 @@
 /**
- * /compare/[category] — 카테고리 진입 직후 단계 1(postal)로 redirect (ADR-0016 §T1).
+ * /compare/[category] — 카테고리 진입 직후 current-provider 로 redirect.
+ *
+ * ADR-0043: postal 단계 제거 → current-provider 직진 (3단계 진입점).
+ * 3단계 골격: current-provider → household → preview (ADR-0016 §T1 Amendment 4).
  *
  * generateMetadata: CATEGORY_LABELS 한글 제거 → getTranslations('compare.categories') 재사용.
  * ADR-0033 §A2.9.1 — params 에서 locale 추출 후 명시 전달.
@@ -62,5 +65,8 @@ export default async function CategoryRedirectPage({
     // 잘못된 category → 404 (Next.js notFound 또는 redirect to /compare)
     redirect('/compare');
   }
-  redirect(`/compare/${category as TariffCategoryInput}/postal`);
+  // ADR-0043 §D5: postal 단계 제거 — current-provider 직진 (3단계 진입점).
+  // 구 4단계: postal → current-provider → household → preview
+  // 신 3단계: current-provider → household → preview
+  redirect(`/compare/${category as TariffCategoryInput}/current-provider`);
 }

@@ -1,14 +1,15 @@
 /**
- * Phase 2 4단계 입력 플로우 — mobile 카테고리 + BE 1000 + single (ADR-0016 §검증 2).
+ * Phase 2 3단계 입력 플로우 — mobile 카테고리 + single (ADR-0016 §T1 Amendment 4).
  *
- * ADR-0016 Amendment 3 + ADR-0041 Amendment 2 (2026-06-06): bill 단계 제거 → 4단계.
- * 변경 후 흐름: postal → household → current-provider → preview → /r/{shortId}
+ * ADR-0043 (2026-06-08): postal 단계 제거 → 3단계.
+ * 변경 후 흐름: current-provider → household → preview → /r/{shortId}
+ * (구 흐름: postal → household → current-provider → preview → /r/{shortId})
  *
- * dev 서버 (reuseExistingServer) 재사용. 4단계 도달 시간 + 콘솔 에러 + 스크린샷
+ * ADR-0043 §D5: /compare/{category} 진입 시 current-provider 직진 (postal 단계 0).
+ * ADR-0016 Amendment 4 cross-ref.
+ *
+ * dev 서버 (reuseExistingServer) 재사용. 3단계 도달 시간 + 콘솔 에러 + 스크린샷
  * 캡처. 운영자 자가 5분 측정 (수동) 의 자동 보조.
- *
- * ADR-0041 D2: 홈 카테고리 카드 직접 클릭 → /compare/{category}/postal 직진.
- * 단, e2e는 /compare 직접 진입 패턴도 유지 (URL 라우팅 회귀 방지).
  */
 
 import { expect, test } from '@playwright/test';
@@ -20,7 +21,7 @@ test.beforeAll(async () => {
   await mkdir(SHOT_DIR, { recursive: true });
 });
 
-test('4단계 입력 → /r/[shortId] 도달 (mobile + 1000 + single + skip)', async ({
+test('3단계 입력 → /r/[shortId] 도달 (mobile + single + skip, ADR-0043 §D5)', async ({
   page,
 }) => {
   const consoleErrors: string[] = [];
@@ -37,36 +38,28 @@ test('4단계 입력 → /r/[shortId] 도달 (mobile + 1000 + single + skip)', a
   await page.goto('/compare');
   await page.screenshot({ path: `${SHOT_DIR}/01-compare.png`, fullPage: true });
 
-  // ─── 1. 모바일 카드 클릭 → /compare/mobile/postal ────────────────────
+  // ─── 1. 모바일 카드 클릭 → /compare/mobile → /compare/mobile/current-provider ─
+  // ADR-0043 §D5: /compare/{category} 진입 시 postal 단계 없이 current-provider 직진.
   await page.getByRole('link', { name: '모바일 비교 시작' }).click();
-  await expect(page).toHaveURL(/\/compare\/mobile\/postal/);
+  // redirect: /compare/mobile → /compare/mobile/current-provider (postal 단계 0).
+  await expect(page).toHaveURL(/\/compare\/mobile\/current-provider/);
+  await page.screenshot({ path: `${SHOT_DIR}/02-current-provider.png`, fullPage: true });
 
-  // ─── 2. 우편번호 1000 입력 → 다음 ────────────────────────────────────
-  await page.getByLabel('우편번호').fill('1000');
-  const nextHousehold = page.getByRole('button', { name: /다음 — 가구 형태/ });
-  await expect(nextHousehold).toBeEnabled();
-  await page.screenshot({ path: `${SHOT_DIR}/02-postal.png`, fullPage: true });
-  await nextHousehold.click();
+  // ─── 2. 현재 공급사 — 스킵 → household ────────────────────────────────
+  await page.getByRole('button', { name: /모르겠어요 \/ 스킵/ }).click();
   await expect(page).toHaveURL(/\/compare\/mobile\/household/);
 
-  // ─── 3. 가구 형태 — 혼자 → 다음 ──────────────────────────────────────
+  // ─── 3. 가구 형태 — 혼자 → preview 직진 ──────────────────────────────
   await page.locator('label[for="household-single"]').click();
-  // ADR-0016 Amendment 3: nextButton "다음 — 현재 공급사" → "다음 — 결과 미리보기"로 변경
-  const nextProvider = page.getByRole('button', { name: /다음 — 현재 공급사/ });
+  const nextProvider = page.getByRole('button', { name: /다음 — 결과 미리보기/ });
   await expect(nextProvider).toBeEnabled();
   await page.screenshot({ path: `${SHOT_DIR}/03-household.png`, fullPage: true });
   await nextProvider.click();
-  await expect(page).toHaveURL(/\/compare\/mobile\/current-provider/);
 
-  // ─── 4. 현재 공급사 — 스킵 → preview 직진 (bill 단계 없음) ───────────
-  await page.screenshot({ path: `${SHOT_DIR}/04-current-provider.png`, fullPage: true });
-  await page.getByRole('button', { name: /모르겠어요 \/ 스킵/ }).click();
-
-  // ADR-0016 Amendment 3: bill 단계 없음 → preview 자동 제출 → /r/[shortId]
-  // preview 단계는 자동 제출로 인해 매우 짧게 존재하다 /r/[shortId] 로 이동한다.
+  // ADR-0016 Amendment 4: preview 자동 제출 → /r/[shortId]
   await page.waitForURL(/\/r\/[A-Za-z0-9_-]{12}$/, { timeout: 10_000 });
   const elapsed = Date.now() - start;
-  await page.screenshot({ path: `${SHOT_DIR}/05-result.png`, fullPage: true });
+  await page.screenshot({ path: `${SHOT_DIR}/04-result.png`, fullPage: true });
 
   // 결과 페이지 — '비교 결과' h1 + shortId code element.
   await expect(
@@ -74,7 +67,7 @@ test('4단계 입력 → /r/[shortId] 도달 (mobile + 1000 + single + skip)', a
   ).toBeVisible();
   await expect(page.locator('code').first()).toHaveText(/^[A-Za-z0-9_-]{12}$/);
 
-  console.warn(`\n[검증] 4단계 완주 시간: ${elapsed}ms (P2 5분 = 300_000ms)`);
+  console.warn(`\n[검증] 3단계 완주 시간: ${elapsed}ms (P2 5분 = 300_000ms)`);
   console.warn(`[검증] 콘솔 에러 수: ${consoleErrors.length}`);
   if (consoleErrors.length > 0) {
     console.warn('[검증] 콘솔 에러:');
@@ -102,29 +95,33 @@ test('/en 진입 → compare 페이지 핵심 텍스트가 ko 아님 (locale i18
   expect(headingText).not.toMatch(/[가-힣]/);
 });
 
-test('4단계 + provider 선택 path (Proximus) + tariff 모르겠어요 → /r/[shortId]', async ({
+test('3단계 + provider 선택 path (Proximus) + tariff 모르겠어요 → /r/[shortId] (ADR-0043)', async ({
   page,
 }) => {
+  // ADR-0043 §D5: /compare/mobile → current-provider 직진 (postal 단계 없음).
   await page.goto('/compare');
   await page.getByRole('link', { name: '모바일 비교 시작' }).click();
-  await page.getByLabel('우편번호').fill('1000');
-  await page.getByRole('button', { name: /다음 — 가구 형태/ }).click();
-  await page.locator('label[for="household-single"]').click();
-  await page.getByRole('button', { name: /다음 — 현재 공급사/ }).click();
-
-  // current-provider — Proximus 선택 → tariff 모르겠어요 → 다음
   await expect(page).toHaveURL(/\/compare\/mobile\/current-provider/);
+
+  // current-provider — Proximus 선택 → tariff 모르겠어요 → household
   await page.getByLabel('현재 공급사 선택').click();
   await page.getByRole('option', { name: 'Proximus' }).click();
   // sub-step tariff Select 노출 — "이 공급사 요금제는 모르겠어요" 클릭
   await page.getByRole('button', { name: /이 공급사 요금제는 모르겠어요/ }).click();
 
-  // ADR-0016 Amendment 3: "다음 — 결과 미리보기"로 직진
+  // ADR-0043 §D5 3단계: current-provider 완료 → household
+  const nextHousehold = page.getByRole('button', { name: /다음 — 가구 형태/ });
+  await expect(nextHousehold).toBeEnabled();
+  await nextHousehold.click();
+  await expect(page).toHaveURL(/\/compare\/mobile\/household/);
+
+  // household 선택 → preview
+  await page.locator('label[for="household-single"]').click();
   const nextPreview = page.getByRole('button', { name: /다음 — 결과 미리보기/ });
   await expect(nextPreview).toBeEnabled();
   await nextPreview.click();
 
-  // bill 단계 없음 → preview → /r/[shortId]
+  // preview → /r/[shortId]
   await page.waitForURL(/\/r\/[A-Za-z0-9_-]{12}$/, { timeout: 10_000 });
   await expect(
     page.getByRole('heading', { level: 1, name: '비교 결과' }),

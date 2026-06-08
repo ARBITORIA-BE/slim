@@ -44,6 +44,7 @@ import { SITE_ORIGIN } from '@/lib/site';
 
 import { BetaEstimatedBanner } from './_components/BetaEstimatedBanner';
 import { CalculationDetails } from './_components/CalculationDetails';
+import { CarrierAvailabilityNotice } from './_components/CarrierAvailabilityNotice';
 import { ComparisonControls } from './_components/ComparisonControls';
 import { ComparisonTable } from './_components/ComparisonTable';
 import { ExcludedProvidersSection } from './_components/ExcludedProvidersSection';
@@ -234,6 +235,10 @@ export default async function ResultPage({
           </Link>
         </article>
       )}
+
+      {/* ADR-0043 §D3: carrier availability caveats — Telenet 매트릭스 (별 섹션, ExcludedProvidersSection 통합 거부).
+           의미 분리: ExcludedProvidersSection = API 미제공 공급사, CarrierAvailabilityNotice = 지역 커버리지 안내. */}
+      <CarrierAvailabilityNotice />
 
       <ExcludedProvidersSection providers={excludedProviders} />
 
