@@ -346,6 +346,48 @@ describe('sessionStateSchema (ADR-0016 §T8 sessionStorage 직렬화)', () => {
     expect(sessionStateSchema.safeParse(state).success).toBe(false);
   });
 
+  it('v1 sessionStorage with postalCountry/postalCode 키 복원 통과 (ADR-0043 §D2 optional 격상)', () => {
+    // 구 sessionStorage v1 entry: postal 단계에서 저장한 data.postalCountry + data.postalCode 키 보유.
+    // 신 schema 에서 postalCountry/postalCode = optional → 유효 데이터로서 복원 성공.
+    const state = {
+      version: SESSION_STATE_VERSION,
+      category: 'mobile',
+      step: 'current-provider',
+      data: {
+        postalCountry: 'BE',
+        postalCode: '1000',
+        // household/currentProvider 는 미제출 (optional)
+      },
+      updatedAt: '2026-05-10T12:34:56.000Z',
+    };
+    const result = sessionStateSchema.safeParse(state);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.data.postalCountry).toBe('BE');
+      expect(result.data.data.postalCode).toBe('1000');
+    }
+  });
+
+  it('v1 sessionStorage postalCountry/postalCode 키 제거 후 복원도 성공 (.optional() 잠금)', () => {
+    // 미래 카테고리 진입 시 postalCountry/postalCode 없어도 통과 (optional 격상 의도).
+    const state = {
+      version: SESSION_STATE_VERSION,
+      category: 'mobile',
+      step: 'household',
+      data: {
+        householdType: 'couple',
+        // postalCountry/postalCode 키 없음 — 여전히 복원 성공
+      },
+      updatedAt: '2026-05-10T12:34:56.000Z',
+    };
+    const result = sessionStateSchema.safeParse(state);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.data.postalCountry).toBeUndefined();
+      expect(result.data.data.postalCode).toBeUndefined();
+    }
+  });
+
   it('version 미스매치 거부 (마이그레이션 트리거)', () => {
     const state = {
       version: 999,
