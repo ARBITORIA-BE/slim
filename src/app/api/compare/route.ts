@@ -106,23 +106,29 @@ async function runCompareFlow(input: ComparisonInput): Promise<string> {
     inputAttributes,
   } = input;
 
-  // 2. comparison_request INSERT — postalCountry 는 input_attributes 안에 봉인
-  //    (스키마 컬럼 신설 회피, ADR-0021 §T10 호환).
+  // 2. comparison_request INSERT.
+  // ADR-0043 §D2: postal optional — 통신 흐름은 undefined (postal 단계 제거됨).
+  //   postalCountry 는 inputAttributes 안에 봉인 (스키마 컬럼 신설 회피, ADR-0021 §T10 호환).
+  //   postal 없으면 postalCountry = JSONB 키 없음.
   const storedInputAttributes: Record<string, unknown> = {
     ...inputAttributes,
-    postalCountry: postal.country,
+    ...(postal ? { postalCountry: postal.country } : {}),
   };
   const { id: requestId } = await insertComparisonRequest({
     category,
-    postalCode: postal.postalCode,
+    // ADR-0043 §D2: postalCode nullable — postal 없으면 null (통신 흐름).
+    postalCode: postal?.postalCode ?? null,
     householdType,
     currentProviderId,
     inputAttributes: storedInputAttributes,
   });
 
-  // 3 + 4. 후보 + 현재 요금제 병렬 SELECT
+  // 3 + 4. 후보 + 현재 요금제 병렬 SELECT.
+  // ADR-0043 §D2: postal.country 없으면 'BE' fallback (BE 1차 SC-B 정합).
+  // 미래 카테고리 진입 시 postal.country 제출 → 해당 국가 후보 SELECT.
+  const candidateCountry = postal?.country ?? 'BE';
   const [candidateRows, currentRow] = await Promise.all([
-    getCandidateSnapshots(category, postal.country),
+    getCandidateSnapshots(category, candidateCountry),
     currentTariffId
       ? getCurrentTariffSnapshot(currentTariffId)
       : Promise.resolve(null),
@@ -144,11 +150,12 @@ async function runCompareFlow(input: ComparisonInput): Promise<string> {
     candidates,
   });
 
-  // 6. shortId + result + items INSERT
+  // 6. shortId + result + items INSERT.
+  // ADR-0043 §D2: postalCountry/postalCode optional — postal 없으면 undefined 전달.
   const shortId = nanoid(12);
   const lockedInputs = buildLockedInputs({
-    postalCountry: postal.country,
-    postalCode: postal.postalCode,
+    postalCountry: postal?.country,
+    postalCode: postal?.postalCode,
     householdType,
     currentProviderId,
     currentTariffId,

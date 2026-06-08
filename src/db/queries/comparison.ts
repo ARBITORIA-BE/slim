@@ -38,7 +38,9 @@ import type { SnapshotJoinRow } from './comparison-helpers';
 
 export interface InsertComparisonRequestArgs {
   readonly category: TariffCategory;
-  readonly postalCode: string;
+  // ADR-0043 §D2: postalCode nullable — 통신 흐름은 null (postal 단계 제거됨).
+  // 미래 카테고리(에너지/모기지/보험 BE) 진입 시 문자열 제공.
+  readonly postalCode: string | null;
   readonly householdType: 'single' | 'couple' | 'family_3_plus';
   readonly currentProviderId: string | null;
   /** ADR-0021 §T10 country / 사용량 키 모두 흡수 (JSONB). */

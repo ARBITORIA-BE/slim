@@ -58,37 +58,15 @@
       "cancel": "Annuleren",
       "stepProgressAriaLabel": "Stap {current}/{total} voltooid",
       "steps": {
-        "postal": "Postcode",
-        "household": "Meubelvorm",
+        "household": "Huishoudtype",
         "current-provider": "Huidige leverancier",
         "preview": "Voorbeeld van het resultaat"
       }
     },
-    "postal": {
-      "title": "Postcode invoeren",
-      "heading": "Waar woont u?",
-      "supportNote": "Kies eerst een land en voer vervolgens de postcode in. Momenteel ondersteunen we de vergelijking van telecomproviders in België (BE). Voor Nederland (NL) en Luxemburg (LU) zijn er mogelijk nog geen vergelijkingsopties beschikbaar totdat er nieuwe providers worden toegevoegd.",
-      "countryLabel": "Land",
-      "countryAriaLabel": "Land selecteren",
-      "postalCodeLabel": "Postcode",
-      "nextButton": "Volgende — Vorm van het meubelstuk",
-      "countries": {
-        "BE": {
-          "label": "België (BE)",
-          "placeholder": "Bijvoorbeeld: 1000",
-          "description": "Postcodes in België bestaan uit vier cijfers tussen 1000 en 9999."
-        },
-        "NL": {
-          "label": "Nederland (NL)",
-          "placeholder": "Bijvoorbeeld: 1011 of 1011 AB",
-          "description": "Nederlandse postcodes bestaan uit vier cijfers (PC4) of vier cijfers, een spatie en twee hoofdletters (PC6). Vergelijkingskandidaten worden later toegevoegd."
-        },
-        "LU": {
-          "label": "Luxemburg (LU)",
-          "placeholder": "Bijvoorbeeld: 1000",
-          "description": "Postcodes in Luxemburg bestaan uit vier cijfers tussen 1000 en 9999. Vergelijkingskandidaten worden later toegevoegd."
-        }
-      }
+    "carrierAvailability": {
+      "notice": "Let op: Telenet is alleen beschikbaar in Vlaanderen en Brussel. Inwoners van Wallonië kunnen kiezen uit 2 providers (Proximus, Orange BE).",
+      "sourceLabel": "Bron: officiële netwerkpagina van Telenet",
+      "verifiedAt": "Geverifieerd: 2026-06-07"
     },
     "household": {
       "title": "Huishoudtype kiezen",

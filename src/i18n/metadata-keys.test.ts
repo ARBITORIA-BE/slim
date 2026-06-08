@@ -71,9 +71,8 @@ describe('metadata i18n 키 정합성 (ADR-0033 §A2.9.2)', () => {
   });
 
   describe('신규 step title 키 — compare.<step>.title', () => {
-    it.each(locales)('%s: compare.postal.title 존재', (_locale, messages) => {
-      expect(messages.compare.postal.title).toBeTruthy();
-    });
+    // ADR-0043 (2026-06-08): compare.postal.* 삭제 — 통신 흐름 3단계 골격.
+    // postal 단계 제거됨. compare.postal.title 테스트 삭제.
 
     it.each(locales)('%s: compare.household.title 존재', (_locale, messages) => {
       expect(messages.compare.household.title).toBeTruthy();

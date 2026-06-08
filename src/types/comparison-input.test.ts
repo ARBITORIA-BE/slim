@@ -222,7 +222,21 @@ describe('tariffCategorySchema (ADR-0042 §D1 Amendment 2: 5값)', () => {
 });
 
 describe('comparisonInputSchema (ADR-0016 §T7 preview 진입 검증)', () => {
-  it('5단계 마친 정상 입력 통과', () => {
+  // ADR-0043 §D2: postal 필드 optional — 통신 흐름은 미제출 (NULL).
+
+  it('postal 없이 3단계 입력 통과 — 통신 흐름 (ADR-0043 §D5)', () => {
+    // 통신 흐름 = postal 단계 없음 → postal 필드 없음.
+    const input = {
+      category: 'mobile',
+      householdType: 'single',
+      currentProviderId: null,
+      currentTariffId: null,
+      inputAttributes: {},
+    };
+    expect(comparisonInputSchema.safeParse(input).success).toBe(true);
+  });
+
+  it('postal 있는 입력 통과 — 미래 카테고리(에너지 등) 호환 (ADR-0043 §D2)', () => {
     const input = {
       category: 'mobile',
       postal: { country: 'BE', postalCode: '1000' },
@@ -249,7 +263,7 @@ describe('comparisonInputSchema (ADR-0016 §T7 preview 진입 검증)', () => {
     }
   });
 
-  it('우편번호 검증이 누적 schema에서도 작동', () => {
+  it('우편번호 검증이 누적 schema에서도 작동 (postal 있을 때만)', () => {
     const input = {
       category: 'mobile',
       postal: { country: 'BE', postalCode: '0001' },
@@ -260,11 +274,27 @@ describe('comparisonInputSchema (ADR-0016 §T7 preview 진입 검증)', () => {
     };
     expect(comparisonInputSchema.safeParse(input).success).toBe(false);
   });
+
+  it('postal 없이 householdType 미제출 시 거부 (필수 필드)', () => {
+    const input = {
+      category: 'mobile',
+      currentProviderId: null,
+      currentTariffId: null,
+      inputAttributes: {},
+    };
+    expect(comparisonInputSchema.safeParse(input).success).toBe(false);
+  });
 });
 
 describe('stepSchemas (RHF resolver 단계별 호출)', () => {
-  it('각 단계 키 노출', () => {
-    expect(Object.keys(stepSchemas)).toEqual(['postal', 'household', 'current-provider']);
+  // ADR-0043 (2026-06-08): postal 키 제거 — 통신 흐름 3단계 골격.
+  // StepName = 'household' | 'current-provider' (postal 제거됨).
+  it('각 단계 키 노출 — postal 제거됨 (ADR-0043 §D2)', () => {
+    expect(Object.keys(stepSchemas)).toEqual(['household', 'current-provider']);
+  });
+
+  it('postal 키 부재 확인 (ADR-0043 §D2 — DEPRECATED in 통신)', () => {
+    expect('postal' in stepSchemas).toBe(false);
   });
 
   it('household step schema 단독 검증', () => {
@@ -274,7 +304,11 @@ describe('stepSchemas (RHF resolver 단계별 호출)', () => {
 });
 
 describe('sessionStateSchema (ADR-0016 §T8 sessionStorage 직렬화)', () => {
-  it('version 1 + 정상 모양 통과', () => {
+  // ADR-0043 (2026-06-08): step enum 3값 — ['current-provider', 'household', 'preview'].
+  // 기존 'postal' step 은 enum 에서 제거됨 → 구 sessionStorage entry 복원 시 schema 실패
+  // → useCompareSession 이 emptyState(current-provider) 로 reset (회귀 안전).
+
+  it('version 1 + household step 정상 모양 통과', () => {
     const state = {
       version: SESSION_STATE_VERSION,
       category: 'mobile' as const,
@@ -288,11 +322,35 @@ describe('sessionStateSchema (ADR-0016 §T8 sessionStorage 직렬화)', () => {
     expect(sessionStateSchema.safeParse(state).success).toBe(true);
   });
 
+  it('current-provider step 통과 (ADR-0043 §D5 — 3단계 진입점)', () => {
+    const state = {
+      version: SESSION_STATE_VERSION,
+      category: 'mobile' as const,
+      step: 'current-provider' as const,
+      data: {},
+      updatedAt: '2026-05-10T12:34:56.000Z',
+    };
+    expect(sessionStateSchema.safeParse(state).success).toBe(true);
+  });
+
+  it('postal step 거부 — 3단계 골격에서 제거됨 (ADR-0043 §D5)', () => {
+    const state = {
+      version: SESSION_STATE_VERSION,
+      category: 'mobile',
+      step: 'postal', // 구 sessionStorage v1 호환 — schema 실패 → emptyState reset
+      data: {},
+      updatedAt: '2026-05-10T12:34:56.000Z',
+    };
+    // 구 'postal' step 을 보유한 sessionStorage entry 는 safeParse 실패 →
+    // useCompareSession 이 emptyState(current-provider) 로 자동 reset (v1 호환).
+    expect(sessionStateSchema.safeParse(state).success).toBe(false);
+  });
+
   it('version 미스매치 거부 (마이그레이션 트리거)', () => {
     const state = {
       version: 999,
       category: 'mobile',
-      step: 'postal',
+      step: 'current-provider',
       data: {},
       updatedAt: '2026-05-10T12:34:56.000Z',
     };
@@ -303,7 +361,7 @@ describe('sessionStateSchema (ADR-0016 §T8 sessionStorage 직렬화)', () => {
     const state = {
       version: SESSION_STATE_VERSION,
       category: 'mobile',
-      step: 'postal',
+      step: 'current-provider',
       data: {},
       updatedAt: '2026-05-10',
     };
