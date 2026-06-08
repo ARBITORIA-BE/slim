@@ -52,12 +52,15 @@ export default function PreviewPage({
     setStatus('submitting');
     setErrorMessage(null);
 
-    // ADR-0021 §T10 — postalCountry sessionStorage 키 신설. 기존 v1 세션
-    // 호환을 위해 fallback 'BE' (페이즈 2 1차는 BE 단일).
+    // ADR-0043 §D2 (2026-06-08): postal optional 격상 — 통신 흐름은 미제출.
+    // postalCode/postalCountry 가 sessionStorage 에 있으면 포함 (미래 카테고리 호환).
+    // ADR-0021 §T10: postalCountry fallback 'BE' 유지 (v1 sessionStorage 호환).
+    const hasPostal = Boolean(state.data.postalCode);
     const country = state.data.postalCountry ?? 'BE';
     const candidate = {
       category,
-      postal: { country, postalCode: state.data.postalCode ?? '' },
+      // postal 필드는 postalCode 가 있을 때만 포함 (통신 흐름 = 없음, 미래 카테고리 = 있음).
+      ...(hasPostal ? { postal: { country, postalCode: state.data.postalCode! } } : {}),
       householdType: state.data.householdType,
       currentProviderId: state.data.currentProviderId ?? null,
       currentTariffId: state.data.currentTariffId ?? null,
@@ -138,7 +141,8 @@ export default function PreviewPage({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push(`/compare/${category}/postal`)}
+              // ADR-0043 §D5: 첫 단계 = current-provider (postal 제거됨).
+              onClick={() => router.push(`/compare/${category}/current-provider`)}
             >
               {t('goToStart')}
             </Button>

@@ -58,37 +58,15 @@
       "cancel": "Annuler",
       "stepProgressAriaLabel": "Étape {current}/{total} terminée",
       "steps": {
-        "postal": "Code postal",
-        "household": "Types de meubles",
-        "current-provider": "Fournisseurs actuels",
+        "household": "Type de foyer",
+        "current-provider": "Fournisseur actuel",
         "preview": "Aperçu des résultats"
       }
     },
-    "postal": {
-      "title": "Saisir le code postal",
-      "heading": "Où habitez-vous ?",
-      "supportNote": "Sélectionnez un pays, puis saisissez votre code postal. Nous proposons actuellement des comparaisons de fournisseurs de télécommunications en Belgique (BE). Il se peut qu'il n'y ait pas de fournisseurs disponibles pour les Pays-Bas (NL) et le Luxembourg (LU) jusqu'à l'ajout de nouveaux fournisseurs.",
-      "countryLabel": "Pays",
-      "countryAriaLabel": "Sélectionner un pays",
-      "postalCodeLabel": "Code postal",
-      "nextButton": "Suivant — Types de meubles",
-      "countries": {
-        "BE": {
-          "label": "Belgique (BE)",
-          "placeholder": "Exemple : 1 000",
-          "description": "Les codes postaux belges sont composés de quatre chiffres compris entre 1000 et 9999."
-        },
-        "NL": {
-          "label": "Pays-Bas (NL)",
-          "placeholder": "Exemple : 1011 ou 1011 AB",
-          "description": "Les codes postaux néerlandais se composent de 4 chiffres (PC4) ou de 4 chiffres suivis d'un espace et de deux lettres majuscules (PC6). Les candidats à comparer seront ajoutés ultérieurement."
-        },
-        "LU": {
-          "label": "Luxembourg (LU)",
-          "placeholder": "Exemple : 1 000",
-          "description": "Les codes postaux luxembourgeois sont composés de quatre chiffres compris entre 1000 et 9999. Les candidats à comparer seront ajoutés ultérieurement."
-        }
-      }
+    "carrierAvailability": {
+      "notice": "Remarque : Telenet est uniquement disponible en Flandre et à Bruxelles. Les résidents de Wallonie peuvent choisir parmi 2 opérateurs (Proximus, Orange BE).",
+      "sourceLabel": "Source : page officielle du réseau Telenet",
+      "verifiedAt": "Vérifié le : 2026-06-07"
     },
     "household": {
       "title": "Choisir le type de foyer",

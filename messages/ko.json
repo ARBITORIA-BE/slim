@@ -57,37 +57,15 @@
       "cancel": "취소",
       "stepProgressAriaLabel": "{current}/{total} 단계 완료",
       "steps": {
-        "postal": "우편번호",
         "household": "가구 형태",
         "current-provider": "현재 공급사",
         "preview": "결과 미리보기"
       }
     },
-    "postal": {
-      "title": "우편번호 입력",
-      "heading": "어디 사세요?",
-      "supportNote": "국가를 선택한 후 우편번호를 입력하세요. 현재 벨기에(BE) 통신 비교를 지원합니다. 네덜란드(NL) / 룩셈부르크(LU)는 공급사가 추가될 때까지 비교 후보가 없을 수 있습니다.",
-      "countryLabel": "국가",
-      "countryAriaLabel": "국가 선택",
-      "postalCodeLabel": "우편번호",
-      "nextButton": "다음 — 가구 형태",
-      "countries": {
-        "BE": {
-          "label": "벨기에 (BE)",
-          "placeholder": "예: 1000",
-          "description": "벨기에 우편번호는 1000~9999 사이의 4자리 숫자입니다."
-        },
-        "NL": {
-          "label": "네덜란드 (NL)",
-          "placeholder": "예: 1011 또는 1011 AB",
-          "description": "네덜란드 우편번호는 4자리 숫자 (PC4) 또는 4자리+공백+대문자 2자 (PC6) 입니다. 비교 후보는 향후 추가됩니다."
-        },
-        "LU": {
-          "label": "룩셈부르크 (LU)",
-          "placeholder": "예: 1000",
-          "description": "룩셈부르크 우편번호는 1000~9999 사이의 4자리 숫자입니다. 비교 후보는 향후 추가됩니다."
-        }
-      }
+    "carrierAvailability": {
+      "notice": "참고: Telenet은 플랑드르(Flanders)와 브뤼셀 지역에서만 서비스됩니다. 왈로니아(Wallonia) 거주 시 2 공급사(Proximus, Orange BE)가 비교 후보가 됩니다.",
+      "sourceLabel": "출처: Telenet 공식 네트워크 페이지",
+      "verifiedAt": "확인: 2026-06-07"
     },
     "household": {
       "title": "가구 형태 선택",

@@ -1,17 +1,20 @@
 /**
- * Comparison input — 5단계 입력 플로우의 Zod schema 단일 출처.
+ * Comparison input — 입력 플로우의 Zod schema 단일 출처.
  *
- * ADR-0016 §T3 (postal) + §T4 (household) + §T5 (current-provider) + §T6 (bill SC-A)
+ * ADR-0016 §T3 (postal — DEPRECATED in 통신, 미래 카테고리 reverse 트리거)
+ * + §T4 (household) + §T5 (current-provider) + §T6 (bill SC-A)
  * + §T7 (preview) 에서 정의된 모든 입력 모양을 한 파일에 모은다. RHF resolver +
  * 서버 액션 재검증(ADR-0016 §T7 클라이언트 우회 방어) 둘 다 본 schema 사용.
  *
- * 페이즈 2 1차 (SC-B 적용): BE 우편번호만. NL/LU 는 페이즈 3 진입 직전 추가
- * (ADR-0016 §T3). 추가 시 본 파일의 postalCodeSchema 만 갱신 — UI/서버는 그대로.
+ * ADR-0043 §D5 (2026-06-08): 통신 흐름 4→3단계 골격 변경.
+ *   구 4단계: postal → current-provider → household → preview
+ *   신 3단계: current-provider → household → preview
+ *   postal 필드 = optional 격상 (미래 카테고리 reverse 트리거 대비 데이터 모델 보존).
  *
  * 카테고리별 사용량 추정 매핑 (T4) 은 페이즈 2 후반 또는 페이즈 3 진입 시 결정 —
  * 현재는 inputAttributes 빈 객체 default.
  *
- * 결정 근거: docs/adr/0016-phase-2-input-flow-design.md
+ * 결정 근거: docs/adr/0016-phase-2-input-flow-design.md + ADR-0043
  */
 
 import { z } from 'zod';
@@ -30,6 +33,12 @@ export const tariffCategorySchema = z.enum(TARIFF_CATEGORIES);
 export type TariffCategoryInput = z.infer<typeof tariffCategorySchema>;
 
 // ─── 우편번호 (ADR-0016 §T3 + ADR-0021 §T10) ─────────────────────────────
+//
+// ADR-0043 §D2 — DEPRECATED in 통신, 미래 카테고리 reverse 트리거 (energy/mortgage/insurance BE).
+// 통신 흐름에서 postal 단계 제거됨 (2026-06-08). 데이터 모델 자체는 보존 —
+// 에너지/모기지/보험 BE 진입 시 이 schema 재활성 + 별 ADR 트리거.
+//
+// harness:i18n 스캔 정합: validation.postal.* 키 = Zod 잠금 키, UI 소비 0 = 정상.
 
 /**
  * 베네룩스 3국 우편번호 — country discriminator + 국가별 regex.
@@ -115,24 +124,28 @@ export const currentProviderSchema = z
   );
 export type CurrentProviderInput = z.infer<typeof currentProviderSchema>;
 
-// ─── 5단계 누적 입력 (preview 단계 = ADR-0016 §T7) ──────────────────────
+// ─── 3단계 누적 입력 (preview 단계 = ADR-0016 §T7) ──────────────────────
 
 /**
- * 5단계 모두 마친 시점의 *전체* 입력. preview 단계가 서버 액션
+ * 3단계(ADR-0043 §D5) 모두 마친 시점의 *전체* 입력. preview 단계가 서버 액션
  * `POST /api/compare` 호출 직전에 한 번 더 safeParse 로 검증 (클라이언트 우회
  * 방어 — ADR-0016 §T7).
  *
  * 매핑 → ADR-0007 §T2 `comparison_request` 컬럼:
  *   category            → comparison_request.category
- *   postal.postalCode   → comparison_request.postal_code
+ *   postal?.postalCode  → comparison_request.postal_code (nullable, ADR-0043 §D2)
  *   householdType       → comparison_request.household_type
  *   currentProviderId   → comparison_request.current_provider_id
  *   inputAttributes     → comparison_request.input_attributes (JSONB)
  *                          + currentTariffId 키도 본 객체에 흡수 (ADR-0016 §T5)
+ *
+ * ADR-0043 §D2: postal 필드 = optional 격상 — 통신 흐름은 미제출 (NULL),
+ * 미래 카테고리(에너지/모기지/보험 BE)는 제출. 데이터 모델 보존.
  */
 export const comparisonInputSchema = z.object({
   category: tariffCategorySchema,
-  postal: postalCodeSchema,
+  // ADR-0043 §D2: postal optional 격상 — 통신 흐름 미제출, 미래 카테고리 제출
+  postal: postalCodeSchema.optional(),
   householdType: householdTypeSchema,
   currentProviderId: z.string().uuid().nullable(),
   currentTariffId: z.string().uuid().nullable(),
@@ -141,9 +154,12 @@ export const comparisonInputSchema = z.object({
 export type ComparisonInput = z.infer<typeof comparisonInputSchema>;
 
 // ─── 단계별 schema 묶음 (RHF resolver 단계별 호출용) ──────────────────────
+//
+// ADR-0043 §D2 (2026-06-08): postal 키 제거 — 통신 흐름 3단계에 postal 단계 없음.
+// StepName 타입 자동 축소: 'household' | 'current-provider' (postal 제거됨).
+// 미래 카테고리(에너지 등) 진입 시 postal 키 재추가 + 별 ADR 트리거.
 
 export const stepSchemas = {
-  postal: postalCodeSchema,
   household: z.object({ householdType: householdTypeSchema }),
   'current-provider': currentProviderSchema,
 } as const;
@@ -161,8 +177,10 @@ export const SESSION_STATE_VERSION = 1;
 export const sessionStateSchema = z.object({
   version: z.literal(SESSION_STATE_VERSION),
   category: tariffCategorySchema,
-  // ADR-0016 Amendment 3: 'bill' 단계 제거 (ADR-0041 Amendment 2 D9, 2026-06-06).
-  step: z.enum(['postal', 'household', 'current-provider', 'preview']),
+  // ADR-0043 (2026-06-08): postal 단계 제거 — 3단계 골격: current-provider → household → preview.
+  // ADR-0016 Amendment 4 cross-ref (ADR-0041 Amendment 2 D9, 2026-06-06).
+  // 순서 중요: current-provider 가 진입점 (redirect 대상), 마지막 = preview.
+  step: z.enum(['current-provider', 'household', 'preview']),
   data: z.object({
     // postalCountry: ADR-0021 §T10 NL/LU 추가로 신설. 기존 v1 sessionStorage
     // 는 postalCountry 부재 → optional, 복원 시 default 'BE' (UI 단계에서 처리).

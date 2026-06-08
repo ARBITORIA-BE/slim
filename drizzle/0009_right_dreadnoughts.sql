@@ -1,0 +1,1 @@
+ALTER TABLE "comparison_request" ALTER COLUMN "postal_code" DROP NOT NULL;

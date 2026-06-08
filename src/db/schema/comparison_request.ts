@@ -94,10 +94,15 @@ export const comparisonRequest = pgTable(
      *   LU: 4자리 숫자
      * 형식 검증은 Zod 책임 (src/types/comparison-input.ts).
      *
+     * ADR-0043 §D2 (2026-06-08): nullable 격상. 통신 흐름 = NULL (postal 단계 제거).
+     * 미래 카테고리(에너지/모기지/보험 BE)는 NOT NULL 값 삽입 가능.
+     * 기존 `notNull()` = 데이터 보존 결정 (Q4 영향 0 — ADR-0043 §D2 정합).
+     * ⚠️ 운영자 `pnpm db:push` 필요 — 본 스키마 변경이 DB 에 반영되어야 함.
+     *
      * **GDPR 정책 (T4)**: 90일 후 1.5.2 cron이 PC2 (앞 2자리, 지역 단위) 로
      * 일반화. quasi-identifier 위험 완화 (ADR-0007 §외부 사실 — Koot 2010).
      */
-    postalCode: text('postal_code').notNull(),
+    postalCode: text('postal_code'),
 
     /** 가구 형태 (PLAN 2.3) — 사용량 추정 fallback 의 핵심 변수. */
     householdType: householdTypeEnum('household_type').notNull(),
