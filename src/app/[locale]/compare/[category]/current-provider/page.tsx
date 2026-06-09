@@ -125,9 +125,9 @@ function ZeroProvidersFallback({
       <div className="rounded-2xl border border-fg/10 bg-bg-warm/40 p-4 text-sm text-fg-soft">
         {fallbackText}
       </div>
-      {/* ADR-0016 Amendment 3: bill 제거 → preview 직진 */}
+      {/* ADR-0043 §D5: 3단계 = current-provider → household → preview. ZeroProvidersFallback Skip 도 household 경유. */}
       <Link
-        href={`/compare/${category}/preview`}
+        href={`/compare/${category}/household`}
         className="inline-flex items-center justify-center self-start rounded-full bg-fg px-6 py-3 text-sm font-medium text-bg transition hover:bg-primary"
       >
         {skipText}

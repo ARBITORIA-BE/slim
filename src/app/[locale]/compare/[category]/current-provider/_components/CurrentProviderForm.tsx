@@ -92,11 +92,14 @@ export function CurrentProviderForm({
     [tariffs, selectedProviderId],
   );
 
-  // ADR-0016 Amendment 3: bill 제거 → preview 직진
+  // ADR-0043 §D5 (2026-06-08): 3단계 순서 = current-provider → household → preview.
+  // 구 ADR-0016 Amendment 3 ("bill 제거 → preview 직진") 패턴은 4단계 (postal/current-provider/household/bill)
+  // 잠금이라 ADR-0043 sweep 시 household 우회 회귀 발화 (2026-06-09 P0 봉합).
+  // STEPS 순서 = useCompareSession.ts:29 단일 출처.
   const proceedSkip = () => {
     updateData({ currentProviderId: null, currentTariffId: null });
-    setStep('preview');
-    router.push(`/compare/${category}/preview`);
+    setStep('household');
+    router.push(`/compare/${category}/household`);
   };
 
   const proceedWithSelection = () => {
@@ -104,8 +107,8 @@ export function CurrentProviderForm({
       currentProviderId: selectedProviderId,
       currentTariffId: tariffUnknown ? null : selectedTariffId,
     });
-    setStep('preview');
-    router.push(`/compare/${category}/preview`);
+    setStep('household');
+    router.push(`/compare/${category}/household`);
   };
 
   // "다음" 버튼 활성 조건:
