@@ -164,40 +164,46 @@ async function runRuleI(
   cwd: string,
   violations: Violation[],
 ): Promise<void> {
-  // 유효한 segment 목록 = 실제 page.tsx 파일이 있는 segment
+  // 유효한 segment 목록 = 실제 page.tsx 파일이 있는 segment.
+  // 브라켓 이스케이프(\\[locale\\]) 가 Windows glob 에서 동작 안 함 —
+  // **/compare/**/page.tsx 로 넓게 잡은 뒤 경로 정규식으로 SEGMENT 추출.
   const routeFiles = await glob(
-    'src/app/\\[locale\\]/compare/\\[category\\]/*/page.tsx',
+    'src/app/**/compare/**/page.tsx',
     { cwd },
   );
   const validSegments = new Set<string>();
   for (const f of routeFiles) {
-    // src/app/[locale]/compare/[category]/SEGMENT/page.tsx
-    const parts = f.replace(/\\/g, '/').split('/');
-    // 인덱스: src(0) app(1) [locale](2) compare(3) [category](4) SEGMENT(5) page.tsx(6)
-    const seg = parts[5];
-    if (seg && !seg.startsWith('[')) {
-      validSegments.add(seg);
+    const normalized = f.replace(/\\/g, '/');
+    // src/app/[locale]/compare/[category]/SEGMENT/page.tsx 패턴 매칭
+    const m = normalized.match(/\/compare\/[^/]+\/([^/]+)\/page\.tsx$/);
+    if (m?.[1] && !m[1].startsWith('[')) {
+      validSegments.add(m[1]);
     }
   }
 
-  // 스캔 대상: CategoryGrid + compare 흐름 전체
-  const scanFiles = await glob(
-    [
-      'src/components/Hero/CategoryGrid.tsx',
-      'src/app/\\[locale\\]/compare/**/*.{ts,tsx}',
-    ],
-    { cwd },
-  );
+  // 스캔 대상: CategoryGrid + compare 흐름 전체.
+  // glob 배열 패턴에서 src/components/Hero/... 가 누락되는 케이스 방어 —
+  // 두 패턴을 별도 호출 후 Set으로 합산 (중복 제거).
+  const [gridFiles, compareFiles] = await Promise.all([
+    glob('src/components/Hero/CategoryGrid.tsx', { cwd }),
+    glob('src/app/**/compare/**/*.{ts,tsx}', { cwd }),
+  ]);
+  const scanFiles = [...new Set([...gridFiles, ...compareFiles])];
 
-  // href 패턴: href="/compare/..." 또는 href={`/compare/...`}
-  const hrefRe = /href=(?:`([^`]*\/compare\/[^`]*)`|"([^"]*\/compare\/[^"]*)")/g;
+  // href 패턴:
+  //   href="/compare/..."          — 문자열 리터럴
+  //   href={`/compare/...`}        — JSX 중괄호 + 템플릿 리터럴 (CategoryGrid 패턴)
+  //   href={"/compare/..."}        — JSX 중괄호 + 문자열 리터럴
+  // eslint no-useless-escape: 정규식 내 \" 는 불필요 이스케이프 — 제거 후 동등.
+  const hrefRe = /href=(?:\{`([^`]*\/compare\/[^`]*)`\}|`([^`]*\/compare\/[^`]*)`|"([^"]*\/compare\/[^"]*)"|[{]"([^"]*\/compare\/[^"]*)"[}])/g;
 
   for (const file of scanFiles) {
     const text = await readFile(resolve(cwd, file), 'utf-8');
     let m: RegExpExecArray | null;
     hrefRe.lastIndex = 0;
     while ((m = hrefRe.exec(text)) !== null) {
-      const href = m[1] ?? m[2] ?? '';
+      // 그룹 1: {`...`}, 그룹 2: `...`, 그룹 3: "...", 그룹 4: {"..."}
+      const href = m[1] ?? m[2] ?? m[3] ?? m[4] ?? '';
       const badSeg = checkHrefSegment(href, validSegments);
       if (badSeg !== null) {
         violations.push({
@@ -354,8 +360,9 @@ async function runRuleIII(
     .filter((s) => s.length > 0);
 
   // 스캔 대상: compare/[category] 아래 모든 tsx/ts (useCompareSession 제외)
+  // **/compare/** 로 브라켓 이스케이프 우회 (Windows glob 호환).
   const scanFiles = await glob(
-    'src/app/\\[locale\\]/compare/\\[category\\]/**/*.{ts,tsx}',
+    'src/app/**/compare/**/*.{ts,tsx}',
     {
       cwd,
       ignore: [
