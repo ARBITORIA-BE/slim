@@ -93,8 +93,11 @@ export default function HouseholdPage({
 
   const onSubmit = (values: FormValues) => {
     updateData({ householdType: values.householdType });
-    setStep('current-provider');
-    router.push(`/compare/${category}/current-provider`);
+    // ADR-0043 §D5 (2026-06-08): 3단계 = current-provider → household → preview.
+    // 구 4단계 (postal → household → current-provider → bill → preview) 시절 잠금이
+    // ADR-0043 sweep 시 회귀로 전이 (2026-06-09 P0 #5 봉합). STEPS 단일 출처 정합.
+    setStep('preview');
+    router.push(`/compare/${category}/preview`);
   };
 
   return (
