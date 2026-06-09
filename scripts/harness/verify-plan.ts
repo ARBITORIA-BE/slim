@@ -13,7 +13,7 @@ import { readFile, access } from 'node:fs/promises';
 import { glob } from 'glob';
 import { resolve } from 'node:path';
 
-interface PlanItem {
+export interface PlanItem {
   id: string;            // "1.7" 같은 ID
   status: ' ' | '~' | 'x' | '!';
   title: string;
@@ -28,8 +28,13 @@ interface Violation {
 
 const violations: Violation[] = [];
 
-async function parsePlan(path: string): Promise<PlanItem[]> {
-  const text = await readFile(path, 'utf-8');
+/**
+ * 인-메모리 텍스트에서 PlanItem 배열 파싱.
+ * 테스트에서 fs 없이 픽스처 문자열을 직접 주입할 때 사용.
+ * ADR-0045 §D2: j-루프에 itemRe.test(subLine) break 추가 — 자식 항목 진입 시
+ * 부모 윈도우 종료로 자식 본문 expectedFiles 누수 방지.
+ */
+export function parsePlanText(text: string): PlanItem[] {
   const items: PlanItem[] = [];
   // CRLF 안전: Windows 체크아웃(core.autocrlf=true)에서 PLAN.md 가 CRLF 라
   // `split('\n')` 만 쓰면 각 줄 끝에 `\r` 가 남아 `(.+)$` 정규식이 안 맞음
@@ -37,6 +42,11 @@ async function parsePlan(path: string): Promise<PlanItem[]> {
   const lines = text.split(/\r?\n/);
 
   const itemRe = /^- \[([ x~!])\] \*\*([A-Z]\.\d+(?:\.[A-Za-z0-9]+)*|\d+(?:\.[A-Za-z0-9]+)*)\*\* (.+)$/;
+  // ADR-0045 §D2: 자식 항목 감지 정규식.
+  // 자식 라인은 `  - [x] **4.16.b** ...` 형태로 2칸 이상 인덴트 후 itemRe 패턴이 옴.
+  // itemRe 는 `^- \[` (행 시작 + 하이픈) 을 강제하므로 자식 라인에는 매치 안 됨.
+  // childItemRe 는 `^\s+- \[` (인덴트 + 하이픈) 로 자식만 감지.
+  const childItemRe = /^\s+- \[([ x~!])\] \*\*([A-Z]\.\d+(?:\.[A-Za-z0-9]+)*|\d+(?:\.[A-Za-z0-9]+)*)\*\* /;
   // 백틱 안 첫 글자는 비공백·비백틱이어야 — nested-backtick 본문 (예: ` >> file.md`)
   // 같은 placeholder 토큰이 실제 파일 경로로 잘못 추출되는 위양성 차단.
   const fileRe = /`([^`\s][^`]*\.(?:ts|tsx|js|jsx|sql|md))`/g;
@@ -55,10 +65,16 @@ async function parsePlan(path: string): Promise<PlanItem[]> {
       title: m[3],
       expectedFiles: [],
     };
-    // 다음 인덴트 라인에서 파일 경로 추출
+    // 다음 인덴트 라인에서 파일 경로 추출.
+    // ADR-0045 §D2: 자식 sub-task 항목 (예: `  - [x] **4.16.b** ...`) 진입 시
+    // 부모 윈도우 종료 — 자식 본문 경로가 부모 expectedFiles 로 누수되는 회귀 방지.
+    // childItemRe (`^\s+- \[`) 로 자식 항목 라인 감지: itemRe 는 `^- \[` 으로
+    // 인덴트 자식 라인에 매치 안 되므로 별도 정규식 필요 (ADR-0045 §D2).
     for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
       const subLine = lines[j];
       if (!subLine || !subLine.startsWith('  ')) break;
+      // 자식 항목 진입 → 부모 윈도우 종료. 자식 본문 expectedFiles 는 자식 책임.
+      if (childItemRe.test(subLine)) break;
       let fm;
       while ((fm = fileRe.exec(subLine)) !== null) {
         // fileRe의 group 1은 정의 보장 (괄호 안 캡처가 매치 조건)
@@ -68,6 +84,11 @@ async function parsePlan(path: string): Promise<PlanItem[]> {
     items.push(item);
   }
   return items;
+}
+
+export async function parsePlan(path: string): Promise<PlanItem[]> {
+  const text = await readFile(path, 'utf-8');
+  return parsePlanText(text);
 }
 
 async function fileExists(p: string): Promise<boolean> {
