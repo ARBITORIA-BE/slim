@@ -60,9 +60,9 @@ errors 0). 그러나 **재발 방지 룰 부재** = 다음 sweep(예: ADR-0044 �
 #### Rule (i) — 컴포넌트 href ↔ 라우트 파일 존재 cross-ref
 
 **탐지 패턴**: `Link href={...}` 또는 `router.push(...)` 의 정적 분석 가능한
-문자열 리터럴 / 템플릿 리터럴 (변수 치환 후 `/compare/${cat}/STEP` 형태) 이
-`src/app/[locale]/compare/[category]/STEP/page.tsx` 또는 `redirect()` 매핑에
-실 존재하는지 검증.
+문자열 리터럴 / 템플릿 리터럴 (변수 치환 후 `/compare/${cat}/<step>` 형태) 이
+`src/app/[locale]/compare/[category]/<step>/page.tsx` 또는 `redirect()` 매핑에
+실 존재하는지 검증 (`<step>` ∈ STEPS 단일 출처 — ADR-0045 §D3 평문화).
 
 **대상 범위 (sizing cap)**: `src/components/Hero/CategoryGrid.tsx` +
 `src/app/[locale]/compare/**/*.{ts,tsx}` 파일만. 통신 BE 흐름 한정 = ADR-0034
