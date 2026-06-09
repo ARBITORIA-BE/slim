@@ -8,6 +8,8 @@ docs/.bkit-memory.json
 docs/.pdca-status.json
 public/reports/bias/*.json
 *.log
+scripts/tmp-*.mjs
+scripts/tmp-*.ts
 .DS_Store
 
 # TypeScript incremental build cache (regenerated per build)
