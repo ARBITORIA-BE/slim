@@ -176,7 +176,7 @@ export async function CategoryGrid({
           return (
             <li key={category}>
               <Link
-                href={`/compare/${category}/postal`}
+                href={`/compare/${category}/current-provider`}
                 className="block rounded-2xl outline-none ring-offset-bg focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 aria-label={t('ariaStart', { label })}
               >
