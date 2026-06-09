@@ -111,7 +111,7 @@
       "supportNote": "We are generating a permalink for the comparison results based on the information you entered. Once complete, you will be automatically redirected to the results page.",
       "submittingMessage": "Calling the comparison engine... (usually takes less than 1 second)",
       "errorTitle": "Failed to generate results",
-      "inputIncomplete": "Your entry is incomplete. Please return to the ZIP code or household type step.",
+      "inputIncomplete": "Your entry is incomplete. Please return to the household type step.",
       "networkError": "A network error has occurred. Please try again.",
       "serverError": "{status}",
       "retry": "Try again",

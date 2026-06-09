@@ -111,7 +111,7 @@
       "supportNote": "Nous générons actuellement un lien permanent vers les résultats de la comparaison en fonction des informations que vous avez saisies. Une fois l'opération terminée, vous serez automatiquement redirigé vers la page des résultats.",
       "submittingMessage": "Appel du moteur de comparaison en cours… (généralement moins d'une seconde)",
       "errorTitle": "Échec de la génération des résultats",
-      "inputIncomplete": "Les informations saisies sont incomplètes. Veuillez revenir à l'étape du code postal ou du type de ménage.",
+      "inputIncomplete": "Les informations saisies sont incomplètes. Veuillez revenir à l'étape du type de ménage.",
       "networkError": "Une erreur réseau s'est produite. Veuillez réessayer.",
       "serverError": "Erreur de serveur ({status})",
       "retry": "Réessayer",

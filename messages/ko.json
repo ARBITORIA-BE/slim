@@ -110,7 +110,7 @@
       "supportNote": "입력하신 정보를 바탕으로 비교 결과 영구 링크를 생성하고 있습니다. 완료 후 자동으로 결과 페이지로 이동합니다.",
       "submittingMessage": "비교 엔진 호출 중… (보통 1초 미만)",
       "errorTitle": "결과 생성 실패",
-      "inputIncomplete": "입력이 완전하지 않습니다. 우편번호 또는 가구 형태 단계로 돌아가세요.",
+      "inputIncomplete": "입력이 완전하지 않습니다. 가구 형태 단계로 돌아가세요.",
       "networkError": "네트워크 오류가 발생했습니다. 다시 시도해 주세요.",
       "serverError": "서버 오류 ({status})",
       "retry": "다시 시도",
