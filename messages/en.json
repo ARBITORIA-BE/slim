@@ -72,7 +72,7 @@
       "title": "Select household type",
       "heading": "How are you doing?",
       "supportNote": "If you select a household type, we will estimate your average usage. Your exact usage will be automatically entered in the future using bill OCR.",
-      "nextButton": "Next — Current Supplier",
+      "nextButton": "Next — Preview results",
       "options": {
         "single": {
           "label": "Alone",
@@ -102,7 +102,7 @@
       "tariffAriaLabel": "Select your current plan",
       "tariffNotRegistered": "This provider's active plans have not yet been registered (to be added in the future).",
       "tariffUnknown": "I'm not familiar with this provider's rate plan (comparing providers only)",
-      "nextButton": "Next — Preview results",
+      "nextButton": "Next — Household type",
       "skipButton": "I don't know / Skip — Proceed as a new subscriber case"
     },
     "preview": {

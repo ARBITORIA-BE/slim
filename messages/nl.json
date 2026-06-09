@@ -72,7 +72,7 @@
       "title": "Huishoudtype kiezen",
       "heading": "Hoe gaat het met u?",
       "supportNote": "Als u het type woning selecteert, wordt het gemiddelde verbruik geschat. Het exacte verbruik wordt later automatisch ingevuld via OCR-verwerking van de factuur.",
-      "nextButton": "Volgende — Huidige leverancier",
+      "nextButton": "Volgende — Resultatenvoorbeeld",
       "options": {
         "single": {
           "label": "alleen",
@@ -102,7 +102,7 @@
       "tariffAriaLabel": "Huidige tariefplan selecteren",
       "tariffNotRegistered": "De actieve tariefplannen van deze leverancier zijn nog niet geregistreerd (worden later toegevoegd).",
       "tariffUnknown": "Ik weet niet hoe het tarief van deze leverancier in elkaar zit (alleen leveranciers vergelijken)",
-      "nextButton": "Volgende — Resultatenvoorbeeld",
+      "nextButton": "Volgende — Huishoudtype",
       "skipButton": "Ik weet het niet / Overslaan — Behandelen als nieuwe klant"
     },
     "preview": {
