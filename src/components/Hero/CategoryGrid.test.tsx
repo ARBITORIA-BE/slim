@@ -3,7 +3,7 @@
  * CategoryGrid 단위 테스트 (PLAN 4.13.c DoD + PLAN 4.14.c, ADR-0041 D1 §블록 2 + ADR-0042 §D1).
  *
  * 검증:
- *   (1) 카테고리 5개 링크 렌더 (/compare/{category}/postal 경로) — ADR-0042 §D1
+ *   (1) 카테고리 5개 링크 렌더 (/compare/{category}/current-provider 경로) — ADR-0042 §D1 + ADR-0043 §D5
  *   (2) showExamples=false 시 가격 예시 없음
  *   (3) showExamples=true + cheapest data 있음 → 가격 텍스트 포함
  *   (4) showExamples=true + cheapest data 없음 → pending placeholder 노출 (5개)
@@ -99,30 +99,33 @@ describe('CategoryGrid', () => {
     mockGetCheapest.mockResolvedValue({});
   });
 
-  it('카테고리 5개 링크가 /compare/{category}/postal 경로로 렌더됨 (ADR-0042 §D1)', async () => {
+  it('카테고리 5개 링크가 /compare/{category}/current-provider 경로로 렌더됨 (ADR-0042 §D1 + ADR-0043 §D5)', async () => {
+    // ADR-0043 §D5 (2026-06-08): postal 단계 제거 → current-provider 직진.
+    // 4.16 본문은 라우트 자체를 삭제했고, 본 hero 카드도 진입점을 동시 갱신해야 함.
+    // 회귀 봉합 (2026-06-09): 4.16 sweep 누락 → home 카드가 /postal 가리킴 = 사용자 클릭 시 404.
     const Component = await CategoryGrid({ variant: 'hero' });
     render(Component);
     // 기존 3개 — exact aria-label 매칭 (substring 충돌 방지)
     expect(screen.getByRole('link', { name: 'Mobiel vergelijking starten' })).toHaveAttribute(
       'href',
-      '/compare/mobile/postal',
+      '/compare/mobile/current-provider',
     );
     expect(screen.getByRole('link', { name: 'Internet vergelijking starten' })).toHaveAttribute(
       'href',
-      '/compare/internet_fixed/postal',
+      '/compare/internet_fixed/current-provider',
     );
     expect(screen.getByRole('link', { name: 'Internet + TV vergelijking starten' })).toHaveAttribute(
       'href',
-      '/compare/bundle_internet_tv/postal',
+      '/compare/bundle_internet_tv/current-provider',
     );
     // 신규 2개 (ADR-0042 §D1)
     expect(screen.getByRole('link', { name: 'Mobiel + Internet vergelijking starten' })).toHaveAttribute(
       'href',
-      '/compare/bundle_mobile_internet/postal',
+      '/compare/bundle_mobile_internet/current-provider',
     );
     expect(screen.getByRole('link', { name: 'Mobiel + Internet + TV vergelijking starten' })).toHaveAttribute(
       'href',
-      '/compare/bundle_mobile_internet_tv/postal',
+      '/compare/bundle_mobile_internet_tv/current-provider',
     );
   });
 

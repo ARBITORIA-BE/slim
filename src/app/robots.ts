@@ -12,15 +12,16 @@
 //
 // Disallow 패턴 해설 (robots.txt 에 그대로 출력됨):
 //   /r/                          -- 개인 비교 결과 (ADR-0021 §T8 noindex)
-//   /compare/[cat]/postal        -- 우편번호 입력 단계 (입력 폼, noindex)
+//   /compare/[cat]/current-provider -- 현재 공급사 선택 단계 (입력 폼, noindex, 3단계 진입점)
 //   /compare/[cat]/household     -- 가구 형태 선택 단계 (입력 폼, noindex)
-//   /compare/[cat]/current-provider -- 현재 공급사 선택 단계 (입력 폼, noindex)
-//   /compare/[cat]/bill          -- 요금 입력 단계 (입력 폼, noindex)
 //   /compare/[cat]/preview       -- 비교 결과 로딩 중 단계 (redirect 즉시 발생, noindex)
 //   /api/                        -- Next.js API route (HTML 아님, 크롤링 대상 아님)
 //
+// ADR-0043 §D5 (2026-06-08): postal 단계 제거 → /compare/*/postal Disallow 룰 삭제.
+// ADR-0016 Amendment 3: bill 단계 제거 → /compare/*/bill Disallow 룰 삭제.
+//
 // 실제 robots.txt 출력 예:
-//   Disallow: /compare/*/postal   <-- * 는 robots.txt 표준 와일드카드 (Google 2008년부터 지원)
+//   Disallow: /compare/*/current-provider   <-- * 는 robots.txt 표준 와일드카드 (Google 2008년부터 지원)
 //
 // sitemap 필드 -- Google 등이 sitemap 위치를 자동 탐지하는 표준 힌트.
 // "Sitemap: https://slim.lu/sitemap.xml" 라인으로 출력됨.
@@ -39,12 +40,11 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         // 개인 비교 결과 -- ADR-0021 §T8 noindex + 개인정보 보호
         '/r/',
-        // 입력 폼 단계 -- sessionStorage 상태 의존, 색인 가치 없음 (PLAN 3.5.2.c)
-        // * 는 robots.txt 와일드카드: /compare/mobile/postal, /compare/internet_fixed/postal 등 모두 차단
-        '/compare/*/postal',
-        '/compare/*/household',
+        // 입력 폼 단계 -- sessionStorage 상태 의존, 색인 가치 없음 (PLAN 3.5.2.c).
+        // ADR-0043 §D5: postal 라우트 부재 → 룰 제거. ADR-0016 Amd 3: bill 라우트 부재 → 룰 제거.
+        // * 는 robots.txt 와일드카드: /compare/mobile/current-provider 등 모두 차단.
         '/compare/*/current-provider',
-        '/compare/*/bill',
+        '/compare/*/household',
         '/compare/*/preview',
         // API route -- HTML 아님, 크롤링 대상 아님
         '/api/',

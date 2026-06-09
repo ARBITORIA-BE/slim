@@ -23,8 +23,9 @@
  * 색인 금지 (제외 — 이 sitemap 에 URL 없음):
  *   /r/[shortId] — 개인 비교 결과 (noindex, ADR-0021 §T8).
  *                  사용자별 맞춤 결과 → 개인정보 + 색인 가치 없음.
- *   /compare/[category]/{postal,household,current-provider,bill,preview}
- *                — 입력 단계 폼 (noindex, PLAN 3.5.2.c).
+ *   /compare/[category]/{current-provider,household,preview}
+ *                — 입력 단계 폼 3단계 (noindex, PLAN 3.5.2.c).
+ *                  ADR-0043 §D5: postal 단계 제거. ADR-0016 Amd 3: bill 단계 제거.
  *                  sessionStorage 상태 의존 + 단독 URL 접근 시 의미 없는 콘텐츠.
  *   /api/* — Next.js API route (HTML 아님, 색인 대상 아님).
  *   /sitemap.xml, /robots.txt — 자기 참조 금지.
