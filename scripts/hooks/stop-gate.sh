@@ -74,6 +74,11 @@ if [[ -f "scripts/verify-db.ts" && -f ".env.local" ]]; then
   run_gate "Gate 5 db-endpoint" "pnpm verify:db"
 fi
 
+# Gate 6: cross-ref (ADR-0044 §D3 — error 격상)
+# 컴포넌트 href ↔ 라우트 파일 존재 / i18n nextButton 라벨 ↔ 도달지 / STEPS ↔ router.push
+# 2026-06-09 P0 회귀 5건 재발 방지 룰 3종. Q2 잠금 = Stop hook 차단.
+[[ -f "scripts/harness/verify-cross-ref.ts" ]] && run_gate "Gate 6 cross-ref" "pnpm harness:cross-ref"
+
 # 결과 조립
 SUMMARY=$(printf '%s\n' "${REPORT[@]}")
 
@@ -90,7 +95,7 @@ ${SUMMARY}
     printf '{"decision":"block","reason":"%s"}\n' "$ESCAPED"
   fi
 else
-  emit_hook_output "Stop" "✅ 5단 게이트 모두 통과
+  emit_hook_output "Stop" "✅ 6단 게이트 모두 통과
 
 ${SUMMARY}"
 fi
