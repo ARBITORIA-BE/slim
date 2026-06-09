@@ -71,7 +71,7 @@
       "title": "가구 형태 선택",
       "heading": "어떻게 사세요?",
       "supportNote": "가구 형태를 선택하면 평균 사용량으로 추정합니다. 정확한 사용량은 향후 청구서 OCR로 자동 입력 예정입니다.",
-      "nextButton": "다음 — 현재 공급사",
+      "nextButton": "다음 — 결과 미리보기",
       "options": {
         "single": {
           "label": "혼자",
@@ -101,7 +101,7 @@
       "tariffAriaLabel": "현재 요금제 선택",
       "tariffNotRegistered": "이 공급사의 활성 요금제가 아직 등록되지 않았습니다 (향후 추가 예정).",
       "tariffUnknown": "이 공급사 요금제는 모르겠어요 (공급사만 비교)",
-      "nextButton": "다음 — 결과 미리보기",
+      "nextButton": "다음 — 가구 형태",
       "skipButton": "모르겠어요 / 스킵 — 신규 가입자 케이스로 진행"
     },
     "preview": {

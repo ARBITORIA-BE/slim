@@ -72,7 +72,7 @@
       "title": "Choisir le type de foyer",
       "heading": "Comment allez-vous ?",
       "supportNote": "Une fois le type de foyer sélectionné, la consommation est estimée sur la base d'une consommation moyenne. La consommation exacte sera automatiquement renseignée ultérieurement grâce à la reconnaissance optique de caractères (OCR) des factures.",
-      "nextButton": "Suivant — Fournisseur actuel",
+      "nextButton": "Suivant — Aperçu des résultats",
       "options": {
         "single": {
           "label": "Tout seul",
@@ -102,7 +102,7 @@
       "tariffAriaLabel": "Choisir un forfait actuel",
       "tariffNotRegistered": "Les forfaits actifs de ce fournisseur n'ont pas encore été enregistrés (ils seront ajoutés ultérieurement).",
       "tariffUnknown": "Je ne connais pas les tarifs de ce fournisseur (comparaison des fournisseurs uniquement)",
-      "nextButton": "Suivant — Aperçu des résultats",
+      "nextButton": "Suivant — Type de ménage",
       "skipButton": "Je ne sais pas / Passer — Traiter comme un nouveau client"
     },
     "preview": {
