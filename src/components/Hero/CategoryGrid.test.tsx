@@ -1,12 +1,15 @@
 // __SAFE_PRICE_DISPLAY__: 테스트 픽스처 — 가격 숫자는 실제 UI 표시 아님 (mock 데이터).
 /**
  * CategoryGrid 단위 테스트 (PLAN 4.13.c DoD + PLAN 4.14.c, ADR-0041 D1 §블록 2 + ADR-0042 §D1).
+ * ADR-0050 §D1 (2026-06-10): 2+3 분리 + 베타 배지 + home 네임스페이스 mock 추가.
  *
  * 검증:
  *   (1) 카테고리 5개 링크 렌더 (/compare/{category}/current-provider 경로) — ADR-0042 §D1 + ADR-0043 §D5
  *   (2) showExamples=false 시 가격 예시 없음
  *   (3) showExamples=true + cheapest data 있음 → 가격 텍스트 포함
  *   (4) showExamples=true + cheapest data 없음 → pending placeholder 노출 (5개)
+ *   (5) 단품 헤더 "Losse abonnementen" + 번들 헤더 "Pakketten" 렌더 (ADR-0050 §D1)
+ *   (6) 베타 배지 bundle_mobile_internet / bundle_mobile_internet_tv 에만 렌더
  *
  * Mock 전략:
  *   - next-intl/server, next/link, lucide-react: 각 의존성 mock
@@ -23,9 +26,10 @@ vi.mock('@/db/queries/cheapest-tariff', () => ({
 }));
 
 // next-intl/server mock
+// why: getTranslations는 네임스페이스별 호출 — 'compare'와 'home' 두 네임스페이스 모두 처리.
 vi.mock('next-intl/server', () => ({
-  getTranslations: vi.fn().mockImplementation(async () => {
-    const map: Record<string, string> = {
+  getTranslations: vi.fn().mockImplementation(async (namespace: string) => {
+    const compareMap: Record<string, string> = {
       'categories.mobile.label': 'Mobiel',
       'categories.internet_fixed.label': 'Internet',
       'categories.bundle_internet_tv.label': 'Internet + TV',
@@ -43,9 +47,18 @@ vi.mock('next-intl/server', () => ({
       exampleCheapestLabel: 'bijv. {provider} {tariff} {price}/maand',
       priceSourceAriaLabel: 'Databron: {sourceUrl}',
     };
+
+    const homeMap: Record<string, string> = {
+      'categories.singles': 'Losse abonnementen',
+      'categories.bundles': 'Pakketten',
+      'categories.beta_badge': 'Beta',
+    };
+
+    const map = namespace === 'home' ? homeMap : compareMap;
+
     // why: next-intl t 함수는 callable + .raw 메소드. 둘 다 mock 필요.
     const t = ((key: string, params?: Record<string, string>): string => {
-      if (key === 'ariaStart') {
+      if (namespace === 'compare' && key === 'ariaStart') {
         return params?.label ? `${params.label} vergelijking starten` : 'vergelijking starten';
       }
       return map[key] ?? key;
@@ -89,6 +102,13 @@ vi.mock('@/components/ui/card', () => ({
   ),
   CardDescription: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <p className={className}>{children}</p>
+  ),
+}));
+
+// Badge mock — ADR-0050 §D1 베타 배지 외화
+vi.mock('@/components/ui/badge', () => ({
+  Badge: ({ children, className, variant }: { children: React.ReactNode; className?: string; variant?: string }) => (
+    <span className={className} data-variant={variant}>{children}</span>
   ),
 }));
 
@@ -160,5 +180,22 @@ describe('CategoryGrid', () => {
     render(Component);
     // Proximus 가 텍스트로 포함됨
     expect(screen.getByText(/proximus/i)).toBeInTheDocument();
+  });
+
+  it('단품/번들 행 헤더 라벨 렌더 (ADR-0050 §D1 — 2+3 분리)', async () => {
+    // why: home 네임스페이스 'categories.singles'/'categories.bundles' 키가 h2로 렌더되는지 검증.
+    const Component = await CategoryGrid({ variant: 'hero' });
+    render(Component);
+    expect(screen.getByText('Losse abonnementen')).toBeInTheDocument();
+    expect(screen.getByText('Pakketten')).toBeInTheDocument();
+  });
+
+  it('베타 배지는 bundle_mobile_internet + bundle_mobile_internet_tv 카드에만 렌더 (ADR-0050 §D1)', async () => {
+    // why: 헌법 §8 #3 다크패턴 0 — 임의 하이라이트 아닌 상태 배지만.
+    // BETA_CATEGORIES 2개에만 배지 텍스트 'Beta' 노출 = 2개 기대.
+    const Component = await CategoryGrid({ variant: 'hero' });
+    render(Component);
+    const badges = screen.getAllByText('Beta');
+    expect(badges.length).toBe(2);
   });
 });

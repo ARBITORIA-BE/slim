@@ -446,6 +446,11 @@
   "home": {
     "headline": "베네룩스 통신 비교, 5분 안에",
     "subheading": "벨기에 모바일 · 인터넷 · 번들 요금을 공식 가격 그대로 비교하세요.",
+    "categories": {
+      "singles": "단품",
+      "bundles": "번들",
+      "beta_badge": "베타"
+    },
     "providersCaption": "벨기에 통신 3대 공급사 시장 점유 ≥ 97.5% (Mordor Intelligence Q1 2025 기준)",
     "providersUpdatedAtLabel": "가격 갱신: {date}",
     "savingsExamplePending": "예시 절약액 — 베타 데이터 수집 중",
