@@ -447,6 +447,11 @@
   "home": {
     "headline": "Telecomvergelijking Benelux, in 5 minuten",
     "subheading": "Vergelijk Belgische mobiele, internet- en bundeltarieven tegen officiële prijzen.",
+    "categories": {
+      "singles": "Losse abonnementen",
+      "bundles": "Pakketten",
+      "beta_badge": "Beta"
+    },
     "providersCaption": "Belgische top 3 telecoms met ≥ 97,5% marktaandeel (Mordor Intelligence Q1 2025)",
     "providersUpdatedAtLabel": "Prijs bijgewerkt: {date}",
     "savingsExamplePending": "Voorbeeldbesparing — bèta-data wordt verzameld",

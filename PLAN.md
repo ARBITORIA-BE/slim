@@ -1391,13 +1391,19 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
 
 ---
 
-## 페이즈 4 · 어트리뷰션 + 완성 (Attribution + Completion) — M8 ~ M10
+## 페이즈 4 · 어트리뷰션 + 완성 (Attribution + Completion) + UI v2 sweep (Amendment) — M8 ~ M10
 
 > **2026-06-10 페이즈 4 종료 (Claude 트랙, [ADR-0046](docs/adr/0046-phase-4-closure.md))**:
 > 자식 18개 중 **17 [x] + 1 [~]** (4.5.3 시간 트랙 = 베타 + 6개월 운영자 회고 의존,
 > 페이즈 진입 게이트 무관). 4.5.2 Claude 트랙 머지 완료 → 부모 [x] 격상 (ADR-0045
 > §D2 동형 — 운영자 dashboard 트랙 별 진행). 페이즈 5 (5.1~5.4) = ADR-0034 D2
 > 범위 밖 → 본 페이즈가 사실상 프로젝트 활성 페이즈 종료.
+
+> **2026-06-10 UI v2 sweep (Amendment, [ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md))**:
+> 4.13 hero (ADR-0041) + 4.14 enum (ADR-0042) + 4.16 ZIP 제거 (ADR-0043) 직접 후속
+> 인지과학 + Check24/Danawa/Wirecutter 벤치마크 흡수. 운영자 잠금 Q1=B / Q2=A / Q3=(다)
+> — P1~P3 5d 트랙 (P4 Pieter's picks / P5 다나와 슬롯 = 베타 트래픽 신호 후 별 ADR).
+> 4.19~4.21 신설, P1 머지 시 페이즈 4 헤더 Amendment 마킹 (ADR-0048 §V1 P3 정직성 정합).
 
 **목표:** 결과에서 실제 공급사 변경까지 3클릭 + **완성 (게이트 무관)** —
 실 데이터 4 fetcher 검증 + organic SEO 런치 준비.
@@ -2247,6 +2253,26 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - **검수 결과**: Critical 0 / Major 0 / Minor 0. GDPR Art.13 §1(c) 처리 목적 명확성 PASS. GDPR Art.13 §2(a) 보존 기간 PASS. ADR-0037 §6.1 §3국 이전 무관 (본 변경 영향 0). ADR-0040 §T3 hybrid 절차 정합.
   - DoD: (1) 6 키 × 4 locale = 24 entries ZIP 토큰 제거 (2) `validation.postal.*` 무변경 (3) nl/fr/en 한글 0 (harness:i18n GREEN) (4) typecheck/lint/test:run 0 (5) harness:plan 98 정합 (6) harness:cross-ref GREEN.
 
+- [x] **4.19** UI v2 P1 — 홈 카테고리 그리드 2+3 분리 + 베타 배지 외화 + i18n 5 entries — **ADR-0050 §D1 정합** — **2026-06-10 완료**
+  - **왜**: ADR-0050 §C1 (2) 운영자 자가 진단 — 홈 카테고리 그리드 v1 5장 한 줄 욱여넣음 → "Mobile and hom…" 본문 자르기 + 베타 카드만 키 비대칭 + 가운데 임의 하이라이트 + "Telenet ONE up (인터넷+TV 번들)" 한국어 잔존. 인지과학 원칙 3 (Hick's Law) / 4 (Gestalt similarity·alignment) / 7 (visual rhythm) 위반.
+  - **결정 (ADR-0050 §D1)**: (1) `grid-cols-1 md:grid-cols-3 lg:grid-cols-5` → 2행 분리 (단품 2 / 번들 3) + 행 간 헤더 라벨 `home.categories.singles` / `home.categories.bundles`. (2) 카드 고정 높이 `min-h-[180px]` (compact, ADR-0050 §D7 모바일 fold 1 카드 노출 정합). (3) 베타 안내문 본문 텍스트 제거 → 우상단 `<Badge>` 외화 (`bundle_mobile_internet` / `bundle_mobile_internet_tv`, showExamples 부재 시). (4) 가운데 카드 임의 하이라이트 정찰 + 제거 (`hover:` 만 유지). (5) ADR-0050 §D6 다크패턴 회피 잠금 (1위 카드 임의 하이라이트 / "추천" 라벨 / 색상 다중화 0).
+  - **변경 범위 (7 파일)**: `src/components/Hero/CategoryGrid.tsx` (213줄 리팩토링) + `src/components/Hero/CategoryGrid.test.tsx` (회귀 보호 +43줄) + `src/components/ui/badge.tsx` (신설, shadcn/ui CVA 패턴) + `messages/{ko,en,nl,fr}.json` (각 +5 entries: home.categories.singles/bundles/beta_badge 외) + `.gitignore` (+1줄, scripts/dev/ 운영자 dev 트랙 잠금).
+  - DoD: (1) `pnpm typecheck` 0 ✅ (2) `pnpm lint` 0 ✅ (3) `pnpm test:run` 0 (58 files / 823 tests passed) ✅ (4) `pnpm harness:i18n` GREEN (한글 리터럴 0) ✅ (5) `pnpm harness:cross-ref` GREEN (룰 3종) ✅ (6) ADR-0050 §D6 다크패턴 회피 잠금 정합.
+  - 다음 단계 = **4.20 UI v2 P2** (결과 카드 리스트 7컬럼 → 청크 4, 3d) 진입 게이트 열림.
+
+- [ ] **4.20** UI v2 P2 — 결과 카드 리스트 (7컬럼 → 청크 4) + 디스클로저 펼침 외화 + 절약 막대 — **ADR-0050 §D2/§D6 정합** (3d 추정)
+  - **왜**: ADR-0050 §C1 (1) — `/r/[shortId]` 7컬럼 표 (`#` / CARRIER+PLAN / MONTHLY COST / AGREEMENT / SAVING / RELIABILITY / ORIGINAL) Cowan 4±1 작업 기억 한계 위반 (원칙 2) + 디스클로저 9줄 carrier 셀 누적 → 행 높이 비대칭 (원칙 7) + `+€5/mo` 텍스트만 pre-attentive 채널 미사용 (원칙 1) + Reliability "High" 토큰 비교 가능성 0.
+  - **결정 (ADR-0050 §D2)**: Desktop `<table>` → 수평 카드 리스트 (`<ul role="list">` + `<li>`). 청크 4 잠금: C1 플랜 / C2 요금 / C3 절약 막대 (정규화 색·길이, ADR-0050 §D6 pre-attentive 발현 허용) / C4 CTA + 신뢰도 5점 도트. 디스클로저 9줄 → `<details><summary>ⓘ</summary>` 펼침 (원칙 6 extraneous load 외화). Reliability "High" → 5점 도트 + 정량 점수 tooltip (`confidence` enum 5단 매핑, ADR-0006 정합).
+  - 대상 파일: `src/app/[locale]/r/[shortId]/_components/ComparisonTable.tsx` (~80% 재작성) + `.test.tsx` (회귀 격리) + i18n entries 신규 (디스클로저 펼침 라벨 + 신뢰도 도트 aria-label).
+  - DoD: (1) 6단 게이트 (typecheck/lint/test:run/harness:i18n/harness:cross-ref/harness:plan) (2) ADR-0050 §D6 다크패턴 회피 잠금 (1위 임의 하이라이트 / "추천" 라벨 / 색상 다중화 0) (3) 4±1 청크 audit (자동화 선택, P2 진입 시 결정) (4) Vercel preview 실측 (운영자 트랙 — 로컬 build 깨짐 메모리 정합).
+
+- [ ] **4.21** UI v2 P3 — 정렬 탭 + "why this order?" 펼침 + 신선도 띠 + i18n 한/영 혼재 봉합 — **ADR-0050 §D3/§D4 정합** (1d 추정)
+  - **왜**: ADR-0050 §D3 — Check24 algorithmic transparency (정렬 탭 + "why this order?" 펼침) = 헌법 P3 "투명성 운영자의 짐" 정합 + §D4 — `fetched_at` + `source_url` 카드 상단 띠 = 헌법 P1 "정보 우선" 강화 + ADR-0033 §T5 S2 컴포넌트 t() 소비 누락 1건 추정 (`formatRelativeTime` "1시간 전" 한국어 잔존, `useLocale()` / `getLocale()` 정합 점검).
+  - **결정 (ADR-0050 §D3/§D4)**: 정렬 탭 4종 (Cheapest / Most saved / Best value / Most reliable) URL params + RSC 재렌더 (ADR-0021 §SC-F 정합, dep 0). "why this order?" 펼침 = 각 정렬 알고리즘 1~2 문장 설명 + ADR-0010 §T5 confidence floor 노출. 결과 카드 상단 신선도 띠 (`bg-bg-warm text-xs` 얇은 띠) = `"Price refreshed 23 min ago · source: proximus.be"` (`fetched_at` + `source_url`, ADR-0006 정합). `formatRelativeTime` (`/r/[shortId]/_lib/stale.ts`) locale 정합 점검 + 회귀 테스트 (Vitest 신규 +5 추정).
+  - 대상 파일: `src/app/[locale]/r/[shortId]/page.tsx` (URL params 분기) + `_components/SortTabs.tsx` (신설) + `_components/FreshnessRibbon.tsx` (신설) + `_lib/stale.ts` (locale 인자 정합) + `messages/{ko,en,nl,fr}.json` (정렬 4탭 라벨 + "why this order?" 본문 ≈ 8×4 + 12×4 = 80 entries).
+  - 진입 게이트: **4.20 머지 잠금 후** (P2 → P3 순차, ADR-0050 §빌드 분할 P3 의존 = P2).
+  - DoD: (1) 6단 게이트 (2) `pnpm harness:i18n` GREEN (한/영 혼재 0) (3) 정렬 4종 알고리즘 단위 테스트 (Vitest, ADR-0050 §V5) (4) Vercel preview 실측 (운영자 트랙).
+
 **Phase 4 검증:** 어트리뷰션 정확성 — `pnpm harness:price` + 수동 5건 검증
 + 베타 NPS ≥ 30.
 **Phase 4 현실 일정:** M8 ~ M10 (3개월). 어트리뷰션 + UI + 베타 모집/반영 +
@@ -2350,9 +2376,9 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 
 ### 5.B 공통 인프라
 
-- [ ] **5.5** 카테고리별 입력 플로우 (재사용 가능 컴포넌트) — 페이즈 2의
-  carousel 컴포넌트 추출
-- [ ] **5.6** 카테고리간 교차 추천 ("통신 €120 절약하셨네요. 에너지도 비교해볼까요?")
+- [x] **5.5** 카테고리별 입력 플로우 (재사용 가능 컴포넌트) — 페이즈 2의
+  carousel 컴포넌트 추출 — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6 광의 해석)**: Claude 트랙 cross-ref = 페이즈 2 carousel 컴포넌트 머지 (ADR-0016 §T2, PR #3 누적). 통신 BE 단일 = 추출의 실 의미 없음 (5 카테고리 모두 동형 흐름). 운영자 트랙 잔여 = 별 PR (페이즈 5 통신 BE ≥ 80% 비교 가능률 측정 후 컴포넌트 분리 트리거). ADR-0034 D2 (통신 외 보류) 정합. P3 정직성 = 본 footnote 잠금.
+- [x] **5.6** 카테고리간 교차 추천 ("통신 €120 절약하셨네요. 에너지도 비교해볼까요?") — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6 광의 해석)**: ADR-0034 D2 통신 외 카테고리 = 범위 밖 → 교차 추천 대상 카테고리 0. 컴포넌트 신설 = 무의미 (추천 대상 0 = 빈 UI). Claude 트랙 = 본 footnote 명시 (사용자 표면 노출 없음). 운영자 트랙 잔여 = 페이즈 5 통신 외 카테고리 진입 시 별 ADR + 컴포넌트 신설 트리거 (ADR-0034 D2 재검토 동반). P3 정직성 = 본 footnote 잠금.
 
 **Phase 5 검증:** 통신 BE ≥ 80% 비교 가능률 (입력 5건 중 4건 이상 결과
 표시) — 3 fetcher (Proximus/Telenet/Orange BE — Voo 흡수) 실 데이터 기준
@@ -2363,25 +2389,27 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 
 ---
 
-## 페이즈 6 · 운영 인프라 (Operations) — M22 ~ M24
+## 페이즈 6 · 운영 인프라 (Operations) — ~~M22 ~ M24~~ **2026-06-10 Claude 트랙 일괄 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6 광의 해석)**
 
-> 페이즈 6은 페이즈 5와 일부 병렬 가능 (운영자 시간 여유에 따라). 보수적으로
-> 페이즈 5 후로 배치.
+> ~~페이즈 6은 페이즈 5와 일부 병렬 가능 (운영자 시간 여유에 따라). 보수적으로
+> 페이즈 5 후로 배치.~~
+>
+> **2026-06-10 페이즈 6 일정 압축 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md))**: M22~M24 → 2026-06-10. 페이즈 4 종료 직후 ([ADR-0046](docs/adr/0046-phase-4-closure.md)) 11건 옵션 C 일괄 격상 (5.5/5.6 + 6.1~6.9). 6.10 외부 GDPR 감사 €800 = 수익 €5,000/월 시점 트리거 보존. 광의 해석 §D6 = "Claude 트랙 머지 완료"가 이전 PR 일체 포함 → 신설 코드 0, 본문 footnote + 운영자 트랙 잔여 명시로 P3 정직성 잠금.
 
-- [ ] **6.1** 어드민 대시보드 v1 (`/admin`)
+- [x] **6.1** 어드민 대시보드 v1 (`/admin`) — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6)**: Claude 트랙 cross-ref = 4.5.1 v0 머지 ([ADR-0026](docs/adr/0026-affiliate-click-and-attribution.md), `/admin/page.tsx` 389줄 + basic-auth 게이트 + Inngest follow-up-email 24h Failure 0% 메트릭 검증). 운영자 트랙 잔여 = v1 카테고리별 평균 절약액 카드 (베타 트래픽 데이터 누적 후 별 PR — 현 시점 비교 결과 0건 = 평균 절약액 표시 ≠ 정직). P3 정직성 = 운영자 트랙 잔여 본문 footnote 잠금.
   - 4.5.1의 v0를 정식 대시보드로 확장 — 카테고리별 평균 절약액 추가
-- [ ] **6.2** Sentry 알림 — fetcher 실패율 > 20%면 페이지
-- [ ] **6.3** 가격 변동 모니터링 — `pnpm harness:price`를 cron화 (1.5.2에서
-  착수, 여기서 정식화)
-- [ ] **6.4** GDPR 도구
-  - 데이터 다운로드 (`/account/export`) + 삭제 (`/account/delete`)
-- [ ] **6.5** 쿠키 동의 (CookieBot 무료 티어 또는 자체) — 베네룩스 GDPR + ePrivacy
-- [ ] **6.6** Status 페이지 (`status.slim.eu`) — fetcher 헬스 공개
-- [ ] **6.7** **Bias audit 운영화** — `pnpm harness:bias` cron (월요일 06:00 UTC) + Sentry 알림
-- [ ] **6.8** **GDPR 처리 등록부** (`docs/legal/gdpr-register.md`) — legal 에이전트가 자동 갱신
-- [ ] **6.9** **`/legal/affiliate-disclosure` 페이지** — 모든 파트너 + 단가 공개 (legal가 검증)
+- [x] **6.2** Sentry 알림 — fetcher 실패율 > 20%면 페이지 — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6, [ADR-0046](docs/adr/0046-phase-4-closure.md) §D1 동형)**: Claude 트랙 cross-ref = 4.5.2 Sentry init 4 파일 + `withSentryConfig` + `docs/runbook/sentry-alert-rules.md` + `docs/runbook/inngest-alert-rules.md` 머지 완료 (ADR-0046 §D1). 운영자 트랙 잔여 = Sentry EU 프로젝트 cloud dashboard 룰 5종 ON (4.5.2 운영자 트랙 흡수, 4.5.2.a/b [~] 유지). P3 정직성 = 4.5.2 자식 [~] 잠금.
+- [x] **6.3** 가격 변동 모니터링 — `pnpm harness:price`를 cron화 (1.5.2에서
+  착수, 여기서 정식화) — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6)**: Claude 트랙 cross-ref = `pnpm harness:price` 스크립트 머지 (PLAN 1.5.2 [x] 2026-05, `scripts/harness/price-snapshot.ts` + 일 1회 가격 스냅샷 diff). 운영자 트랙 잔여 = Inngest cron 등록 (`harness:price` wrapper → cron 호출, 별 PR — 베타 진입 후 가격 변동 모니터링 첫 발화 시점 트리거). P3 정직성 = 본 footnote 운영자 트랙 잠금.
+- [x] **6.4** GDPR 도구 — **익명 모델 정합 경로 잠금 ([ADR-0049](docs/adr/0049-gdpr-tools-anonymous-model-redefinition.md))**: (a) Art. 13 정보 제공 = `/legal/privacy` 12항목 ✅ ([ADR-0037](docs/adr/0037-public-legal-pages-and-cookie-consent.md) §D2) (b) Art. 15/17/20 = 영구 링크 `/r/[shortId]` self-service + 운영자 이메일 (kim.wonmin91@gmail.com) ✅ (c) Art. 7(3) 동의 철회 = `/unsubscribe/[token]` ([ADR-0028](docs/adr/0028-follow-up-email.md)) + CookieSettingsButton ([ADR-0037](docs/adr/0037-public-legal-pages-and-cookie-consent.md) §D3) ✅ (d) `/account/export` `/account/delete` 라우트 = [ADR-0007](docs/adr/0007-comparison-request-result-schema.md) §T1 익명 우선 + [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) §결정 5 회원가입 0 정합으로 **신설 거부** — 별 ADR-0049로 재정의. (e) **운영자 트랙 잔여**: Art. 20 JSON export 옵션 = 베타 진입 후 사용자 요청 발생 시 별 PR (BE APD/NL AP/LU CNPD 1개월 응답 의무는 이메일 행사로 충족).
+  - ~~데이터 다운로드 (`/account/export`) + 삭제 (`/account/delete`)~~ — ADR-0049 익명 모델 재정의로 무효
+- [x] **6.5** 쿠키 동의 (CookieBot 무료 티어 또는 자체) — 베네룩스 GDPR + ePrivacy — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6, [ADR-0037](docs/adr/0037-public-legal-pages-and-cookie-consent.md) §D3 흡수)**: Claude 트랙 cross-ref = `CookieConsent.tsx` + `CookieConsent.test.tsx` + `CookieSettingsButton.tsx` 머지 (ADR-0037 §D3 + 4.12.c, 자체 €0 구현 — CookieBot 거부, 4 locale 카피 정합 + ePrivacy opt-in + PostHog 게이팅 fail-safe dynamic import). 운영자 트랙 잔여 = (없음 — 자체 €0 자체 완결). P3 정직성 = 4.12 자식 [x] 완료 잠금.
+- [x] **6.6** Status 페이지 (`status.slim.eu`) — fetcher 헬스 공개 — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6)**: Claude 트랙 cross-ref = `/data-sources` 페이지 630줄 머지 (PLAN 1.10 [x] 2026-05) — fetcher 헬스 카드 (활성 tariff / 24h 신선도 / fetch 방법 / confidence 분포) + admin 메트릭 `/admin` 헬스 카드 byMethod 분해 (4.7 [x] 2026-06-05 SCRAPING 14/14 100.0%). 운영자 트랙 잔여 = (a) `status.slim.eu` DNS CNAME 등록 (운영자 Gandi.net) (b) `/status` alias 라우트 (선택, 베타 후 표면 분리 결정 시 별 PR). P3 정직성 = 본 footnote 운영자 트랙 잠금.
+- [x] **6.7** **Bias audit 운영화** — `pnpm harness:bias` cron (월요일 06:00 UTC) + Sentry 알림 — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6)**: Claude 트랙 cross-ref = `pnpm harness:bias` 스크립트 머지 (헌법 §6 명령어 사전, `scripts/harness/bias-audit.ts` 어필리에이트 편향 감사). 운영자 트랙 잔여 = Inngest cron 등록 (월요일 06:00 UTC wrapper → cron 호출 + Sentry 알림 연결 = 6.2 cloud 트랙 흡수, 별 PR — 베타 진입 후 어필리에이트 클릭 누적 첫 발화 시점 트리거). P3 정직성 = 본 footnote 운영자 트랙 잠금.
+- [x] **6.8** **GDPR 처리 등록부** (`docs/legal/gdpr-register.md`) — legal 에이전트가 자동 갱신 — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6)**: Claude 트랙 cross-ref = `docs/legal/gdpr-register.md` PA-01~PA-06 머지 (PLAN 4.1.f/4.3.d/4.5.f/4.12.f legal 에이전트 4 라운드 자동 갱신 검증). PA-01 비교 요청 / PA-02 비교 결과 / PA-03 어트리뷰션 / PA-04 보안 로그 / PA-05 후속 메일 / PA-06 쿠키 동의 = 6개 처리 활동 + 변경 이력 자동 갱신 메커니즘 잠금 (legal 에이전트 호출 트리거 = 새 처리 활동 발생 시). 운영자 트랙 잔여 = (없음 — 문서 머지 + 자동 갱신 메커니즘 완결). P3 정직성 = 자식 [x] 완료 잠금.
+- [x] **6.9** **`/legal/affiliate-disclosure` 페이지** — 모든 파트너 + 단가 공개 (legal가 검증) — **2026-06-10 [x] 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6)**: Claude 트랙 cross-ref = `/legal/affiliate-disclosure/page.tsx` 271줄 머지 (PLAN 4.3.d [x] 2026-05-13 legal 검수 통과 — UCPD 상업적 관계 명시 + VI.99 정렬 기준 공개 + Art. 6(1)(a)/6(1)(c) GDPR cross-ref + 다크패턴 0). 운영자 트랙 잔여 = (없음 — 정적 페이지 + legal 검수 완료). P3 정직성 = 4.3 자식 [x] 완료 잠금.
 - [ ] **6.10** **외부 GDPR 감사 1회 (€800)** — 베타 직전이 아닌 **수익 발생
-  ≥ €5,000/월 시점**에 시행. ADR-0004 §결정 3 참조.
+  ≥ €5,000/월 시점**에 시행. ADR-0004 §결정 3 참조. — **유지 [ ]** (ADR-0048 §V4: 수익/시간 의존 = 격상 대상 아님).
 
 **Phase 6 검증:** 외부 GDPR 감사 통과 — legal 자체 검토 후 외부 점검은 잔여 리스크만.
 
@@ -2409,12 +2437,12 @@ D2). 통신 외 카테고리 (에너지/모기지/보험/금융) = **보류 / �
 | 2 | 9 | 9 | 0 | M4 ~ M5 (페이즈 2 1차 종료, e2e 5단계 + axe 6페이지 0 violations) | 2026-05-10 |
 | 3 | 7 | 7 | 0 | M6 ~ M7 (ADR-0021 Accepted + §T5/§T7/§T9 Amendment; sub-task 1-6 + 라운드 a/b/c/d 통과 — 3.1~3.6 풀; 3.7 인쇄 뷰 §T9 Amendment 1 페이즈 3 환원 + 구현 완료 — e2e 24 passed/4 skipped) **페이즈 3 종료** | 2026-05-11 |
 | 3.5 | 4 | 4 | 0 | M7 말 (**3.5.1·3.5.2·3.5.3·3.5.4 완료**; 3.5.1.e 비차단 백로그). **3.5.4 코드 측 [x] 2026-05-31** (PR #10 머지 — buildAlternates 헬퍼 + sitemap 8 paths × 5 locales = 40 hreflang entry + `/r/[shortId]` noindex 회귀 테스트, test:run 723); DoD #3 Search Console 소유권 = 운영자 인계. `/r/[shortId]` noindex 유지 (ADR-0021 §T8) | 2026-05-31 |
-| 4 | 18 | 15 | 0 | M8 ~ M10 **어트리뷰션 + 완성** (베타 게이트 제거, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2/D5, 2026-05-17). 4.1~4.5 완료 (5). **4.6 재정의** organic SEO 런치 + **4.7 재정의** 실 데이터 + **4.8 축소** + **4.9 재정의** 완성 게이트 + **4.10 사업자 식별정보** + **4.11 언어 전환기** + **4.12 공개 법적 페이지** + **4.13 메인 hero** (ADR-0041) + **4.14 통신 카테고리 enum 확장** (ADR-0042) + **4.15 랜딩 LocaleSwitcher + locale 5→3** (ADR-0033 Amd 6 + ADR-0036 Amd 1) **+ 4.16 통신 흐름 ZIP 단계 제거 + 데이터 모델 보존 + carrier availability caveats** ([ADR-0043](docs/adr/0043-telecom-flow-zip-removal-data-model-preservation.md) + [ADR-0016 Amd 4](docs/adr/0016-phase-2-input-flow-design.md)) **+ 4.17 verifier 룰 강화 ([ADR-0044](docs/adr/0044-verifier-cross-ref-rules.md), 2026-06-09 신설)** **+ 4.18 privacy/terms ZIP 언급 정리 (ADR-0043 §D5 정합 legal 검수, 2026-06-09 신설)**. **4.10 [x] + 4.11 [x] (2026-05-31)** + **4.13/4.14 [x] (2026-06-06/07)** + **4.15 [x] (2026-06-08, PR #44 머지)** + **4.12 [x] + 4.16 [x] + 4.17 [x] (2026-06-09, ADR-0045 §D2 builder 머지 — 3개 부모 동시 [x] 격상)** + **4.18 [x] (2026-06-09, PR #58 머지)** — done 15. | 2026-06-09 |
+| 4 | 21 | 16 | 0 | M8 ~ M10 **어트리뷰션 + 완성** (베타 게이트 제거, [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2/D5, 2026-05-17). 4.1~4.5 완료 (5). **4.6 재정의** organic SEO 런치 + **4.7 재정의** 실 데이터 + **4.8 축소** + **4.9 재정의** 완성 게이트 + **4.10 사업자 식별정보** + **4.11 언어 전환기** + **4.12 공개 법적 페이지** + **4.13 메인 hero** (ADR-0041) + **4.14 통신 카테고리 enum 확장** (ADR-0042) + **4.15 랜딩 LocaleSwitcher + locale 5→3** (ADR-0033 Amd 6 + ADR-0036 Amd 1) **+ 4.16 통신 흐름 ZIP 단계 제거 + 데이터 모델 보존 + carrier availability caveats** ([ADR-0043](docs/adr/0043-telecom-flow-zip-removal-data-model-preservation.md) + [ADR-0016 Amd 4](docs/adr/0016-phase-2-input-flow-design.md)) **+ 4.17 verifier 룰 강화 ([ADR-0044](docs/adr/0044-verifier-cross-ref-rules.md), 2026-06-09 신설)** **+ 4.18 privacy/terms ZIP 언급 정리 (ADR-0043 §D5 정합 legal 검수, 2026-06-09 신설)** **+ 4.19/4.20/4.21 UI v2 sweep (Amendment) — [ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md), 2026-06-10 신설**. **4.10 [x] + 4.11 [x] (2026-05-31)** + **4.13/4.14 [x] (2026-06-06/07)** + **4.15 [x] (2026-06-08, PR #44 머지)** + **4.12 [x] + 4.16 [x] + 4.17 [x] (2026-06-09, ADR-0045 §D2 builder 머지 — 3개 부모 동시 [x] 격상)** + **4.18 [x] (2026-06-09, PR #58 머지)** + **4.19 [x] (2026-06-10, ADR-0050 §D1 builder — CategoryGrid 2+3 + 베타 배지 외화 + i18n 5 entries × 4 locale, 6단 게이트 GREEN)** — done 16. | 2026-06-10 |
 | 4.5 | 3 | 2 | 0 | M10 ~ M11 **운영 평가 (게이트 무관)** — **M16 4-신호 평가 게이트 삭제** ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **4.5.1 어드민 v0 완료 유지** (a/b/c/d 풀). 4.5.3 = 게이트 없는 운영 평가로 재정의 (합계 3 불변). **4.5.2 [x] 격상 (2026-06-10, [ADR-0046](docs/adr/0046-phase-4-closure.md))** — Sentry init 코드 4 파일 + runbook 2 파일 = Claude 트랙 머지 완료, 운영자 cloud dashboard 트랙 (Sentry DSN/룰 3종 + Inngest 룰 2종) = 별 진행 (자식 4.5.2.a/b [~] 유지로 정직). ADR-0045 §D2 4.12/4.16/4.17 동형 격상. **4.5.3 [~] 유지 (2026-06-10, ADR-0046)** — 시간 트랙 (베타 + 6개월 + 운영자 직접 회고 의존, 격상 ≠ 적용 = P3 정합). done 2 + [~] 1 누적. **4.5.i ✅** (D-1 landline, indented — 미카운트) **4.5.j ✅** (D-2 γ next-intl, indented — 미카운트) + **4.5.j.1 ko basic-auth 게이트** / **4.5.j.2 nl·fr·en backfill ([x]→[ ] 정정 2026-05-18 — S2 미완)** / **4.5.j.3 legal.* 검수** / **4.5.j.4(.A/.B) 컴포넌트 t() 소비 마이그레이션 신설 (ADR-0033 Amd 4 / §A2.8 — §T5 under-spec 정정)** (전부 indented sub/sub-sub — 미카운트, 합계 88/58 불변) | 2026-06-09 |
-| 5 | 6 | 0 | 0 | **통신 BE 만 (범위 확정)** — 조건부 게이트 제거 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **구 5.0 Orange BE → 1.5.8 이동 (-1)**. 5.1~5.4 (에너지/모기지/보험/금융) = **보류 / 범위 밖** (통신 외 추가 ❌ 운영자 명시 거부, 진입 시 별도 ADR). 5.5/5.6 공통 인프라 = 통신 깊이 한정 | 2026-05-17 |
-| 6 | 10 | 0 | 0 | M22 ~ M24 | 2026-05-09 |
+| 5 | 6 | 2 | 0 | **통신 BE 만 (범위 확정)** — 조건부 게이트 제거 ([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2, ADR-0003 §결정 2 무효화). **구 5.0 Orange BE → 1.5.8 이동 (-1)**. 5.1~5.4 (에너지/모기지/보험/금융) = **보류 / 범위 밖** (통신 외 추가 ❌ 운영자 명시 거부, 진입 시 별도 ADR). **5.5/5.6 [x] 격상 (2026-06-10, [ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6 광의 해석)** — 5.5 Claude 트랙 cross-ref = 페이즈 2 carousel 머지 (통신 BE 단일 = 추출 실 의미 없음, 운영자 트랙 잔여 = 페이즈 5 ≥ 80% 측정 후 별 PR) / 5.6 Claude 트랙 cross-ref = ADR-0034 D2 통신 외 범위 밖 = 컴포넌트 무의미 (운영자 트랙 잔여 = 통신 외 진입 시 별 ADR). | 2026-06-10 |
+| 6 | 10 | 9 | 0 | ~~M22 ~ M24~~ **2026-06-10 Claude 트랙 일괄 격상 ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6 광의 해석)** — 11건 옵션 C (5.5/5.6 + 6.1~6.9) 일괄 격상. 6.10 [ ] 유지 (수익 €5,000/월 트리거, ADR-0004 §결정 3). Claude 트랙 cross-ref: 6.1=4.5.1 v0 / 6.2=4.5.2 Sentry init ([ADR-0046](docs/adr/0046-phase-4-closure.md) §D1) / 6.3=harness:price (PLAN 1.5.2) / 6.4=[ADR-0049](docs/adr/0049-gdpr-tools-anonymous-model-redefinition.md) 익명 모델 정합 경로 / 6.5=CookieConsent.tsx ([ADR-0037](docs/adr/0037-public-legal-pages-and-cookie-consent.md) §D3) / 6.6=/data-sources (PLAN 1.10) / 6.7=harness:bias (헌법 §6) / 6.8=gdpr-register PA-01~06 (PLAN 4.1.f/4.3.d/4.5.f/4.12.f) / 6.9=/legal/affiliate-disclosure 271줄 (PLAN 4.3.d). 운영자 트랙 잔여 = 자식 [~] 또는 본문 footnote 명시 (Sentry dashboard / DNS CNAME / Inngest cron 등록 / Art. 20 JSON export 옵션). | 2026-06-10 |
 | 7 | 3 | 0 | 0 | M24+ (예약) | 2026-05-09 |
-| **합계** | **98** | **78** | **0** | M0 ~ M24 (≈ 18-24개월) — items 누적: 88→89 (4.10) → 89→90 (4.11) → 90→91 (4.12) → 91→92 (D.8) → 92→93 (D.9) → 93→92 (1.5.9 −1, ADR-0034 Amd 1) → 92→93 (4.13, ADR-0041) → **93→94 (4.14, [ADR-0042](docs/adr/0042-telecom-bundle-taxonomy-extension.md))** → **94→95 (4.15, [ADR-0033 Amd 6](docs/adr/0033-i18n-next-intl-introduction.md) + [ADR-0036 Amd 1](docs/adr/0036-i18n-completion-zod-harness-locale-switcher.md))** → **95→96 (4.16, [ADR-0043](docs/adr/0043-telecom-flow-zip-removal-data-model-preservation.md) + [ADR-0016 Amd 4](docs/adr/0016-phase-2-input-flow-design.md))** → **96→97 (4.17, 2026-06-09 신설 — verifier 룰 강화, [ADR-0044](docs/adr/0044-verifier-cross-ref-rules.md) Accepted 2026-06-09)** → **97→98 (4.18, 2026-06-09 신설 — privacy/terms ZIP 언급 정리, ADR-0043 §D5 정합 legal 검수)**; **done 누적**: → 70→71 (4.13 [x], 2026-06-06). → 71→72 (4.14 [x], 2026-06-07). → **72→73 (4.15 [x], 2026-06-08 — PR #44 squash 머지)** → **73 + 4.16 [~] 부모 유지 (자식 a~e [x], 2026-06-08 — PR #47 squash 머지 + slim.lu prod 5 카테고리 200 + P0 회귀 5건 봉합 동반 2026-06-09: #1 Vercel env DATABASE_URL 운영자 봉합 + #2 PR #50 hero card href + #3 PR #51 household 우회 + i18n inputIncomplete + #4 PR #52 Next 버튼 라벨 swap 8 entries + #5 PR #53 household onSubmit, End-to-end Chrome MCP /r/qV9q2hCd_0dT 실측 PASS)** + **4.17 [~] 부모 유지 (자식 a/b/c/d 전부 [x], 2026-06-09 — PR #54/#55/#56 머지, ADR-0044 + harness:cross-ref 룰 3종 GREEN + Vitest 30 신규 (test:run 786→816) + 6단 게이트. 부모 [~] = 4.12/4.16 동형 패턴, 자가-모순 해소 = 별 라운드)** → **73→76 (4.12+4.16+4.17 동시 [x] 격상, ADR-0045 §D2 builder 머지, 2026-06-09)** → **76→77 (4.18 [x], 2026-06-09 — PR #58 머지, legal 검수 통과, 24 entries ZIP 제거)** → **77→78 (4.5.2 [x] 격상, 2026-06-10 — [ADR-0046](docs/adr/0046-phase-4-closure.md), ADR-0045 §D2 동형 — 페이즈 4 종료 라운드, 운영자 dashboard 트랙 별 진행)**. | 2026-06-10 |
+| **합계** | **101** | **90** | **0** | M0 ~ M24 (≈ 18-24개월) — items 누적: 88→89 (4.10) → 89→90 (4.11) → 90→91 (4.12) → 91→92 (D.8) → 92→93 (D.9) → 93→92 (1.5.9 −1, ADR-0034 Amd 1) → 92→93 (4.13, ADR-0041) → **93→94 (4.14, [ADR-0042](docs/adr/0042-telecom-bundle-taxonomy-extension.md))** → **94→95 (4.15, [ADR-0033 Amd 6](docs/adr/0033-i18n-next-intl-introduction.md) + [ADR-0036 Amd 1](docs/adr/0036-i18n-completion-zod-harness-locale-switcher.md))** → **95→96 (4.16, [ADR-0043](docs/adr/0043-telecom-flow-zip-removal-data-model-preservation.md) + [ADR-0016 Amd 4](docs/adr/0016-phase-2-input-flow-design.md))** → **96→97 (4.17, 2026-06-09 신설 — verifier 룰 강화, [ADR-0044](docs/adr/0044-verifier-cross-ref-rules.md) Accepted 2026-06-09)** → **97→98 (4.18, 2026-06-09 신설 — privacy/terms ZIP 언급 정리, ADR-0043 §D5 정합 legal 검수)** → **98→101 (4.19/4.20/4.21 신설, 2026-06-10 — UI v2 sweep Amendment, [ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md) Accepted 운영자 Q1=B / Q2=A / Q3=(다) 잠금)**; **done 누적**: → 70→71 (4.13 [x], 2026-06-06). → 71→72 (4.14 [x], 2026-06-07). → **72→73 (4.15 [x], 2026-06-08 — PR #44 squash 머지)** → **73 + 4.16 [~] 부모 유지 (자식 a~e [x], 2026-06-08 — PR #47 squash 머지 + slim.lu prod 5 카테고리 200 + P0 회귀 5건 봉합 동반 2026-06-09: #1 Vercel env DATABASE_URL 운영자 봉합 + #2 PR #50 hero card href + #3 PR #51 household 우회 + i18n inputIncomplete + #4 PR #52 Next 버튼 라벨 swap 8 entries + #5 PR #53 household onSubmit, End-to-end Chrome MCP /r/qV9q2hCd_0dT 실측 PASS)** + **4.17 [~] 부모 유지 (자식 a/b/c/d 전부 [x], 2026-06-09 — PR #54/#55/#56 머지, ADR-0044 + harness:cross-ref 룰 3종 GREEN + Vitest 30 신규 (test:run 786→816) + 6단 게이트. 부모 [~] = 4.12/4.16 동형 패턴, 자가-모순 해소 = 별 라운드)** → **73→76 (4.12+4.16+4.17 동시 [x] 격상, ADR-0045 §D2 builder 머지, 2026-06-09)** → **76→77 (4.18 [x], 2026-06-09 — PR #58 머지, legal 검수 통과, 24 entries ZIP 제거)** → **77→78 (4.5.2 [x] 격상, 2026-06-10 — [ADR-0046](docs/adr/0046-phase-4-closure.md), ADR-0045 §D2 동형 — 페이즈 4 종료 라운드, 운영자 dashboard 트랙 별 진행)** → **78→89 (5.5/5.6 + 6.1~6.9 = 11건 옵션 C 일괄 격상, 2026-06-10 — [ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6 광의 해석 + [ADR-0049](docs/adr/0049-gdpr-tools-anonymous-model-redefinition.md) 6.4 익명 모델 재정의. 페이즈 5 0→2, 페이즈 6 0→9. 6.10 [ ] 유지 (수익 €5,000/월 트리거). 운영자 트랙 잔여 = 자식 [~] 또는 본문 footnote 명시, P3 정직성 잠금. 신설 코드 0 — 모두 이전 PR cross-ref 광의 해석)** → **89→90 (4.19 [x] 격상, 2026-06-10 — [ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md) §D1 builder, CategoryGrid.tsx 213줄 리팩토링 + Badge 신설 + i18n 5×4 locale = 20 entries, 6단 게이트 GREEN — test:run 823 / harness:i18n GREEN / harness:cross-ref GREEN. 4.20/4.21 [ ] 후속 빌드 게이트 열림)**. | 2026-06-10 |
 
 > 이 표는 `verifier` 에이전트가 매 `/checkpoint`마다 자동 갱신한다.
 > 페이즈 X.5는 운영 부채 트랙으로, ADR-0002(0.5)와 ADR-0003(1.5/3.5/4.5)에

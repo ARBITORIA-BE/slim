@@ -25,3 +25,4 @@ e2e/screenshots/
 
 # Claude Code agent worktrees (각 에이전트 isolation copy — main trunk 영향 0)
 .claude/worktrees/
+.gstack/

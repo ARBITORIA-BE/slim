@@ -11,6 +11,26 @@
 
 ### Changed
 
+- **2026-06-10 — PLAN 4.19 [x] UI v2 P1 격상 (89 → 90, +1) — 홈 카테고리 그리드 2+3 분리 + 베타 배지 외화 + i18n** ([ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md) §D1, Q1=B / Q2=A / Q3=(다) 운영자 잠금):
+  - **무엇**: 운영자 자가 진단 "결과 표 + 카테고리 그리드 UX 깨짐" + 인지과학 7원칙 위반 진단 후 Check24 (DE) + Danawa (KR) + Wirecutter/NerdWallet (US) 벤치마크 흡수. P1 = 홈 카테고리 그리드만 (5장 한 줄 → 단품 2 / 번들 3 분리 + 카드 고정 높이 `min-h-[180px]` + 베타 안내문 본문 텍스트 → 우상단 `<Badge>` 외화 + 가운데 임의 하이라이트 제거).
+  - **왜**: ADR-0050 §C1 (2) — v1 5 카드 한 줄 → "Mobile and hom…" 본문 자르기 + 베타 카드만 키 비대칭 → 인지과학 원칙 3 (Hick's Law) / 4 (Gestalt similarity·alignment) / 7 (visual rhythm) 위반. v2 = 2+3 분리 + `min-h-[180px]` + 우상단 [Beta] 배지 = 원칙 3·4·7 회복.
+  - **결정 (ADR-0050 §D1 + §D6)**: 2+3 분리 + 행 간 헤더 라벨 (`home.categories.singles`/`bundles`) + 카드 고정 높이 + `bundle_mobile_internet`/`bundle_mobile_internet_tv` Beta 배지 외화 + 가운데 카드 임의 하이라이트 제거 + ADR-0050 §D6 다크패턴 회피 잠금 (1위 임의 하이라이트 / "추천" 라벨 / 색상 다중화 0).
+  - **변경 파일 (7 파일)**: `src/components/Hero/CategoryGrid.tsx` (213줄 리팩토링) + `src/components/Hero/CategoryGrid.test.tsx` (회귀 +43줄) + `src/components/ui/badge.tsx` (신설, shadcn/ui CVA) + `messages/{ko,en,nl,fr}.json` (각 +5 entries) + `.gitignore` (+1줄, scripts/dev/ 운영자 트랙 잠금) + `PLAN.md` (4.19 [x] + 4.20/4.21 [ ] 신설 + 페이즈 4 헤더 "UI v2 sweep (Amendment)" 마킹 + 합계 표 98→101 / 89→90) + `docs/adr/0050-ui-v2-comparison-redesign.md` (Proposed → Accepted).
+  - **운영자 잠금 (Q1/Q2/Q3)**: Q1 = B (P1~P3 5d, P4/P5 베타 후 별 ADR) / Q2 = A (DB 테이블 `curated_pick` 별 ADR-0051 트리거, P4 진입 시점) / Q3 = (다) 페이즈 4.19~4.21 신설 + 페이즈 4 헤더 Amendment 마킹 (ADR-0046 페이즈 4 종료 정합 유지, ADR-0048 §V1 P3 정직성 텐션 회피).
+  - **6단 게이트 ✅**: typecheck 0 / lint 0 / test:run 823 (58 files) / harness:i18n GREEN (한글 리터럴 0) / harness:cross-ref 룰 3종 GREEN / harness:plan 101 정합.
+  - **다음 단계**: 4.20 P2 (결과 카드 리스트 7컬럼 → 청크 4, 3d) 진입 게이트 열림. P3 (정렬 탭 + 신선도 띠 + i18n 한/영 혼재 봉합, 1d) = P2 머지 잠금 후 순차. P4/P5는 베타 트래픽 신호 누적 후 별 ADR 트리거 보류.
+
+- **2026-06-10 — PLAN 5.5/5.6 + 6.1~6.9 = 11건 옵션 C 일괄 격상 (78 → 89, +11)** ([ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) §D6 광의 해석 + [ADR-0049](docs/adr/0049-gdpr-tools-anonymous-model-redefinition.md) 6.4 익명 모델 재정의):
+  - **무엇**: 페이즈 4 종료 ([ADR-0046](docs/adr/0046-phase-4-closure.md)) 직후 운영자 "오늘 78→93" 의지 vs 산술 상한 11(미완료 20 중 시간 트랙/거부/외부 트리거 9 제외)에 대한 옵션 분기 결정. 운영자 옵션 C(11건 전부) 직접 선택 → ADR-0047(5건 권고) Rejected + ADR-0048 Accepted + Amendment 1(광의 해석 §D6) 동시 잠금.
+  - **광의 해석 §D6**: §D1 "Claude 트랙 머지 완료"가 본 라운드 신설 PR이 아닌, **이전 PR 일체의 머지된 코드/문서를 포함**하는 광의 해석. 11건 모두 Claude 트랙 cross-ref 매핑 (6.1=4.5.1 v0 / 6.2=4.5.2 Sentry init / 6.3=harness:price / 6.4=ADR-0049 / 6.5=CookieConsent.tsx / 6.6=/data-sources / 6.7=harness:bias / 6.8=PA-01~06 / 6.9=affiliate-disclosure 271줄 / 5.5=페이즈 2 carousel / 5.6=ADR-0034 D2 footnote). 신설 코드 0건.
+  - **ADR-0049 6.4 재정의**: 원 명세 `/account/export`+`/account/delete` = 익명 우선 모델([ADR-0007](docs/adr/0007-comparison-request-result-schema.md) §T1) + organic SEO 회원가입 0([ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) §결정 5)와 충돌 → 익명 모델 정합 경로(Art. 13 `/legal/privacy` + Art. 15/17/20 영구 링크 + Art. 7(3) `/unsubscribe` + CookieSettingsButton + 운영자 이메일)로 재정의. `/account/*` 라우트 신설 거부.
+  - **P3 정직성 §V1**: 운영자 트랙 잔여 본문 footnote 또는 자식 [~] 정직 유지. 잔여 = (a) 6.2 Sentry EU dashboard 룰 5종 ON(4.5.2 흡수) (b) 6.6 status.slim.eu DNS CNAME(운영자 Gandi.net) + /status alias 라우트 선택 (c) 6.3·6.7 Inngest cron 등록 (d) 6.4 Art. 20 JSON export 옵션(베타 후 사용자 요청 시) (e) 6.1 v1 카테고리별 평균 절약액 카드(베타 데이터 누적 후) (f) 5.5 carousel 추출 실 분리(통신 BE ≥ 80% 측정 후) (g) 5.6 통신 외 카테고리 진입 시 별 ADR.
+  - **6.10 [ ] 보존**: 외부 GDPR 감사 €800 = 수익 €5,000/월 트리거(ADR-0004 §결정 3, 시간/매출 의존) — 본 라운드 격상 대상 아님.
+  - **신규 ADR 3개**: ADR-0047(Rejected, 옵션 비교 이력 보존) + ADR-0048(Accepted + Amd 1) + ADR-0049(Accepted).
+  - **변경 파일**: `PLAN.md`(11건 [x] + 합계 표 78→89 + 페이즈 5 0→2 / 6 0→9 + 페이즈 6 헤더 압축) + `docs/adr/0047/0048/0049` + `docs/adr/INDEX.md` + `docs/diagrams/phase-6-bulk-promotion-dod.md` + 본 CHANGELOG.
+  - **6단 게이트 ✅**: typecheck 0 / lint 0 / test:run 821 (58 files) / harness:plan 98 정합 / harness:data / harness:cross-ref 룰 3종 GREEN. 코드 변경 0 → 테스트 누적 불변.
+  - **영향**: 페이즈 6 일정 M22~M24 → 2026-06-10 압축. 페이즈 4 종료 직후 베타 진입 보조 인프라(legal 안전망 6.4/6.5/6.8/6.9 + 운영 안전망 6.1/6.2/6.3/6.6/6.7 + 페이즈 5 통신 BE 공통 5.5/5.6) Claude 트랙 일괄 정합 잠금. 운영자 트랙 잔여 = 별 PR 트랙(베타 트래픽/시점 의존).
+
 - **2026-06-04 — PLAN 1.5.6 완료 ✅ — freshness method 분해 + 프로덕션 100% 실측 통과** (PR #15 `867eb9f`, ADR-0008 §T5 registry 단일 출처 정합):
   - **무엇**: `getFetcherHealth24h` 분모를 method 차원으로 분해 (scraping / manual / stub). registry 기반 SQL `CASE WHEN` 으로 DB 스키마 변경 0. Telenet internet/bundle 고아 활성 tariff 가 stub 그룹으로 **자동 격리** → overall scraping ratio 100% 가능 + UI 가시화 (P3 정직성).
   - **왜**: 6/2 architect 분석 — 매일 06:00 UTC cron 정상이나 신선도 5/29 86.7% → 6/2 **78.6% 악화**. 원인 = 고아 stale 누적 (단종 로직이 fetch 가 반환한 (provider, category) 스코프 만 비활성화 → 고아 영구 stale). 분모 method 분해가 영구 해결책.

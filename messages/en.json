@@ -447,6 +447,11 @@
   "home": {
     "headline": "Benelux telecom comparison, in 5 minutes",
     "subheading": "Compare Belgian mobile, internet, and bundle plans at official prices.",
+    "categories": {
+      "singles": "Single plans",
+      "bundles": "Bundles",
+      "beta_badge": "Beta"
+    },
     "providersCaption": "Belgium's top 3 telecoms with ≥ 97.5% market share (Mordor Intelligence Q1 2025)",
     "providersUpdatedAtLabel": "Price updated: {date}",
     "savingsExamplePending": "Example savings — beta data being collected",

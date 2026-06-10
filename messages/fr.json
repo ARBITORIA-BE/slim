@@ -447,6 +447,11 @@
   "home": {
     "headline": "Comparaison télécom Benelux en 5 minutes",
     "subheading": "Comparez les forfaits mobiles, internet et bundle belges aux tarifs officiels.",
+    "categories": {
+      "singles": "Forfaits simples",
+      "bundles": "Bundles",
+      "beta_badge": "Bêta"
+    },
     "providersCaption": "Les 3 grands opérateurs belges avec ≥ 97,5 % de parts de marché (Mordor Intelligence T1 2025)",
     "providersUpdatedAtLabel": "Prix mis à jour : {date}",
     "savingsExamplePending": "Économies illustratives — données bêta en cours de collecte",
