@@ -9,6 +9,15 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **2026-06-12 — UI v2 P1 hotfix — Beta 카드 본문 텍스트 중복 노출 봉합** ([ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md) §D1 (4) 잠금 정합):
+  - **무엇**: slim.lu/en 실측 ARIA tree 감사에서 `bundle_mobile_internet` / `bundle_mobile_internet_tv` Beta 카드에 우상단 [Beta] Badge + 본문 "The 'Average Savings' preview will be available after the beta period." 텍스트 *중복* 노출 발견. ADR-0050 §D1 (4) "본문 텍스트에서 베타 안내문 제거 → Badge로만 외화" 잠금 부분 미적용.
+  - **수정**: `PriceExample` 컴포넌트에 `isBeta` prop 추가 → Beta 카드 + 데이터 부재 시 `null` 반환 (본문 텍스트 미노출). 비-Beta 카드 (mobile/internet_fixed/bundle_internet_tv) + 데이터 부재 시 ADR-0011 §T2 항목 5 동형 정직 표시 유지 (`pendingLabel` 노출).
+  - **변경 파일 (3)**: `src/components/Hero/CategoryGrid.tsx` (PriceExample 분기 + CategoryCard prop 전달) + `src/components/Hero/CategoryGrid.test.tsx` (어설션 5 → 3 갱신 + ADR-0050 §D1 (4) 정합 메시지) + 본 CHANGELOG.
+  - **6단 게이트 ✅**: typecheck 0 / lint 0 / test:run 823 (58 files) / harness:i18n GREEN / harness:cross-ref GREEN / harness:plan 101 정합.
+  - **잔여 P3 트랙**: "Telenet ONE up (인터넷+TV 번들)" 한국어 잔존 (Internet+TV 카드 e.g. 텍스트) = DB tariff `display_name` 시드 데이터 한국어 잔존 추정 = 4.21 P3 i18n 한/영 혼재 봉합 + supabase 트랙 (운영자 트랙).
+
 ### Changed
 
 - **2026-06-10 — PLAN 4.19 [x] UI v2 P1 격상 (89 → 90, +1) — 홈 카테고리 그리드 2+3 분리 + 베타 배지 외화 + i18n** ([ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md) §D1, Q1=B / Q2=A / Q3=(다) 운영자 잠금):
