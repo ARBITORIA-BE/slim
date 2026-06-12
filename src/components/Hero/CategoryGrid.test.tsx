@@ -156,13 +156,15 @@ describe('CategoryGrid', () => {
     expect(screen.queryByText(/voorbeeldbesparing/i)).not.toBeInTheDocument();
   });
 
-  it('showExamples=true + 데이터 없음 → pending placeholder 5개 표시 (ADR-0042 §D1)', async () => {
+  it('showExamples=true + 데이터 없음 → pending placeholder 3개 (비-Beta 카테고리만, ADR-0050 §D1 (4))', async () => {
     mockGetCheapest.mockResolvedValue({});
     const Component = await CategoryGrid({ variant: 'hero', showExamples: true });
     render(Component);
-    // 5 카테고리 모두 placeholder
+    // ADR-0050 §D1 (4) 정합: Beta 카드 (bundle_mobile_internet / bundle_mobile_internet_tv)
+    // 는 Badge로 외화 → 본문 pendingLabel 노출 0. 비-Beta 3개만 placeholder 표시
+    // (mobile / internet_fixed / bundle_internet_tv).
     const pendingItems = screen.getAllByText(/voorbeeldbesparing/i);
-    expect(pendingItems.length).toBe(5);
+    expect(pendingItems.length).toBe(3);
   });
 
   it('showExamples=true + mobile cheapest 데이터 있음 → 가격 포함', async () => {

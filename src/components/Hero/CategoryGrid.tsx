@@ -93,16 +93,20 @@ interface PriceExampleProps {
   category: TariffCategoryInput;
   /** i18n t() 함수 */
   exampleLabel: string;
-  /** 데이터 부재 시 표시 문자열 */
+  /** 데이터 부재 시 표시 문자열 (Beta 카드는 사용 X — Badge로 외화) */
   pendingLabel: string;
   /** abbr aria-label 템플릿 "{sourceUrl}" 치환 — 헌법 §8 #6 한글 리터럴 금지 */
   priceSourceAriaLabel: string;
+  /** Beta 카드 분기 — data 부재 시 본문 텍스트 미노출 (ADR-0050 §D1 (4)) */
+  isBeta: boolean;
 }
 
-function PriceExample({ cheapest, category, exampleLabel, pendingLabel, priceSourceAriaLabel }: PriceExampleProps) {
+function PriceExample({ cheapest, category, exampleLabel, pendingLabel, priceSourceAriaLabel, isBeta }: PriceExampleProps) {
   const data = cheapest[category];
   if (!data) {
-    // ADR-0011 §T2 항목 5 동형 — 0 데이터 정직 표시
+    // ADR-0050 §D1 (4): Beta 카드는 Badge로 외화 → 본문 텍스트 중복 노출 0.
+    // 단품/비-Beta 카드는 ADR-0011 §T2 항목 5 동형 — 0 데이터 정직 표시 유지.
+    if (isBeta) return null;
     return (
       <p className="text-xs text-muted italic">
         {pendingLabel}
@@ -210,6 +214,7 @@ function CategoryCard({
                 exampleLabel={exampleLabel}
                 pendingLabel={pendingLabel}
                 priceSourceAriaLabel={priceSourceAriaLabel}
+                isBeta={isBeta}
               />
             </div>
           )}
