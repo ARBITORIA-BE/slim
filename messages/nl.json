@@ -188,7 +188,27 @@
       "subtitleVoiceMinutes": "Gesprek {value} minuten",
       "subtitleTvChannels": "TV-{value}-kanaal",
       "promoNote": "Promotie {price} ({months} maanden)",
-      "activationNote": "Activeringskosten {amount}"
+      "activationNote": "Activeringskosten {amount}",
+      "ctaButton": "Wijzigen",
+      "disclosure": {
+        "summary": "Affiliate bekendmaking",
+        "ariaLabel": "{providerName} kosteninformatie"
+      },
+      "savingsBar": {
+        "ariaLabel": "Besparing: {amount}, {pct}% van het beste in deze vergelijking"
+      },
+      "reliability": {
+        "dots": {
+          "ariaLabel": "Betrouwbaarheid {n}/5 — {confidence}"
+        },
+        "levels": {
+          "verified": "Geverifieerd",
+          "high": "Hoog",
+          "medium": "Gemiddeld",
+          "low": "Laag",
+          "stub": "Geschat"
+        }
+      }
     },
     "calculationDetails": {
       "summary": "Berekeningsbasis bekijken — Gebruikte aannames + Formule + Opmerkingen Triggers + Engineversie",

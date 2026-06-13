@@ -188,7 +188,27 @@
       "subtitleVoiceMinutes": "Call duration {value} minutes",
       "subtitleTvChannels": "TV Channel: {value}",
       "promoNote": "Promotion {price} ({months} months)",
-      "activationNote": "Activation fee {amount}"
+      "activationNote": "Activation fee {amount}",
+      "ctaButton": "Change",
+      "disclosure": {
+        "summary": "Affiliate disclosure",
+        "ariaLabel": "{providerName} fee information"
+      },
+      "savingsBar": {
+        "ariaLabel": "Savings: {amount}, {pct}% of best in this comparison"
+      },
+      "reliability": {
+        "dots": {
+          "ariaLabel": "Reliability {n}/5 — {confidence}"
+        },
+        "levels": {
+          "verified": "Verified",
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low",
+          "stub": "Estimated"
+        }
+      }
     },
     "calculationDetails": {
       "summary": "View calculation basis — Assumptions used + Formula + Notes on triggers + Engine version",

@@ -210,7 +210,7 @@ export default async function ResultPage({
               {t('comparisonHeading')}
             </h2>
             <ComparisonControls basePath={basePath} view={tableView} />
-            <ComparisonTable rows={visibleItems} />
+            <ComparisonTable rows={visibleItems} shortId={shortId} />
           </section>
         </>
       ) : (

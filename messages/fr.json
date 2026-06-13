@@ -188,7 +188,27 @@
       "subtitleVoiceMinutes": "Durée de l'appel : {value}min",
       "subtitleTvChannels": "Chaîne de télévision «{value}»",
       "promoNote": "Offre promotionnelle {price} ({months} mois)",
-      "activationNote": "Frais d'activation {amount}"
+      "activationNote": "Frais d'activation {amount}",
+      "ctaButton": "Changer",
+      "disclosure": {
+        "summary": "Déclaration d'affiliation",
+        "ariaLabel": "Informations sur les frais {providerName}"
+      },
+      "savingsBar": {
+        "ariaLabel": "Économies : {amount}, {pct}% du meilleur de cette comparaison"
+      },
+      "reliability": {
+        "dots": {
+          "ariaLabel": "Fiabilité {n}/5 — {confidence}"
+        },
+        "levels": {
+          "verified": "Vérifié",
+          "high": "Élevé",
+          "medium": "Moyen",
+          "low": "Faible",
+          "stub": "Estimé"
+        }
+      }
     },
     "calculationDetails": {
       "summary": "Afficher les bases de calcul — Hypothèses utilisées + Formules + Remarques + Version du moteur",
