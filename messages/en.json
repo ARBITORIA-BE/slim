@@ -284,6 +284,24 @@
       "newCompare": "Start a new comparison",
       "goHome": "Home"
     },
+    "sortTabs": {
+      "ariaLabel": "Sort tabs",
+      "cheapest": "Cheapest",
+      "most_saved": "Most saved",
+      "best_value": "Best value",
+      "most_reliable": "Most reliable",
+      "whyThisOrder": {
+        "summary": "Why this order?",
+        "cheapest": "Sorted by lowest monthly price. Contract terms and other conditions are shown separately under each plan.",
+        "most_saved": "Sorted by the largest monthly saving compared to your current plan. New subscribers see the cheapest options first.",
+        "best_value": "Ranked by savings ÷ monthly price — best value ratio. Plans that save the most relative to their cost appear at the top.",
+        "most_reliable": "Sorted by data reliability (verified ≥ high ≥ medium ≥ low ≥ estimated). Directly fetched and recently verified data comes first."
+      }
+    },
+    "freshnessRibbon": {
+      "refreshed": "Price refreshed {time}",
+      "source": "source"
+    },
     "controls": {
       "ariaLabel": "Sorting and Filtering Comparison Tables",
       "sortLabel": "Sort",

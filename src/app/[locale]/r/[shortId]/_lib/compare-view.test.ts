@@ -1,10 +1,10 @@
 /**
- * compare-view 단위 테스트 — 라운드 b (PLAN 3.2).
+ * compare-view 단위 테스트 — P3 확장 (PLAN 4.21, ADR-0050 §D3).
  *
  * 검증:
- *   1. parseSearchParams — sort default + 알 수 없는 값 fallback + 필터 누적
+ *   1. parseSearchParams — sort default(cheapest) + 알 수 없는 값 fallback + 필터 누적
  *   2. serialize via buildSortHref / buildFilterToggleHref — 기본 sort 는 URL 생략
- *   3. applyView — 필터 적용 + 3 정렬 모드 + tie-break tariffSlug ASC
+ *   3. applyView — P2 레거시 3종 + P3 신규 4종 정렬 + tie-break tariffSlug ASC
  *   4. 순수성 — 입력 rows 변형 X
  */
 
@@ -17,6 +17,7 @@ import {
   buildFilterToggleHref,
   buildSortHref,
   parseSearchParams,
+  SORT_TAB_KEYS,
   type ViewState,
 } from './compare-view';
 
@@ -54,15 +55,15 @@ function row(overrides: Partial<ResultRowData> = {}): ResultRowData {
 }
 
 describe('parseSearchParams', () => {
-  it('빈 입력 → 기본 sort + 필터 0', () => {
+  it('빈 입력 → 기본 sort = cheapest + 필터 0 (P3 DEFAULT_SORT 변경)', () => {
     const v = parseSearchParams({});
-    expect(v.sort).toBe('saving_desc');
+    expect(v.sort).toBe('cheapest');
     expect(v.filters.size).toBe(0);
   });
 
-  it('알 수 없는 sort → 기본 fallback', () => {
+  it('알 수 없는 sort → 기본 fallback = cheapest', () => {
     const v = parseSearchParams({ sort: 'random_unknown' });
-    expect(v.sort).toBe('saving_desc');
+    expect(v.sort).toBe('cheapest');
   });
 
   it('알 수 없는 filter 값 → 무시', () => {
@@ -70,7 +71,7 @@ describe('parseSearchParams', () => {
     expect(v.filters.size).toBe(0);
   });
 
-  it('유효한 sort + 2 필터 누적', () => {
+  it('유효한 sort + 2 필터 누적 (레거시 price_asc 허용)', () => {
     const v = parseSearchParams({
       sort: 'price_asc',
       commitment: 'none',
@@ -81,6 +82,13 @@ describe('parseSearchParams', () => {
     expect(v.filters.has('data_unlimited')).toBe(true);
   });
 
+  it('P3 신규 sort — cheapest/most_saved/best_value/most_reliable 파싱', () => {
+    for (const key of SORT_TAB_KEYS) {
+      const v = parseSearchParams({ sort: key });
+      expect(v.sort).toBe(key);
+    }
+  });
+
   it('배열 값 → 첫 요소 사용', () => {
     const v = parseSearchParams({ sort: ['price_asc', 'saving_desc'] });
     expect(v.sort).toBe('price_asc');
@@ -88,10 +96,11 @@ describe('parseSearchParams', () => {
 });
 
 describe('buildSortHref / buildFilterToggleHref', () => {
-  const base: ViewState = { sort: 'saving_desc', filters: new Set() };
+  // P3: DEFAULT_SORT = 'cheapest'
+  const base: ViewState = { sort: 'cheapest', filters: new Set() };
 
-  it('기본 sort 변경 시 query 없음', () => {
-    expect(buildSortHref('/r/abc', base, 'saving_desc')).toBe('/r/abc');
+  it('기본 sort (cheapest) 변경 시 query 없음', () => {
+    expect(buildSortHref('/r/abc', base, 'cheapest')).toBe('/r/abc');
   });
 
   it('non-default sort → ?sort=...', () => {
@@ -100,9 +109,27 @@ describe('buildSortHref / buildFilterToggleHref', () => {
     );
   });
 
+  it('P3 신규 sort → ?sort=most_saved', () => {
+    expect(buildSortHref('/r/abc', base, 'most_saved')).toBe(
+      '/r/abc?sort=most_saved',
+    );
+  });
+
+  it('P3 best_value → ?sort=best_value', () => {
+    expect(buildSortHref('/r/abc', base, 'best_value')).toBe(
+      '/r/abc?sort=best_value',
+    );
+  });
+
+  it('P3 most_reliable → ?sort=most_reliable', () => {
+    expect(buildSortHref('/r/abc', base, 'most_reliable')).toBe(
+      '/r/abc?sort=most_reliable',
+    );
+  });
+
   it('필터 보존 + 정렬 변경', () => {
     const withFilter: ViewState = {
-      sort: 'saving_desc',
+      sort: 'cheapest',
       filters: new Set(['commitment_none']),
     };
     // URLSearchParams 순서 = set 순서 (sort 먼저 set 됨)
@@ -117,9 +144,9 @@ describe('buildSortHref / buildFilterToggleHref', () => {
     );
   });
 
-  it('필터 토글 — 제거', () => {
+  it('필터 토글 — 제거 (DEFAULT_SORT=cheapest 이므로 sort 생략)', () => {
     const withFilter: ViewState = {
-      sort: 'saving_desc',
+      sort: 'cheapest',
       filters: new Set(['commitment_none']),
     };
     expect(
@@ -129,12 +156,15 @@ describe('buildSortHref / buildFilterToggleHref', () => {
 });
 
 describe('applyView', () => {
+  // why: monthlyPriceCents 명시 — cheapest 정렬 테스트 결정성 확보.
+  //      row() 기본값 monthlyPriceCents=1500 이어서 명시 오버라이드 필요.
   const rows: ResultRowData[] = [
     row({
       rank: 1,
       tariffSlug: 'a-tariff',
       monthlySavingCents: 2000,
       monthlyAvg12Cents: 1500,
+      monthlyPriceCents: 1500,
       commitmentMonths: 24,
     }),
     row({
@@ -142,6 +172,7 @@ describe('applyView', () => {
       tariffSlug: 'b-tariff',
       monthlySavingCents: 500,
       monthlyAvg12Cents: 2500,
+      monthlyPriceCents: 2500,
       commitmentMonths: 0,
     }),
     row({
@@ -149,17 +180,62 @@ describe('applyView', () => {
       tariffSlug: 'c-tariff',
       monthlySavingCents: 1000,
       monthlyAvg12Cents: 2000,
+      monthlyPriceCents: 2000,
       commitmentMonths: 12,
       attributes: { data_gb: 'unlimited' },
     }),
   ];
 
-  it('saving_desc 기본 — rank 순서와 일치 (이미 정렬됨)', () => {
+  it('saving_desc — rank 순서와 일치 (이미 정렬됨, 레거시)', () => {
     const v = applyView(rows, { sort: 'saving_desc', filters: new Set() }, 5);
     expect(v.map((r) => r.tariffSlug)).toEqual([
       'a-tariff',
       'c-tariff',
       'b-tariff',
+    ]);
+  });
+
+  it('cheapest (P3) — monthlyPriceCents ASC', () => {
+    // rows: a=1500, b=2500, c=2000
+    const v = applyView(rows, { sort: 'cheapest', filters: new Set() }, 5);
+    expect(v.map((r) => r.tariffSlug)).toEqual([
+      'a-tariff',  // 1500
+      'c-tariff',  // 2000
+      'b-tariff',  // 2500
+    ]);
+  });
+
+  it('most_saved (P3) — monthlySavingCents DESC', () => {
+    // rows: a=2000, c=1000, b=500
+    const v = applyView(rows, { sort: 'most_saved', filters: new Set() }, 5);
+    expect(v.map((r) => r.tariffSlug)).toEqual([
+      'a-tariff',  // 2000
+      'c-tariff',  // 1000
+      'b-tariff',  // 500
+    ]);
+  });
+
+  it('best_value (P3) — savings/price DESC', () => {
+    // a: 2000/1500 = 1.33, b: 500/2500 = 0.2, c: 1000/2000 = 0.5
+    const v = applyView(rows, { sort: 'best_value', filters: new Set() }, 5);
+    expect(v.map((r) => r.tariffSlug)).toEqual([
+      'a-tariff',  // 1.33
+      'c-tariff',  // 0.5
+      'b-tariff',  // 0.2
+    ]);
+  });
+
+  it('most_reliable (P3) — confidence DESC', () => {
+    const reliabilityRows = [
+      row({ tariffSlug: 'low-row', confidence: 'low', monthlySavingCents: 3000 }),
+      row({ tariffSlug: 'high-row', confidence: 'high', monthlySavingCents: 100, rank: 2 }),
+      row({ tariffSlug: 'medium-row', confidence: 'medium', monthlySavingCents: 500, rank: 3 }),
+    ];
+    const v = applyView(reliabilityRows, { sort: 'most_reliable', filters: new Set() }, 5);
+    expect(v.map((r) => r.tariffSlug)).toEqual([
+      'high-row',    // 4
+      'medium-row',  // 3
+      'low-row',     // 2
     ]);
   });
 
