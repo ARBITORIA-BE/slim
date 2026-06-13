@@ -196,7 +196,27 @@
       "subtitleVoiceMinutes": "통화 {value}분",
       "subtitleTvChannels": "TV {value}채널",
       "promoNote": "프로모 {price} ({months}개월)",
-      "activationNote": "활성화비 {amount}"
+      "activationNote": "활성화비 {amount}",
+      "ctaButton": "변경",
+      "disclosure": {
+        "summary": "제휴 수수료 공개",
+        "ariaLabel": "{providerName} 수수료 정보"
+      },
+      "savingsBar": {
+        "ariaLabel": "절약액: {amount}, 이 비교 결과 최대 대비 {pct}%"
+      },
+      "reliability": {
+        "dots": {
+          "ariaLabel": "신뢰도 {n}/5 — {confidence}"
+        },
+        "levels": {
+          "verified": "검증됨",
+          "high": "높음",
+          "medium": "보통",
+          "low": "낮음",
+          "stub": "추정값"
+        }
+      }
     },
     "controls": {
       "ariaLabel": "비교 표 정렬 및 필터",
