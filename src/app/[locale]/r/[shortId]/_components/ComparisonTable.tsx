@@ -22,10 +22,11 @@
 import type { ResultRowData } from '@/db/queries/comparison';
 import type { Confidence } from '@/db/schema/tariff_snapshot';
 import type { TariffCategory } from '@/db/schema/tariff';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
-import { formatRelativeTime } from '../_lib/stale';
+import { formatRelativeTime, type RelativeTimeLocale } from '../_lib/stale';
+import { FreshnessRibbon } from './FreshnessRibbon';
 import { SavingsBar } from './SavingsBar';
 import { ReliabilityDots } from './ReliabilityDots';
 import type { ReliabilityLevel } from './ReliabilityDots';
@@ -39,6 +40,12 @@ export interface ComparisonTableProps {
   readonly now?: Date;
   /** /go/{shortId}/{itemId} CTA href 구성용. page.tsx 가 전달. */
   readonly shortId: string;
+  /**
+   * locale — formatRelativeTime locale 인자 전달 (ADR-0033 §T5 S2).
+   * why: ComparisonTable 은 RSC 이므로 getLocale() 직접 호출 가능.
+   *      하지만 CardProps 에 locale 을 내려주기 위해 상위에서 한 번만 호출.
+   */
+  readonly locale?: RelativeTimeLocale;
 }
 
 // ─── 표시 helper ──────────────────────────────────────────────────────────
@@ -128,6 +135,7 @@ function SourceLink({
   href,
   fetchedAt,
   now,
+  locale,
   label,
   newTabLabel,
   checkedLabel,
@@ -135,11 +143,14 @@ function SourceLink({
   readonly href: string;
   readonly fetchedAt: Date;
   readonly now: Date;
+  readonly locale: RelativeTimeLocale;
   readonly label: string;
   readonly newTabLabel: string;
   readonly checkedLabel: string;
 }) {
-  const relative = formatRelativeTime(fetchedAt, now);
+  // why: locale 인자 전달 — ADR-0033 §T5 S2 봉합.
+  //      P2 에서 locale 누락 → 한국어 하드코딩 잔존. P3 에서 정합.
+  const relative = formatRelativeTime(fetchedAt, now, locale);
   return (
     <a
       href={href}
@@ -161,6 +172,7 @@ function SourceLink({
 interface CardProps {
   readonly r: ResultRowData;
   readonly now: Date;
+  readonly locale: RelativeTimeLocale;
   readonly maxSavingCents: number;
   readonly t: TableTranslator;
   readonly sourceLinkLabel: string;
@@ -172,6 +184,7 @@ interface CardProps {
 function ComparisonCard({
   r,
   now,
+  locale,
   maxSavingCents,
   t,
   sourceLinkLabel,
@@ -209,10 +222,18 @@ function ComparisonCard({
 
   return (
     <li>
+      {/* FreshnessRibbon — 카드 상단 신선도 띠 (ADR-0050 §D4, 헌법 P1). */}
+      {/* why: FreshnessRibbon 은 RSC async 컴포넌트. 카드 li 상단에 위치. */}
+      <FreshnessRibbon
+        fetchedAt={r.fetchedAt}
+        sourceUrl={r.sourceUrl}
+        now={now}
+      />
       <article
         // why: min-h 고정 — ADR-0050 원칙 7 visual rhythm 행 균일 잠금.
         //      flex-col md:flex-row — 모바일 stack / 데스크톱 수평.
-        className="flex min-h-[88px] flex-col gap-3 rounded-2xl border border-fg/10 bg-bg p-4 md:flex-row md:items-center"
+        //      rounded-t-none — FreshnessRibbon 이 상단 둥글기 담당.
+        className="flex min-h-[88px] flex-col gap-3 rounded-b-2xl border border-t-0 border-fg/10 bg-bg p-4 md:flex-row md:items-center"
       >
         {/* C1 플랜 — 공급사·요금제 + 약정 footnote */}
         <div className="flex flex-1 flex-col gap-0.5">
@@ -247,6 +268,7 @@ function ComparisonCard({
             href={r.sourceUrl}
             fetchedAt={r.fetchedAt}
             now={now}
+            locale={locale}
             label={sourceLinkLabel}
             newTabLabel={sourceLinkNewTab}
             checkedLabel={sourceChecked}
@@ -300,10 +322,20 @@ function ComparisonCard({
 
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────────────
 
-export async function ComparisonTable({ rows, now, shortId }: ComparisonTableProps) {
-  // why: RSC 이므로 getTranslations 사용.
-  const t = await getTranslations('result.table');
+export async function ComparisonTable({ rows, now, shortId, locale: localeProp }: ComparisonTableProps) {
+  // why: RSC 이므로 getTranslations + getLocale 사용.
+  //      locale 은 props 로 받거나 getLocale() 로 자동 획득.
+  const [t, rawLocale] = await Promise.all([
+    getTranslations('result.table'),
+    localeProp ? Promise.resolve(localeProp) : getLocale(),
+  ]);
   const ref = now ?? new Date();
+
+  // why: locale → RelativeTimeLocale 좁힘 ('ko'|'en'|'nl'|'fr' 외 → 'en' fallback).
+  const locale: RelativeTimeLocale =
+    rawLocale === 'ko' || rawLocale === 'en' || rawLocale === 'nl' || rawLocale === 'fr'
+      ? rawLocale
+      : 'en';
 
   if (rows.length === 0) {
     return (
@@ -335,6 +367,7 @@ export async function ComparisonTable({ rows, now, shortId }: ComparisonTablePro
           key={r.tariffSnapshotId}
           r={r}
           now={ref}
+          locale={locale}
           maxSavingCents={maxSavingCents}
           t={t}
           sourceLinkLabel={sourceLinkLabel}

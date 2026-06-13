@@ -284,6 +284,24 @@
       "newCompare": "Nieuwe vergelijking starten",
       "goHome": "Naar de startpagina"
     },
+    "sortTabs": {
+      "ariaLabel": "Sorteertabbladen",
+      "cheapest": "Goedkoopste",
+      "most_saved": "Meeste besparing",
+      "best_value": "Beste prijs-kwaliteit",
+      "most_reliable": "Meest betrouwbaar",
+      "whyThisOrder": {
+        "summary": "Waarom deze volgorde?",
+        "cheapest": "Gesorteerd op laagste maandelijkse prijs. Contractvoorwaarden en andere condities worden apart vermeld onder elk abonnement.",
+        "most_saved": "Gesorteerd op de hoogste maandelijkse besparing ten opzichte van uw huidige abonnement. Nieuwe abonnees zien de goedkoopste opties eerst.",
+        "best_value": "Gerangschikt op besparing ÷ maandprijs — de beste prijs-kwaliteitverhouding. Abonnementen met de hoogste besparing ten opzichte van de kosten staan bovenaan.",
+        "most_reliable": "Gesorteerd op betrouwbaarheid van de gegevens (geverifieerd ≥ hoog ≥ gemiddeld ≥ laag ≥ geschat). Rechtstreeks opgehaalde en recentelijk geverifieerde gegevens komen eerst."
+      }
+    },
+    "freshnessRibbon": {
+      "refreshed": "Prijs bijgewerkt {time}",
+      "source": "bron"
+    },
     "controls": {
       "ariaLabel": "Vergelijkingstabel sorteren en filteren",
       "sortLabel": "Sorteren",
