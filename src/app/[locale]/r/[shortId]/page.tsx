@@ -49,6 +49,7 @@ import { ComparisonControls } from './_components/ComparisonControls';
 import { ComparisonTable } from './_components/ComparisonTable';
 import { ExcludedProvidersSection } from './_components/ExcludedProvidersSection';
 import { ResultConclusionCard } from './_components/ResultConclusionCard';
+import { SortTabs } from './_components/SortTabs';
 import {
   deriveCaveatTriggers,
   type CaveatTriggerRow,
@@ -209,6 +210,9 @@ export default async function ResultPage({
             >
               {t('comparisonHeading')}
             </h2>
+            {/* P3: SortTabs (ADR-0050 §D3) — 4종 탭 + "Why this order?" */}
+            <SortTabs basePath={basePath} view={tableView} />
+            {/* P2 레거시 ComparisonControls 유지 (필터 토글 역할) */}
             <ComparisonControls basePath={basePath} view={tableView} />
             <ComparisonTable rows={visibleItems} shortId={shortId} />
           </section>

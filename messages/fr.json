@@ -284,6 +284,24 @@
       "newCompare": "Lancer une nouvelle comparaison",
       "goHome": "Retour à la page d'accueil"
     },
+    "sortTabs": {
+      "ariaLabel": "Onglets de tri",
+      "cheapest": "Le moins cher",
+      "most_saved": "Plus d'économies",
+      "best_value": "Meilleur rapport qualité-prix",
+      "most_reliable": "Plus fiable",
+      "whyThisOrder": {
+        "summary": "Pourquoi cet ordre ?",
+        "cheapest": "Trié par prix mensuel le plus bas. Les conditions contractuelles et autres conditions sont indiquées séparément sous chaque offre.",
+        "most_saved": "Trié par économie mensuelle maximale par rapport à votre forfait actuel. Les nouveaux abonnés voient les offres les moins chères en premier.",
+        "best_value": "Classé selon le ratio économies ÷ prix mensuel — le meilleur rapport qualité-prix. Les forfaits offrant les plus grandes économies par rapport à leur coût apparaissent en tête.",
+        "most_reliable": "Trié par fiabilité des données (vérifié ≥ élevé ≥ moyen ≥ faible ≥ estimé). Les données collectées directement et vérifiées récemment apparaissent en premier."
+      }
+    },
+    "freshnessRibbon": {
+      "refreshed": "Prix actualisé {time}",
+      "source": "source"
+    },
     "controls": {
       "ariaLabel": "Tri et filtrage des tableaux comparatifs",
       "sortLabel": "Tri",

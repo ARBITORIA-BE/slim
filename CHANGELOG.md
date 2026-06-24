@@ -11,6 +11,28 @@
 
 ### Changed
 
+- **2026-06-24 — PLAN 4.22 / 4.23 신설 (101 → 103, +2) — Organic SEO 콘텐츠 마케팅 트랙 ([ADR-0051](docs/adr/0051-organic-seo-content-marketing-track.md) Accepted)**:
+  - **무엇**: ADR-0034 §D5 organic SEO 런치 (2026-06-05) 후 ~3주 SC 데이터 회고 (클릭 0 / 노출 8 / 평균 게재순위 14.3 / 색인 누락 50%) 끝에 운영자가 옵션 B (콘텐츠 마케팅) 잠금 → ADR-0051 신설. Q1~Q4 architect 권고 묶음 잠금: Q1=(a) `/guides/{slug}` / Q2 권고 토픽 순서 (1) Proximus vs Telenet vs Orange BE → (2) 벨기에 모바일 평균 가격 → (8) 제외 공급사 정직 표시 / Q3=(나) 별 ADR-0052 신설 (P4 Pieter's picks 영역 분리) / Q4=(A) P1+P2 만 (1 가이드 발행 → 3개월 SC 추적 효과 게이트).
+  - **왜**: ADR-0034 D5 organic SEO 런치 가설이 ~3주 데이터로 거의 0 트래픽 확정. Google 권위 cold-start 패턴 + 백링크 0 + informational intent 콘텐츠 0 = 베네룩스 의도 키워드 노출 0. ADR-0051 = ADR-0034 §D5 트랙의 **콘텐츠 트랙으로 구체화**. ADR-0050 P4 (Pieter's picks 큐레이션) 영역 분리 = Q3=(나) 별 ADR-0052 트리거.
+  - **신설 PLAN 항목 2건**:
+    - **4.22** Organic SEO 콘텐츠 P1 — MDX 인프라 + 첫 가이드 (Proximus vs Telenet vs Orange BE 비교, head term 최대 impressions 기대). 2d Claude 인프라 + 운영자 본문 트랙 분리.
+    - **4.23** Organic SEO 콘텐츠 P2 — i18n 4 locale 봉합 + DeepL hybrid 라운드 (ADR-0040 §T3 동형). 1d 추정.
+  - **운영자 트랙 분리 (P3 정직성)**: 콘텐츠 본문 = 운영자 직접 (Claude = 인프라 + DeepL hybrid 자동화). P3~P5 (가이드 +4~9건 + 외부 디렉토리 등록) = 3개월 SC 추적 후 효과 게이트 통과 시 별 PR 트리거.
+  - **운영자 SC 5분 액션 동반 트랙 (Claude 자동화 불가)**: (1) SC 우상단 봉투 → 메시지 3건 확인 (Google 발송, 단서 가능) (2) SC Performance 필터 5개 ❌ 칩 클릭 (cookie 저장, URL 우회 불가) → 진짜 트래픽 데이터 재채집 (3) SC 색인생성 → 3가지 이유 행 클릭 → 색인 누락 4 URL 정확 확인. ADR-0051 데이터 게이트 강화.
+  - **ADR-0050 빌드 분할 P4 Pieter's picks 큐레이션 = 별 ADR-0052 트리거**: Q3=(나) 영역 분리 잠금. P2 머지 후 별 트랙.
+  - **변경 파일**: `docs/adr/0051-organic-seo-content-marketing-track.md` (Accepted, 418줄 + Q1~Q4 잠금 메모) + PLAN.md (4.22/4.23 신설 + 페이즈 4 행 21/18 → 23/18 + 합계 표 101/92 → 103/92 + 누적 메모 101→103) + CHANGELOG.md (본 entry).
+  - **6단 게이트**: typecheck 0 / lint 0 / test:run 통과 (코드 변경 0) / harness:i18n GREEN / harness:cross-ref GREEN / harness:plan 103 정합.
+  - **다음 단계**: P1 (4.22) builder 진입 게이트 열림. ADR-0051 빌드 분할 P1 인프라 + 첫 가이드.
+
+- **2026-06-13 — PLAN 4.21 [x] UI v2 P3 격상 (91 → 92, +1) — 정렬 탭 + 신선도 띠 + i18n 한/영 봉합 (PR #67) + DB 한국어 잔존 봉합 1건** ([ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md) §D3/§D4 + [ADR-0033](docs/adr/0033-i18n-next-intl-introduction.md) §T5 S2 봉합):
+  - **무엇**: `/r/[shortId]` 결과 페이지 정렬 탭 4종 (Cheapest / Most saved / Best value / Most reliable) URL params + RSC 재렌더 + "Why this order?" `<details>` 펼침 (Check24 algorithmic transparency) + 카드별 신선도 띠 (`fetchedAt` 상대 시간 + `source_url` 도메인) + `formatRelativeTime` 한국어 하드코딩 → `Intl.RelativeTimeFormat(locale)` 위임.
+  - **왜**: ADR-0050 §D3 헌법 P3 "투명성 운영자의 짐" 정합 + §D4 헌법 P1 "정보 우선" 강화 + ADR-0033 §T5 S2 컴포넌트 t() 소비 누락 봉합 (영어/네덜란드어/프랑스어 페이지 "1시간 전" 한국어 잔존 근절).
+  - **변경 범위 (PR #67)**: `src/app/[locale]/r/[shortId]/page.tsx` (URL params + SortTabs 통합) + `_components/SortTabs.{tsx,test.tsx}` 신설 + `_components/FreshnessRibbon.{tsx,test.tsx}` 신설 + `_components/ComparisonTable.tsx` (FreshnessRibbon 배선) + `_lib/stale.{ts,test.ts}` (locale 인자 + Intl 위임 + 4 locale 회귀) + `_lib/compare-view.{ts,test.ts}` (SortKey 4종 + DEFAULT_SORT='cheapest' + 레거시 saving_desc 하위 호환) + `messages/{ko,en,nl,fr}.json` 각 +9 entries = 36 entries (result.sortTabs + result.freshnessRibbon).
+  - **6단 게이트 ✅**: typecheck 0 / lint 0 / test:run **889** (63 files, +40 신규) / harness:i18n GREEN / harness:cross-ref GREEN / harness:plan 101 정합 (수정 후).
+  - **DB 한국어 잔존 봉합 (운영자 트랙, 본 라운드 동반)**: P1 실측에서 "(인터넷+TV 번들)" 한국어 잔존 발견 → 원인 정찰로 DB `tariff.name` 1건 (`telenet-one-up-bundle` id=80a975b8...) 확정 (코드/messages/fetcher 한국어 0건). 일회성 스크립트 (`scripts/dev/patch-tariff-korean-suffix.ts`) BEFORE/AFTER 명시 + reversibility 보존 UPDATE 1 row 실행 — `"ONE up (인터넷+TV 번들)"` → `"ONE up"`. Provider name "Telenet" + tariff "ONE up" = "Telenet ONE up" 정합. ISR cache (ADR-0041 D7.4 revalidate 3600s) main 머지 자동 배포 시 invalidate 동반.
+  - **머지 금지 잠금 정합 (P3 정직성)**: builder가 `gh pr merge` 호출 안 함 ([feedback-builder-no-merge](C:/Users/kimwo/.claude/projects/C--Users-kimwo-slim/memory/feedback_builder_no_merge.md) 메모리 정합 ✅). 운영자가 시각 잠금 후 명시 머지 결정. P2 (PR #65) 자동 머지 패턴 회복.
+  - **ADR-0050 빌드 분할 P3 트랙 완결** — P1 (CategoryGrid 2+3) + hotfix (Beta 본문 봉합) + P2 (결과 카드 청크 4) + P3 (정렬 탭 + 신선도 띠 + i18n 봉합) 풀 (Q1=B 잠금 정합). P4 (Pieter's picks 큐레이션 인프라) / P5 (다나와 슬롯 max 3 + 표 모드 진입) = **베타 트래픽 신호 후 별 ADR-0051 트리거**.
+
 - **2026-06-13 — PLAN 4.20 [x] UI v2 P2 격상 (90 → 91, +1) — 결과 표 7컬럼 → 청크 4 수평 카드 리스트 (PR #65)** ([ADR-0050](docs/adr/0050-ui-v2-comparison-redesign.md) §D2/§D6):
   - **무엇**: `/r/[shortId]` ComparisonTable.tsx 80% 재작성 — Desktop `<table>` 7컬럼 (#/CARRIER+PLAN/MONTHLY COST/AGREEMENT/SAVING/RELIABILITY/ORIGINAL) → 수평 카드 리스트 (`<ul role="list">` + `<li>`) 청크 4 잠금 (C1 플랜 / C2 요금 / C3 절약 막대 / C4 CTA + 신뢰도 도트).
   - **왜**: ADR-0050 §C1 (1) v1 7컬럼 표 Cowan 4±1 작업 기억 한계 위반 (원칙 2) + 디스클로저 9줄 carrier 셀 누적 → 행 높이 비대칭 (원칙 7) + `+€5/mo` 텍스트만 pre-attentive 채널 미사용 (원칙 1) + Reliability "High" 단일 토큰 비교 가능성 0.

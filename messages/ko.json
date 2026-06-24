@@ -218,6 +218,24 @@
         }
       }
     },
+    "sortTabs": {
+      "ariaLabel": "정렬 탭",
+      "cheapest": "최저 요금",
+      "most_saved": "절약액 큰 순",
+      "best_value": "가성비 순",
+      "most_reliable": "신뢰도 순",
+      "whyThisOrder": {
+        "summary": "이 순서의 기준은?",
+        "cheapest": "월 요금이 가장 낮은 순으로 정렬됩니다. 약정 기간 등 추가 조건은 각 요금제 아래 별도 표시됩니다.",
+        "most_saved": "현재 요금제 대비 월 절약액이 큰 순으로 정렬됩니다. 신규 가입자는 후보 중 가장 저렴한 순입니다.",
+        "best_value": "절약액 ÷ 월 요금으로 계산한 가성비 순입니다. 작은 요금에서 큰 절약을 달성하는 요금제가 위에 표시됩니다.",
+        "most_reliable": "데이터 신뢰도 순입니다 (확인됨 ≥ 높음 ≥ 보통 ≥ 낮음 ≥ 추정값). 직접 수집·24시간 이내 검증 데이터를 우선합니다."
+      }
+    },
+    "freshnessRibbon": {
+      "refreshed": "{time}에 갱신된 가격",
+      "source": "출처"
+    },
     "controls": {
       "ariaLabel": "비교 표 정렬 및 필터",
       "sortLabel": "정렬",
