@@ -622,6 +622,16 @@
     "copyright": "© {year} Slim",
     "languageLabel": "Langue"
   },
+  "guides": {
+    "metaTitle": "Guides Slim — Guides de comparaison télécom en Belgique",
+    "metaDescription": "Des guides honnêtes et basés sur les données pour comparer Proximus, Telenet et Orange Belgium — mobile, internet et offres groupées.",
+    "indexHeading": "Guides de comparaison télécom",
+    "indexDescription": "Comparez les opérateurs télécoms belges — prix, conditions contractuelles et fiabilité, appuyés par des données.",
+    "empty": "Des guides arrivent bientôt.",
+    "publishedAt": "Publié le : {date}",
+    "author": "Par {name}",
+    "readMore": "Lire la suite"
+  },
   "validation": {
     "postal": {
       "be": "Le code postal belge (BE) doit être un nombre de 4 chiffres compris entre 1000 et 9999 (ex. : 1000, 9000)",
