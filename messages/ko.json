@@ -621,6 +621,16 @@
     "copyright": "© {year} Slim",
     "languageLabel": "언어"
   },
+  "guides": {
+    "metaTitle": "Slim 가이드 — 벨기에 통신 비교 가이드",
+    "metaDescription": "Proximus, Telenet, Orange Belgium 비교 가이드. 모바일 · 인터넷 · 번들 요금을 정확하게 비교합니다.",
+    "indexHeading": "통신 비교 가이드",
+    "indexDescription": "베네룩스 통신 공급사 비교 — 가격, 약정, 신뢰도를 데이터 기반으로 분석합니다.",
+    "empty": "가이드를 준비 중입니다. 곧 공개됩니다.",
+    "publishedAt": "발행: {date}",
+    "author": "저자: {name}",
+    "readMore": "자세히 보기"
+  },
   "validation": {
     "postal": {
       "be": "벨기에(BE) 우편번호는 1000~9999 사이의 4자리 숫자여야 합니다 (예: 1000, 9000)",

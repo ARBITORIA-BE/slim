@@ -45,6 +45,7 @@ import type { MetadataRoute } from 'next';
 
 import { SITE_ORIGIN } from '@/lib/site';
 import { routing } from '@/i18n/routing';
+import { getGuideEntries } from '@/lib/guides';
 
 /**
  * 색인 대상 모든 경로 (locale prefix 제외).
@@ -88,21 +89,61 @@ function priorityFor(path: string): number {
   return 0.8;
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 빌드 시각 — 정적 라우트는 빌드마다 갱신 (동적 콘텐츠 아님).
   const now = new Date();
 
-  return INDEXABLE_PATHS.map((path) => ({
+  // 정적 경로 entries
+  const staticEntries: MetadataRoute.Sitemap = INDEXABLE_PATHS.map((path) => ({
     // defaultLocale URL 을 entry 대표 URL 로 사용 (Google 권장 — canonical = hreflang 중 하나)
     url: localeUrl(routing.defaultLocale, path),
     lastModified: now,
     changeFrequency: 'weekly' as const,
     priority: priorityFor(path),
-    // Google Localized Versions — 5 locale × path 매트릭스 (ADR-0034 D5)
+    // Google Localized Versions — 3 locale × path 매트릭스 (ADR-0033 Amd 6)
     alternates: {
       languages: Object.fromEntries(
         routing.locales.map((l) => [l, localeUrl(l, path)]),
       ),
     },
   }));
+
+  // ADR-0051 §D1: 가이드 슬러그 자동 통합 — src/content/guides/*.mdx 동적 추출.
+  // 왜 여기서 동적 추출하는가?
+  //   운영자가 새 .mdx 파일을 추가하면 sitemap 도 자동 갱신 (코드 변경 0).
+  //   `pnpm harness:plan` DoD #3 "sitemap entries +1 (가이드 신설)" 정합.
+  const guideEntries = await getGuideEntries();
+
+  const guideIndexEntry: MetadataRoute.Sitemap = [
+    {
+      url: localeUrl(routing.defaultLocale, '/guides'),
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+      alternates: {
+        languages: Object.fromEntries(
+          routing.locales.map((l) => [l, localeUrl(l, '/guides')]),
+        ),
+      },
+    },
+  ];
+
+  const guideSlugEntries: MetadataRoute.Sitemap = guideEntries.map((entry) => {
+    const path = `/guides/${entry.slug}`;
+    return {
+      url: localeUrl(routing.defaultLocale, path),
+      lastModified: entry.frontmatter.publishedAt
+        ? new Date(entry.frontmatter.publishedAt)
+        : now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+      alternates: {
+        languages: Object.fromEntries(
+          routing.locales.map((l) => [l, localeUrl(l, path)]),
+        ),
+      },
+    };
+  });
+
+  return [...staticEntries, ...guideIndexEntry, ...guideSlugEntries];
 }
