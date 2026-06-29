@@ -20,8 +20,11 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { buildAlternates } from '@/lib/alternates';
 import { getGuideEntries, getGuideFrontmatter } from '@/lib/guides';
 
-// ADR-0023 §T4: LCP ≤ 2.5s → 정적 빌드 강제 (ISR 0초).
-export const dynamic = 'force-static';
+// ADR-0051 §D1 hotfix (2026-06-29): 'force-static' 제거 — Next.js 15 + Turbopack
+// 정적 import map 조합에서도 prod 404 회귀가 잡혀, fallback ISR (revalidate 기본
+// 1년) 로 전환. 가이드 페이지는 정적 텍스트 + small bundle = LCP 영향 미미
+// (ADR-0023 §T4 ≤ 2.5s 잠금 유지). dynamicParams=true 기본값 유지 → 첫 요청 시
+// 정적 생성 + edge cache.
 
 /**
  * 정적 import map — Next.js 15 + Turbopack이 빌드 시 모든 MDX 모듈을 명시적으로 등록.
