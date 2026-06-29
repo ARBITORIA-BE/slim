@@ -41,7 +41,10 @@ const GUIDES_DIR = path.join(process.cwd(), 'src', 'content', 'guides');
  * 지원 타입: 문자열 값만 (모든 frontmatter 필드가 문자열).
  */
 function parseFrontmatter(content: string): GuideFrontmatter {
-  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  // CRLF 안전: Windows checkout (core.autocrlf=true)에서 .mdx 가 CRLF 라
+  // `\n` 만 매치하는 정규식은 frontmatter 블록을 못 잡고 default ("Untitled")
+  // 로 떨어진다. `\r?\n` 으로 LF/CRLF 둘 다 처리.
+  const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!fmMatch || !fmMatch[1]) {
     return {
       title: 'Untitled',
@@ -55,7 +58,7 @@ function parseFrontmatter(content: string): GuideFrontmatter {
   const raw = fmMatch[1];
   const result: Record<string, string> = {};
 
-  for (const line of raw.split('\n')) {
+  for (const line of raw.split(/\r?\n/)) {
     const colonIdx = line.indexOf(':');
     if (colonIdx === -1) continue;
     const key = line.slice(0, colonIdx).trim();
