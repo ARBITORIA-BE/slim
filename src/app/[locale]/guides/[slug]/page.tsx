@@ -23,6 +23,27 @@ import { getGuideEntries, getGuideFrontmatter } from '@/lib/guides';
 // ADR-0023 §T4: LCP ≤ 2.5s → 정적 빌드 강제 (ISR 0초).
 export const dynamic = 'force-static';
 
+/**
+ * 정적 import map — Next.js 15 + Turbopack이 빌드 시 모든 MDX 모듈을 명시적으로 등록.
+ *
+ * 왜 정적 map인가 (template literal dynamic import 대신)?
+ *   `await import(\`@/content/guides/${slug}.mdx\`)` 패턴은 Next.js 15 + Turbopack +
+ *   `force-static` + `pageExtensions: ['mdx']` 조합에서 슬러그별 모듈을 컴파일 단계에
+ *   등록하지 못해 prod에서 모든 슬러그 페이지가 404 반환 (2026-06-29 prod 회귀 봉합).
+ *   정적 import = 빌드 시 명시적 dep graph에 포함 → 정적 페이지 생성 보장.
+ *
+ * 운영자 트랙 (ADR-0051 §D3 정합):
+ *   새 가이드 추가 시 (1) `src/content/guides/{slug}.mdx` 작성 + (2) 본 map 갱신.
+ *   완전 자동 추출은 별 PR 트랙 (빌드 시 코드 생성 인프라 — 본 hotfix 범위 밖).
+ */
+const GUIDE_MODULES: Record<
+  string,
+  () => Promise<{ default: React.ComponentType<Record<string, never>> }>
+> = {
+  'proximus-vs-telenet-vs-orange-be': () =>
+    import('@/content/guides/proximus-vs-telenet-vs-orange-be.mdx'),
+};
+
 interface GuidePageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
@@ -91,15 +112,14 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
   const t = await getTranslations({ locale, namespace: 'guides' });
 
-  // MDX 파일 동적 로드 — @next/mdx RSC 렌더
-  // @builder-justification: dynamic import of MDX files requires 'as any' — MDX module type is not
-  // statically known at compile time. Template literal path prevents static type analysis.
-  // 'as any' 사용 이유: @next/mdx 는 .mdx 파일의 TypeScript 타입을 제공하지 않는다.
+  // MDX 모듈 정적 map 조회 — 빌드 시 명시적 dep graph 등록 (Turbopack 정적 빌드 정합)
+  const loader = GUIDE_MODULES[slug];
+  if (!loader) {
+    notFound();
+  }
   let GuideContent: React.ComponentType<Record<string, never>>;
   try {
-    const mod = (await import(`@/content/guides/${slug}.mdx`)) as {
-      default: React.ComponentType<Record<string, never>>;
-    };
+    const mod = await loader();
     GuideContent = mod.default;
   } catch {
     notFound();
