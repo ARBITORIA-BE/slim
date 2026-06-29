@@ -30,6 +30,15 @@ const config: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
   // ADR-0051 §D1: MDX 파일 확장자 등록 — 빌드 시 .mdx 파일을 RSC로 처리.
   pageExtensions: ['tsx', 'ts', 'mdx'],
+  // ADR-0051 §D1 hotfix (2026-06-29): /guides/[slug] prod 404 회귀 봉합.
+  //   src/content/guides/*.mdx 가 Vercel serverless bundle 에 자동 포함되지
+  //   않아 generateStaticParams 의 readdir 가 빈 배열 → 슬러그 페이지 0개 빌드.
+  //   outputFileTracingIncludes 로 트레이싱 강제 → fs.readdir 정상 작동.
+  outputFileTracingIncludes: {
+    '/[locale]/guides/[slug]': ['./src/content/guides/**/*'],
+    '/[locale]/guides': ['./src/content/guides/**/*'],
+    '/sitemap.xml': ['./src/content/guides/**/*'],
+  },
 };
 
 // PLAN 4.5.2.a: Sentry 래핑. SENTRY_AUTH_TOKEN 부재 시 source map upload 자동 skip
