@@ -3,6 +3,7 @@
 ## 상태
 
 **Accepted (2026-06-24, 운영자 — architect 권고 묶음 잠금).**
+**Amendment 1 Accepted (2026-07-08, 운영자 — §D1 MDX → TSX 정적 라우트 이전 트리거 확정).** ↓ §Amendment 1 참조.
 
 운영자 잠금 결과:
 - **Q1 = (a) `/guides/{slug}`** — 영역 분리 명확 + Check24 패턴 정합
@@ -416,3 +417,196 @@ architect 권고 = **A (P1+P2 만)** — 운영자 시간 cap + SC 데이터 게
      `INDEXABLE_PATHS` 배열 1줄.
    - 의존: `@next/mdx` (신규 dep 1, Next 15 native).
    - 테스트: 가이드 라우트 렌더 + sitemap entry 회귀 + LCP 회귀 (Lighthouse).
+
+---
+
+## Amendment 1 (2026-07-08) — §D1 MDX → TSX 정적 라우트 이전
+
+**상태**: **Accepted (2026-07-08, 운영자 잠금 — Option 2 트리거 확정).**
+
+> 원 §D1 (MDX 인프라 우선) 결정은 폐기하지 않고 **역사적 기록으로
+> 유지** (헌법 §3 P3 정직성 정합). 본 Amendment 는 §D1 결정 위에 새
+> 결정 레이어를 얹어 재정의한다.
+
+### A1.C. 컨텍스트 (Context)
+
+원 §D1 (@next/mdx 통합 + `[locale]/[slug]` dynamic route + MDX 파일
+`src/content/guides/*.mdx`) 잠금 후 4.22 P1 (PR #70) 머지, 이후
+prod slim.lu/{locale}/guides/{slug} 4 locale (nl/fr/en/default)
+전체에서 **404 반환** 회귀 발견 (2026-06-29 운영자 SC URL 검사
+결과).
+
+두 hotfix 시도, 모두 실패:
+
+**PR #72** — 정적 import map + MDX ambient .d.ts:
+- `src/app/[locale]/guides/[slug]/page.tsx`:
+  `` await import(`@/content/guides/${slug}.mdx`) `` template literal
+  → 정적 map (`GUIDE_MODULES`) + slug lookup 전환.
+- `src/types/mdx.d.ts` 신설 (ambient `declare module '*.mdx'`).
+- `src/lib/guides.ts`: CRLF 안전 정규식 (Windows 부수 봉합).
+- **결과**: prod 여전히 404, X-Vercel-Cache HIT.
+
+**PR #73** — outputFileTracingIncludes + force-static 제거:
+- `next.config.ts`: `outputFileTracingIncludes` 추가
+  (`/[locale]/guides/[slug]` → `./src/content/guides/**/*`).
+- `src/app/[locale]/guides/[slug]/page.tsx`: `dynamic = 'force-static'`
+  제거 → fallback ISR.
+- **결과**: prod 여전히 404, 9일 후에도 동일.
+
+**진단 (architect)**:
+- Next.js 15 + Turbopack + `[locale]/[slug]` dynamic route + MDX RSC
+  조합이 Vercel prod 에서 작동 X.
+- 정확한 근본 원인 미확정 — 심층 진단 = Vercel build log (Chrome MCP
+  + 운영자 Vercel 인증) 필요, 4시간+ 소요, 3번째 hotfix 성공 보장 X.
+- 시간 투자 대비 ROI 낮음 (P1 가이드 5~10건 계획이라 MDX 자유도
+  필수 아님, TSX 로 감당 가능).
+
+### A1.O. 운영자 4 옵션 잠금 (2026-07-08)
+
+| 옵션 | 의미 | 판정 |
+|---|---|---|
+| 1 | 심층 진단 + 3번째 hotfix (Vercel build log 정찰) | 거부 — 4시간+ + 3번째 실패 위험 |
+| **2** ⭐ | **MDX 폐기 → TSX 정적 라우트** | **운영자 선택** |
+| 3 | 3rd party MDX (contentlayer / velite) | 거부 — 신규 dep = §D1 잠금 (dep 0) 위반 |
+| 4 | ADR-0051 트랙 자체 보류 / Rejected | 거부 — 옵션 B 콘텐츠 마케팅 트랙 이유 유지 |
+
+운영자 Option 2 선택 이유:
+1. 9일 두 번 실패 = MDX 트랙 계속 밀면 시간 낭비 위험 高.
+2. 가이드 5~10건 = TSX 감당 가능 (MDX 자유도 필수 아님).
+3. **prod 안정성 확실** — Next.js 정적 라우트 패턴 = 검증된 인프라.
+4. 콘텐츠 시각화 자유도 향상 (TSX = React 컴포넌트 = 표/차트/interactive).
+5. 운영자 학습자 모드 정합 (feedback_learning_mode 메모리, TSX 학습
+   유익).
+
+### A1.D. 결정 (Decision)
+
+- 원 §D1 (@next/mdx 통합 + `[locale]/[slug]` dynamic route + MDX
+  파일 `src/content/guides/*.mdx`) **폐기**.
+- 각 가이드 = **정적 TSX 라우트 하나씩** — 예:
+  `src/app/[locale]/guides/proximus-vs-telenet-vs-orange-be/page.tsx`.
+- 본문 = TSX 컴포넌트 (JSX + Tailwind + next-intl `t()` — 필요 시).
+- **Q1 = (a) `/guides/{slug}` URL 구조 유지** — 사용자 URL 안정성
+  (이미 PR #70 발행 후 SC 색인 요청된 URL 유지).
+- ADR-0050 §D6 다크패턴 회피 잠금 정합 유지.
+
+### A1.R. 변경 범위 (Scope)
+
+**삭제**:
+- `@next/mdx` dep (package.json).
+- `pageExtensions: ['mdx']` (next.config.ts).
+- `outputFileTracingIncludes` (next.config.ts, PR #73 잔재).
+- `src/app/[locale]/guides/[slug]/page.tsx` (dynamic route).
+- `src/lib/guides.ts` + `src/lib/guides.test.ts`.
+- `src/types/mdx.d.ts` (PR #72 잔재).
+- `src/content/guides/*.mdx` (모든 MDX 파일).
+
+**수정**:
+- `next.config.ts` — MDX 통합 제거.
+- `src/app/sitemap.ts` — 정적 슬러그 배열 소비 (fs.readdir 자동
+  추출 X).
+- `src/app/[locale]/guides/page.tsx` — 정적 가이드 배열 소비
+  (index 페이지, 가이드 0건이면 ADR-0011 §T2 정직 표시 = "가이드
+  준비 중").
+
+**신설**:
+- `src/app/[locale]/guides/proximus-vs-telenet-vs-orange-be/page.tsx`
+  — RSC + `generateMetadata` (인라인 title/description) + hreflang
+  3 locale + 본문 placeholder (운영자 본문 트랙).
+
+### A1.Q. 기존 Q 잠금 유지
+
+- **Q1 유지 = (a) `/guides/{slug}` URL 구조** — Amendment 1 재잠금.
+- **Q2 유지 = 원 권고 순서** — 첫 가이드 = Proximus vs Telenet vs
+  Orange BE (head term), 후속 = 벨기에 모바일 평균 가격 → 제외
+  공급사 정직 표시.
+- **Q3 유지 = (나) 별 ADR-0052 신설** — P4 Pieter's picks 큐레이션
+  = 별 ADR (본 ADR 사이즈 cap 보존, 영역 분리).
+- **Q4 유지 = (A) P1+P2 만 잠금** — 1 가이드 발행 → 3개월 SC 추적
+  → 효과 신호 후 P3~P5 진입.
+
+### A1.D3'. §D3 (콘텐츠 자동 추출) 재정의
+
+- 원 §D3: `getGuideEntries()` `fs.readdir` 로 자동 추출 (MDX 파일
+  기반).
+- 새 §D3: 각 가이드 = TSX 라우트 하나 = **명시적 코드 등록**. 자동
+  추출 X, 운영자 트랙 명시 (헌법 §3 P3 정직성 정합 — 자동 매직 X).
+
+### A1.D4'. §D4 정직성 정합
+
+- `/guides` 인덱스 페이지 = 정적 배열 소비 (가이드 목록 하드코드,
+  새 가이드 추가 시 배열 갱신).
+- ADR-0011 §T2 동형 — 가이드 0건일 때 "가이드 준비 중" 정직 표시
+  (원 §결과 P3 투명성 잠금 유지).
+
+### A1.B. 빌드 분할 유지 (Q4 P1+P2 잠금)
+
+- **P1 (PLAN 4.22 재정의)**: TSX 정적 라우트 신설 + 첫 가이드
+  스켈레톤 (Claude 인프라, 운영자 본문 트랙). 폐기 파일 명시 삭제
+  (Amendment 1 hotfix #3 PR).
+- **P2 (PLAN 4.23 재정의)**: i18n 4 locale 봉합 + DeepL hybrid
+  (운영자 영어 본문 → nl/fr 자동 번역, ADR-0040 §T3 절차 정합).
+
+### A1.V. 검증 (Verification)
+
+- **V1**. `pnpm harness:i18n` GREEN 유지.
+- **V2**. `pnpm harness:plan` 정합 (PLAN 4.22/4.23 Amendment 1
+  재정의 반영).
+- **V3**. Lighthouse LCP ≤ 2.5s 유지 — **정적 페이지 = 이상적**
+  (ISR 오버헤드 X).
+- **V4**. **Vercel prod 200 OK 실측** — slim.lu/guides/{slug} +
+  slim.lu/{en,nl,fr}/guides/{slug} = **4/4 URL 200 OK**. 이 게이트가
+  Amendment 1 성공 판정의 SoT (PR #72 + #73 회귀 재발 방지 잠금).
+- **V5**. Google Search Console URL 검사 → 색인 요청 성공 (운영자
+  트랙, V4 통과 후).
+
+### A1.C+. Consequences
+
+**✅ 회복**:
+- Vercel prod 안정성 100% (정적 페이지 = 검증된 패턴).
+- LCP 정적 = 이상적 (ISR 오버헤드 X, ADR-0023 §T4 정합).
+- 콘텐츠 자유도 ↑ (TSX = React 컴포넌트 = 표/차트/interactive
+  가능).
+- 학습자 모드 정합 (TSX 학습 유익, feedback_learning_mode 메모리).
+
+**⚠️ 잃는 것 / 부채**:
+- 마크다운 문법 편의성 손실 — 5~10 가이드는 감당 가능 범위.
+- 새 가이드 추가 시 페이지 파일 신설 (자동 추출 X) — 운영자 트랙
+  명시 (§A1.D3' 정합).
+- 원 PR #70 + PR #72 + PR #73 = **폐기 트랙** = 코드 삭제 트랙
+  (Amendment 1 hotfix #3 PR 이 명시 삭제 + 본 Amendment 본문 명시
+  링크).
+
+### A1.X. 폐기 코드 잔재 청소
+
+- Amendment 1 P1 hotfix #3 PR 이 §A1.R "삭제" 목록 파일 명시 삭제
+  + PR description 에 본 Amendment 링크 명시.
+- 삭제 PR 머지 시 원 §D1 MDX 인프라 트랙 = 완전 폐기 확정.
+
+### A1.CR. Related Cross-ref
+
+- ADR-0034 §D5 organic SEO 런치 — 본 Amendment 정합 유지 (§D5
+  본문 변경 0).
+- ADR-0050 §D6 다크패턴 회피 잠금 — TSX 라우트에도 잠금 유지.
+- ADR-0033 Amd 6 3 locale (nl/fr/en) — TSX 라우트 hreflang 정합
+  (default locale 포함 4 URL 검증).
+- ADR-0023 §T4 LCP — **정적 페이지 = 이상적** (Amendment 1 회복
+  포인트).
+- ADR-0011 §T2 + ADR-0029 §T2 정직성 — 가이드 0건 정직 표시
+  (§A1.D4' 정합).
+- ADR-0040 §T3 DeepL hybrid — P2 (PLAN 4.23) i18n 본문 절차 정합
+  유지.
+
+### A1.N. 다음 단계 (Next Steps)
+
+1. Amendment 1 Accepted 마킹 확정 (본 문서 상단 §상태 갱신 시점 =
+   운영자 결정 트리거 확정).
+2. **builder 트리거** (병렬 진행 가능 — 본 Amendment 결정 명확):
+   - 브랜치: `hotfix/adr-0051-amd1-mdx-to-tsx` (또는 운영자
+     명명값).
+   - PR: §A1.R "삭제" 파일 명시 삭제 + §A1.R "수정" 파일 재작성 +
+     §A1.R "신설" 파일 (첫 가이드 TSX 스켈레톤).
+   - PR description: 본 Amendment 링크 + V4 게이트 (prod 4/4 URL
+     200 OK) 명시.
+3. PLAN 4.22 (P1) + 4.23 (P2) Amendment 1 재정의 반영 (별 architect
+   턴 or builder 인계 시 동반 갱신).
+4. builder 머지 후 운영자 V5 (SC URL 검사 → 색인 요청) 트랙 진입.

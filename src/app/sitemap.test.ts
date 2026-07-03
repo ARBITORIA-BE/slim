@@ -2,7 +2,7 @@
  * app/sitemap.ts 단위 테스트 (PLAN 3.5.4 DoD #2).
  *
  * [ADR-0033 Amd 6 + ADR-0036 Amd 1 갱신 — 5→3 locale 통합]:
- * [ADR-0051 §D1 갱신 — 가이드 슬러그 자동 통합]:
+ * [ADR-0051 §Amendment 1 갱신 — MDX 폐기, GUIDE_INDEX 정적 배열 통합]:
  *
  * 검증 범위:
  *   1. 8 정적 경로 + 가이드 인덱스 1 + 가이드 슬러그 N entries
@@ -16,6 +16,10 @@
  *   9. 각 entry 의 alternates.languages 에 3 locale 전부 있음
  *  10. /guides 인덱스 entry 존재 (ADR-0051 §D1)
  *  11. /guides/proximus-vs-telenet-vs-orange-be entry 존재 (ADR-0051 §D3 P1 스켈레톤)
+ *
+ * sitemap() 은 ADR-0051 §Amendment 1 이후 동기 함수 (GUIDE_INDEX 정적 배열
+ * 소비 — fs.readdir 비동기 호출 제거). await 는 동기 반환값에도 안전하게
+ * 적용되므로 호출부 변경 불필요.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -23,8 +27,7 @@ import sitemap from './sitemap';
 import { routing } from '@/i18n/routing';
 import { SITE_ORIGIN } from '@/lib/site';
 
-// sitemap 이 async 함수가 됐으므로 await 처리
-const entries = await sitemap();
+const entries = sitemap();
 
 describe('sitemap — 정적 8 경로 포함', () => {
   it('홈 / entry 존재', () => {

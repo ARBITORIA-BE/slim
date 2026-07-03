@@ -630,7 +630,8 @@
     "empty": "Gidsen komen binnenkort.",
     "publishedAt": "Gepubliceerd: {date}",
     "author": "Door {name}",
-    "readMore": "Lees meer"
+    "readMore": "Lees meer",
+    "contentComingSoon": "Inhoud in voorbereiding — de operator schrijft deze gids momenteel zelf. Vergelijk ondertussen live prijzen."
   },
   "validation": {
     "postal": {

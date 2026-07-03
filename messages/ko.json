@@ -629,7 +629,8 @@
     "empty": "가이드를 준비 중입니다. 곧 공개됩니다.",
     "publishedAt": "발행: {date}",
     "author": "저자: {name}",
-    "readMore": "자세히 보기"
+    "readMore": "자세히 보기",
+    "contentComingSoon": "본문 작성 중입니다 — 운영자가 직접 작성 중입니다. 지금 바로 실시간 가격을 비교하세요."
   },
   "validation": {
     "postal": {
