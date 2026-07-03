@@ -38,6 +38,11 @@
  *   ADR-0011 §T2: 실 데이터 0건 카테고리는 비교 진입 가능하되 "후보 없음" 정직 표시.
  *   → sitemap 에는 mobile + internet_fixed 만 포함. 카테고리 추가 시 아래 배열도 갱신.
  *
+ * ADR-0051 §Amendment 1 (2026-07-08): MDX + fs.readdir 기반 getGuideEntries
+ * 폐기 → GUIDE_INDEX 정적 배열 소비 (src/lib/guides-index.ts 단일 출처,
+ * 가이드 인덱스 페이지와 공동 소비). Vercel prod 404 회귀(PR #70/#72/#73)
+ * 재발 방지 — sitemap 생성이 더 이상 런타임 fs 접근에 의존하지 않는다.
+ *
  * ADR 근거: ADR-0020 §결정 7, ADR-0021 §T8, ADR-0034 D5, PLAN 3.5.2.d, PLAN 3.5.4.
  */
 
@@ -45,7 +50,7 @@ import type { MetadataRoute } from 'next';
 
 import { SITE_ORIGIN } from '@/lib/site';
 import { routing } from '@/i18n/routing';
-import { getGuideEntries } from '@/lib/guides';
+import { GUIDE_INDEX } from '@/lib/guides-index';
 
 /**
  * 색인 대상 모든 경로 (locale prefix 제외).
@@ -89,7 +94,7 @@ function priorityFor(path: string): number {
   return 0.8;
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default function sitemap(): MetadataRoute.Sitemap {
   // 빌드 시각 — 정적 라우트는 빌드마다 갱신 (동적 콘텐츠 아님).
   const now = new Date();
 
@@ -108,12 +113,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-  // ADR-0051 §D1: 가이드 슬러그 자동 통합 — src/content/guides/*.mdx 동적 추출.
-  // 왜 여기서 동적 추출하는가?
-  //   운영자가 새 .mdx 파일을 추가하면 sitemap 도 자동 갱신 (코드 변경 0).
-  //   `pnpm harness:plan` DoD #3 "sitemap entries +1 (가이드 신설)" 정합.
-  const guideEntries = await getGuideEntries();
-
+  // ADR-0051 §Amendment 1: 가이드 슬러그 정적 배열 통합 — GUIDE_INDEX 단일 출처.
+  // 왜 정적 배열인가 (fs.readdir 동적 추출 대신)?
+  //   MDX + fs.readdir 조합이 Vercel serverless bundle 트레이싱 누락으로
+  //   prod 404 회귀(PR #70/#72/#73) — sitemap 생성도 동일 근본 원인에 노출됐었다.
+  //   정적 배열 = 빌드 타임 완전 결정 + 런타임 fs 접근 0.
   const guideIndexEntry: MetadataRoute.Sitemap = [
     {
       url: localeUrl(routing.defaultLocale, '/guides'),
@@ -128,13 +132,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const guideSlugEntries: MetadataRoute.Sitemap = guideEntries.map((entry) => {
+  const guideSlugEntries: MetadataRoute.Sitemap = GUIDE_INDEX.map((entry) => {
     const path = `/guides/${entry.slug}`;
     return {
       url: localeUrl(routing.defaultLocale, path),
-      lastModified: entry.frontmatter.publishedAt
-        ? new Date(entry.frontmatter.publishedAt)
-        : now,
+      lastModified: entry.publishedAt ? new Date(entry.publishedAt) : now,
       changeFrequency: 'monthly' as const,
       priority: 0.7,
       alternates: {

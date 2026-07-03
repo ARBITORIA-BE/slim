@@ -1,21 +1,10 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 import { withSentryConfig } from '@sentry/nextjs';
-import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
 
 // ADR-0033 §T1: next-intl plugin 배선.
 // request.ts 경로 명시 — next-intl이 getRequestConfig를 찾는 기준점.
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
-
-// ADR-0051 §D1: MDX RSC native 통합 — @next/mdx.
-// pageExtensions 에 'mdx' 추가 → src/content/guides/*.mdx 를 RSC import 가능.
-// remark/rehype 플러그인 0 (P1 범위 — 추가 필요 시 별 ADR).
-const withMDX = createMDX({
-  options: {
-    remarkPlugins: [],
-    rehypePlugins: [],
-  },
-});
 
 // ADR-0002: 검증 권한은 로컬 stop-gate + GitHub Actions가 소유.
 // Vercel은 순수 빌드 머신.
@@ -28,17 +17,6 @@ const config: NextConfig = {
   reactStrictMode: true,
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
-  // ADR-0051 §D1: MDX 파일 확장자 등록 — 빌드 시 .mdx 파일을 RSC로 처리.
-  pageExtensions: ['tsx', 'ts', 'mdx'],
-  // ADR-0051 §D1 hotfix (2026-06-29): /guides/[slug] prod 404 회귀 봉합.
-  //   src/content/guides/*.mdx 가 Vercel serverless bundle 에 자동 포함되지
-  //   않아 generateStaticParams 의 readdir 가 빈 배열 → 슬러그 페이지 0개 빌드.
-  //   outputFileTracingIncludes 로 트레이싱 강제 → fs.readdir 정상 작동.
-  outputFileTracingIncludes: {
-    '/[locale]/guides/[slug]': ['./src/content/guides/**/*'],
-    '/[locale]/guides': ['./src/content/guides/**/*'],
-    '/sitemap.xml': ['./src/content/guides/**/*'],
-  },
 };
 
 // PLAN 4.5.2.a: Sentry 래핑. SENTRY_AUTH_TOKEN 부재 시 source map upload 자동 skip
@@ -49,7 +27,7 @@ const sentryOrg = process.env.SENTRY_ORG;
 const sentryProject = process.env.SENTRY_PROJECT;
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
 
-export default withSentryConfig(withNextIntl(withMDX(config)), {
+export default withSentryConfig(withNextIntl(config), {
   ...(sentryOrg ? { org: sentryOrg } : {}),
   ...(sentryProject ? { project: sentryProject } : {}),
   ...(sentryAuthToken ? { authToken: sentryAuthToken } : {}),

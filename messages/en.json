@@ -630,7 +630,8 @@
     "empty": "Guides coming soon.",
     "publishedAt": "Published: {date}",
     "author": "By {name}",
-    "readMore": "Read more"
+    "readMore": "Read more",
+    "contentComingSoon": "Content in preparation — the operator is writing this guide by hand. Compare live prices right now instead."
   },
   "validation": {
     "postal": {
