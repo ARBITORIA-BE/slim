@@ -11,6 +11,19 @@
 
 ### Changed
 
+- **2026-07-22 — PLAN 4.22.1 [x] 격상 (93 → 94, +1) — MDX → TSX 정적 라우트 이전 hotfix #3 성공 + SC SEO 효과 발화** ([ADR-0051 §Amendment 1](docs/adr/0051-organic-seo-content-marketing-track.md#amendment-1-2026-07-08--d1-mdx--tsx-정적-라우트-이전) 정합):
+  - **hotfix #3 성공 (PR #74, 2026-07-03 머지)**: MDX 인프라 완전 폐기 (`@next/mdx` dep + `pageExtensions: ['mdx']` + `outputFileTracingIncludes` + `[slug]/page.tsx` dynamic route + `src/lib/guides.ts` + `src/types/mdx.d.ts` + `src/content/guides/*.mdx`) → `src/app/[locale]/guides/proximus-vs-telenet-vs-orange-be/page.tsx` TSX 정적 라우트 신설. Q1=(a) URL 구조 유지 (`/guides/{slug}`). 6단 게이트 GREEN + prod 4/4 URL 200 OK 실측.
+  - **왜 hotfix 3회 필요**: PR #70 원 MDX 인프라 → PR #72 정적 import map (실패) → PR #73 outputFileTracingIncludes + force-static 제거 (실패) → PR #74 MDX 폐기 + TSX 이전 (성공). Next.js 15 + Turbopack + i18n dynamic route + MDX RSC 조합이 Vercel prod에서 근본 미작동 확정.
+  - **2026-07-22 SC 회고 시점 SEO 효과 발화** (2주 흐름 검증):
+    - 총 노출수 **10 → 39 (+3.9배)** 🚀
+    - 색인 페이지 **4 → 6 (+2)** — `/guides` + `/guides/proximus-vs-telenet-vs-orange-be` 색인 성공
+    - 색인 마지막 업데이트 26.6.12 → **26.6.30** (Google 재크롤 발동)
+    - **베네룩스 의도 키워드 6종 신규 노출**: `internet vergelijken belgie` (81.2위) / `mobiele abonnementen vergelijken` (89.5) / `vergelijk internet providers` (63.3) / `zakelijk internet en telefonie vergelijken` (68.3) / `internet providers vergelijken` (69.7) / `internet providers belgië vergelijken` (63.5)
+    - 클릭 여전 0 (평균 위 60-89 = 페이지 6-9), 그러나 진짜 승리 = Google이 slim.lu를 관련 검색 pool에 진입시킴 (이전 "slim" 단일 검색어에서 확장).
+  - **ADR-0051 §D5 예측 정확 실현** — "vergelijk telecom" 류 informational + 비교 의도 키워드 노출 시작. 콘텐츠 트랙 성공 신호.
+  - **잔여 운영자 트랙**: (1) 첫 가이드 영어 본문 작성 2-4시간 (현 스켈레톤 → 실 4 섹션 콘텐츠) (2) SC URL 색인 요청 (색인된 새 페이지 재요청으로 크롤 우선순위 ↑) (3) 4.23 P2 DeepL hybrid (본문 완료 후 Claude 진입).
+  - **다음 단계**: 3개월 SC 추적 게이트 (ADR-0051 Q4=A) — 노출 지속 증가 + 클릭 첫 발생 확인 시 P3~P5 진입 (가이드 +4~9건 + 외부 디렉토리 등록).
+
 - **2026-06-29 — PLAN 4.22 [x] Organic SEO 콘텐츠 P1 격상 (92 → 93, +1) — MDX 인프라 + 첫 가이드 스켈레톤 (PR #70)** ([ADR-0051](docs/adr/0051-organic-seo-content-marketing-track.md) §D1/§D3 빌드 분할 P1):
   - **무엇**: `@next/mdx` 통합 + `src/app/[locale]/guides/[slug]/page.tsx` RSC 동적 라우트 + `/guides` 인덱스 + `src/app/sitemap.ts` async 변환 + 가이드 슬러그 자동 통합 + `src/lib/guides.ts` frontmatter 파싱 (dep 0) + 첫 가이드 스켈레톤 (Proximus vs Telenet vs Orange BE 비교).
   - **왜**: ADR-0034 §D5 organic SEO 런치 후 ~3.5주 SC 17일 정체 (클릭 0 / 노출 8→10 / 평균 게재순위 14.3→14.2 / 색인 4/4 변화 0 / sitemap 마지막 fetch 26.6.12 정체). ADR-0051 옵션 B (콘텐츠 마케팅) 잠금 → Google 권위 cold-start 봉합 트리거. 새 페이지 발견 = sitemap re-fetch + 색인 신호.
