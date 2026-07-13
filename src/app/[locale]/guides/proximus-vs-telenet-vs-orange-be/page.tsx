@@ -79,25 +79,166 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
       </header>
 
       <article className="prose prose-neutral max-w-none">
-        {/* 스켈레톤 — 운영자 본문 작성 트랙 (ADR-0051 §Amendment 1 §D3 정직성) */}
-        <p className="italic text-fg/60">{t('contentComingSoon')}</p>
-
-        <h2>1. Price Comparison</h2>
-        <p>[Placeholder — Proximus / Telenet / Orange BE mobile & internet pricing table]</p>
-
-        <h2>2. Contract Terms</h2>
-        <p>[Placeholder — 12/24-month contracts, no-contract options]</p>
-
-        <h2>3. Data Freshness & Reliability</h2>
-        <p>[Placeholder — Slim.lu data source, fetched_at metrics]</p>
-
-        <h2>4. Conclusion</h2>
-        <p>[Placeholder — recommendation matrix by household type]</p>
-
         <p>
+          Belgium&apos;s residential telecom market is dominated by three
+          operators: <strong>Proximus</strong>, <strong>Telenet</strong>, and{' '}
+          <strong>Orange Belgium</strong>. Together they cover more than 97% of
+          households (Mordor Intelligence Q1 2025). Choosing between them is
+          rarely a &ldquo;best overall&rdquo; question &mdash; it depends on
+          where you live, what you already own, and whether you need mobile,
+          fixed internet, TV, or all three. This guide compares them honestly,
+          without paid rankings, so you can pick the operator that fits your
+          household.
+        </p>
+
+        <h2>1. Price comparison &mdash; mobile, internet, bundles</h2>
+        <p>
+          Belgian telecom prices sit in narrow bands across the three
+          operators. Entry-level mobile plans start around €15/month across
+          all three; standalone home internet starts around €35/month for
+          slower fibre tiers and rises to €60&ndash;€70/month for gigabit
+          speeds. Bundles (mobile + internet, or internet + TV) usually save
+          around €10&ndash;€20/month compared to buying the parts separately,
+          but the exact discount changes when operators run promotions.
+        </p>
+        <p>
+          Because prices move &mdash; sometimes weekly &mdash; a static table
+          in a guide will be wrong within a month. We keep the live data on{' '}
           <Link href="/compare/mobile" className="text-primary hover:underline">
-            slim.lu/compare/mobile →
+            /compare/mobile
           </Link>
+          ,{' '}
+          <Link
+            href="/compare/internet_fixed"
+            className="text-primary hover:underline"
+          >
+            /compare/internet_fixed
+          </Link>
+          , and the three bundle categories. Every price shown there carries
+          its source URL and the timestamp of the last fetch, so you can
+          check the official operator page yourself.
+        </p>
+
+        <h2>2. Contract terms &mdash; 12 months, 24 months, or no contract</h2>
+        <p>
+          The three operators offer a similar contract menu with different
+          defaults. Proximus and Telenet lean toward 24-month contracts for
+          their bundled offers, with an upfront modem or install discount
+          that unlocks after month 24. Orange Belgium generally sells
+          shorter-commitment mobile plans and increasingly no-contract
+          internet, which trades a slightly higher monthly price for the
+          freedom to leave at any time.
+        </p>
+        <p>
+          The right choice depends on your risk tolerance. If you know
+          you&apos;ll stay in the same home for two years, a 24-month
+          contract usually wins on total cost. If you rent, move often, or
+          are testing a new operator, a no-contract or 12-month plan
+          protects you from early-termination fees. Belgian consumer law
+          caps those fees after month 6, but the practical maths still
+          favours matching contract length to your actual plans.
+        </p>
+
+        <h2>3. Data freshness &amp; how we compare</h2>
+        <p>
+          Slim compares Proximus, Telenet, and Orange Belgium using their
+          public pricing pages. Every 24 hours our fetcher visits each
+          operator&apos;s official site, parses the current tariffs, and
+          stores them alongside the source URL and a UTC timestamp. Nothing
+          is hand-edited; nothing is inferred. When an operator changes a
+          price, the comparison changes within a day.
+        </p>
+        <p>
+          We are transparent about what we don&apos;t cover yet. Orange
+          Belgium&apos;s mobile page renders prices in JavaScript, so our
+          current fetcher only reads the three fixed internet plans (Start,
+          Zen, Giga Internet). Mobile Vikings, Scarlet, hey!, and other
+          smaller Belgian operators are not yet compared &mdash; you can
+          see the full exclusion list on{' '}
+          <Link
+            href="/data-sources"
+            className="text-primary hover:underline"
+          >
+            /data-sources
+          </Link>
+          . If an operator is missing, we say so.
+        </p>
+
+        <h2>4. Which operator fits your household?</h2>
+        <p>
+          Rather than crown a single winner, here is a practical decision
+          matrix based on the household you actually have:
+        </p>
+        <ul>
+          <li>
+            <strong>Single, urban, mobile-first</strong> &mdash; A cheap
+            mobile plan from any of the three often beats a bundle. Compare
+            entry mobile tariffs on{' '}
+            <Link
+              href="/compare/mobile"
+              className="text-primary hover:underline"
+            >
+              /compare/mobile
+            </Link>{' '}
+            and look at data allowance, not headline price.
+          </li>
+          <li>
+            <strong>Couple, one home, no TV</strong> &mdash; A mobile +
+            internet duo (without TV channels) is usually the best value.
+            See{' '}
+            <Link
+              href="/compare/bundle_mobile_internet"
+              className="text-primary hover:underline"
+            >
+              /compare/bundle_mobile_internet
+            </Link>
+            .
+          </li>
+          <li>
+            <strong>Family with kids, TV matters</strong> &mdash; A triple
+            play (mobile + internet + TV) usually wins on total cost, but
+            look carefully at TV channel packs; you may already own the
+            content elsewhere. See{' '}
+            <Link
+              href="/compare/bundle_mobile_internet_tv"
+              className="text-primary hover:underline"
+            >
+              /compare/bundle_mobile_internet_tv
+            </Link>
+            .
+          </li>
+          <li>
+            <strong>Renter or planning to move</strong> &mdash; Prioritise
+            no-contract or 12-month plans over 24-month lock-ins, even if
+            the monthly price is a few euros higher.
+          </li>
+          <li>
+            <strong>Living in Wallonia</strong> &mdash; Telenet&apos;s
+            network is Flanders and Brussels only. In Wallonia the
+            practical choice is Proximus vs Orange Belgium. Slim shows this
+            filter automatically once you enter a postal code.
+          </li>
+        </ul>
+        <p>
+          Whatever your situation, the honest answer is: check the live
+          comparison, not this guide, on the day you sign up. Prices,
+          promotions, and contract terms change often. Slim exists to make
+          that check take five minutes.
+        </p>
+
+        <p className="text-sm text-fg/60">
+          <em>
+            Slim is an independent comparison tool. We are not paid by
+            Proximus, Telenet, or Orange Belgium to influence rankings. Read
+            our{' '}
+            <Link
+              href="/legal/affiliate-disclosure"
+              className="text-primary hover:underline"
+            >
+              affiliate disclosure
+            </Link>
+            .
+          </em>
         </p>
       </article>
     </main>
