@@ -118,13 +118,25 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
                 <td className={TD_CLASS}>Mobile, entry (5&ndash;15&nbsp;GB)</td>
                 <td className={TD_CLASS}>Essential 5&nbsp;GB &mdash; €14.99 promo (6&nbsp;mo) &rarr; €16.99</td>
                 <td className={TD_CLASS}>Basic 15&nbsp;GB &mdash; €11 promo (6&nbsp;mo) &rarr; €16</td>
-                <td className={TD_CLASS}>Not yet on Slim &mdash; see operator site</td>
+                <td className={TD_CLASS}>Small 12&nbsp;GB &mdash; €15 (no promo)</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Mobile, mid (70&nbsp;GB)</td>
+                <td className={TD_CLASS}>Smart 70&nbsp;GB &mdash; €18.99 promo (6&nbsp;mo) &rarr; €24.99</td>
+                <td className={TD_CLASS}>&mdash; not sold at this tier</td>
+                <td className={TD_CLASS}>Medium 70&nbsp;GB &mdash; €18 promo (6&nbsp;mo) &rarr; €23</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Mobile, large (140&nbsp;GB)</td>
+                <td className={TD_CLASS}>Maxi 140&nbsp;GB &mdash; €21.99 promo (6&nbsp;mo) &rarr; €29.99</td>
+                <td className={TD_CLASS}>&mdash; not sold at this tier</td>
+                <td className={TD_CLASS}>Large 140&nbsp;GB &mdash; €20 promo (12&nbsp;mo) &rarr; €29</td>
               </tr>
               <tr>
                 <td className={TD_CLASS}>Mobile, unlimited data</td>
-                <td className={TD_CLASS}>Unlimited &mdash; €34.99 promo &rarr; €49.99</td>
-                <td className={TD_CLASS}>Unlimited &mdash; €14 promo &rarr; €27.50</td>
-                <td className={TD_CLASS}>Not yet on Slim &mdash; see operator site</td>
+                <td className={TD_CLASS}>Unlimited &mdash; €34.99 promo (6&nbsp;mo) &rarr; €49.99</td>
+                <td className={TD_CLASS}>Unlimited &mdash; €14 promo (6&nbsp;mo) &rarr; €27.50</td>
+                <td className={TD_CLASS}>Unlimited &mdash; €31 promo (12&nbsp;mo) &rarr; €40</td>
               </tr>
               <tr>
                 <td className={TD_CLASS}>Internet, entry (100&ndash;200&nbsp;Mbps)</td>
@@ -148,11 +160,26 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
           </table>
         </div>
         <p className={P_CLASS}>
-          Two things to notice at a glance. Proximus and Telenet publish
-          the sharpest headline promos on gigabit tiers but let the price
-          jump €20&ndash;€30/month at the end of the promo window. Orange
-          Belgium&apos;s gigabit sits lower than the post-promo prices of
-          the other two, but higher than their in-promo prices.
+          A few patterns to notice at a glance. On{' '}
+          <strong className="font-semibold text-fg">mobile</strong>,
+          Telenet is aggressive at the entry tier (15&nbsp;GB for €11
+          during promo, roughly triple the data of Proximus Essential at
+          a similar price) but does not sell mid or large tiers &mdash;
+          if you want 70&nbsp;GB or 140&nbsp;GB, you either downgrade
+          to Basic or jump to Unlimited. Proximus and Orange Belgium
+          both offer a full four-tier ladder; Orange consistently
+          undercuts Proximus by €1&ndash;€4/month at the mid, large,
+          and unlimited tiers &mdash; but its Unlimited promo runs
+          12&nbsp;months instead of 6, so the effective 2-year cost is
+          closer than the headline suggests.
+        </p>
+        <p className={P_CLASS}>
+          On <strong className="font-semibold text-fg">internet</strong>,
+          Proximus and Telenet publish the sharpest headline promos on
+          gigabit tiers but let the price jump €20&ndash;€30/month at
+          the end of the promo window. Orange Belgium&apos;s gigabit
+          sits lower than the post-promo prices of the other two, but
+          higher than their in-promo prices.
         </p>
         <p className={P_CLASS}>
           Because these numbers move &mdash; sometimes weekly &mdash; a
@@ -269,8 +296,8 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
               <tr>
                 <td className={TD_CLASS}>Mobile covered on Slim</td>
                 <td className={TD_CLASS}>Yes</td>
-                <td className={TD_CLASS}>Yes</td>
-                <td className={TD_CLASS}>Not yet (JS-rendered page)</td>
+                <td className={TD_CLASS}>Yes (Basic + Unlimited only)</td>
+                <td className={TD_CLASS}>Coming next round &mdash; static HTML re-confirmed 2026-07</td>
               </tr>
               <tr>
                 <td className={TD_CLASS}>Internet covered on Slim</td>
@@ -300,10 +327,13 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
           neutral names, and the underlying network is fibre in some
           addresses and cable in others (Orange in particular now delivers
           via the ex-Voo cable network in many locations). Second, Slim
-          does not yet cover Telenet&apos;s home internet plans or Orange
-          Belgium&apos;s mobile plans &mdash; those pages need a different
-          fetcher and are on the roadmap. Where Slim can&apos;t compare,
-          the results page says so.
+          does not yet cover Telenet&apos;s home internet plans, and
+          Orange Belgium&apos;s mobile plans are next in line &mdash;
+          the operator&apos;s mobile page was JavaScript-rendered when
+          Slim first surveyed it, but a 2026-07 re-check found it now
+          serves the four tiers (Small / Medium / Large / Unlimited) as
+          static HTML, so the fetcher can be extended. Where Slim
+          can&apos;t compare today, the results page says so.
         </p>
         <p className={P_CLASS}>
           Mobile Vikings, Scarlet, hey!, and other smaller Belgian
