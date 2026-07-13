@@ -2318,13 +2318,48 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
     - (V5) Google Search Console URL 검사 → 색인 요청 성공 (운영자 트랙, V4 통과 후)
   - **6단 게이트 통과 (typecheck/lint/test:run/harness:i18n/harness:cross-ref/harness:plan) + prod 4/4 URL 200 OK 실측 = 4.22.1 [x] 게이트**.
 
-- [ ] **4.23** Organic SEO 콘텐츠 P2 — i18n 4 locale 봉합 + DeepL hybrid 라운드 — **[ADR-0051](docs/adr/0051-organic-seo-content-marketing-track.md) §D2 + 빌드 분할 P2 정합 + [Amendment 1](docs/adr/0051-organic-seo-content-marketing-track.md#amendment-1-2026-07-08--d1-mdx--tsx-정적-라우트-이전) §A1.B P2 재정의** (1d 추정)
+- [ ] **4.23** Organic SEO 콘텐츠 P2 — i18n 4 locale 봉합 + DeepL hybrid 라운드 — **[ADR-0051](docs/adr/0051-organic-seo-content-marketing-track.md) §D2 + 빌드 분할 P2 정합 + [Amendment 1](docs/adr/0051-organic-seo-content-marketing-track.md#amendment-1-2026-07-08--d1-mdx--tsx-정적-라우트-이전) §A1.B P2 재정의** (1.5d 추정 — 2026-07-13 architect 상향)
   - **왜**: ADR-0051 §D2 첫 가이드 본문 영어 → 네덜란드어/프랑스어 정합 = 베네룩스 3 locale 노출 + Google hreflang 신호 강화 + 색인 누락 50% 회복 트리거.
-  - **결정 (ADR-0051 §D2 + Amendment 1 §A1.B)**: DeepL Free hybrid (ADR-0040 §T3 동형) — 운영자 영어 본문 → DeepL nl/fr 1차 → 운영자/legal 수동 검수. 콘텐츠 분량 ≈ 5,000 chars × 3 locale = 15,000 chars / DeepL Free 500K cap = 3% 누적 (영향 미미). **Amendment 1 재정의**: 본문 = TSX 컴포넌트 안 문자열 (MDX 파일 X) → next-intl `t()` 소비 or JSX 안 locale 분기 (builder 결정, 4.22.1 신설 파일 구조 정합).
-  - 대상 파일: `src/app/[locale]/guides/proximus-vs-telenet-vs-orange-be/page.tsx` (본문 i18n 봉합) + `messages/{nl,fr}.json` (가이드 메타 + 본문 키 i18n 봉합).
-  - 진입 게이트: **4.22.1 머지 + prod 4/4 URL 200 OK 실측 잠금 후**.
-  - DoD: (1) 6단 게이트 (2) `pnpm harness:i18n` GREEN (가이드 본문 한글 0 — 영어/네덜란드어/프랑스어 본문만) (3) DeepL 누적 cap < 5% 정합 (4) prod 4/4 URL i18n 렌더 실측 (nl/fr locale 스위치 확인).
+  - **결정 (ADR-0051 §D2 + Amendment 1 §A1.B)**: DeepL Free hybrid (ADR-0040 §T3 동형) — 운영자 영어 본문 → DeepL en→nl/fr 1차 → 운영자/legal 수동 검수. 콘텐츠 분량 ≈ 10,000 chars (page.tsx 표 4개 확장 + Section 5 personal note 반영, 원 5,000 추정 상향) × 2 locale (en→nl, en→fr) = 20,000 chars / DeepL Free 500K cap = **4% 누적 (legal ~20,400 합산 8%, 영향 미미)**. **Amendment 1 재정의**: 본문 = TSX 컴포넌트 안 문자열 (MDX 파일 X) → next-intl `t()` 소비 (JSX locale 분기 = 반려, 유지 부담 ↑ + typecheck 회귀 위험).
+  - **architect 결정 잠금 (2026-07-13, 미결 1~4)** — Amendment 2 신설 불요, 본 PLAN 인라인 결정 = 잠금 SoT:
+    - **[미결 1 = (a) en 정본 예외]** guides namespace 는 SEO 노출 콘텐츠 = UI 셸 영역과 분리. Amendment 1 §A1.B "운영자 영어 본문" 명시 잠금 재확인. ADR-0033 §A2.7 G2-ii ko 정본 규칙은 UI 텍스트 대상 = 본 예외 = 새 SEO 콘텐츠 트랙 신설 시 (별 ADR 트리거 시점) ADR-0033 Amd 7 검토 (현 시점 트리거 없음).
+    - **[미결 2 = (c) 하이브리드 key 구조]** 문단·헤딩·리스트·링크 = 세밀 key (`guides.proximusVsTelenetVsOrangeBe.section{N}.para{M}` / `.heading` / `.li{K}`). 표 = 행·셀 개별 key (`.tables.{tableId}.row{R}.col{C}` — 표 5개 × 5~7행 × 4~5셀 ≈ 130~150 리프). 예상 총 리프 = 약 160~200 (본 architect 사이즈 예산 반영). ⚠️ 대안 = "표 = JSON 배열 청크" 반려 — MD/청크 파싱 = MDX 폐기 사유 (Vercel prod 렌더 회귀) 재현 위험 + DeepL 배치 50개 cap = 문제 없음.
+    - **[미결 3 = (a) `scripts/i18n/translate-guide.mjs` 신설]** source_lang 방향 다름 (ko→X vs en→X) + 네임스페이스 격리 = 기존 translate.mjs / translate-legal.mjs 회귀 위험 봉합. translate-legal.mjs `TARGET_NAMESPACES` 패턴 + prefix 감지 + var-protection 인라인 재사용 (source_lang=EN, target_lang={NL,FR} 2건). ICU `{var}` 예상 = **낮음** (본문에 next-intl `{date}` / `{name}` 정도만, publishedAt/author 메타 재사용).
+    - **[미결 4 = (c) 인프라 P2a 병렬 + 실 번역 P2b 대기]** — 원 옵션 (b) 병렬 진행의 리스크 봉합 하이브리드. P2a (인프라: 스키마 + t() rewiring + 스크립트 신설) = **트랙 A 콘텐츠 텍스트 변경 0** = feat/4.22 base 병렬 안전. P2b (실 DeepL 배치 + 검수) = 트랙 A (PR #76) 머지 후 진입 (b-1 en 정본 확정 게이트 = 텍스트 변경 시 재작업 방지).
+  - **대상 파일 (4.23.a P2a 인프라)**:
+    - `src/app/[locale]/guides/proximus-vs-telenet-vs-orange-be/page.tsx` (JSX 하드코딩 → `t()` 소비 rewiring, JSX 링크·`<strong>`·`<code>` 구조 유지 → next-intl rich text `t.rich` 소비 or 인라인 JSX + 값만 `t()` 삽입).
+    - `messages/en.json` (가이드 본문 en 정본 SoT — 표 셀 · 문단 · 리스트 아이템 리프 160~200개, 기존 `guides.metaTitle/metaDescription/publishedAt/author/...` 밑 nested `guides.proximusVsTelenetVsOrangeBe.*` 신설).
+    - `messages/nl.json` + `messages/fr.json` (동일 스키마 + `[nl] `/`[fr] ` prefix placeholder — translate-guide.mjs incremental 감지 대상).
+    - `messages/ko.json` (`guides.proximusVsTelenetVsOrangeBe.*` = **본문 스킵 대상 명시** = `_comment` 필드 = "en 정본 예외, ADR-0051 Amd 1 §A1.B" — 리프 값 채우지 않음, translate-guide.mjs 가 이 서브트리를 소비 대상에서 제외).
+    - `scripts/i18n/translate-guide.mjs` (신설, translate-legal.mjs 복제 + source_lang=EN + TARGET_NAMESPACES=`['guides','proximusVsTelenetVsOrangeBe']` 1건 + retarget 로직 재사용).
+  - **대상 파일 (4.23.b P2b 실 번역)**:
+    - `pnpm tsx --env-file=.env.local scripts/i18n/translate-guide.mjs` 실행 → `messages/{nl,fr}.json` guides 서브트리 채움.
+    - 운영자 nl/fr 스팟 검수 (Claude 트랙 밖) → 정정 라운드 시 특정 키만 재실행 (translate-guide.mjs `--retarget` 옵션 = translate.mjs 41키 재보정 패턴 재사용).
+  - **진입 게이트**:
+    - **4.23.a P2a** = 4.22.1 머지 + prod 4/4 URL 200 OK 실측 잠금 후 (기존 유지).
+    - **4.23.b P2b** = **트랙 A (PR #76 feat/4.22-guide-content-draft) 머지 후 en 정본 확정 잠금**. 트랙 A 확정 전 DeepL 배치 실행 = ❌ (텍스트 변경 시 재배치 부담 + 쿼터 낭비).
+  - **DoD**:
+    - **4.23.a P2a DoD**: (1) 6단 게이트 (typecheck/lint/test:run/harness:i18n/harness:cross-ref/harness:plan) (2) page.tsx 하드코딩 영어 0 (JSX 안 리터럴 텍스트 노드 = 모두 `t()` 소비, 브랜드명 Proximus/Telenet/Orange = i18n key 값에 포함 or JSX 유지 판단 = builder 재량) (3) `messages/en.json` guides.proximusVsTelenetVsOrangeBe.* 리프 완결 (nl/fr = `[nl] `/`[fr] ` prefix placeholder, ko = _comment 스킵 명시) (4) `scripts/i18n/translate-guide.mjs` dry-run 실행 → source_lang=EN 확인 로그 + 대상 리프 카운트 (5) prod 4/4 URL en locale 렌더 실측 = 트랙 A 콘텐츠 그대로 (텍스트 회귀 0).
+    - **4.23.b P2b DoD**: (1) DeepL 배치 실행 → `messages/{nl,fr}.json` guides.proximusVsTelenetVsOrangeBe.* prefix 0건 잔존 (2) DeepL 누적 cap < 10% (legal + guides 합산, 실측 로그 기록) (3) ICU 변수 무결성 검증 통과 (translate-guide.mjs 내장 warn 0건) (4) prod 4/4 URL nl/fr locale 렌더 실측 (locale 스위치 = 표 셀 · 문단 3언어 정합) (5) 운영자 스팟 검수 회고 1건 (`docs/i18n/guide-translation-review.md` 또는 PR description 인라인 — 다크패턴 0 / 가격 오역 0 / 브랜드명 보존).
+  - **헌법/ADR 정합 리스크**:
+    - **P3 정직성**: DeepL 자동 nl/fr = SEO 노출 콘텐츠 오역 위험 → 운영자 스팟 검수 + 사후 SC 회귀 리포트 (ADR-0040 §D1 legal 사후 감사 패턴 동형).
+    - **ADR-0033 §A2.7 G2-ii ko 정본**: guides namespace = 예외 = _comment 명시 + 본 PLAN 인라인 결정 = 잠금 SoT. Amd 7 신설 트리거 = 두 번째 SEO 콘텐츠 트랙 (별 가이드) 진입 시점.
+    - **ADR-0040 §T3 legal hybrid**: 원 절차 = ko→X = 변경 없음. guide hybrid = translate-guide.mjs 별 스크립트 = 격리 = legal 트랙 회귀 위험 0.
+    - **DeepL Free cap**: legal ~20,400 + guides ~20,000 = ~40,400 chars = 8% (500K cap 여유 92%, 후속 가이드 4~9건 시 30~60% 예상 정합).
   - **운영자 트랙 분리**: 콘텐츠 본문 = 운영자 직접 (Claude는 인프라 + DeepL hybrid 자동화). ADR-0051 Q4 = (A) P1+P2만 — 1 가이드 발행 후 **3개월 SC 추적** → impressions 증가 + 색인 페이지 증가 = 효과 게이트. 효과 신호 후 P3~P5 (가이드 +4~9건 + 외부 디렉토리 등록) = 별 PR 트리거. ADR-0050 §빌드 분할 P4 Pieter's picks 큐레이션은 **별 ADR-0052** 트리거 (Q3 잠금, 영역 분리).
+  - **sub-task 분해**:
+    - [ ] **4.23.a** P2a 인프라 — 트랙 A 병렬 안전 (콘텐츠 텍스트 변경 0). **1.2d 추정** (a-1 스키마 0.4d + a-2 t() rewiring 0.5d + a-3 스크립트 신설 0.2d + a-4 ko _comment 스킵 0.1d).
+      - a-1: `messages/{en,nl,fr}.json` guides.proximusVsTelenetVsOrangeBe.* 스키마 신설 (en 정본 채움 + nl/fr `[locale] ` prefix placeholder).
+      - a-2: `page.tsx` JSX 하드코딩 → `t()` / `t.rich` rewiring (표 셀 · 문단 · 리스트 · 링크 텍스트).
+      - a-3: `scripts/i18n/translate-guide.mjs` 신설 (translate-legal.mjs 복제 + source_lang=EN + TARGET_NAMESPACES 1건).
+      - a-4: `messages/ko.json` guides.proximusVsTelenetVsOrangeBe.* = `_comment` 스킵 명시 (translate.mjs / harness:i18n 정합 검증).
+      - 진입 게이트: 4.22.1 머지 + prod 4/4 URL 200 OK 실측 잠금 후.
+    - [ ] **4.23.b** P2b 실 번역 라운드 — 트랙 A 머지 후 진입. **0.3d 추정** (b-1 배치 실행 0.1d + b-2 검증 0.1d + b-3 prod 실측 0.1d) + 운영자 스팟 검수 별 트랙.
+      - b-1: `pnpm tsx --env-file=.env.local scripts/i18n/translate-guide.mjs` 실행 (en→{NL,FR}) → prefix 0건 잔존 확인.
+      - b-2: ICU 변수 무결성 + DeepL 누적 cap < 10% 확인 (스크립트 내장 검증 + `pnpm harness:i18n` GREEN).
+      - b-3: prod 4/4 URL 실측 (locale 스위치 = nl/fr 정합).
+      - b-4 (운영자 트랙): nl/fr 스팟 검수 회고 → 정정 라운드 시 `--retarget` 옵션 재실행.
+      - 진입 게이트: **트랙 A (PR #76) 머지 + en 정본 확정 잠금 후**.
 
 **Phase 4 검증:** 어트리뷰션 정확성 — `pnpm harness:price` + 수동 5건 검증
 + 베타 NPS ≥ 30.
