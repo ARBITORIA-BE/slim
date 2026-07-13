@@ -95,17 +95,19 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
           rankings, so you can pick the operator that fits your household.
         </p>
 
-        <h2 className={H2_CLASS}>1. Price comparison &mdash; mobile, internet, bundles</h2>
+        <h2 className={H2_CLASS}>1. Price comparison &mdash; mobile and internet</h2>
         <p className={P_CLASS}>
-          Belgian telecom prices sit in narrow bands across the three
-          operators. The typical entry-tier ranges (at time of writing) look
-          like this:
+          Prices below are the entry, mid, and top tiers advertised on each
+          operator&apos;s official page in August 2026. Almost all headline
+          prices are <strong className="font-semibold text-fg">promotional</strong> and
+          revert to a higher &ldquo;standard&rdquo; price after 6 or 12
+          months &mdash; both numbers are shown where they matter.
         </p>
         <div className={TABLE_WRAP}>
           <table className={TABLE_CLASS}>
             <thead>
               <tr>
-                <th className={TH_CLASS}>Category</th>
+                <th className={TH_CLASS}>Tier</th>
                 <th className={TH_CLASS}>Proximus</th>
                 <th className={TH_CLASS}>Telenet</th>
                 <th className={TH_CLASS}>Orange Belgium</th>
@@ -113,57 +115,78 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
             </thead>
             <tbody>
               <tr>
-                <td className={TD_CLASS}>Mobile (entry)</td>
-                <td className={TD_CLASS}>~€15+/mo</td>
-                <td className={TD_CLASS}>~€15+/mo</td>
-                <td className={TD_CLASS}>~€15+/mo</td>
+                <td className={TD_CLASS}>Mobile, entry (5&ndash;15&nbsp;GB)</td>
+                <td className={TD_CLASS}>Essential 5&nbsp;GB &mdash; €14.99 promo (6&nbsp;mo) &rarr; €16.99</td>
+                <td className={TD_CLASS}>Basic 15&nbsp;GB &mdash; €11 promo (6&nbsp;mo) &rarr; €16</td>
+                <td className={TD_CLASS}>Not yet on Slim &mdash; see operator site</td>
               </tr>
               <tr>
-                <td className={TD_CLASS}>Internet, fibre entry</td>
-                <td className={TD_CLASS}>~€38+/mo</td>
-                <td className={TD_CLASS}>~€40+/mo</td>
-                <td className={TD_CLASS}>~€38+/mo</td>
+                <td className={TD_CLASS}>Mobile, unlimited data</td>
+                <td className={TD_CLASS}>Unlimited &mdash; €34.99 promo &rarr; €49.99</td>
+                <td className={TD_CLASS}>Unlimited &mdash; €14 promo &rarr; €27.50</td>
+                <td className={TD_CLASS}>Not yet on Slim &mdash; see operator site</td>
               </tr>
               <tr>
-                <td className={TD_CLASS}>Internet, gigabit tier</td>
-                <td className={TD_CLASS}>~€60&ndash;€70/mo</td>
-                <td className={TD_CLASS}>~€60&ndash;€70/mo</td>
-                <td className={TD_CLASS}>~€57+/mo (Giga)</td>
+                <td className={TD_CLASS}>Internet, entry (100&ndash;200&nbsp;Mbps)</td>
+                <td className={TD_CLASS}>Internet Light 100&nbsp;Mbps &mdash; €39.99 (no promo)</td>
+                <td className={TD_CLASS}>Basic 200&nbsp;Mbps &mdash; €35 promo (6&nbsp;mo)</td>
+                <td className={TD_CLASS}>Start 150&ndash;200&nbsp;Mbps &mdash; €53 promo (12&nbsp;mo)</td>
               </tr>
               <tr>
-                <td className={TD_CLASS}>Bundle (mobile + internet)</td>
-                <td className={TD_CLASS}>&minus;€10 to &minus;€20 vs parts</td>
-                <td className={TD_CLASS}>&minus;€10 to &minus;€20 vs parts</td>
-                <td className={TD_CLASS}>&minus;€10 to &minus;€20 vs parts</td>
+                <td className={TD_CLASS}>Internet, mid (400&ndash;500&nbsp;Mbps)</td>
+                <td className={TD_CLASS}>Mega Fiber 500&nbsp;Mbps &mdash; €57.99 promo &rarr; €77.99</td>
+                <td className={TD_CLASS}>Standard 500&nbsp;Mbps &mdash; €35 promo &rarr; €65</td>
+                <td className={TD_CLASS}>Zen 400&ndash;500&nbsp;Mbps &mdash; €62 promo (12&nbsp;mo)</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Internet, gigabit</td>
+                <td className={TD_CLASS}>Giga Fiber 2&nbsp;Gbps &mdash; €57.99 promo &rarr; €77.99</td>
+                <td className={TD_CLASS}>Turbo 2.5&nbsp;Gbps &mdash; €55 promo &rarr; €85</td>
+                <td className={TD_CLASS}>Giga 1&nbsp;Gbps &mdash; €72 promo (12&nbsp;mo)</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p className={P_CLASS}>
-          Because prices move &mdash; sometimes weekly &mdash; a static
-          table like this is out of date within a month. We keep the live
-          data on{' '}
+          Two things to notice at a glance. Proximus and Telenet publish
+          the sharpest headline promos on gigabit tiers but let the price
+          jump €20&ndash;€30/month at the end of the promo window. Orange
+          Belgium&apos;s gigabit sits lower than the post-promo prices of
+          the other two, but higher than their in-promo prices.
+        </p>
+        <p className={P_CLASS}>
+          Because these numbers move &mdash; sometimes weekly &mdash; a
+          static table like this is out of date within a month. Live data
+          lives on{' '}
           <Link href="/compare/mobile" className={LINK_CLASS}>
             /compare/mobile
           </Link>
-          ,{' '}
+          {' '}and{' '}
           <Link href="/compare/internet_fixed" className={LINK_CLASS}>
             /compare/internet_fixed
           </Link>
-          , and the three bundle categories. Every price there carries its
-          source URL and the timestamp of the last fetch, so you can check
-          the official operator page yourself.
+          , with each price stamped by the source URL and the time of the
+          last fetch so you can check the operator page yourself.
         </p>
 
-        <h2 className={H2_CLASS}>2. Contract terms &mdash; 12 months, 24 months, or no contract</h2>
+        <h2 className={H2_CLASS}>2. Contract terms and promo windows</h2>
         <p className={P_CLASS}>
-          The three operators offer a similar menu with different defaults:
+          A surprise for many first-time switchers: on their consumer sites,
+          Proximus, Telenet, and Orange Belgium all advertise their internet
+          and mobile plans as{' '}
+          <strong className="font-semibold text-fg">non-binding</strong>{' '}
+          &mdash; you can cancel at any time. The catch is the{' '}
+          <strong className="font-semibold text-fg">promotional discount window</strong>:
+          the low headline price only holds for the first 6 or 12 months,
+          after which the monthly bill jumps back to the &ldquo;standard&rdquo;
+          tariff. That is the number that matters for the second half of
+          your stay.
         </p>
         <div className={TABLE_WRAP}>
           <table className={TABLE_CLASS}>
             <thead>
               <tr>
-                <th className={TH_CLASS}>Contract length</th>
+                <th className={TH_CLASS}>Aspect</th>
                 <th className={TH_CLASS}>Proximus</th>
                 <th className={TH_CLASS}>Telenet</th>
                 <th className={TH_CLASS}>Orange Belgium</th>
@@ -171,42 +194,54 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
             </thead>
             <tbody>
               <tr>
-                <td className={TD_CLASS}>24-month (with modem/install discount)</td>
-                <td className={TD_CLASS}>Common default for bundles</td>
-                <td className={TD_CLASS}>Common default for bundles</td>
-                <td className={TD_CLASS}>Available, less pushed</td>
+                <td className={TD_CLASS}>Cancel anytime?</td>
+                <td className={TD_CLASS}>Yes (site: &ldquo;change or cancel free, whenever&rdquo;)</td>
+                <td className={TD_CLASS}>Yes (non-binding)</td>
+                <td className={TD_CLASS}>Yes (non-binding)</td>
               </tr>
               <tr>
-                <td className={TD_CLASS}>12-month</td>
-                <td className={TD_CLASS}>Available</td>
-                <td className={TD_CLASS}>Available</td>
-                <td className={TD_CLASS}>Available</td>
+                <td className={TD_CLASS}>Typical mobile promo window</td>
+                <td className={TD_CLASS}>6 months</td>
+                <td className={TD_CLASS}>6 months</td>
+                <td className={TD_CLASS}>6&ndash;12 months</td>
               </tr>
               <tr>
-                <td className={TD_CLASS}>No contract</td>
-                <td className={TD_CLASS}>Higher monthly price</td>
-                <td className={TD_CLASS}>Higher monthly price</td>
-                <td className={TD_CLASS}>Increasingly the default</td>
+                <td className={TD_CLASS}>Typical internet promo window</td>
+                <td className={TD_CLASS}>12 months (except no-promo Light)</td>
+                <td className={TD_CLASS}>6 months</td>
+                <td className={TD_CLASS}>12 months</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Post-promo price step</td>
+                <td className={TD_CLASS}>+€10 to +€20/mo</td>
+                <td className={TD_CLASS}>+€30/mo on gigabit</td>
+                <td className={TD_CLASS}>Not clearly stated on the plan page</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Installation fee</td>
+                <td className={TD_CLASS}>Varies; sometimes waived in bundle promos</td>
+                <td className={TD_CLASS}>Currently free on internet plans</td>
+                <td className={TD_CLASS}>€39</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p className={P_CLASS}>
-          The right pick depends on your risk tolerance. Staying two years
-          in the same home &rArr; a 24-month contract usually wins on total
-          cost. Renting, moving often, or testing an operator &rArr; a
-          no-contract or 12-month plan protects you from early-termination
-          fees. Belgian consumer law caps those fees after month 6, but the
-          practical maths still favours matching contract length to your
-          actual plans.
+          Belgian consumer law lets you cancel at any time, so the real
+          maths is not &ldquo;lock-in vs freedom&rdquo; but &ldquo;in-promo
+          price vs the 2nd-year price&rdquo;. If you plan to keep the same
+          plan for two years or more, compare the post-promo columns above,
+          not the headline promo.
         </p>
 
-        <h2 className={H2_CLASS}>3. Data freshness &amp; how we compare</h2>
+        <h2 className={H2_CLASS}>3. What Slim actually covers (and doesn&apos;t)</h2>
         <p className={P_CLASS}>
-          Slim compares the three operators using their public pricing
-          pages. Every 24 hours the fetcher visits each site, parses the
-          current tariffs, and stores them with the source URL and a UTC
-          timestamp. Nothing hand-edited, nothing inferred.
+          Slim compares the three operators by parsing their public pricing
+          pages every 24 hours and storing each price with its source URL
+          and a UTC timestamp. Nothing hand-edited, nothing inferred. Here
+          is what that coverage looks like today &mdash; including the
+          gaps, so you know when to double-check on the operator&apos;s own
+          site.
         </p>
         <div className={TABLE_WRAP}>
           <table className={TABLE_CLASS}>
@@ -222,8 +257,8 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
               <tr>
                 <td className={TD_CLASS}>Data method</td>
                 <td className={TD_CLASS}>HTML scraping</td>
-                <td className={TD_CLASS}>Official API</td>
-                <td className={TD_CLASS}>HTML scraping (fixed internet only)</td>
+                <td className={TD_CLASS}>HTML scraping</td>
+                <td className={TD_CLASS}>HTML scraping</td>
               </tr>
               <tr>
                 <td className={TD_CLASS}>Update frequency</td>
@@ -238,21 +273,47 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
                 <td className={TD_CLASS}>Not yet (JS-rendered page)</td>
               </tr>
               <tr>
+                <td className={TD_CLASS}>Internet covered on Slim</td>
+                <td className={TD_CLASS}>Yes (Light / Go / Mega / Giga)</td>
+                <td className={TD_CLASS}>Not yet (manual fallback)</td>
+                <td className={TD_CLASS}>Yes (Start / Zen / Giga)</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>&ldquo;Fibre&rdquo; branding on operator site</td>
+                <td className={TD_CLASS}>Explicit (Mega Fiber, Giga Fiber)</td>
+                <td className={TD_CLASS}>Not used on plan names</td>
+                <td className={TD_CLASS}>Not used on plan names</td>
+              </tr>
+              <tr>
                 <td className={TD_CLASS}>Region</td>
                 <td className={TD_CLASS}>Belgium-wide</td>
                 <td className={TD_CLASS}>Flanders + Brussels only</td>
-                <td className={TD_CLASS}>Belgium-wide (Voo absorbed 2025)</td>
+                <td className={TD_CLASS}>Belgium-wide (Voo cable network absorbed, 2025)</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p className={P_CLASS}>
-          Mobile Vikings, Scarlet, hey!, and other smaller Belgian operators
-          are not yet compared &mdash; see the full exclusion list on{' '}
+          Two things worth understanding here. First, only Proximus brands
+          its plans as &ldquo;Fiber&rdquo; on the consumer site &mdash;
+          Telenet and Orange Belgium sell the same speed tiers under
+          neutral names, and the underlying network is fibre in some
+          addresses and cable in others (Orange in particular now delivers
+          via the ex-Voo cable network in many locations). Second, Slim
+          does not yet cover Telenet&apos;s home internet plans or Orange
+          Belgium&apos;s mobile plans &mdash; those pages need a different
+          fetcher and are on the roadmap. Where Slim can&apos;t compare,
+          the results page says so.
+        </p>
+        <p className={P_CLASS}>
+          Mobile Vikings, Scarlet, hey!, and other smaller Belgian
+          operators are not yet compared either &mdash; see the full
+          exclusion list on{' '}
           <Link href="/data-sources" className={LINK_CLASS}>
             /data-sources
           </Link>
-          . If an operator is missing, we say so.
+          . If an operator is missing, Slim says so; it does not silently
+          drop them.
         </p>
 
         <h2 className={H2_CLASS}>4. Which operator fits your household?</h2>
