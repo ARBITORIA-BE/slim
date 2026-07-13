@@ -7,11 +7,12 @@
  *   2회 hotfix 실패) → 옵션 2 (TSX 정적 라우트) 이전.
  *   Next.js 정적 라우트 = 검증된 패턴 + LCP 이상적 + 런타임 fs 접근 0.
  *
- * 본문 = 운영자 직접 작성 트랙 (2-4시간, head term 콘텐츠).
- * 현재 = 스켈레톤 (섹션 헤딩 + placeholder). ADR-0029 §T2 정직성 정합.
+ * 왜 명시 Tailwind 클래스인가? (2026-08 fix)
+ *   `prose prose-neutral` 은 `@tailwindcss/typography` plugin 미설치로 미작동.
+ *   명시 클래스로 h2/p/table/ul 스타일 지정 → 표가 텍스트로 보이던 회귀 봉합.
  *
  * 다크패턴 회피 잠금 (ADR-0050 §D6 동형): 1위 임의 하이라이트 0 /
- * "추천" 라벨 0 / 색상 다중화 0 — 본 페이지는 단일 가이드 본문, 해당 없음.
+ * "추천" 라벨 0 / 색상 다중화 0 — 표 정렬은 factual only.
  */
 
 import type { Metadata } from 'next';
@@ -29,25 +30,27 @@ const SLUG = 'proximus-vs-telenet-vs-orange-be';
 
 /**
  * GUIDE_INDEX 단일 출처에서 본 가이드 메타 조회 (sitemap.ts 와 중복 방지).
- *
- * 왜 즉시실행함수인가?
- *   `noUncheckedIndexedAccess` 하에서 `Array.find` 결과는 `T | undefined`.
- *   모듈 스코프 `if (!x) throw` 의 narrowing 은 함수 스코프를 넘어 전파되지
- *   않으므로, 즉시실행함수로 감싸 반환 타입을 non-null `GuideIndexEntry` 로
- *   확정한다 (빌드 타임 자가검증 — GUIDE_INDEX 누락 시 즉시 실패, 조용한
- *   404 방지).
  */
 const GUIDE_META = (() => {
   const entry = GUIDE_INDEX.find((g) => g.slug === SLUG);
   if (!entry) {
-    // Build-time self-check only (never user-facing) — kept in English so
-    // harness:i18n's Korean-literal scan (src/app/[locale]/**) stays clean.
     throw new Error(
       `[guides/${SLUG}] missing entry in GUIDE_INDEX — check src/lib/guides-index.ts.`,
     );
   }
   return entry;
 })();
+
+// 명시 클래스 (prose plugin 미작동 회귀 봉합)
+const P_CLASS = 'mb-4 text-base leading-7 text-fg/80';
+const H2_CLASS = 'mt-10 mb-4 text-2xl font-bold text-fg';
+const TABLE_WRAP = 'my-6 overflow-x-auto';
+const TABLE_CLASS = 'w-full border-collapse text-sm';
+const TH_CLASS = 'border-b-2 border-fg/25 bg-bg-warm/50 px-3 py-2 text-left font-semibold text-fg';
+const TD_CLASS = 'border-b border-fg/10 px-3 py-2 align-top text-fg/80';
+const UL_CLASS = 'mb-4 list-disc space-y-2 pl-6 text-fg/80';
+const LI_CLASS = 'leading-7';
+const LINK_CLASS = 'text-primary hover:underline';
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
@@ -78,73 +81,73 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
         </div>
       </header>
 
-      <article className="prose prose-neutral max-w-none">
-        <p>
+      <article className="max-w-none">
+        <p className={P_CLASS}>
           Belgium&apos;s residential telecom market is dominated by three
-          operators: <strong>Proximus</strong>, <strong>Telenet</strong>, and{' '}
-          <strong>Orange Belgium</strong>. Together they cover more than 97% of
-          households (Mordor Intelligence Q1 2025). Choosing between them is
-          rarely a &ldquo;best overall&rdquo; question &mdash; it depends on
-          where you live, what you already own, and whether you need mobile,
-          fixed internet, TV, or all three. This guide compares them honestly,
-          without paid rankings, so you can pick the operator that fits your
-          household.
+          operators: <strong className="font-semibold text-fg">Proximus</strong>,{' '}
+          <strong className="font-semibold text-fg">Telenet</strong>, and{' '}
+          <strong className="font-semibold text-fg">Orange Belgium</strong>.
+          Together they cover more than 97% of households (Mordor Intelligence
+          Q1 2025). Choosing between them is rarely a &ldquo;best
+          overall&rdquo; question &mdash; it depends on where you live, what
+          you already own, and whether you need mobile, fixed internet, TV,
+          or all three. This guide compares them honestly, without paid
+          rankings, so you can pick the operator that fits your household.
         </p>
 
-        <h2>1. Price comparison &mdash; mobile, internet, bundles</h2>
-        <p>
+        <h2 className={H2_CLASS}>1. Price comparison &mdash; mobile, internet, bundles</h2>
+        <p className={P_CLASS}>
           Belgian telecom prices sit in narrow bands across the three
           operators. The typical entry-tier ranges (at time of writing) look
           like this:
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Proximus</th>
-              <th>Telenet</th>
-              <th>Orange Belgium</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Mobile (entry)</td>
-              <td>~€15+/mo</td>
-              <td>~€15+/mo</td>
-              <td>~€15+/mo</td>
-            </tr>
-            <tr>
-              <td>Internet, fibre entry</td>
-              <td>~€38+/mo</td>
-              <td>~€40+/mo</td>
-              <td>~€38+/mo</td>
-            </tr>
-            <tr>
-              <td>Internet, gigabit tier</td>
-              <td>~€60&ndash;€70/mo</td>
-              <td>~€60&ndash;€70/mo</td>
-              <td>~€57+/mo (Giga)</td>
-            </tr>
-            <tr>
-              <td>Bundle (mobile + internet)</td>
-              <td>&minus;€10 to &minus;€20 vs parts</td>
-              <td>&minus;€10 to &minus;€20 vs parts</td>
-              <td>&minus;€10 to &minus;€20 vs parts</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
+        <div className={TABLE_WRAP}>
+          <table className={TABLE_CLASS}>
+            <thead>
+              <tr>
+                <th className={TH_CLASS}>Category</th>
+                <th className={TH_CLASS}>Proximus</th>
+                <th className={TH_CLASS}>Telenet</th>
+                <th className={TH_CLASS}>Orange Belgium</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className={TD_CLASS}>Mobile (entry)</td>
+                <td className={TD_CLASS}>~€15+/mo</td>
+                <td className={TD_CLASS}>~€15+/mo</td>
+                <td className={TD_CLASS}>~€15+/mo</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Internet, fibre entry</td>
+                <td className={TD_CLASS}>~€38+/mo</td>
+                <td className={TD_CLASS}>~€40+/mo</td>
+                <td className={TD_CLASS}>~€38+/mo</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Internet, gigabit tier</td>
+                <td className={TD_CLASS}>~€60&ndash;€70/mo</td>
+                <td className={TD_CLASS}>~€60&ndash;€70/mo</td>
+                <td className={TD_CLASS}>~€57+/mo (Giga)</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Bundle (mobile + internet)</td>
+                <td className={TD_CLASS}>&minus;€10 to &minus;€20 vs parts</td>
+                <td className={TD_CLASS}>&minus;€10 to &minus;€20 vs parts</td>
+                <td className={TD_CLASS}>&minus;€10 to &minus;€20 vs parts</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className={P_CLASS}>
           Because prices move &mdash; sometimes weekly &mdash; a static
           table like this is out of date within a month. We keep the live
           data on{' '}
-          <Link href="/compare/mobile" className="text-primary hover:underline">
+          <Link href="/compare/mobile" className={LINK_CLASS}>
             /compare/mobile
           </Link>
           ,{' '}
-          <Link
-            href="/compare/internet_fixed"
-            className="text-primary hover:underline"
-          >
+          <Link href="/compare/internet_fixed" className={LINK_CLASS}>
             /compare/internet_fixed
           </Link>
           , and the three bundle categories. Every price there carries its
@@ -152,41 +155,43 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
           the official operator page yourself.
         </p>
 
-        <h2>2. Contract terms &mdash; 12 months, 24 months, or no contract</h2>
-        <p>
+        <h2 className={H2_CLASS}>2. Contract terms &mdash; 12 months, 24 months, or no contract</h2>
+        <p className={P_CLASS}>
           The three operators offer a similar menu with different defaults:
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Contract length</th>
-              <th>Proximus</th>
-              <th>Telenet</th>
-              <th>Orange Belgium</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>24-month (with modem/install discount)</td>
-              <td>Common default for bundles</td>
-              <td>Common default for bundles</td>
-              <td>Available, less pushed</td>
-            </tr>
-            <tr>
-              <td>12-month</td>
-              <td>Available</td>
-              <td>Available</td>
-              <td>Available</td>
-            </tr>
-            <tr>
-              <td>No contract</td>
-              <td>Higher monthly price</td>
-              <td>Higher monthly price</td>
-              <td>Increasingly the default</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
+        <div className={TABLE_WRAP}>
+          <table className={TABLE_CLASS}>
+            <thead>
+              <tr>
+                <th className={TH_CLASS}>Contract length</th>
+                <th className={TH_CLASS}>Proximus</th>
+                <th className={TH_CLASS}>Telenet</th>
+                <th className={TH_CLASS}>Orange Belgium</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className={TD_CLASS}>24-month (with modem/install discount)</td>
+                <td className={TD_CLASS}>Common default for bundles</td>
+                <td className={TD_CLASS}>Common default for bundles</td>
+                <td className={TD_CLASS}>Available, less pushed</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>12-month</td>
+                <td className={TD_CLASS}>Available</td>
+                <td className={TD_CLASS}>Available</td>
+                <td className={TD_CLASS}>Available</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>No contract</td>
+                <td className={TD_CLASS}>Higher monthly price</td>
+                <td className={TD_CLASS}>Higher monthly price</td>
+                <td className={TD_CLASS}>Increasingly the default</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className={P_CLASS}>
           The right pick depends on your risk tolerance. Staying two years
           in the same home &rArr; a 24-month contract usually wins on total
           cost. Renting, moving often, or testing an operator &rArr; a
@@ -196,132 +201,124 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
           actual plans.
         </p>
 
-        <h2>3. Data freshness &amp; how we compare</h2>
-        <p>
+        <h2 className={H2_CLASS}>3. Data freshness &amp; how we compare</h2>
+        <p className={P_CLASS}>
           Slim compares the three operators using their public pricing
           pages. Every 24 hours the fetcher visits each site, parses the
           current tariffs, and stores them with the source URL and a UTC
           timestamp. Nothing hand-edited, nothing inferred.
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Aspect</th>
-              <th>Proximus</th>
-              <th>Telenet</th>
-              <th>Orange Belgium</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Data method</td>
-              <td>HTML scraping</td>
-              <td>Official API</td>
-              <td>HTML scraping (fixed internet only)</td>
-            </tr>
-            <tr>
-              <td>Update frequency</td>
-              <td>Every 24h</td>
-              <td>Every 24h</td>
-              <td>Every 24h</td>
-            </tr>
-            <tr>
-              <td>Mobile covered on Slim</td>
-              <td>Yes</td>
-              <td>Yes</td>
-              <td>Not yet (JS-rendered page)</td>
-            </tr>
-            <tr>
-              <td>Region</td>
-              <td>Belgium-wide</td>
-              <td>Flanders + Brussels only</td>
-              <td>Belgium-wide (Voo absorbed 2025)</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
+        <div className={TABLE_WRAP}>
+          <table className={TABLE_CLASS}>
+            <thead>
+              <tr>
+                <th className={TH_CLASS}>Aspect</th>
+                <th className={TH_CLASS}>Proximus</th>
+                <th className={TH_CLASS}>Telenet</th>
+                <th className={TH_CLASS}>Orange Belgium</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className={TD_CLASS}>Data method</td>
+                <td className={TD_CLASS}>HTML scraping</td>
+                <td className={TD_CLASS}>Official API</td>
+                <td className={TD_CLASS}>HTML scraping (fixed internet only)</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Update frequency</td>
+                <td className={TD_CLASS}>Every 24h</td>
+                <td className={TD_CLASS}>Every 24h</td>
+                <td className={TD_CLASS}>Every 24h</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Mobile covered on Slim</td>
+                <td className={TD_CLASS}>Yes</td>
+                <td className={TD_CLASS}>Yes</td>
+                <td className={TD_CLASS}>Not yet (JS-rendered page)</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Region</td>
+                <td className={TD_CLASS}>Belgium-wide</td>
+                <td className={TD_CLASS}>Flanders + Brussels only</td>
+                <td className={TD_CLASS}>Belgium-wide (Voo absorbed 2025)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className={P_CLASS}>
           Mobile Vikings, Scarlet, hey!, and other smaller Belgian operators
           are not yet compared &mdash; see the full exclusion list on{' '}
-          <Link
-            href="/data-sources"
-            className="text-primary hover:underline"
-          >
+          <Link href="/data-sources" className={LINK_CLASS}>
             /data-sources
           </Link>
           . If an operator is missing, we say so.
         </p>
 
-        <h2>4. Which operator fits your household?</h2>
-        <p>
+        <h2 className={H2_CLASS}>4. Which operator fits your household?</h2>
+        <p className={P_CLASS}>
           Rather than crown a single winner, here is a practical decision
           matrix based on the household you actually have:
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Household situation</th>
-              <th>Best fit</th>
-              <th>Where to compare</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Single, urban, mobile-first</td>
-              <td>Any of 3 entry mobile plans (compare data allowance, not headline price)</td>
-              <td>
-                <Link
-                  href="/compare/mobile"
-                  className="text-primary hover:underline"
-                >
-                  /compare/mobile
-                </Link>
-              </td>
-            </tr>
-            <tr>
-              <td>Couple, one home, no TV</td>
-              <td>Mobile + internet duo (skip TV channel packs)</td>
-              <td>
-                <Link
-                  href="/compare/bundle_mobile_internet"
-                  className="text-primary hover:underline"
-                >
-                  /compare/bundle_mobile_internet
-                </Link>
-              </td>
-            </tr>
-            <tr>
-              <td>Family with kids, TV matters</td>
-              <td>Triple play (mobile + internet + TV) &mdash; check channel packs you already own</td>
-              <td>
-                <Link
-                  href="/compare/bundle_mobile_internet_tv"
-                  className="text-primary hover:underline"
-                >
-                  /compare/bundle_mobile_internet_tv
-                </Link>
-              </td>
-            </tr>
-            <tr>
-              <td>Renter or planning to move</td>
-              <td>No-contract or 12-month over 24-month lock-ins, even if a few euros higher</td>
-              <td>Any operator</td>
-            </tr>
-            <tr>
-              <td>Living in Wallonia</td>
-              <td>Proximus vs Orange Belgium (Telenet Flanders+Brussels only)</td>
-              <td>Auto-filtered by postcode on Slim</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
+        <div className={TABLE_WRAP}>
+          <table className={TABLE_CLASS}>
+            <thead>
+              <tr>
+                <th className={TH_CLASS}>Household situation</th>
+                <th className={TH_CLASS}>Best fit</th>
+                <th className={TH_CLASS}>Where to compare</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className={TD_CLASS}>Single, urban, mobile-first</td>
+                <td className={TD_CLASS}>Any of 3 entry mobile plans (compare data allowance, not headline price)</td>
+                <td className={TD_CLASS}>
+                  <Link href="/compare/mobile" className={LINK_CLASS}>
+                    /compare/mobile
+                  </Link>
+                </td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Couple, one home, no TV</td>
+                <td className={TD_CLASS}>Mobile + internet duo (skip TV channel packs)</td>
+                <td className={TD_CLASS}>
+                  <Link href="/compare/bundle_mobile_internet" className={LINK_CLASS}>
+                    /compare/bundle_mobile_internet
+                  </Link>
+                </td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Family with kids, TV matters</td>
+                <td className={TD_CLASS}>Triple play (mobile + internet + TV) &mdash; check channel packs you already own</td>
+                <td className={TD_CLASS}>
+                  <Link href="/compare/bundle_mobile_internet_tv" className={LINK_CLASS}>
+                    /compare/bundle_mobile_internet_tv
+                  </Link>
+                </td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Renter or planning to move</td>
+                <td className={TD_CLASS}>No-contract or 12-month over 24-month lock-ins, even if a few euros higher</td>
+                <td className={TD_CLASS}>Any operator</td>
+              </tr>
+              <tr>
+                <td className={TD_CLASS}>Living in Wallonia</td>
+                <td className={TD_CLASS}>Proximus vs Orange Belgium (Telenet Flanders+Brussels only)</td>
+                <td className={TD_CLASS}>Auto-filtered by postcode on Slim</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className={P_CLASS}>
           Whatever your situation, the honest answer is: check the live
           comparison, not this guide, on the day you sign up. Prices,
           promotions, and contract terms change often. Slim exists to make
           that check take five minutes.
         </p>
 
-        <h2>5. Personal note from the operator</h2>
-        <p>
+        <h2 className={H2_CLASS}>5. Personal note from the operator</h2>
+        <p className={P_CLASS}>
           I run Slim myself, and I switched from Orange Belgium (mobile +
           internet, around €62/month) to Proximus (two mobile lines +
           500&nbsp;Mbps fibre, around €90/month) earlier this year. Adding
@@ -329,24 +326,29 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
           not all of it &mdash; the fibre component alone got noticeably
           more expensive.
         </p>
-        <p>
+        <p className={P_CLASS}>
           Two things surprised me, and both are worth checking for yourself
           before you switch:
         </p>
-        <ul>
-          <li>
-            <strong>&ldquo;500&nbsp;Mbps fibre&rdquo; is a wired number, not
-            a Wi-Fi one.</strong> In my apartment I rarely see more than
-            around 10&nbsp;Mbps on Wi-Fi from the router that ships in the
-            standard package. That is likely a Wi-Fi 5 / 2.4&nbsp;GHz vs
-            5&nbsp;GHz / router-placement problem, not a fibre problem
-            &mdash; but the marketing headline never mentions it. If you
-            rely on Wi-Fi for everything (as most households do), a lower
-            fibre tier plus a better router may serve you the same or
-            better than the fastest tier with the stock modem.
+        <ul className={UL_CLASS}>
+          <li className={LI_CLASS}>
+            <strong className="font-semibold text-fg">
+              &ldquo;500&nbsp;Mbps fibre&rdquo; is a wired number, not a Wi-Fi
+              one.
+            </strong>{' '}
+            In my apartment I rarely see more than around 10&nbsp;Mbps on
+            Wi-Fi from the router that ships in the standard package. That
+            is likely a Wi-Fi 5 / 2.4&nbsp;GHz vs 5&nbsp;GHz /
+            router-placement problem, not a fibre problem &mdash; but the
+            marketing headline never mentions it. If you rely on Wi-Fi for
+            everything (as most households do), a lower fibre tier plus a
+            better router may serve you the same or better than the fastest
+            tier with the stock modem.
           </li>
-          <li>
-            <strong>5G coverage felt more stable on Orange for me.</strong>{' '}
+          <li className={LI_CLASS}>
+            <strong className="font-semibold text-fg">
+              5G coverage felt more stable on Orange for me.
+            </strong>{' '}
             Proximus has the largest overall infrastructure in Belgium, but
             in the places I actually use my phone (home, commute, work) I
             hit dropouts more often than I did on Orange. Coverage is very
@@ -356,7 +358,7 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
             Proximus bundle.
           </li>
         </ul>
-        <p>
+        <p className={P_CLASS}>
           This is one household&apos;s experience, not a verdict. Belgian
           consumer surveys (Test-Aankoop, Trustpilot BE) show mixed
           Proximus satisfaction scores despite the operator&apos;s market
@@ -367,15 +369,12 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
           each one costs and points you at what to test.
         </p>
 
-        <p className="text-sm text-fg/60">
+        <p className="mt-8 text-sm text-fg/60">
           <em>
             Slim is an independent comparison tool. We are not paid by
             Proximus, Telenet, or Orange Belgium to influence rankings. Read
             our{' '}
-            <Link
-              href="/legal/affiliate-disclosure"
-              className="text-primary hover:underline"
-            >
+            <Link href="/legal/affiliate-disclosure" className={LINK_CLASS}>
               affiliate disclosure
             </Link>
             .
