@@ -11,6 +11,28 @@
 
 ### Changed
 
+- **2026-07-22 — PLAN 4.22.1 [x] 격상 (93 → 94, +1) — MDX → TSX 정적 라우트 이전 hotfix #3 성공 + SC SEO 효과 발화** ([ADR-0051 §Amendment 1](docs/adr/0051-organic-seo-content-marketing-track.md#amendment-1-2026-07-08--d1-mdx--tsx-정적-라우트-이전) 정합):
+  - **hotfix #3 성공 (PR #74, 2026-07-03 머지)**: MDX 인프라 완전 폐기 (`@next/mdx` dep + `pageExtensions: ['mdx']` + `outputFileTracingIncludes` + `[slug]/page.tsx` dynamic route + `src/lib/guides.ts` + `src/types/mdx.d.ts` + `src/content/guides/*.mdx`) → `src/app/[locale]/guides/proximus-vs-telenet-vs-orange-be/page.tsx` TSX 정적 라우트 신설. Q1=(a) URL 구조 유지 (`/guides/{slug}`). 6단 게이트 GREEN + prod 4/4 URL 200 OK 실측.
+  - **왜 hotfix 3회 필요**: PR #70 원 MDX 인프라 → PR #72 정적 import map (실패) → PR #73 outputFileTracingIncludes + force-static 제거 (실패) → PR #74 MDX 폐기 + TSX 이전 (성공). Next.js 15 + Turbopack + i18n dynamic route + MDX RSC 조합이 Vercel prod에서 근본 미작동 확정.
+  - **2026-07-22 SC 회고 시점 SEO 효과 발화** (2주 흐름 검증):
+    - 총 노출수 **10 → 39 (+3.9배)** 🚀
+    - 색인 페이지 **4 → 6 (+2)** — `/guides` + `/guides/proximus-vs-telenet-vs-orange-be` 색인 성공
+    - 색인 마지막 업데이트 26.6.12 → **26.6.30** (Google 재크롤 발동)
+    - **베네룩스 의도 키워드 6종 신규 노출**: `internet vergelijken belgie` (81.2위) / `mobiele abonnementen vergelijken` (89.5) / `vergelijk internet providers` (63.3) / `zakelijk internet en telefonie vergelijken` (68.3) / `internet providers vergelijken` (69.7) / `internet providers belgië vergelijken` (63.5)
+    - 클릭 여전 0 (평균 위 60-89 = 페이지 6-9), 그러나 진짜 승리 = Google이 slim.lu를 관련 검색 pool에 진입시킴 (이전 "slim" 단일 검색어에서 확장).
+  - **ADR-0051 §D5 예측 정확 실현** — "vergelijk telecom" 류 informational + 비교 의도 키워드 노출 시작. 콘텐츠 트랙 성공 신호.
+  - **잔여 운영자 트랙**: (1) 첫 가이드 영어 본문 작성 2-4시간 (현 스켈레톤 → 실 4 섹션 콘텐츠) (2) SC URL 색인 요청 (색인된 새 페이지 재요청으로 크롤 우선순위 ↑) (3) 4.23 P2 DeepL hybrid (본문 완료 후 Claude 진입).
+  - **다음 단계**: 3개월 SC 추적 게이트 (ADR-0051 Q4=A) — 노출 지속 증가 + 클릭 첫 발생 확인 시 P3~P5 진입 (가이드 +4~9건 + 외부 디렉토리 등록).
+
+- **2026-06-29 — PLAN 4.22 [x] Organic SEO 콘텐츠 P1 격상 (92 → 93, +1) — MDX 인프라 + 첫 가이드 스켈레톤 (PR #70)** ([ADR-0051](docs/adr/0051-organic-seo-content-marketing-track.md) §D1/§D3 빌드 분할 P1):
+  - **무엇**: `@next/mdx` 통합 + `src/app/[locale]/guides/[slug]/page.tsx` RSC 동적 라우트 + `/guides` 인덱스 + `src/app/sitemap.ts` async 변환 + 가이드 슬러그 자동 통합 + `src/lib/guides.ts` frontmatter 파싱 (dep 0) + 첫 가이드 스켈레톤 (Proximus vs Telenet vs Orange BE 비교).
+  - **왜**: ADR-0034 §D5 organic SEO 런치 후 ~3.5주 SC 17일 정체 (클릭 0 / 노출 8→10 / 평균 게재순위 14.3→14.2 / 색인 4/4 변화 0 / sitemap 마지막 fetch 26.6.12 정체). ADR-0051 옵션 B (콘텐츠 마케팅) 잠금 → Google 권위 cold-start 봉합 트리거. 새 페이지 발견 = sitemap re-fetch + 색인 신호.
+  - **6단 게이트 ✅**: typecheck 0 / lint 0 / test:run **908 passed** (64 files, +19 신규) / harness:i18n GREEN / harness:cross-ref GREEN / harness:plan 103 정합.
+  - **변경 파일 (PR #70)**: `next.config.ts` (`withMDX` + `pageExtensions: ['tsx','ts','mdx']`) + `src/content/guides/proximus-vs-telenet-vs-orange-be.mdx` (스켈레톤, 본문 = 운영자 트랙) + `src/lib/guides.{ts,test.ts}` (frontmatter 파싱 + 6 케이스, dep 0 — gray-matter 불필요) + `src/app/[locale]/guides/[slug]/page.tsx` (RSC + `force-static` LCP 잠금 + `generateStaticParams` + `generateMetadata` + hreflang 3 locale ADR-0033 Amd 6) + `src/app/[locale]/guides/page.tsx` (인덱스 + 가이드 0건 정직 표시 + ADR-0050 §D6 다크패턴 회피 잠금) + `src/app/sitemap.{ts,test.ts}` async 변환 + 가이드 슬러그 자동 통합 (4 케이스) + `messages/{ko,en,nl,fr}.json` `guides.*` 8 키 × 4 locale = 32 entries.
+  - **머지 금지 잠금 정합 (P3 정직성)**: builder가 PR 생성까지만, `gh pr merge` 호출 안 함 ([feedback-builder-no-merge](C:/Users/kimwo/.claude/projects/C--Users-kimwo-slim/memory/feedback_builder_no_merge.md) 메모리 정합 ✅). 운영자 시각 잠금 후 명시 머지 결정.
+  - **SC 정체 진단**: SC 17일 데이터 정체 = Google 권위 cold-start 확정. PR #70 머지 → prod sitemap +2 entries (`/guides` + `/guides/proximus-vs-telenet-vs-orange-be`) = Google 새 페이지 발견 trigger. 5일~1주 안에 색인 누락 봉합 + 노출 증가 예상.
+  - **운영자 트랙 잔여**: (1) 첫 가이드 영어 본문 작성 (2-4시간, `src/content/guides/proximus-vs-telenet-vs-orange-be.mdx` head term 콘텐츠) (2) SC 5분 액션 (메시지 3건 / 필터 5개 ❌ / 색인 누락 4 URL "색인 생성 요청" / Sitemap 재제출). (3) 4.23 P2 builder 진입 게이트 열림 (DeepL hybrid nl/fr 1d 추정).
+
 - **2026-06-24 — PLAN 4.22 / 4.23 신설 (101 → 103, +2) — Organic SEO 콘텐츠 마케팅 트랙 ([ADR-0051](docs/adr/0051-organic-seo-content-marketing-track.md) Accepted)**:
   - **무엇**: ADR-0034 §D5 organic SEO 런치 (2026-06-05) 후 ~3주 SC 데이터 회고 (클릭 0 / 노출 8 / 평균 게재순위 14.3 / 색인 누락 50%) 끝에 운영자가 옵션 B (콘텐츠 마케팅) 잠금 → ADR-0051 신설. Q1~Q4 architect 권고 묶음 잠금: Q1=(a) `/guides/{slug}` / Q2 권고 토픽 순서 (1) Proximus vs Telenet vs Orange BE → (2) 벨기에 모바일 평균 가격 → (8) 제외 공급사 정직 표시 / Q3=(나) 별 ADR-0052 신설 (P4 Pieter's picks 영역 분리) / Q4=(A) P1+P2 만 (1 가이드 발행 → 3개월 SC 추적 효과 게이트).
   - **왜**: ADR-0034 D5 organic SEO 런치 가설이 ~3주 데이터로 거의 0 트래픽 확정. Google 권위 cold-start 패턴 + 백링크 0 + informational intent 콘텐츠 0 = 베네룩스 의도 키워드 노출 0. ADR-0051 = ADR-0034 §D5 트랙의 **콘텐츠 트랙으로 구체화**. ADR-0050 P4 (Pieter's picks 큐레이션) 영역 분리 = Q3=(나) 별 ADR-0052 트리거.

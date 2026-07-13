@@ -622,6 +622,17 @@
     "copyright": "© {year} Slim",
     "languageLabel": "Taal"
   },
+  "guides": {
+    "metaTitle": "Slim Gidsen — Vergelijkingsgidsen voor Belgische Telecom",
+    "metaDescription": "Eerlijke, datagestuurde gidsen om Proximus, Telenet en Orange Belgium te vergelijken — mobiel, internet en bundels.",
+    "indexHeading": "Telecomvergelijkingsgidsen",
+    "indexDescription": "Vergelijk Belgische telecomaanbieders — prijzen, contractvoorwaarden en betrouwbaarheid, onderbouwd met data.",
+    "empty": "Gidsen komen binnenkort.",
+    "publishedAt": "Gepubliceerd: {date}",
+    "author": "Door {name}",
+    "readMore": "Lees meer",
+    "contentComingSoon": "Inhoud in voorbereiding — de operator schrijft deze gids momenteel zelf. Vergelijk ondertussen live prijzen."
+  },
   "validation": {
     "postal": {
       "be": "Belgische (BE) postcode moet een 4-cijferig getal zijn tussen 1000 en 9999 (bijv. 1000, 9000)",

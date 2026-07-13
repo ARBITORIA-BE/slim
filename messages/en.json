@@ -622,6 +622,17 @@
     "copyright": "© {year} Slim",
     "languageLabel": "Language"
   },
+  "guides": {
+    "metaTitle": "Slim Guides — Belgium Telecom Comparison Guides",
+    "metaDescription": "Honest, data-driven guides comparing Proximus, Telenet, and Orange Belgium — mobile, internet, and bundle plans.",
+    "indexHeading": "Telecom Comparison Guides",
+    "indexDescription": "Compare Belgian telecom providers — pricing, contract terms, and reliability, backed by data.",
+    "empty": "Guides coming soon.",
+    "publishedAt": "Published: {date}",
+    "author": "By {name}",
+    "readMore": "Read more",
+    "contentComingSoon": "Content in preparation — the operator is writing this guide by hand. Compare live prices right now instead."
+  },
   "validation": {
     "postal": {
       "be": "Belgian (BE) postal code must be a 4-digit number between 1000 and 9999 (e.g. 1000, 9000)",
