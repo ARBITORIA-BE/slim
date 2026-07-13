@@ -33,6 +33,8 @@ A §조건 C) — 본 Amendment 가 숨기지 않음. 옵션 X 자동 비활성�
 - Proposed (2026-05-09) — 7 평가 + Appendix A legal 1차 검토
 - Accepted 옵션 C (2026-05-10) — 운영자 결정, GATE-F 통과
 - Amendment 1 (2026-05-17) — 옵션 C → 진입 (ADR-0034 D3, 운영자 의식 수용)
+- Amendment 3 (2026-05-28) — 정찰 스텁 전제 붕괴 정정 (페이지 단위 하이브리드 Cheerio)
+- **Amendment 4 (2026-07-13, Draft)** — Orange BE mobile 재정찰: JS-rendered 전제 붕괴 → mobile 정적 파싱 가능 확인, fetcher 스코프 확장 (internet_fixed → +mobile). PLAN 4.24 트리거.
 
 본 ADR은 **결정 + 권장만** 한다. 실 fetcher 코드 변경 X, fetcher 메타 변경 X,
 새 의존성 X. 옵션 C 채택의 직접 후속 = PLAN 1.5.6 status 갱신 + 본문 인용
@@ -2116,3 +2118,148 @@ ADR-0004 §결정 3 기준에서 현재 진행 가능.
 **Appendix B Amendment 작성: legal 에이전트 (2026-06-05)**
 **결론**: 1.5.8 (Orange BE fetcher) 코드 머지 게이트 **OPEN** (B.5 공통 조건 준수 전제).
 **직접 금지 0건, false positive만 매칭 — Proximus/Telenet과 동일 패턴.**
+
+---
+
+## Amendment 4 (2026-07-13, Draft) — Orange BE mobile 페이지 재정찰: JS-rendered 전제 붕괴 → 정적 파싱 가능 확인 + fetcher 스코프 확장
+
+### Status
+
+**Draft (architect, 2026-07-13)**. ADR status = Accepted 유지 (Amendment 3 §Decision "*페이지 단위* 판단" 원칙 재적용). 본 Amendment는 **Orange BE mobile 페이지의 스코프 재분류**이지 분기 재격상(LOW/MEDIUM/HIGH)이 아니다. MEDIUM 2.75 분류 근거는 유효. Amendment 3 §Decision 2 ("정적 매칭 성공 → scraping" 분기)의 재발화 사례.
+
+**Accepted 격상 조건**: 운영자 승인 + builder 라운드 착수 트리거.
+
+### Context — Amendment 3 전제의 재검증
+
+**PLAN 1.5.8 완료 시점 (2026-06-05)** `src/fetchers/orange-be.ts` 헤더 잠금:
+
+> Mobile 페이지 (`/fr/mobile/abonnements-gsm`):
+> `<obe-dps-price>` 웹 컴포넌트 (JS 런타임 렌더링)로 가격 표시.
+> 정적 HTML 에는 `discount-text=" "` placeholder 만 존재 — 표시 가격 부재.
+> ADR-0013 Amendment 3 의 "internet 매칭 0 → manual 폴백" 패턴 역방향 사례 —
+> Orange BE 는 mobile 이 JS 렌더링. 본 fetcher 는 mobile 미커버 (정직 표기)
+
+즉 Amendment 3 §Decision 2 페이지 단위 분기 (정적 매칭 성공 → scraping / 실패 → manual 폴백) 에서 Orange BE mobile 은 "정적 매칭 실패" 판정을 받았고, ADR-0034 D4 페이즈 5 후속 라운드로 미룸.
+
+**2026-07-13 재정찰** (Pieter, WebFetch `https://www.orange.be/fr/mobile/abonnements-gsm`): **Orange BE mobile 페이지가 정적 HTML 로 개편되었음이 관측됨**. 4 tier 파싱 성공:
+
+| Tier | Data | Speed | Std price | Promo | Promo mo |
+|---|---|---|---|---|---|
+| Small | 12 GB | 5G 400 Mbps | €15/mo | — (no promo) | — |
+| Medium | 70 GB | 5G 1 Gbps | €23/mo | €18/mo | 6 |
+| Large | 140 GB | 5G 1 Gbps | €29/mo | €20/mo | 12 |
+| Unlimited | unlimited | 5G 1 Gbps | €40/mo | €31/mo | 12 |
+
+**전제 붕괴**: Amendment 3 §미확인 (2026-05-28) 목록 4번째 항목 — "WebFetch ≠ raw fetch" 경고 재확인 필요. 본 Amendment 4 는 WebFetch 만 관측 — builder 첫 fetch(undici raw HTML) 로 정찰 재검증이 필수 게이트.
+
+### architect 정찰 검증 (WebFetch, 2026-07-13) — 페이지 단위 원칙 재적용
+
+Amendment 3 §Decision 2 "정적 매칭 성공 → scraping" 분기의 **재발화**:
+
+- **Orange BE mobile (재관측)**: 4 tier 가격이 정적 HTML 리터럴에 존재 (WebFetch 확인). `<obe-dps-price>` 웹 컴포넌트가 정적 텍스트로 fall-back 렌더링을 노출하거나, Orange BE 가 SEO 목적으로 SSR 을 강화한 것으로 추정. **DOM 구조 (셀렉터 후보)**: 미확인 (WebFetch 는 렌더 후 텍스트 반환) → **builder 첫 fetch (undici raw HTML) 로 셀렉터 잠금 필수**.
+- **Orange BE internet (기존)**: `.obe-pricebox` × 3 = 정적 파싱 확정 (1.5.8 프로덕션 실증). 변경 0.
+- **voo.be**: 2025-10-01 합병 후 여전히 정적 가격 부재 상태 (ADR-0034 Amendment 1 §Decision #1) — 본 Amendment 4 스코프 밖.
+
+**미확인 (정직 명시)**:
+- Mobile 페이지 raw HTML (undici fetch) 의 실제 셀렉터 이름 — WebFetch 는 렌더 후 텍스트만 노출, class/데이터 속성 불명 → **builder 첫 fetch 로 셀렉터 후보 3종 (`.obe-pricebox` 재사용 여부 / 신규 컨테이너 클래스 / 4 tier 카드 wrapper) 잠금**.
+- 표시 가격이 promo 인지 std 인지 구분 방식 — Amendment 3 §Decision 3 원칙 (`<del>` 정가 + `.obe-price-amount` 표시 가격 = 프로모) 를 mobile 에도 재사용 가능한지 실 HTML 로 검증.
+- Cloudflare/Imperva 챌린지 첫 fetch 응답 — mobile 페이지 URL 은 internet 페이지와 다른 CDN 정책 가능성. Amendment 3 §Decision 3 24h 신선도 게이트 재적용.
+
+### Decision — Orange BE fetcher mobile 스코프 확장
+
+Amendment 3 §Decision "페이지 단위 하이브리드 Cheerio" 원칙 재적용. 채택:
+
+**D1. Fetcher 구조 — 기존 `orange-be.ts` 확장 (신설 X)**
+
+- 기존 `orange-be.ts` 에 `parseMobilePlans($, ...)` 함수 병렬 추가. `parseInternetPlans` 와 동일 패턴.
+- `fetch()` 함수 = `fetchPage(INTERNET_SOURCE_URL)` + `fetchPage(MOBILE_SOURCE_URL)` 두 번 (page-unit fetch). Amendment 3 §B.5 공통 조건 "일 1회 이하 fetch" 정합 (같은 provider = 같은 cron trigger = 1회/일, 2 페이지 fetch 는 페이지 단위지 provider 단위 아님).
+- 두 페이지 중 하나 실패 시 부분 성공 반환 (기존 internet-only 폴백 경로 = 100% 실패 시 ok:false 유지, 부분 성공 = ok:true + data 감소).
+- Metadata 갱신: `categories: ['internet_fixed']` → `['internet_fixed', 'mobile']`. `FETCHER_VERSION` = `'orange-be@2026-07-13'` 격상.
+- **거부한 대안** (별도 `orange-be-mobile.ts` 신설): 같은 provider = 같은 provider_slug (`orange-be`) → registry 중복 + `admin-metrics.buildMethodCaseExpression` (providerSlug × category 매핑) 자연 처리 재사용 상실. Proximus fetcher 도 mobile + internet 을 한 파일로 처리 (동형 패턴). 파일 크기는 200 LOC 정도 증가 예상 — 관리 가능.
+
+**D2. Zod schema — `mobileAttributesSchema` 재사용 (신설 X)**
+
+- `src/types/tariff-attributes.ts` `mobileAttributesSchema` 이미 존재 (data_gb / voice_minutes / sms / eu_roaming_included / throttle_after_gb_speed_kbps).
+- Orange BE mobile 4 tier 는 이 스키마에 자연 매핑:
+  - Small: `data_gb: 12`, `voice_minutes: 'unlimited'` (추정 — builder 첫 fetch 실 HTML 확인 필수), `sms: 'unlimited'`, `eu_roaming_included: true`
+  - Medium/Large: `data_gb: 70/140`, 동일
+  - Unlimited: `data_gb: 'unlimited'`, 동일
+- 신규 스키마 0. ADR-0005 §T1 변경 0.
+
+**D3. Legal 게이트 — 재검토 불필요 (Appendix B Amendment 2026-06-05 재사용)**
+
+- Orange BE 소비자 GTC 3종 PDF (postpaid / sales / fiber) 는 Appendix B Amendment (2026-06-05) 에서 "직접 금지 0건, WEAK" 판정 완료. postpaid PDF §5.1 (SIM 카드 개인 사용 목적) 는 서비스 가입자 스코프 조항으로 공개 mobile 가격 페이지 스크래핑에 적용 안 됨 (Appendix B Amendment 2026-06-05 표 postpaid L473-474 판정).
+- **mobile 페이지 URL 자체가 robots.txt Disallow 대상인지 재확인 필수** (builder DoD): Appendix C §C.1 (2026-06-04) 기록 = `Disallow: /*mobile=` 는 쿼리 파라미터 패턴. `/fr/mobile/abonnements-gsm` 경로는 쿼리 없음 → 미차단 예상. 그러나 robots.txt 는 시점 가변 → builder 첫 fetch 전 재확인.
+- 결론: **legal 재호출 트리거 없음** (B.9 표 1.5.8 판정 🟢 PASS 재사용).
+
+**D4. Prod 배포 게이트 — Amendment 3 §Decision 3 + 1.5.8 프로덕션 트랙 재적용**
+
+- 로컬 게이트: typecheck 0 / lint 0 / test:run 0 실패 / harness:plan/data 정합.
+- 프로덕션 게이트 (머지 후):
+  - Vercel/Inngest 프로덕션 IP 실 fetch 성공 (메모리 `project_fetcher_prod_ip` 정합 — 로컬 fetch 성공 ≠ 프로덕션 성공, Imperva/Cloudflare 데이터센터 IP 차단 가능).
+  - 실 Neon DB `tariff_snapshot` Orange BE mobile 4 tier 누적 확인.
+  - 24h 신선도 모니터링 (admin 헬스).
+  - `confidence='low'` < 20% (§검증 방법 §Amendment 3).
+  - Sentry 차단(403/429/챌린지) 0건 → Amendment 4 정당화. 1건 → mobile 파트만 자동 비활성 + Amendment 5 트리거.
+
+### Consequences (정직 — CLAUDE.md §2)
+
+- ✅ Orange BE mobile 4 tier 실 데이터 커버 → confidence 격상 가능. `/data-sources` mobile 커버리지 표기 정직성 회복 (Orange BE mobile "후속 라운드" → "실 데이터"). 시장 대표성 향상 (Orange BE mobile 잔여 gap 해소).
+- ⚠️ **Amendment 3 (2026-05-28) 시점 관측이 6주 만에 뒤집힘 = 통신사 페이지 마크업의 *시점 가변성*을 실증**. Orange BE 가 SEO 또는 UI 리팩토링으로 SSR 을 강화한 것으로 추정 (정확한 원인은 미확인). 이는 페이지 단위 스크래핑의 근본적 fragile 성질을 재확인 — Amendment 3 §B.5 공통 조건 "셀렉터 재검증 트리거" 정합.
+- ⚠️ Fetcher 파일 크기 증가 (~200 LOC 추정). 관리 가능하나 향후 provider 페이지 수 ≥ 3 이면 파일 분할 재검토 (별도 refactor ADR 트리거).
+- ⚠️ 2 페이지 fetch × 1일 = fetch 횟수 2배 (Amendment 3 §B.5 "일 1회 이하 fetch" 는 provider 단위 정합, 페이지 단위 아님). Orange BE 부담 증가 미미 (일 2 request), 그러나 정직 명시.
+- 🔁 mobile 페이지가 재차 JS-rendered 로 회귀할 가능성 상존 → Amendment 3 §B.5 셀렉터 재검증 트리거 자동 발화 (rawPayload.warnings 에 "obe-pricebox not found" 또는 mobile plan-name span not found 검출 시 자동 비활성 + Sentry).
+- 🔁 ADR-0014 (affiliate-feed-as-primary) **미트리거 유지** (Cheerio 가용 재확인).
+
+### 검증 방법
+
+**게이트 A — builder 첫 fetch 정찰** (구현 착수 전):
+- undici raw HTML fetch `https://www.orange.be/fr/mobile/abonnements-gsm` — WebFetch 결과와 raw HTML 이 일치하는지 셀렉터 관측 검증 (Amendment 3 "WebFetch ≠ raw fetch" 경고 정합).
+- 셀렉터 후보 3종 (`.obe-pricebox` 재사용 / 신규 클래스 / 4 tier 카드 wrapper) 확정.
+- 챌린지 페이지 미검출 확인.
+- 4 tier 각각 std price + promo price + data_gb + speed 추출 성공.
+
+**게이트 B — 로컬 게이트**:
+- typecheck 0 / lint 0 / test:run 0 실패 (신규 unit 8~10 + integration 3~4 케이스).
+- harness:plan/data 정합.
+- `confidence='low'` 로컬 케이스 비율 < 20%.
+
+**게이트 C — 머지 후 24h 프로덕션 신선도 게이트** (1.5.8 트랙 재사용):
+- Vercel/Inngest 프로덕션 IP 실 fetch 성공 확인 (Inngest 대시보드 로그).
+- 실 Neon DB `tariff_snapshot` Orange BE mobile 4 tier 누적.
+- 24h 내 Sentry 차단 0건.
+- admin 헬스 mobile 카테고리 활성 tariff 비율 회복 확인.
+
+24h 후 통과 시 본 Amendment 4 → Accepted 격상. 미통과 시 mobile 스코프 자동 비활성 + Amendment 5 트리거 (원인 진단 + 다음 라운드 결정).
+
+### 영향
+
+**PLAN.md 갱신**:
+- **§4.24 신설** (본 Amendment 4 트리거) — 상세 명세는 PLAN 4.24 참조.
+- 1.5.8 본문 변경 0 (역사적 기록 보존 — 2026-06-05 시점 mobile 미커버 판정은 그 시점에 정확).
+
+**다른 ADR과의 관계**:
+- ADR-0008 §T1/§T4/§T5 변경 0 (mobile 카테고리 매핑 자동 재사용).
+- ADR-0005 §T6 변경 0 (mobile 카테고리 enum 이미 존재).
+- ADR-0034 D4 (4→3 fetcher, Voo 흡수) 변경 0 (본 Amendment 는 fetcher 개수 변경 X, 스코프 확장만).
+- Amendment 3 (2026-05-28) 페이지 단위 원칙 **재적용 사례**로 append.
+
+**Fetcher 헤더 정직성 갱신**:
+- `src/fetchers/orange-be.ts` 헤더 docblock 에서 mobile 페이지 = JS-rendered 판정 문구 **삭제 금지** (역사 기록 보존, 헌법 P3 정합).
+- 대신 헤더 하단에 "2026-07-13 재정찰: mobile 정적 파싱 가능 확인 → Amendment 4 스코프 확장" 1줄 append. Amendment 3 문구는 (a) 역사 기록 (b) 셀렉터 fragile 실증으로 보존.
+
+### 사이즈 추정
+
+**1-2일** — 근거:
+- Day 1 (~6h): builder 첫 fetch 정찰 (게이트 A, 30분) + `parseMobilePlans` 신설 (~150 LOC, 2h — `parseInternetPlans` 패턴 재사용) + `fetch()` 함수 병렬 fetch 확장 (~50 LOC, 1h) + Metadata categories 갱신 + version 격상 (~10 LOC, 15분) + unit 테스트 8~10 케이스 (~200 LOC, 2h — 기존 `orange-be.test.ts` fixture 패턴 재사용) + integration 3~4 케이스 (~100 LOC, 1h).
+- Day 2 (~4h): 로컬 게이트 통과 (게이트 B, 30분) + PR 생성 (`gh pr create`, 15분) + 운영자 머지 (별 트랙) + 프로덕션 IP 실 fetch 확인 (Inngest 대시보드, 15분) + 24h 신선도 관찰 (게이트 C, 백그라운드) + Amendment 4 → Accepted 격상 + provider seed 재확인 (`scripts/seed-providers.ts` orange-be 이미 존재, 신규 seed 불필요 — 메모리 `project_provider_seed_required` 정합).
+
+1.5.8 P1 (2026-06-05) 실적 = ~2일 (정찰 + 구현 + 프로덕션 게이트) → 본 Amendment 4 는 같은 fetcher 확장이므로 학습 곡선 절감 + robots/legal 재검토 0 → **1-2일 상한 확정**.
+
+### 잃는 것 / 부채
+
+- Mobile 페이지 셀렉터 재검증 트리거 (`rawPayload.warnings` "mobile pricebox not found") 가 새 자동 비활성 경로 추가 → Sentry 알림 볼륨 증가 가능 (2 페이지 monitoring). 관리 가능.
+- Fetcher 파일 크기 증가 (관리 가능, refactor 트리거 없음).
+- 2026-05-28 → 2026-07-13 (6주) 사이 Orange BE 마크업 변경의 **원인은 미확인** — SEO 강화 추정만. 이후 회귀 가능성 상존, 재검증 트리거로 완화.
+
+**Amendment 4 작성: architect (2026-07-13) — WebFetch 재정찰 기반, builder 첫 fetch raw HTML 재검증 게이트 A 필수**
