@@ -664,7 +664,7 @@
         "para1": "[nl] I run Slim myself, and I switched from Orange Belgium (mobile + internet, around €62/month) to Proximus (two mobile lines + 500 Mbps fibre, around €90/month) earlier this year. Adding the second mobile line explains part of the price increase, but not all of it — the fibre component alone got noticeably more expensive.",
         "para2": "[nl] Two things surprised me, and both are worth checking for yourself before you switch:",
         "li1": "[nl] <strong>“500 Mbps fibre” is a wired number, not a Wi-Fi one.</strong> In my apartment I rarely see more than around 10 Mbps on Wi-Fi from the router that ships in the standard package. That is likely a Wi-Fi 5 / 2.4 GHz vs 5 GHz / router-placement problem, not a fibre problem — but the marketing headline never mentions it. If you rely on Wi-Fi for everything (as most households do), a lower fibre tier plus a better router may serve you the same or better than the fastest tier with the stock modem.",
-        "li2": "[nl] <strong>5G coverage felt more stable on Orange for me.</strong> Proximus has the largest overall infrastructure in Belgium, but in the places I actually use my phone (home, commute, work) I hit dropouts more often than I did on Orange. Coverage is very location-specific, so your experience may be different — but if 5G reliability matters to you, worth testing an Orange SIM in your usual spots before committing to a 24-month Proximus bundle.",
+        "li2": "[nl] <strong>5G coverage felt more stable on Orange for me.</strong> Proximus has the largest overall infrastructure in Belgium, but in the places I actually use my phone (home, commute, work) I hit dropouts more often than I did on Orange. Coverage is very location-specific, so your experience may be different — but if 5G reliability matters to you, worth testing an Orange SIM in your usual spots before committing to a Proximus bundle.",
         "para3": "[nl] This is one household’s experience, not a verdict. Belgian consumer surveys (Test-Aankoop, Trustpilot BE) show mixed Proximus satisfaction scores despite the operator’s market leadership, so the pattern is not unique to me — but the only data that matters for your decision is your own postcode, your own usage, and a Wi-Fi speed test you run yourself. Slim will not tell you which operator is best; it will tell you what each one costs and points you at what to test."
       },
       "footer": {
@@ -823,13 +823,13 @@
           },
           "row4": {
             "col1": "[nl] Renter or planning to move",
-            "col2": "[nl] No-contract or 12-month over 24-month lock-ins, even if a few euros higher",
+            "col2": "[nl] All three are non-binding — compare installation fees instead",
             "col3": "[nl] Any operator"
           },
           "row5": {
             "col1": "[nl] Living in Wallonia",
             "col2": "[nl] Proximus vs Orange Belgium (Telenet Flanders+Brussels only)",
-            "col3": "[nl] Auto-filtered by postcode on Slim"
+            "col3": "[nl] Slim shows a Telenet coverage note — it does not filter by postcode"
           }
         }
       }
