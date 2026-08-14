@@ -483,7 +483,7 @@ TVA 발급 후 Daisycon/Awin 가입 시 — 본 ADR §평가 5 결론 (윤리 �
 ### PLAN.md 갱신
 
 - **§1.5.6** 본문 마지막 줄에 인용 추가:
-  > 진행 또는 보류 분기는 [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)
+  > 진행 또는 보류 분기는 [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md)
   > §분기 권장에 따른다. 현재 평가: **MEDIUM** — 페이즈 5/6 재평가.
 - §작업 추적 메타 표 합계 변동 X (체크박스 마킹 X — 본 ADR은 평가만)
 - Scope cut 옵션 표 변동 X (본 ADR은 새 옵션 도입 X)

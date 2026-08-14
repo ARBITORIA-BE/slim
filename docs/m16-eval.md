@@ -50,7 +50,7 @@
 
 ## Cross-ref
 
-- [ADR-0003](adr/0003-meta-roadmap.md) §결정 2 — DEPRECATED (Amendment 1, 2026-05-17 무효화)
+- [ADR-0003](adr/0003-plan-realism-solo-side.md) §결정 2 — DEPRECATED (Amendment 1, 2026-05-17 무효화)
 - [ADR-0034](adr/0034-strategy-pivot-completion-first-seo-launch.md) D2 — 본 문서 게이트 의미 삭제 결정 출처
 - [4.5.1.b 어드민 메트릭](../PLAN.md) — 측정 방법 단일 출처
 - [4.5.2 Sentry/Inngest 알림](../PLAN.md) — 운영 가시성 트랙

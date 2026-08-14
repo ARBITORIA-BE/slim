@@ -319,12 +319,12 @@ V5 = observational (게이트 아님, 운영자 자가 검증).
   (Amendment 4 동반)
 - [ADR-0011 §T2](0011-data-sources-page-and-caveats-boundary.md) — 정직 표시 패턴
   (carrier availability caveats 재사용)
-- [ADR-0029 §T2](0029-honesty-tokens.md) — 정직성 토큰 (caveats 텍스트 톤)
+- [ADR-0029 §T2](0029-beta-recruitment.md) — 정직성 잠금 토큰 (caveats 텍스트 톤)
 - [ADR-0034 D2 + Amendment 1 D4](0034-strategy-pivot-completion-first-seo-launch.md)
   — 통신 BE만 + 3 공급사
-- [ADR-0007 §T2](0007-comparison-request-data-model.md) — `comparison_request.postal_code`
+- [ADR-0007 §T2](0007-comparison-request-result-schema.md) — `comparison_request.postal_code`
   컬럼 (보존)
-- [ADR-0033 §T1](0033-i18n-namespace-and-locale-routing.md) — i18n 5 locale
+- [ADR-0033 §T1](0033-i18n-next-intl-introduction.md) — i18n 5 locale
 - [ADR-0040 §T3](0040-legal-namespace-deepl-hybrid-and-interstitial-boundary.md)
   — DeepL hybrid (`compare.*` 일반 트랙)
 - [ADR-0042 §D1](0042-telecom-bundle-taxonomy-extension.md) — enum 5값 (carrier

@@ -9,6 +9,23 @@
 
 ## [Unreleased]
 
+### Added
+
+- **2026-08-14 — PLAN 4.25 [x] 신설: 문서 링크 무결성 게이트 (6단 → 7단, 105 → 106 / 94 → 95)** ([ADR-0044 Amendment 1](docs/adr/0044-verifier-cross-ref-rules.md) 정합):
+  - **무엇**: `scripts/harness/verify-doc-links.ts` 신설 — 룰 (iv) 마크다운 상대 링크 `[텍스트](경로.md)` 대상 파일 실재 정적 검증. `pnpm harness:doc-links` + `scripts/hooks/stop-gate.sh` **Gate 7** 등록 + 단위 테스트 21건 (test:run 902 → **923**).
+  - **왜**: 바로 아래 고아 ADR 사고의 근본 원인 봉합. 룰 3종([ADR-0044](docs/adr/0044-verifier-cross-ref-rules.md))은 컴포넌트↔라우팅 한정이고 `harness:plan`은 체크박스↔코드 정합만 봐서, **근거 문서가 통째로 없는 상태**를 아무 게이트도 잡지 못했다. 근거 없는 `[x]` 11건이 2026-06-10부터 약 4개월간 통과했다.
+  - **구현/위반 처리**: ADR-0044 §D2/§D3와 동형 — 정규식 정적 스캔 (새 의존성 0) + `error` 격상 exit 1 (Stop hook 차단).
+  - **실측**: 전체 마크다운 **623개 링크** 스캔 → **깨진 링크 7건 발화**. 전부 ADR 번호는 맞고 파일명/상대 base만 틀린 오타로, 원 의도 유실 0:
+    - `CHANGELOG.md` → `0027-affiliate-rates.md` ⇒ `0027-affiliate-rate-data-source.md`
+    - ADR-0043 → `0007-comparison-request-data-model.md` ⇒ `0007-comparison-request-result-schema.md`
+    - ADR-0043 → `0029-honesty-tokens.md` ⇒ `0029-beta-recruitment.md` (§T2 정직성 잠금 토큰 — 내용 일치 확인)
+    - ADR-0043 → `0033-i18n-namespace-and-locale-routing.md` ⇒ `0033-i18n-next-intl-introduction.md`
+    - `docs/m16-eval.md` → `adr/0003-meta-roadmap.md` ⇒ `adr/0003-plan-realism-solo-side.md`
+    - `docs/build-gate-negative-test.md` → 상대 base 누락 ⇒ `adr/0017-db-mismatch-incident-postmortem.md`
+    - ADR-0013 자기 참조 → 저장소 루트 경로로 적혀 이중 해석 ⇒ 파일 기준 상대 경로
+  - **범위 밖 (의도적)**: 외부 URL (네트워크 의존 = 게이트 비결정성) / 앵커 실재 (한글 slug 규칙이 렌더러별로 달라 위양성 위험) / 코드 파일 링크 (룰 (i) 소관) / 펜스 코드블록 내부 (예시 인용 오탐 방지, 줄 수는 보존해 라인 번호 정합).
+  - **링크 해석 기준**: 저장소 루트가 아니라 **문서 파일 위치** 기준 — GitHub 렌더링과 동일. 따라서 `docs/adr/` 안에서 `docs/adr/x.md`로 적은 링크는 위반으로 잡힌다 (실제로 GitHub에서 깨지므로 정탐).
+
 ### Fixed
 
 - **2026-08-14 — 고아 ADR 봉합: ADR-0047/0048/0049 + 페이즈 6 DoD 다이어그램 main 편입 (근거 없는 `[x]` 11건 해소)**:
@@ -529,7 +546,7 @@
 - **PLAN 4.3.a** — ADR-0027 신설 (2026-05-13):
   - 제휴 단가 데이터 모델 정식 결정. 정적 TypeScript const (`src/data/affiliate-rates.ts`) 채택 (ADR-0027 옵션 C).
   - `AffiliateRate` 인터페이스: 8필드 (providerId / currency / amountCents / commissionType / source / fetchedAt / effectiveFrom / effectiveTo?).
-  - 결정 근거: [ADR-0027](docs/adr/0027-affiliate-rates.md) — T1(정적 TS const 선택) / T2(literal 타입 EUR/CPA) / T3(8필드 정합) / T4(헬퍼 함수 활성 2값 분기) / T5(P1/P3 정합 — source/fetchedAt NOT empty + ISO 8601 + amountCents 정수>0).
+  - 결정 근거: [ADR-0027](docs/adr/0027-affiliate-rate-data-source.md) — T1(정적 TS const 선택) / T2(literal 타입 EUR/CPA) / T3(8필드 정합) / T4(헬퍼 함수 활성 2값 분기) / T5(P1/P3 정합 — source/fetchedAt NOT empty + ISO 8601 + amountCents 정수>0).
   - **ADR-0027 발행 (2026-05-13)** + `docs/adr/INDEX.md` 정식 항목화 + ADR-0026 §T4 cross-ref 기존 보유.
   - 검증: ADR 본문 신설 + INDEX 반영. (코드 아직 미구현 — 4.3.b 이어서 진행)
 

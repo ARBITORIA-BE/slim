@@ -242,7 +242,7 @@ GATE-J 진입.
   분리 (Vercel = 빌드 / Actions = 검증)
 - [ADR-0015](adr/0015-vercel-integration-and-d1-closure.md) — §검증 2/3 D.1
   DoD #2/#3 마감 게이트
-- [ADR-0017](0017-db-mismatch-incident-postmortem.md) — DB 미스매치 사건
+- [ADR-0017](adr/0017-db-mismatch-incident-postmortem.md) — DB 미스매치 사건
   종결 (음성 PR 실행 시 production DB 영향 0 — 본 가이드는 typecheck/build
   단독)
 - [ADR-0018](adr/0018-neon-multi-org-policy.md) — Neon 멀티 org 정책 (음성 PR
