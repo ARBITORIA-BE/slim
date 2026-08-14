@@ -274,9 +274,78 @@ PASS 로그 확인.
   원인. 본 ADR 은 동일 ADR 패턴 미래 재발화 봉합.
 - **PLAN 4.17** — 본 ADR Decision 의 PLAN 본문 잠금.
 
+## Amendment 1 (2026-08-14) — 룰 (iv) 문서 링크 무결성 추가 (6단 → 7단 게이트)
+
+**Accepted** (2026-08-14, Pieter — 고아 ADR 사고 실측 트리거).
+
+> 주의: 본 Amendment 는 아래 §Amendment 트리거에 예고됐던 "Amd 1 트리거"(ts-morph
+> 격상)와 다른 사안이다. 예고된 격상 트리거는 아직 발화하지 않았고 미래 Amendment 로
+> 남는다. 번호는 실제 발생 순서를 따른다.
+
+### A1.맥락 — 룰 3종이 못 본 표면
+
+2026-08-14 stale PR 정리 중 실측: `PLAN.md`(2482/2483/2494/2499/2501/2506/2545/2547행)와
+`CHANGELOG.md`(89행)가 **5.5/5.6 + 6.1~6.9 = 11건 `[x]` 격상의 근거**로
+[ADR-0048](0048-phase-6-bulk-promotion-option-c.md) / [ADR-0049](0049-gdpr-tools-anonymous-model-redefinition.md)
+를 링크하고 있었으나 해당 파일이 main 에 없었다 (미머지 PR #62 에만 존재,
+`docs/adr/` 가 0046 → 0050 으로 건너뜀).
+
+**근거 없는 `[x]` 11건이 2026-06-10부터 약 4개월간 게이트를 통과했다.**
+
+원인 = 본 ADR 룰 3종이 **컴포넌트 ↔ 라우팅 한정**이라 문서 링크를 보지 않는다.
+`harness:plan` 은 PLAN 체크박스 ↔ 코드 파일 정합만 보고 링크 대상을 검증하지 않는다.
+헌법 §3 **P1**(출처 없는 주장 금지) + **P5**(결정은 ADR로) 위반이 게이트 사각지대에 있었다.
+
+### A1.D1 — 룰 (iv) 신설
+
+`scripts/harness/verify-doc-links.ts` — 마크다운 상대 링크 `[텍스트](경로.md)` 의
+대상 파일 실재를 정적 검증. `pnpm harness:doc-links`.
+
+구현 = 본 ADR §D2 와 **동형** (정규식 정적 스캔, 새 의존성 0).
+위반 처리 = 본 ADR §D3 와 **동형** (`error` 격상 → exit 1 → Stop hook 차단).
+
+### A1.D2 — 범위 경계 (의도적 제외)
+
+| 대상 | 처리 | 사유 |
+|---|---|---|
+| 상대 `.md` 링크 | ✅ 검증 | 본 사고의 표면 |
+| 외부 URL (http/https/mailto/tel) | ❌ 제외 | 네트워크 의존 = 게이트 비결정성 |
+| 앵커(`#section`) 실재 | ❌ 제외 | 한글 앵커 slug 규칙이 렌더러마다 달라 위양성 위험. 경로만 보고 앵커는 잘라냄 |
+| 코드 파일 링크 (`.ts`/`.tsx`) | ❌ 제외 | 룰 (i) 소관 |
+| 펜스 코드블록 내부 | ❌ 제외 | 예시로 인용된 링크 오탐 방지 (줄 수는 보존해 라인 번호 정합) |
+| 백틱 인라인 코드 내부 | ❌ 제외 | **본 Amendment 작성 중 실측 발화** — 링크 문법 자체를 설명하는 문서(본 ADR / PLAN 4.25 / CHANGELOG)가 스스로를 깨뜨렸다. 길이 보존 치환으로 라인 번호 정합 유지 |
+
+링크가 **저장소 루트 기준이 아니라 문서 파일 위치 기준**으로 해석된다 — GitHub 렌더링과
+동일 기준. 따라서 `docs/adr/` 안에서 `docs/adr/x.md` 로 적은 링크는 위반으로 잡힌다
+(실제로 GitHub 에서 깨지는 링크이므로 정탐).
+
+### A1.D3 — 6단 → 7단 게이트
+
+`scripts/hooks/stop-gate.sh` Gate 7 등록. `.claude/settings.json` description 갱신.
+
+### A1.V1 — 검증 (2026-08-14 실측)
+
+- 최초 실행: 전체 마크다운 **623개 링크** 스캔 → **깨진 링크 7건** 발화
+  - `CHANGELOG.md` → `0027-affiliate-rates.md` (실제 `0027-affiliate-rate-data-source.md`)
+  - ADR-0043 → `0007-comparison-request-data-model.md` (실제 `0007-comparison-request-result-schema.md`)
+  - ADR-0043 → `0029-honesty-tokens.md` (실제 `0029-beta-recruitment.md` — §T2 정직성 잠금 토큰)
+  - ADR-0043 → `0033-i18n-namespace-and-locale-routing.md` (실제 `0033-i18n-next-intl-introduction.md`)
+  - `docs/m16-eval.md` → `adr/0003-meta-roadmap.md` (실제 `adr/0003-plan-realism-solo-side.md`)
+  - `docs/build-gate-negative-test.md` → `0017-...md` (상대 base 누락, 실제 `adr/0017-...md`)
+  - ADR-0013 자기 참조 → 저장소 루트 경로로 적혀 이중 해석
+- 7건 전부 **ADR 번호는 맞고 파일명/상대 base 만 틀린** 오타로 확인 (원 의도 유실 0).
+- 수정 후 재실행: GREEN. (본 Amendment 문서 추가 후 링크 총량 623 → **630**건, GREEN 유지)
+- 단위 테스트 `verify-doc-links.test.ts` 21건 — 고아 ADR 회귀 재현 2건 + 인라인 코드 위양성 4건 포함. `pnpm test:run` 902 → **923**.
+
+### A1.잃는 것 / 부채
+
+- 앵커 미검증 = `#amendment-1-...` 같은 앵커가 깨져도 통과한다. 한글 slug 규칙 확정 후 별 트랙.
+- 외부 URL 미검증 = 공급사 GTC 링크 등의 link-rot 은 여전히 수동 확인 대상.
+- 정규식 기반이라 참조 링크 문법(`[a][ref]`) 미지원 — 현 문서에 사용례 0 이라 유예.
+
 ## Amendment 트리거 (미래)
 
-- **Amd 1 트리거**: 룰 (i)/(ii)/(iii) 위양성 ≥ 3건/월 또는 위음성 ≥ 1건/월 발생
+- **ts-morph 격상 트리거**: 룰 (i)/(ii)/(iii) 위양성 ≥ 3건/월 또는 위음성 ≥ 1건/월 발생
   시 → 옵션 (B) ts-morph AST 정적 분석 격상 검토.
 - **Amd 2 트리거**: 페이즈 5 통신 외 카테고리(에너지/모기지/보험 등) 진입 시 (별
   ADR + 본 룰 범위 확장).

@@ -53,7 +53,7 @@
           {
             "type": "command",
             "command": "bash scripts/hooks/stop-gate.sh",
-            "description": "5단 게이트 종합 검증 — 통과 못 하면 사용자에게 보고하고 멈춤"
+            "description": "7단 게이트 종합 검증 — 통과 못 하면 사용자에게 보고하고 멈춤"
           }
         ]
       }

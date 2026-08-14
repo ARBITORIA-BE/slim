@@ -118,7 +118,8 @@ pnpm db:push          # Drizzle 스키마 마이그레이션
 pnpm db:studio        # DB 시각화
 pnpm harness:plan     # PLAN.md 정합성 검증
 pnpm harness:data     # 데이터 fidelity 감사
-pnpm harness:cross-ref # 컴포넌트 ↔ 라우팅 cross-ref 정적 스캔 (ADR-0044, Stop hook 6단 게이트)
+pnpm harness:cross-ref # 컴포넌트 ↔ 라우팅 cross-ref 정적 스캔 (ADR-0044, Stop hook 게이트 6단)
+pnpm harness:doc-links # 마크다운 상대 링크 ↔ 파일 존재 검증 (ADR-0044 Amd 1, Stop hook 게이트 7단)
 pnpm harness:price     # 가격 스냅샷 diff
 pnpm harness:bias      # 어필리에이트 편향 감사 (주간)
 pnpm harness:e2e       # E2E 스모크
