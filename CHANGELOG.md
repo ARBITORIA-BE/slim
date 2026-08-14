@@ -9,6 +9,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **2026-08-14 — 고아 ADR 봉합: ADR-0047/0048/0049 + 페이즈 6 DoD 다이어그램 main 편입 (근거 없는 `[x]` 11건 해소)**:
+  - **문제**: `PLAN.md` (2482/2483/2494/2499/2501/2506/2545/2547행) 과 `CHANGELOG.md` (89행) 이 **5.5/5.6 + 6.1~6.9 = 11건 `[x]` 격상의 근거**로 [ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) / [ADR-0049](docs/adr/0049-gdpr-tools-anonymous-model-redefinition.md) 를 링크하고 있었으나, 해당 ADR 파일이 **main에 존재하지 않았음** (`docs/adr/` 가 0046 → 0050 으로 건너뜀). 즉 전체 진행률 94/105 중 11건이 **깨진 링크를 근거로 `[x]`** 상태 = 헌법 §3 **P1 (출처 없는 주장 금지) + P5 (결정은 ADR로) 위반**.
+  - **원인**: 2026-06-10 옵션 C 일괄 격상 라운드에서 PLAN/CHANGELOG 변경분만 main에 반영되고, ADR 문서 3건 + 다이어그램은 미머지 PR #62 (`feat/adr-0048-phase-6-bulk-promotion`) 에만 남음. 해당 브랜치가 main 대비 15커밋 뒤처져 stale 로 보였던 탓에 근거 문서가 유실 직전이었음.
+  - **봉합**: PR #62 브랜치에서 **문서 4파일만 추출** (코드 변경 0) — `docs/adr/0047-phase-6-beta-support-partial-entry.md` (182줄, **Rejected** 상태 = 옵션 비교 이력 보존) / `docs/adr/0048-phase-6-bulk-promotion-option-c.md` (164줄) / `docs/adr/0049-gdpr-tools-anonymous-model-redefinition.md` (138줄) / `docs/diagrams/phase-6-bulk-promotion-dod.md` (121줄).
+  - **동반**: `docs/adr/INDEX.md` 누락 5건 등재 (0047/0048/0049 + **0050/0051도 미등재 상태였음**).
+  - **PLAN.md 체크박스 변경 0** — 본 PR은 기존 `[x]` 의 근거를 복원할 뿐, 진행률(94/105)을 바꾸지 않음.
+  - **후속 부채**: `harness:cross-ref` / `verify-plan` 게이트가 이 dangling ADR 링크를 탐지하지 못했음 (ADR-0044 룰 3종 = 컴포넌트↔라우팅 한정). 문서 링크 무결성 룰 추가 = 별 트랙.
+
 ### Changed
 
 - **2026-07-22 — PLAN 4.22.1 [x] 격상 (93 → 94, +1) — MDX → TSX 정적 라우트 이전 hotfix #3 성공 + SC SEO 효과 발화** ([ADR-0051 §Amendment 1](docs/adr/0051-organic-seo-content-marketing-track.md#amendment-1-2026-07-08--d1-mdx--tsx-정적-라우트-이전) 정합):
