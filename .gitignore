@@ -10,6 +10,9 @@ public/reports/bias/*.json
 *.log
 scripts/tmp-*.mjs
 scripts/tmp-*.ts
+# 로컬 개발용 1회성 스크립트 (라운드별 패치/조회 + prod 스모크 셸)
+# — 저장소 산출물이 아니라 운영자 로컬 도구. 재사용 가치가 생기면 scripts/ 로 승격.
+scripts/dev/
 .DS_Store
 
 # TypeScript incremental build cache (regenerated per build)

@@ -11,6 +11,43 @@
 
 ### Changed
 
+- **2026-08-14 — stale PR 3건 정리 (#49 / #45 / #33) + Inngest 정찰 결론 runbook 이관**:
+  - **판정 근거**: 3건 모두 새 main(`d696fe3`) 기준 재확인 — 산출물이 main에 이미 존재하거나, main이 더 늦은 판단으로 앞서 있음.
+    - **#49** (`chore/4.5.2-4.5.3-marking`) — `docs/m16-eval.md` main에 존재. PLAN 4.5.2는 main이 `[x]`([ADR-0046](docs/adr/0046-phase-4-closure.md))로 PR의 `[~]`보다 앞섬. merge-base 이후 main 29커밋 진행.
+    - **#45** (`feat/4.16-zip-removal`) — ZIP 제거(`comparison-input.ts`) + locale 5→3(`routing.ts`) 전부 main 반영(PR #47 경유). 브랜치 마지막 2커밋이 4.16.b/4.16.d **Revert**라 net 효과 무효. merge-base 이후 main 33커밋 진행.
+    - **#33** (`chore/4.5.2.b-mark-complete`) — main은 4.5.2.b를 의도적으로 `[~]` 유지(2026-06-10, 운영자 트랙 잔여 = P3 정직 보존). PR의 `[x]`보다 main 판단이 나중. merge-base 이후 main 43커밋 진행.
+  - **유실 방지 이관**: #33에만 있던 **Inngest 자체 알림 시스템 부재 정찰**(2026-06-05 Chrome MCP 실측 — Hobby/Pro/Enterprise 전 plan 알림 기능 없음, Enterprise만 Dedicated slack channel, Pro $75/월 ≈ €70/월 = €300 cap 대비 효익 낮음)을 [`docs/runbook/inngest-alert-rules.md`](docs/runbook/inngest-alert-rules.md)로 이관. **runbook의 "Notifications 메뉴 진입" 절차가 실행 불가일 수 있다는 경고 + 재검증 트리거 명시** (정찰은 2026-06-05 시점 관찰).
+  - PLAN 체크박스 변경 0.
+
+### Added
+
+- **2026-08-14 — PLAN 4.25 [x] 신설: 문서 링크 무결성 게이트 (6단 → 7단, 105 → 106 / 94 → 95)** ([ADR-0044 Amendment 1](docs/adr/0044-verifier-cross-ref-rules.md) 정합):
+  - **무엇**: `scripts/harness/verify-doc-links.ts` 신설 — 룰 (iv) 마크다운 상대 링크 `[텍스트](경로.md)` 대상 파일 실재 정적 검증. `pnpm harness:doc-links` + `scripts/hooks/stop-gate.sh` **Gate 7** 등록 + 단위 테스트 21건 (test:run 902 → **923**).
+  - **왜**: 바로 아래 고아 ADR 사고의 근본 원인 봉합. 룰 3종([ADR-0044](docs/adr/0044-verifier-cross-ref-rules.md))은 컴포넌트↔라우팅 한정이고 `harness:plan`은 체크박스↔코드 정합만 봐서, **근거 문서가 통째로 없는 상태**를 아무 게이트도 잡지 못했다. 근거 없는 `[x]` 11건이 2026-06-10부터 약 4개월간 통과했다.
+  - **구현/위반 처리**: ADR-0044 §D2/§D3와 동형 — 정규식 정적 스캔 (새 의존성 0) + `error` 격상 exit 1 (Stop hook 차단).
+  - **실측**: 전체 마크다운 **623개 링크** 스캔 → **깨진 링크 7건 발화**. 전부 ADR 번호는 맞고 파일명/상대 base만 틀린 오타로, 원 의도 유실 0:
+    - `CHANGELOG.md` → `0027-affiliate-rates.md` ⇒ `0027-affiliate-rate-data-source.md`
+    - ADR-0043 → `0007-comparison-request-data-model.md` ⇒ `0007-comparison-request-result-schema.md`
+    - ADR-0043 → `0029-honesty-tokens.md` ⇒ `0029-beta-recruitment.md` (§T2 정직성 잠금 토큰 — 내용 일치 확인)
+    - ADR-0043 → `0033-i18n-namespace-and-locale-routing.md` ⇒ `0033-i18n-next-intl-introduction.md`
+    - `docs/m16-eval.md` → `adr/0003-meta-roadmap.md` ⇒ `adr/0003-plan-realism-solo-side.md`
+    - `docs/build-gate-negative-test.md` → 상대 base 누락 ⇒ `adr/0017-db-mismatch-incident-postmortem.md`
+    - ADR-0013 자기 참조 → 저장소 루트 경로로 적혀 이중 해석 ⇒ 파일 기준 상대 경로
+  - **범위 밖 (의도적)**: 외부 URL (네트워크 의존 = 게이트 비결정성) / 앵커 실재 (한글 slug 규칙이 렌더러별로 달라 위양성 위험) / 코드 파일 링크 (룰 (i) 소관) / 펜스 코드블록 내부 (예시 인용 오탐 방지, 줄 수는 보존해 라인 번호 정합).
+  - **링크 해석 기준**: 저장소 루트가 아니라 **문서 파일 위치** 기준 — GitHub 렌더링과 동일. 따라서 `docs/adr/` 안에서 `docs/adr/x.md`로 적은 링크는 위반으로 잡힌다 (실제로 GitHub에서 깨지므로 정탐).
+
+### Fixed
+
+- **2026-08-14 — 고아 ADR 봉합: ADR-0047/0048/0049 + 페이즈 6 DoD 다이어그램 main 편입 (근거 없는 `[x]` 11건 해소)**:
+  - **문제**: `PLAN.md` (2482/2483/2494/2499/2501/2506/2545/2547행) 과 `CHANGELOG.md` (89행) 이 **5.5/5.6 + 6.1~6.9 = 11건 `[x]` 격상의 근거**로 [ADR-0048](docs/adr/0048-phase-6-bulk-promotion-option-c.md) / [ADR-0049](docs/adr/0049-gdpr-tools-anonymous-model-redefinition.md) 를 링크하고 있었으나, 해당 ADR 파일이 **main에 존재하지 않았음** (`docs/adr/` 가 0046 → 0050 으로 건너뜀). 즉 전체 진행률 94/105 중 11건이 **깨진 링크를 근거로 `[x]`** 상태 = 헌법 §3 **P1 (출처 없는 주장 금지) + P5 (결정은 ADR로) 위반**.
+  - **원인**: 2026-06-10 옵션 C 일괄 격상 라운드에서 PLAN/CHANGELOG 변경분만 main에 반영되고, ADR 문서 3건 + 다이어그램은 미머지 PR #62 (`feat/adr-0048-phase-6-bulk-promotion`) 에만 남음. 해당 브랜치가 main 대비 15커밋 뒤처져 stale 로 보였던 탓에 근거 문서가 유실 직전이었음.
+  - **봉합**: PR #62 브랜치에서 **문서 4파일만 추출** (코드 변경 0) — `docs/adr/0047-phase-6-beta-support-partial-entry.md` (182줄, **Rejected** 상태 = 옵션 비교 이력 보존) / `docs/adr/0048-phase-6-bulk-promotion-option-c.md` (164줄) / `docs/adr/0049-gdpr-tools-anonymous-model-redefinition.md` (138줄) / `docs/diagrams/phase-6-bulk-promotion-dod.md` (121줄).
+  - **동반**: `docs/adr/INDEX.md` 누락 5건 등재 (0047/0048/0049 + **0050/0051도 미등재 상태였음**).
+  - **PLAN.md 체크박스 변경 0** — 본 PR은 기존 `[x]` 의 근거를 복원할 뿐, 진행률(94/105)을 바꾸지 않음.
+  - **후속 부채**: `harness:cross-ref` / `verify-plan` 게이트가 이 dangling ADR 링크를 탐지하지 못했음 (ADR-0044 룰 3종 = 컴포넌트↔라우팅 한정). 문서 링크 무결성 룰 추가 = 별 트랙.
+
+### Changed
+
 - **2026-07-22 — PLAN 4.22.1 [x] 격상 (93 → 94, +1) — MDX → TSX 정적 라우트 이전 hotfix #3 성공 + SC SEO 효과 발화** ([ADR-0051 §Amendment 1](docs/adr/0051-organic-seo-content-marketing-track.md#amendment-1-2026-07-08--d1-mdx--tsx-정적-라우트-이전) 정합):
   - **hotfix #3 성공 (PR #74, 2026-07-03 머지)**: MDX 인프라 완전 폐기 (`@next/mdx` dep + `pageExtensions: ['mdx']` + `outputFileTracingIncludes` + `[slug]/page.tsx` dynamic route + `src/lib/guides.ts` + `src/types/mdx.d.ts` + `src/content/guides/*.mdx`) → `src/app/[locale]/guides/proximus-vs-telenet-vs-orange-be/page.tsx` TSX 정적 라우트 신설. Q1=(a) URL 구조 유지 (`/guides/{slug}`). 6단 게이트 GREEN + prod 4/4 URL 200 OK 실측.
   - **왜 hotfix 3회 필요**: PR #70 원 MDX 인프라 → PR #72 정적 import map (실패) → PR #73 outputFileTracingIncludes + force-static 제거 (실패) → PR #74 MDX 폐기 + TSX 이전 (성공). Next.js 15 + Turbopack + i18n dynamic route + MDX RSC 조합이 Vercel prod에서 근본 미작동 확정.
@@ -519,7 +556,7 @@
 - **PLAN 4.3.a** — ADR-0027 신설 (2026-05-13):
   - 제휴 단가 데이터 모델 정식 결정. 정적 TypeScript const (`src/data/affiliate-rates.ts`) 채택 (ADR-0027 옵션 C).
   - `AffiliateRate` 인터페이스: 8필드 (providerId / currency / amountCents / commissionType / source / fetchedAt / effectiveFrom / effectiveTo?).
-  - 결정 근거: [ADR-0027](docs/adr/0027-affiliate-rates.md) — T1(정적 TS const 선택) / T2(literal 타입 EUR/CPA) / T3(8필드 정합) / T4(헬퍼 함수 활성 2값 분기) / T5(P1/P3 정합 — source/fetchedAt NOT empty + ISO 8601 + amountCents 정수>0).
+  - 결정 근거: [ADR-0027](docs/adr/0027-affiliate-rate-data-source.md) — T1(정적 TS const 선택) / T2(literal 타입 EUR/CPA) / T3(8필드 정합) / T4(헬퍼 함수 활성 2값 분기) / T5(P1/P3 정합 — source/fetchedAt NOT empty + ISO 8601 + amountCents 정수>0).
   - **ADR-0027 발행 (2026-05-13)** + `docs/adr/INDEX.md` 정식 항목화 + ADR-0026 §T4 cross-ref 기존 보유.
   - 검증: ADR 본문 신설 + INDEX 반영. (코드 아직 미구현 — 4.3.b 이어서 진행)
 
