@@ -9,6 +9,16 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **2026-08-14 — stale PR 3건 정리 (#49 / #45 / #33) + Inngest 정찰 결론 runbook 이관**:
+  - **판정 근거**: 3건 모두 새 main(`d696fe3`) 기준 재확인 — 산출물이 main에 이미 존재하거나, main이 더 늦은 판단으로 앞서 있음.
+    - **#49** (`chore/4.5.2-4.5.3-marking`) — `docs/m16-eval.md` main에 존재. PLAN 4.5.2는 main이 `[x]`([ADR-0046](docs/adr/0046-phase-4-closure.md))로 PR의 `[~]`보다 앞섬. merge-base 이후 main 29커밋 진행.
+    - **#45** (`feat/4.16-zip-removal`) — ZIP 제거(`comparison-input.ts`) + locale 5→3(`routing.ts`) 전부 main 반영(PR #47 경유). 브랜치 마지막 2커밋이 4.16.b/4.16.d **Revert**라 net 효과 무효. merge-base 이후 main 33커밋 진행.
+    - **#33** (`chore/4.5.2.b-mark-complete`) — main은 4.5.2.b를 의도적으로 `[~]` 유지(2026-06-10, 운영자 트랙 잔여 = P3 정직 보존). PR의 `[x]`보다 main 판단이 나중. merge-base 이후 main 43커밋 진행.
+  - **유실 방지 이관**: #33에만 있던 **Inngest 자체 알림 시스템 부재 정찰**(2026-06-05 Chrome MCP 실측 — Hobby/Pro/Enterprise 전 plan 알림 기능 없음, Enterprise만 Dedicated slack channel, Pro $75/월 ≈ €70/월 = €300 cap 대비 효익 낮음)을 [`docs/runbook/inngest-alert-rules.md`](docs/runbook/inngest-alert-rules.md)로 이관. **runbook의 "Notifications 메뉴 진입" 절차가 실행 불가일 수 있다는 경고 + 재검증 트리거 명시** (정찰은 2026-06-05 시점 관찰).
+  - PLAN 체크박스 변경 0.
+
 ### Added
 
 - **2026-08-14 — PLAN 4.25 [x] 신설: 문서 링크 무결성 게이트 (6단 → 7단, 105 → 106 / 94 → 95)** ([ADR-0044 Amendment 1](docs/adr/0044-verifier-cross-ref-rules.md) 정합):
