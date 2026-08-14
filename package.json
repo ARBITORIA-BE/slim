@@ -29,6 +29,7 @@
     "harness:price": "tsx --env-file=.env.local scripts/harness/price-snapshot.ts",
     "harness:bias": "tsx scripts/harness/bias-audit.ts",
     "harness:cross-ref": "tsx scripts/harness/verify-cross-ref.ts",
+    "harness:doc-links": "tsx scripts/harness/verify-doc-links.ts",
     "harness:e2e": "tsx scripts/harness/e2e-smoke.ts",
     "harness:perf": "tsx scripts/harness/perf-budget.ts",
     "harness:load": "tsx scripts/harness/load-smoke.ts",

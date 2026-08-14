@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stop hook
-# 메인 응답 종료 직전 5단 게이트 실행. 하나라도 실패하면 decision: "block".
+# 메인 응답 종료 직전 7단 게이트 실행. 하나라도 실패하면 decision: "block".
 # 환경 미준비(pnpm 없음 등)는 에러 메시지를 명확히.
 
 set -euo pipefail
@@ -79,6 +79,12 @@ fi
 # 2026-06-09 P0 회귀 5건 재발 방지 룰 3종. Q2 잠금 = Stop hook 차단.
 [[ -f "scripts/harness/verify-cross-ref.ts" ]] && run_gate "Gate 6 cross-ref" "pnpm harness:cross-ref"
 
+# Gate 7: 문서 링크 무결성 (ADR-0044 Amendment 1 §A1.D1 — error 격상)
+# 마크다운 상대 링크 `[텍스트](경로.md)` 대상 파일 실재 검증.
+# 2026-08-14 고아 ADR 사고 재발 방지 — PLAN/CHANGELOG가 main에 없는 ADR-0048/0049를
+# 11건 [x] 격상 근거로 링크한 상태가 4개월간 게이트를 통과했다 (룰 3종은 코드 한정).
+[[ -f "scripts/harness/verify-doc-links.ts" ]] && run_gate "Gate 7 doc-links" "pnpm harness:doc-links"
+
 # 결과 조립
 SUMMARY=$(printf '%s\n' "${REPORT[@]}")
 
@@ -95,7 +101,7 @@ ${SUMMARY}
     printf '{"decision":"block","reason":"%s"}\n' "$ESCAPED"
   fi
 else
-  emit_hook_output "Stop" "✅ 6단 게이트 모두 통과
+  emit_hook_output "Stop" "✅ 7단 게이트 모두 통과
 
 ${SUMMARY}"
 fi
