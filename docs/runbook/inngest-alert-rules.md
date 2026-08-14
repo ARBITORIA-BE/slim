@@ -11,10 +11,34 @@
 - **Inngest plan**: Free tier (현재) — 5 concurrent steps + 50K function runs/월. 솔로 단계 충분
 - **로그 위치**: Inngest 대시보드 (메모리 `reference_inngest_vercel_logs.md` — Vercel runtime logs에는 DB 에러만)
 
-## 활성화 절차 (운영자 트랙)
+## ⚠️ 선행 정찰 결과 — Inngest 자체 알림 시스템 부재 (2026-06-05)
+
+> **아래 "활성화 절차"는 이 정찰 이전에 작성된 것이라 현재 그대로 실행되지 않을 수 있다.**
+
+2026-06-05 Pieter Chrome MCP 대시보드 직접 정찰 결과:
+
+- **Hobby / Pro / Enterprise 전 plan 에 자체 알림(Notifications/Alerts) 시스템이 없다.**
+- Enterprise plan 만 "Dedicated slack channel" 을 명시 — 즉 **Slack/Discord 통합조차 Pro 이하에서는 불가**.
+- Pro plan = $75/월 (≈ €70/월). 운영자 €300/월 cap 대비 **비용 대비 효익 낮음** → 격상 거부.
+
+**그래서 4.5.2.b DoD 를 재정의했다**:
+
+| # | 항목 | 상태 |
+|---|---|---|
+| (i) | 본 문서 명세 잠금 | ✅ |
+| (ii) | admin 헬스 페이지 `byMethod.scraping` 모니터링으로 대체 (PLAN 4.7) | ✅ 실측 SCRAPING 14/14 100.0% |
+| (iii) | Inngest 자체 알림 | ❌ **시스템 부재** — 외부 통합 별 트랙 (운영자 필요 시 Webhook → self-hosted endpoint 구축, 본 sub-task 범위 밖) |
+
+**재검증 트리거**: 위는 2026-06-05 시점 관찰이다. Inngest 가 이후 알림 기능을 추가했을 수 있으므로,
+아래 절차를 실행하기 전에 대시보드에서 Notifications 메뉴 존재를 먼저 확인할 것.
+
+*(출처: PR #33 `chore/4.5.2.b-mark-complete` — 해당 PR 은 PLAN 마킹이 main 의 더 늦은 판단([~] 유지)에
+의해 대체되어 close 됐고, 이 정찰 결론만 2026-08-14 본 문서로 이관했다.)*
+
+## 활성화 절차 (운영자 트랙) — 위 정찰 이후 조건부
 
 1. **Inngest Cloud 대시보드** (app.inngest.com) → ARBITORIA-BE 워크스페이스 → production 환경
-2. **좌측 사이드바 "Notifications" 또는 "Alerts"** 진입
+2. **좌측 사이드바 "Notifications" 또는 "Alerts"** 진입 — **메뉴 부재 시 여기서 중단** (위 §선행 정찰 참조)
 3. 아래 룰 2종 등록
 4. **수신 채널**: 운영자 이메일 `kim.wonmin91@gmail.com`
 
@@ -64,7 +88,7 @@ Inngest Free tier 충분. 베타 트래픽 증가 시 Starter plan ($20/월) rea
 
 ## 미해결 / 후속
 
-- (1) **Inngest 대시보드 알림 룰 등록** — 운영자 트랙 (본 docs는 명세만)
+- (1) **Inngest 대시보드 알림 룰 등록** — 운영자 트랙 (본 docs는 명세만). **단 2026-06-05 정찰 기준 Inngest 자체 알림 시스템이 없어 현재 실행 불가** (§선행 정찰 참조) → 실효 모니터링은 admin 헬스 페이지가 담당
 - (2) **fetcher 별 분해 알림** — 현재 `dailyFetchAll` 1개 함수 안에 3 fetcher (Proximus/Telenet/Orange BE) → 함수 단위 알림. fetcher 별 알림은 PLAN 4.7 admin 헬스 페이지로 보완 (byMethod.scraping 측정)
 - (3) **Sentry 통합** — 4.5.2.a 활성 시 Inngest step error → Sentry 전파 검토
 
