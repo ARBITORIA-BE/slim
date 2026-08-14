@@ -390,13 +390,13 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
               </tr>
               <tr>
                 <td className={TD_CLASS}>Renter or planning to move</td>
-                <td className={TD_CLASS}>No-contract or 12-month over 24-month lock-ins, even if a few euros higher</td>
+                <td className={TD_CLASS}>All three are non-binding &mdash; compare installation fees instead</td>
                 <td className={TD_CLASS}>Any operator</td>
               </tr>
               <tr>
                 <td className={TD_CLASS}>Living in Wallonia</td>
                 <td className={TD_CLASS}>Proximus vs Orange Belgium (Telenet Flanders+Brussels only)</td>
-                <td className={TD_CLASS}>Auto-filtered by postcode on Slim</td>
+                <td className={TD_CLASS}>Slim shows a Telenet coverage note &mdash; it does not filter by postcode</td>
               </tr>
             </tbody>
           </table>
@@ -445,8 +445,8 @@ export default async function ProximusVsTelenetVsOrangeBePage({ params }: PagePr
             hit dropouts more often than I did on Orange. Coverage is very
             location-specific, so your experience may be different &mdash;
             but if 5G reliability matters to you, worth testing an Orange
-            SIM in your usual spots before committing to a 24-month
-            Proximus bundle.
+            SIM in your usual spots before committing to a Proximus
+            bundle.
           </li>
         </ul>
         <p className={P_CLASS}>
