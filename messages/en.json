@@ -631,7 +631,209 @@
     "publishedAt": "Published: {date}",
     "author": "By {name}",
     "readMore": "Read more",
-    "contentComingSoon": "Content in preparation — the operator is writing this guide by hand. Compare live prices right now instead."
+    "contentComingSoon": "Content in preparation — the operator is writing this guide by hand. Compare live prices right now instead.",
+    "proximusVsTelenetVsOrangeBe": {
+      "intro": {
+        "para1": "Belgium’s residential telecom market is dominated by three operators: <strong>Proximus</strong>, <strong>Telenet</strong>, and <strong>Orange Belgium</strong>. Together they cover more than 97% of households (Mordor Intelligence Q1 2025). Choosing between them is rarely a “best overall” question — it depends on where you live, what you already own, and whether you need mobile, fixed internet, TV, or all three. This guide compares them honestly, without paid rankings, so you can pick the operator that fits your household."
+      },
+      "section1": {
+        "heading": "1. Price comparison — mobile and internet",
+        "para1": "Prices below are the entry, mid, and top tiers advertised on each operator’s official page in August 2026. Almost all headline prices are <strong>promotional</strong> and revert to a higher “standard” price after 6 or 12 months — both numbers are shown where they matter.",
+        "para2": "A few patterns to notice at a glance. On <strong>mobile</strong>, Telenet is aggressive at the entry tier (15 GB for €11 during promo, roughly triple the data of Proximus Essential at a similar price) but does not sell mid or large tiers — if you want 70 GB or 140 GB, you either downgrade to Basic or jump to Unlimited. Proximus and Orange Belgium both offer a full four-tier ladder; Orange consistently undercuts Proximus by €1–€4/month at the mid, large, and unlimited tiers — but its Unlimited promo runs 12 months instead of 6, so the effective 2-year cost is closer than the headline suggests.",
+        "para3": "On <strong>internet</strong>, Proximus and Telenet publish the sharpest headline promos on gigabit tiers but let the price jump €20–€30/month at the end of the promo window. Orange Belgium’s gigabit sits lower than the post-promo prices of the other two, but higher than their in-promo prices.",
+        "para4": "Because these numbers move — sometimes weekly — a static table like this is out of date within a month. Live data lives on <link1></link1> and <link2></link2>, with each price stamped by the source URL and the time of the last fetch so you can check the operator page yourself."
+      },
+      "section2": {
+        "heading": "2. Contract terms and promo windows",
+        "para1": "A surprise for many first-time switchers: on their consumer sites, Proximus, Telenet, and Orange Belgium all advertise their internet and mobile plans as <strong>non-binding</strong> — you can cancel at any time. The catch is the <strong>promotional discount window</strong>: the low headline price only holds for the first 6 or 12 months, after which the monthly bill jumps back to the “standard” tariff. That is the number that matters for the second half of your stay.",
+        "para2": "Belgian consumer law lets you cancel at any time, so the real maths is not “lock-in vs freedom” but “in-promo price vs the 2nd-year price”. If you plan to keep the same plan for two years or more, compare the post-promo columns above, not the headline promo."
+      },
+      "section3": {
+        "heading": "3. What Slim actually covers (and doesn’t)",
+        "para1": "Slim compares the three operators by parsing their public pricing pages every 24 hours and storing each price with its source URL and a UTC timestamp. Nothing hand-edited, nothing inferred. Here is what that coverage looks like today — including the gaps, so you know when to double-check on the operator’s own site.",
+        "para2": "Two things worth understanding here. First, only Proximus brands its plans as “Fiber” on the consumer site — Telenet and Orange Belgium sell the same speed tiers under neutral names, and the underlying network is fibre in some addresses and cable in others (Orange in particular now delivers via the ex-Voo cable network in many locations). Second, Slim does not yet cover Telenet’s home internet plans, and Orange Belgium’s mobile plans are next in line — the operator’s mobile page was JavaScript-rendered when Slim first surveyed it, but a 2026-07 re-check found it now serves the four tiers (Small / Medium / Large / Unlimited) as static HTML, so the fetcher can be extended. Where Slim can’t compare today, the results page says so.",
+        "para3": "Mobile Vikings, Scarlet, hey!, and other smaller Belgian operators are not yet compared either — see the full exclusion list on <link1></link1>. If an operator is missing, Slim says so; it does not silently drop them."
+      },
+      "section4": {
+        "heading": "4. Which operator fits your household?",
+        "para1": "Rather than crown a single winner, here is a practical decision matrix based on the household you actually have:",
+        "para2": "Whatever your situation, the honest answer is: check the live comparison, not this guide, on the day you sign up. Prices, promotions, and contract terms change often. Slim exists to make that check take five minutes."
+      },
+      "section5": {
+        "heading": "5. Personal note from the operator",
+        "para1": "I run Slim myself, and I switched from Orange Belgium (mobile + internet, around €62/month) to Proximus (two mobile lines + 500 Mbps fibre, around €90/month) earlier this year. Adding the second mobile line explains part of the price increase, but not all of it — the fibre component alone got noticeably more expensive.",
+        "para2": "Two things surprised me, and both are worth checking for yourself before you switch:",
+        "li1": "<strong>“500 Mbps fibre” is a wired number, not a Wi-Fi one.</strong> In my apartment I rarely see more than around 10 Mbps on Wi-Fi from the router that ships in the standard package. That is likely a Wi-Fi 5 / 2.4 GHz vs 5 GHz / router-placement problem, not a fibre problem — but the marketing headline never mentions it. If you rely on Wi-Fi for everything (as most households do), a lower fibre tier plus a better router may serve you the same or better than the fastest tier with the stock modem.",
+        "li2": "<strong>5G coverage felt more stable on Orange for me.</strong> Proximus has the largest overall infrastructure in Belgium, but in the places I actually use my phone (home, commute, work) I hit dropouts more often than I did on Orange. Coverage is very location-specific, so your experience may be different — but if 5G reliability matters to you, worth testing an Orange SIM in your usual spots before committing to a Proximus bundle.",
+        "para3": "This is one household’s experience, not a verdict. Belgian consumer surveys (Test-Aankoop, Trustpilot BE) show mixed Proximus satisfaction scores despite the operator’s market leadership, so the pattern is not unique to me — but the only data that matters for your decision is your own postcode, your own usage, and a Wi-Fi speed test you run yourself. Slim will not tell you which operator is best; it will tell you what each one costs and points you at what to test."
+      },
+      "footer": {
+        "disclaimer": "<em>Slim is an independent comparison tool. We are not paid by Proximus, Telenet, or Orange Belgium to influence rankings. Read our <link1>affiliate disclosure</link1>.</em>"
+      },
+      "tables": {
+        "priceComparison": {
+          "header": {
+            "col1": "Tier",
+            "col2": "Proximus",
+            "col3": "Telenet",
+            "col4": "Orange Belgium"
+          },
+          "row1": {
+            "col1": "Mobile, entry (5–15 GB)",
+            "col2": "Essential 5 GB — €14.99 promo (6 mo) → €16.99",
+            "col3": "Basic 15 GB — €11 promo (6 mo) → €16",
+            "col4": "Small 12 GB — €15 (no promo)"
+          },
+          "row2": {
+            "col1": "Mobile, mid (70 GB)",
+            "col2": "Smart 70 GB — €18.99 promo (6 mo) → €24.99",
+            "col3": "— not sold at this tier",
+            "col4": "Medium 70 GB — €18 promo (6 mo) → €23"
+          },
+          "row3": {
+            "col1": "Mobile, large (140 GB)",
+            "col2": "Maxi 140 GB — €21.99 promo (6 mo) → €29.99",
+            "col3": "— not sold at this tier",
+            "col4": "Large 140 GB — €20 promo (12 mo) → €29"
+          },
+          "row4": {
+            "col1": "Mobile, unlimited data",
+            "col2": "Unlimited — €34.99 promo (6 mo) → €49.99",
+            "col3": "Unlimited — €14 promo (6 mo) → €27.50",
+            "col4": "Unlimited — €31 promo (12 mo) → €40"
+          },
+          "row5": {
+            "col1": "Internet, entry (100–200 Mbps)",
+            "col2": "Internet Light 100 Mbps — €39.99 (no promo)",
+            "col3": "Basic 200 Mbps — €35 promo (6 mo)",
+            "col4": "Start 150–200 Mbps — €53 promo (12 mo)"
+          },
+          "row6": {
+            "col1": "Internet, mid (400–500 Mbps)",
+            "col2": "Mega Fiber 500 Mbps — €57.99 promo → €77.99",
+            "col3": "Standard 500 Mbps — €35 promo → €65",
+            "col4": "Zen 400–500 Mbps — €62 promo (12 mo)"
+          },
+          "row7": {
+            "col1": "Internet, gigabit",
+            "col2": "Giga Fiber 2 Gbps — €57.99 promo → €77.99",
+            "col3": "Turbo 2.5 Gbps — €55 promo → €85",
+            "col4": "Giga 1 Gbps — €72 promo (12 mo)"
+          }
+        },
+        "contractTerms": {
+          "header": {
+            "col1": "Aspect",
+            "col2": "Proximus",
+            "col3": "Telenet",
+            "col4": "Orange Belgium"
+          },
+          "row1": {
+            "col1": "Cancel anytime?",
+            "col2": "Yes (site: “change or cancel free, whenever”)",
+            "col3": "Yes (non-binding)",
+            "col4": "Yes (non-binding)"
+          },
+          "row2": {
+            "col1": "Typical mobile promo window",
+            "col2": "6 months",
+            "col3": "6 months",
+            "col4": "6–12 months"
+          },
+          "row3": {
+            "col1": "Typical internet promo window",
+            "col2": "12 months (except no-promo Light)",
+            "col3": "6 months",
+            "col4": "12 months"
+          },
+          "row4": {
+            "col1": "Post-promo price step",
+            "col2": "+€10 to +€20/mo",
+            "col3": "+€30/mo on gigabit",
+            "col4": "Not clearly stated on the plan page"
+          },
+          "row5": {
+            "col1": "Installation fee",
+            "col2": "Varies; sometimes waived in bundle promos",
+            "col3": "Currently free on internet plans",
+            "col4": "€39"
+          }
+        },
+        "coverage": {
+          "header": {
+            "col1": "Aspect",
+            "col2": "Proximus",
+            "col3": "Telenet",
+            "col4": "Orange Belgium"
+          },
+          "row1": {
+            "col1": "Data method",
+            "col2": "HTML scraping",
+            "col3": "HTML scraping",
+            "col4": "HTML scraping"
+          },
+          "row2": {
+            "col1": "Update frequency",
+            "col2": "Every 24h",
+            "col3": "Every 24h",
+            "col4": "Every 24h"
+          },
+          "row3": {
+            "col1": "Mobile covered on Slim",
+            "col2": "Yes",
+            "col3": "Yes (Basic + Unlimited only)",
+            "col4": "Coming next round — static HTML re-confirmed 2026-07"
+          },
+          "row4": {
+            "col1": "Internet covered on Slim",
+            "col2": "Yes (Light / Go / Mega / Giga)",
+            "col3": "Not yet (manual fallback)",
+            "col4": "Yes (Start / Zen / Giga)"
+          },
+          "row5": {
+            "col1": "“Fibre” branding on operator site",
+            "col2": "Explicit (Mega Fiber, Giga Fiber)",
+            "col3": "Not used on plan names",
+            "col4": "Not used on plan names"
+          },
+          "row6": {
+            "col1": "Region",
+            "col2": "Belgium-wide",
+            "col3": "Flanders + Brussels only",
+            "col4": "Belgium-wide (Voo cable network absorbed, 2025)"
+          }
+        },
+        "householdFit": {
+          "header": {
+            "col1": "Household situation",
+            "col2": "Best fit",
+            "col3": "Where to compare"
+          },
+          "row1": {
+            "col1": "Single, urban, mobile-first",
+            "col2": "Any of 3 entry mobile plans (compare data allowance, not headline price)"
+          },
+          "row2": {
+            "col1": "Couple, one home, no TV",
+            "col2": "Mobile + internet duo (skip TV channel packs)"
+          },
+          "row3": {
+            "col1": "Family with kids, TV matters",
+            "col2": "Triple play (mobile + internet + TV) — check channel packs you already own"
+          },
+          "row4": {
+            "col1": "Renter or planning to move",
+            "col2": "All three are non-binding — compare installation fees instead",
+            "col3": "Any operator"
+          },
+          "row5": {
+            "col1": "Living in Wallonia",
+            "col2": "Proximus vs Orange Belgium (Telenet Flanders+Brussels only)",
+            "col3": "Slim shows a Telenet coverage note — it does not filter by postcode"
+          }
+        }
+      }
+    }
   },
   "validation": {
     "postal": {

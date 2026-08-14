@@ -630,7 +630,10 @@
     "publishedAt": "발행: {date}",
     "author": "저자: {name}",
     "readMore": "자세히 보기",
-    "contentComingSoon": "본문 작성 중입니다 — 운영자가 직접 작성 중입니다. 지금 바로 실시간 가격을 비교하세요."
+    "contentComingSoon": "본문 작성 중입니다 — 운영자가 직접 작성 중입니다. 지금 바로 실시간 가격을 비교하세요.",
+    "proximusVsTelenetVsOrangeBe": {
+      "_comment": "en 정본 예외, ADR-0051 Amd 1 §A1.B"
+    }
   },
   "validation": {
     "postal": {
