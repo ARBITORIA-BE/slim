@@ -9,6 +9,21 @@
 
 ## [Unreleased]
 
+### Removed
+
+- **2026-08-16 — PLAN 4.24 취소 (107 → 106) + [ADR-0013 Amendment 4](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) **Rejected** — Orange BE mobile "정적 파싱 가능" 주장 반증**:
+  - **무엇이 틀렸나**: Amendment 4 Draft(2026-07-13)는 *"JS-rendered 전제 붕괴 → 정적 파싱 가능"* 을 주장했으나 그 근거 정찰이 **WebFetch** 로 수행됐다. WebFetch 는 JS 실행 후 결과를 반환한다 — 같은 ADR 의 **Amendment 3 이 명시적으로 경고한 "WebFetch ≠ raw fetch" 함정**에 그대로 빠진 사례. Amendment 4 는 스스로 *"builder 첫 fetch raw HTML 재검증 게이트 A 필수"* 를 조건으로 걸었고, **그 게이트에서 탈락했다** (절차는 설계대로 작동).
+  - **재검증 실측 (프로덕션과 동일한 `Slim/1.0` UA raw fetch)**:
+    - `<obe-dps-price>` 웹 컴포넌트 **5개 인스턴스 존치** — 1.5.8(2026-06-05)이 미커버로 판정한 그 마커이며 사라진 적이 없다.
+    - Amendment 4 가 기록한 프로모 가격 4개(€15 / €18 / €20 / €31) **raw HTML 에 0건**.
+    - `<script>` 15개(57KB) 전수 검색 — `mob-s`/`mob-m`/`mob-l`/`mob-xl` 슬러그별 가격 페이로드 **0건**, 가격 API 엔드포인트 흔적 **0건**.
+    - 정적으로 얻히는 것 = 티어명 · `product-slug` · 데이터 GB · **프로모 종료 후 가격**(`discount-text` → 23€/29€/40€) 뿐.
+  - **부분 편입 거부**: post-promo 가격만 싣는 선택지를 거부했다. `ComparisonTable` 주 비교 숫자는 월정액이고 Proximus·Telenet 은 **프로모 가격**을 싣는다 → Orange 만 프로모 종료 후 가격이 들어가면 비교 기준이 어긋나 **Orange 가 부당하게 비싸 보인다**. 헌법 §3 P1(공급사 가격 가공 금지) + P3 위반 + 정렬·절약액 계산 왜곡.
+  - **Playwright 이연**: ADR-0013 §1498 이 Amendment 4 를 "Playwright 또는 manual 전면 전환 재평가" 트리거로 지정했으나, 3사 중 1개 카테고리를 위한 새 의존성 + CI 시간 + €300/월 cap 영향이 비대칭. 재평가는 [ADR-0053](docs/adr/0053-telecom-provider-ecosystem-expansion.md) §D7 시점으로 이연.
+  - **사용자 표면 정정 (P1) — 3 locale**: 가이드 커버리지 표가 *"Coming next round — static HTML re-confirmed 2026-07"*, 본문 §3 이 *"a 2026-07 re-check found it now serves the four tiers as static HTML"* 로 표기 중이었다 — 본 재검증으로 **거짓이 된 문구**. en 정본 수정 + nl/fr `translate-guide.mjs --retarget` 재번역 (DeepL 누적 16,701 → **18,215 / 1,000,000 자 = 1.82%**).
+  - **방법론 규칙 재확인 (ADR-0013 신설 절)**: fetcher 편입 판정의 「어떻게」 축은 **프로덕션과 동일한 UA 의 raw fetch 로만** 확정한다. WebFetch/브라우저 관측은 판정 근거로 쓰지 않고 정찰 착수 단서로만 쓴다. ADR-0053 §D6 "부정 판정 시 2개 표기 패턴 재확인" 규칙과 짝을 이룬다.
+  - 1.5.9 Voo fetcher 취소([ADR-0034 Amd 1](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md)) 와 동형 처리 — 항목 −1, 본문은 반증 이력 보존.
+
 ### Changed
 
 - **2026-08-16 — PLAN 4.23 `[x]` 격상 (95 → 96 / 107) — Organic SEO 콘텐츠 P2 완결**:

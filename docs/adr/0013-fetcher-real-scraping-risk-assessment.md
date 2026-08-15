@@ -2125,9 +2125,21 @@ ADR-0004 §결정 3 기준에서 현재 진행 가능.
 
 ### Status
 
-**Draft (architect, 2026-07-13)**. ADR status = Accepted 유지 (Amendment 3 §Decision "*페이지 단위* 판단" 원칙 재적용). 본 Amendment는 **Orange BE mobile 페이지의 스코프 재분류**이지 분기 재격상(LOW/MEDIUM/HIGH)이 아니다. MEDIUM 2.75 분류 근거는 유효. Amendment 3 §Decision 2 ("정적 매칭 성공 → scraping" 분기)의 재발화 사례.
+> ## ❌ **Rejected (2026-08-16, 운영자 — raw fetch 재검증으로 전제 반증)**
+>
+> 본 Amendment 의 핵심 주장("JS-rendered 전제 붕괴 → 정적 파싱 가능")은 **재현되지 않았다.**
+> 근거 정찰이 **WebFetch** 로 수행됐고, WebFetch 는 JS 실행 후 결과를 반환한다 —
+> 본 ADR **Amendment 3 이 명시적으로 경고한 "WebFetch ≠ raw fetch"** 함정에
+> 그대로 빠진 사례다. 상세는 아래 §Amendment 4 재검증 (2026-08-16) 참조.
+>
+> **1.5.8 (2026-06-05) 의 원 판정 — "Orange BE mobile = JS 렌더링, fetcher 미커버" — 이 유효하다.**
+> PLAN 4.24 는 본 Rejected 에 따라 **취소**됐다.
 
-**Accepted 격상 조건**: 운영자 승인 + builder 라운드 착수 트리거.
+~~**Draft (architect, 2026-07-13)**. ADR status = Accepted 유지 (Amendment 3 §Decision "*페이지 단위* 판단" 원칙 재적용). 본 Amendment는 **Orange BE mobile 페이지의 스코프 재분류**이지 분기 재격상(LOW/MEDIUM/HIGH)이 아니다. MEDIUM 2.75 분류 근거는 유효. Amendment 3 §Decision 2 ("정적 매칭 성공 → scraping" 분기)의 재발화 사례.~~
+
+~~**Accepted 격상 조건**: 운영자 승인 + builder 라운드 착수 트리거.~~ — 격상되지 않았다.
+
+본문은 **반증 이력 보존 가치**로 남긴다 (ADR-0047 §D3 "옵션 비교 이력 보존" 동형).
 
 ### Context — Amendment 3 전제의 재검증
 
@@ -2263,3 +2275,87 @@ Amendment 3 §Decision "페이지 단위 하이브리드 Cheerio" 원칙 재적�
 - 2026-05-28 → 2026-07-13 (6주) 사이 Orange BE 마크업 변경의 **원인은 미확인** — SEO 강화 추정만. 이후 회귀 가능성 상존, 재검증 트리거로 완화.
 
 **Amendment 4 작성: architect (2026-07-13) — WebFetch 재정찰 기반, builder 첫 fetch raw HTML 재검증 게이트 A 필수**
+
+---
+
+## Amendment 4 재검증 (2026-08-16) — ❌ 게이트 A 불통과 → Amendment 4 Rejected
+
+Amendment 4 는 스스로 **"builder 첫 fetch raw HTML 재검증 게이트 A 필수"** 를 조건으로 걸었다.
+PLAN 4.24 착수 직전 그 게이트를 실행했고, **전제가 반증됐다.** 절차는 설계대로 작동했다 —
+Amendment 가 자기 게이트를 통과하지 못한 것이다.
+
+### 방법
+
+프로덕션 fetcher 와 **동일한 UA** 로 raw fetch (WebFetch 아님):
+
+```
+UA: Slim/1.0 (+https://slim.lu; price comparison; contact kim.wonmin91@gmail.com)
+대상: /fr/mobile/abonnements-gsm  (200, 251KB)
+      /nl/mobiel/gsm-abonnementen (200, 245KB)
+```
+
+### 관측 1 — `<obe-dps-price>` 웹 컴포넌트가 **그대로 있다**
+
+1.5.8 (2026-06-05) 이 Orange BE mobile 을 미커버로 판정한 그 마커다. 사라진 적이 없다.
+raw HTML 에 5개 인스턴스 존재:
+
+```html
+<obe-dps-price product-slug="mob-s"  show-suffix="true" ...>
+<obe-dps-price product-slug="mob-m"  ... discount-text="23 €/maand na 12 maanden">
+<obe-dps-price product-slug="mob-l"  ... discount-text="29€/maand na 12 maanden">
+<obe-dps-price product-slug="mob-xl" ... discount-text="40 €/maand na 12 maanden">
+<obe-dps-price-legals>
+```
+
+본 Amendment §Context 가 인용한 1.5.8 헤더 문구 — *"정적 HTML 에는 `discount-text` placeholder 만
+존재 — 표시 가격 부재"* — 가 **현재도 정확히 성립**한다. 달라진 것은 `discount-text` 가 빈 값에서
+**프로모 종료 후 가격**으로 채워졌다는 점뿐이다.
+
+### 관측 2 — Amendment 4 가 기록한 프로모 가격 4개가 raw HTML 에 없다
+
+| 티어 | Amendment 4 기록 (WebFetch) | raw HTML 존재 |
+|---|---|---|
+| Small 12GB | €15 (no promo) | ❌ |
+| Medium 70GB | €18 promo → €23 | ❌ (€23 만 `discount-text` 로 존재) |
+| Large 140GB | €20 promo → €29 | ❌ (€29 만) |
+| Unlimited | €31 promo → €40 | ❌ (€40 만) |
+
+`<script>` 블록 15개(총 57KB) 전수 검색: `mob-s`/`mob-m`/`mob-l`/`mob-xl` 슬러그별 가격
+페이로드 **0건**, 가격 API 엔드포인트 흔적 **0건**. 프로모 가격은 런타임에 컴포넌트가 가져온다.
+
+### 정적으로 얻을 수 있는 것 / 없는 것
+
+| 얻을 수 있음 | 얻을 수 없음 |
+|---|---|
+| 티어명 (Orange Mobile Small/Medium/Large/XL) | **프로모(헤드라인) 월정액 4개 전부** |
+| `product-slug` (`mob-s`/`m`/`l`/`xl`) | |
+| 데이터 GB (12 / 70 / 140) · 5G 속도 · 통화/SMS 조건 | |
+| **프로모 종료 후 가격** (`discount-text`) | |
+
+### 왜 "부분 편입"을 채택하지 않았는가
+
+post-promo 가격만 싣는 선택지가 있었으나 **거부**한다. `ComparisonTable` 의 주 비교 숫자는
+월정액이고 Proximus·Telenet 은 **프로모 가격**을 싣는다. Orange 만 프로모 종료 후 가격이
+들어가면 비교 기준이 어긋나 **Orange 가 부당하게 비싸 보인다** — 헌법 §3 P1(공급사 가격 가공
+금지) + P3 정합 위반. 정렬·절약액 계산도 왜곡된다.
+
+### 결정
+
+1. **Amendment 4 → Rejected.** 1.5.8 원 판정("Orange BE mobile = JS 렌더링, 미커버") 유효.
+2. **PLAN 4.24 취소** (107 → 106). 1.5.9 Voo fetcher 취소 (ADR-0034 Amd 1) 와 동형 처리.
+3. **Playwright 도입은 본 라운드에서 채택하지 않는다.** 본 ADR §1498 이 이미 Amendment 4 를
+   "Playwright 또는 manual 전면 전환 재평가" 트리거로 지정했으나, 3사 중 1개 카테고리를 위한
+   새 의존성 + CI 시간 + 운영자 €300/월 cap 영향이 비대칭이다. 재평가는 **커버리지 압력이
+   더 커진 시점**([ADR-0053](0053-telecom-provider-ecosystem-expansion.md) §D7 공급사 확장 트랙)으로 이연.
+4. **사용자 표면 정정**: `/guides/proximus-vs-telenet-vs-orange-be` 커버리지 표가
+   *"Coming next round — static HTML re-confirmed 2026-07"* 로 표기 중이었다. 본 재검증으로
+   **거짓이 된 문구**이므로 3 locale 동시 정정 (P1).
+
+### 방법론 교훈 (Amendment 3 경고의 2차 실증)
+
+Amendment 3 은 *"architect 가 WebFetch 로 본 URL 과 일부 상이 → WebFetch ≠ raw fetch 경고가
+정당했음을 재확인"* 이라 적었다. Amendment 4 는 **같은 함정에 다시 빠졌다.**
+
+> **규칙 (재확인)**: fetcher 편입 판정의 「어떻게」 축은 **프로덕션과 동일한 UA 의 raw fetch**
+> 로만 확정한다. WebFetch / 브라우저 기반 관측은 **판정 근거로 쓰지 않는다** — 정찰 착수
+> 단서로만 쓴다. [ADR-0053](0053-telecom-provider-ecosystem-expansion.md) §D6 "부정 판정 시 2개 표기 패턴 재확인" 규칙과 짝을 이룬다.
