@@ -216,7 +216,7 @@
       "assumptions": {
         "heading": "Assumptions",
         "categoryLabel": "Category",
-        "householdLabel": "Furniture styles",
+        "householdLabel": "Household type",
         "usageSourceLabel": "Source of usage data",
         "usageSourceDirect": "User-entered data",
         "usageSourceEstimated": "{version}",
