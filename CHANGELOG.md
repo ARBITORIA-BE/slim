@@ -9,6 +9,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **2026-08-16 — PLAN 4.23 `[x]` 격상 (95 → 96 / 107) — Organic SEO 콘텐츠 P2 완결**:
+  - **4.23.a** (PR #83 `86386c9`) — `guides.proximusVsTelenetVsOrangeBe.*` 스키마 **122 리프** + `page.tsx` 477→293줄 `t()`/`t.rich` 재배선 + `translate-guide.mjs` 신설. base 를 `feat/4.22` 위에 stack (main base 였다면 낡은 텍스트를 추출하고 `page.tsx` 전면 충돌).
+  - **4.23.b** (PR #86 `11a0f80`) — DeepL en→nl/fr 각 122 리프. 누적 **16,701 / 1,000,000 자 = 1.67%**.
+  - **prod 4/4 URL 실측 (DoD b-3) 완료**: `[nl]`/`[fr]` **마커 노출 0건** · default→NL / en→EN / fr→FR 렌더 정합 · 가격 `14,99` 렌더 · 검수 수정 2건이 **3언어 모두** 반영 확인 (`does not filter by postcode` / `ne filtre pas par code postal` / `er wordt niet op postcode gefilterd`).
+  - **b-4 운영자 스팟 검수 = 별 트랙 잔여** ([ADR-0045](docs/adr/0045-verify-plan-child-window-boundary.md) §D2 동형 — Claude 트랙 완결 + 운영자 트랙 명시로 P3 정직 보존).
+
 ### Added
 
 - **2026-08-15 — PLAN 4.26 신설: 통신 공급사 생태계 확장 — 6하원칙 편입 심사 프레임 (106 → 107)** ([ADR-0053](docs/adr/0053-telecom-provider-ecosystem-expansion.md) **Proposed**, 운영자 Q1~Q3 잠금 대기):
