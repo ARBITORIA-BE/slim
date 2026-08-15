@@ -9,6 +9,20 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **2026-08-15 — 제외 공급사 목록 시드 10건 — 비어 있던 `/data-sources` 제외 섹션 봉합 (헌법 §3 P3 위반)**:
+  - **문제**: `scripts/seed-providers.ts` 가 비교 대상 3사(Proximus/Telenet/Orange)만 시드하고 `excludedReason` 행을 **하나도 넣지 않았다**. 프로덕션 `/data-sources` 실측 결과 제외 섹션에 Mobile Vikings / Scarlet / hey! / BASE / Digi / Edpnet 등이 **전부 없음**. 그런데 [가이드 §3](src/app/[locale]/guides/proximus-vs-telenet-vs-orange-be/page.tsx) 이 *"Mobile Vikings, Scarlet, hey!, and other smaller Belgian operators are not yet compared either — see the full exclusion list on /data-sources"* 라고 **라이브에서 안내 중**이었다. 존재하지 않는 목록을 가리키는 상태 = **P3("비교에서 제외된 공급사도 이름을 밝힌다") 위반**.
+  - **실재 확인 (2026-08-15)**: 후보 도메인 1회 GET → HTTP 200 + `<title>` 확인. 1차 미해결 3건은 대체 도메인 재정찰로 확정 — `hey!` → `heytelecom.be`(`hey.be` 아님) / `Digi` → `digi-belgium.be`(`digi.be` 아님) / `Lebara` → `mobile.lebara.com/be/nl`.
+  - **시드 10건**: Mobile Vikings · Scarlet · BASE · Edpnet · Lycamobile · JIM Mobile · hey! · Digi Belgium · Lebara · VOO.
+  - **제외 사유 3종 (사용자 노출 문구)**:
+    - 8건 = `Not yet assessed — fetcher feasibility survey pending (2026-08-15).`
+    - **Lebara** = `Automated price fetch blocked by bot protection (HTTP 403 challenge observed 2026-08-15)` — 실측 관측. [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Appendix B 의 Orange Love 번들 WAF 403 선례와 동형.
+    - **VOO** = `Merged into Orange Belgium (completed 2025-10-01)` — [ADR-0034 Amendment 1](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) 출처.
+  - **Youfone BE 는 편입 보류** — 전 후보 도메인 미해결. 실재를 확인하지 못한 사업자를 목록에 올리는 것은 P1 위반이므로 도메인 확인 후 별 라운드.
+  - **정책 기록**: 제외 공급사는 `name` + `excludedReason` 만 렌더되므로 `legalName` 은 상업 브랜드명(법인명 검증은 정찰 이연), `vatId` 는 **null 유지**(UNIQUE 인덱스 — 미검증 관측값이 향후 정확한 값 삽입을 막을 수 있음). 관측된 VAT 는 주석으로만 보존 (BASE → `BE0473416418` = Telenet Group VAT / Edpnet → `BE0799091641`).
+  - ⚠️ **운영자 트랙**: 본 PR 머지만으로는 프로덕션 DB가 바뀌지 않는다. `pnpm tsx --env-file=.env.local scripts/seed-providers.ts` **1회 실행 필요** (멱등 — 기존 3사는 보존).
+
 ### Changed
 
 - **2026-08-14 — stale PR 3건 정리 (#49 / #45 / #33) + Inngest 정찰 결론 runbook 이관**:
