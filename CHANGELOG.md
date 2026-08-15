@@ -9,6 +9,16 @@
 
 ## [Unreleased]
 
+### Added
+
+- **2026-08-15 — PLAN 4.26 신설: 통신 공급사 생태계 확장 — 6하원칙 편입 심사 프레임 (106 → 107)** ([ADR-0053](docs/adr/0053-telecom-provider-ecosystem-expansion.md) **Proposed**, 운영자 Q1~Q3 잠금 대기):
+  - **진단**: 운영자 지적("사업자가 2개뿐")을 실측한 결과 **표면 숫자보다 나빴다** — 5 카테고리 × 3 공급사 = **15칸 중 자동 수집 4칸(27%)**. 특히 [ADR-0042](docs/adr/0042-telecom-bundle-taxonomy-extension.md)로 신설한 번들 3종은 **fetcher 0개** = 카테고리 enum 은 있고 데이터가 없다.
+  - **프레임**: 운영자의 "니즈는 6하원칙으로 답할 때 문제 해결력이 가장 높다"를 **편입 심사 기준**으로 전환. 공급사 1건당 누가(MNO/MVNO·타깃) / 어디서(커버 지역·호스트망) / 무엇을(카테고리) / 언제(갱신 주기) / 어떻게(정적 HTML·JS·WAF) / 왜(편입 or 제외 사유) 6축 판정.
+  - **§D2 판정 2분기 — "미정" 금지**: 6축 중 하나라도 미충족이면 편입 후보에서 빼고 `excludedReason` 을 **구체 사유로 교체**. 정찰 결과가 어느 쪽이든 산출물이 나오고, P3 가 즉시 충족된다. 목표 품질은 Lebara 의 `HTTP 403 bot protection` 수준 — *"안 봤다"* 가 아니라 *"봤는데 이래서 안 된다"*.
+  - **방법론 신설 0**: [ADR-0013](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Appendix B + 1.5.8/1.5.9 절차(raw fetch 정찰 · robots · GTC pdftotext · legal 판정) 재사용. 신규 의존성/SaaS 0.
+  - **경계**: [ADR-0034](docs/adr/0034-strategy-pivot-completion-first-seo-launch.md) D2 "통신 BE 한정" **유지** — 카테고리 확장이 아니라 같은 카테고리 안의 공급사 확장. fetcher 신설은 정찰 산출물 기준 별 항목. 수동 입력 가격 편입 ❌.
+  - **운영자 잠금 대기**: Q1 정찰 범위 / Q2 우선순위 가중치 / Q3 **번들 먼저 vs 공급사 먼저** (번들 9칸이 전부 0 — 기존 3사 번들만 채워도 27% → 60%).
+
 ### Fixed
 
 - **2026-08-15 — 제외 공급사 목록 시드 10건 — 비어 있던 `/data-sources` 제외 섹션 봉합 (헌법 §3 P3 위반)**:
