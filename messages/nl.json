@@ -651,7 +651,7 @@
       "section3": {
         "heading": "3. Wat Slim precies wel (en niet) omvat",
         "para1": "Slim vergelijkt de drie providers door hun openbare prijspagina’s elke 24 uur te analyseren en elke prijs op te slaan samen met de bron-URL en een UTC-tijdstempel. Niets wordt handmatig bewerkt, niets wordt afgeleid. Zo ziet die dekking er vandaag uit — inclusief de hiaten, zodat je weet wanneer je dit op de eigen website van de provider nog eens moet controleren.",
-        "para2": "Twee zaken die het vermelden waard zijn. Ten eerste is Proximus de enige die zijn abonnementen op de consumentensite als “Fiber” bestempelt — Telenet en Orange Belgium verkopen dezelfde snelheidsniveaus onder neutrale namen, en het onderliggende netwerk bestaat op sommige adressen uit glasvezel en op andere uit kabel (met name Orange levert momenteel op veel locaties via het voormalige Voo-kabelnetwerk). Ten tweede dekt Slim de internetabonnementen voor thuisgebruik van Telenet nog niet, en de mobiele abonnementen van Orange Belgium staan op de beurtlijst — de mobiele pagina van de operator werd met JavaScript weergegeven toen Slim deze voor het eerst onderzocht, maar bij een hercontrole op 7 juli 2026 bleek dat de vier snelheidsniveaus (Small / Medium / Large / Unlimited) als statische HTML, zodat de fetcher kan worden uitgebreid. Wanneer Slim op dit moment geen vergelijking kan maken, wordt dit op de resultatenpagina vermeld.",
+        "para2": "Twee zaken die het vermelden waard zijn. Ten eerste is Proximus de enige die zijn abonnementen op de consumentensite als “Fiber” bestempelt — Telenet en Orange Belgium verkopen dezelfde snelheidsniveaus onder neutrale namen, en het onderliggende netwerk bestaat op sommige adressen uit glasvezel en op andere uit kabel (met name Orange levert nu op veel locaties via het voormalige Voo-kabelnetwerk). Ten tweede dekt Slim de internetabonnementen voor thuisgebruik van Telenet nog niet, en blijven de mobiele abonnementen van Orange Belgium buiten beschouwing — die pagina geeft de prijzen weer in JavaScript, en een hercontrole in augustus 2026 bevestigde dat de maandelijkse hoofdprijzen nog steeds ontbreken in de statische HTML. Slim laat liever een leemte staan dan een getal te vermelden dat het niet kan verifiëren. Waar Slim op dit moment geen vergelijking kan maken, wordt dit op de resultatenpagina vermeld.",
         "para3": "Mobile Vikings, Scarlet, hey! en andere kleinere Belgische providers worden ook nog niet vergeleken — zie de volledige uitsluitingslijst op <link1></link1>. Als een provider ontbreekt, vermeldt Slim dat; de provider wordt niet stilletjes weggelaten."
       },
       "section4": {
@@ -782,7 +782,7 @@
             "col1": "Mobiel beschikbaar op Slim",
             "col2": "Ja",
             "col3": "Ja (alleen Basic + Unlimited)",
-            "col4": "In de volgende ronde — statische HTML opnieuw bevestigd 2026-07"
+            "col4": "Niet opgenomen — prijzen worden via JavaScript weergegeven (opnieuw gecontroleerd op 16 augustus 2026)"
           },
           "row4": {
             "col1": "Internet is inbegrepen bij Slim",

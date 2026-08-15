@@ -651,7 +651,7 @@
       "section3": {
         "heading": "3. What Slim actually covers (and doesn’t)",
         "para1": "Slim compares the three operators by parsing their public pricing pages every 24 hours and storing each price with its source URL and a UTC timestamp. Nothing hand-edited, nothing inferred. Here is what that coverage looks like today — including the gaps, so you know when to double-check on the operator’s own site.",
-        "para2": "Two things worth understanding here. First, only Proximus brands its plans as “Fiber” on the consumer site — Telenet and Orange Belgium sell the same speed tiers under neutral names, and the underlying network is fibre in some addresses and cable in others (Orange in particular now delivers via the ex-Voo cable network in many locations). Second, Slim does not yet cover Telenet’s home internet plans, and Orange Belgium’s mobile plans are next in line — the operator’s mobile page was JavaScript-rendered when Slim first surveyed it, but a 2026-07 re-check found it now serves the four tiers (Small / Medium / Large / Unlimited) as static HTML, so the fetcher can be extended. Where Slim can’t compare today, the results page says so.",
+        "para2": "Two things worth understanding here. First, only Proximus brands its plans as “Fiber” on the consumer site — Telenet and Orange Belgium sell the same speed tiers under neutral names, and the underlying network is fibre in some addresses and cable in others (Orange in particular now delivers via the ex-Voo cable network in many locations). Second, Slim does not yet cover Telenet’s home internet plans, and Orange Belgium’s mobile plans stay uncovered — that page renders its prices in JavaScript, and a 2026-08 re-check confirmed the headline monthly prices are still absent from the static HTML. Slim would rather leave a gap than quote a number it cannot verify. Where Slim can’t compare today, the results page says so.",
         "para3": "Mobile Vikings, Scarlet, hey!, and other smaller Belgian operators are not yet compared either — see the full exclusion list on <link1></link1>. If an operator is missing, Slim says so; it does not silently drop them."
       },
       "section4": {
@@ -782,7 +782,7 @@
             "col1": "Mobile covered on Slim",
             "col2": "Yes",
             "col3": "Yes (Basic + Unlimited only)",
-            "col4": "Coming next round — static HTML re-confirmed 2026-07"
+            "col4": "Not covered — prices are JavaScript-rendered (re-verified 2026-08-16)"
           },
           "row4": {
             "col1": "Internet covered on Slim",

@@ -651,7 +651,7 @@
       "section3": {
         "heading": "3. Ce que Slim couvre réellement (et ce qu’il ne couvre pas)",
         "para1": "Slim compare les trois opérateurs en analysant leurs pages publiques de tarifs toutes les 24 heures et en enregistrant chaque prix avec son URL source et un horodatage UTC. Aucune modification manuelle, aucune déduction. Voici à quoi ressemble cette couverture aujourd’hui — y compris les lacunes, afin que vous sachiez quand vérifier les informations sur le site de l’opérateur lui-même.",
-        "para2": "Il y a deux points qu’il convient de comprendre ici. Premièrement, Proximus est la seule à qualifier ses offres de « Fibre » sur son site grand public — Telenet et Orange Belgium commercialisent les mêmes niveaux de débit sous des noms neutres, et le réseau sous-jacent est en fibre optique à certaines adresses et par câble à d’autres (Orange, en particulier, fournit désormais ses services via l’ancien réseau câblé de Voo dans de nombreux endroits). Deuxièmement, Slim ne couvre pas encore les forfaits Internet résidentiels de Telenet, et les forfaits mobiles d’Orange Belgium sont les prochains sur la liste : la page mobile de l’opérateur était générée en JavaScript lorsque Slim l’a analysée pour la première fois, mais une nouvelle vérification effectuée le 07/07/2026 a révélé qu’elle propose désormais les quatre niveaux (Small / Medium / Large / Illimité) sous forme de HTML statique ; le robot de collecte peut donc être étendu. Lorsque Slim ne peut pas effectuer de comparaison à l’heure actuelle, la page de résultats l’indique clairement.",
+        "para2": "Il y a deux points à comprendre ici. Premièrement, seule Proximus qualifie ses offres de « Fibre » sur son site grand public — Telenet et Orange Belgium commercialisent les mêmes niveaux de débit sous des noms neutres, et le réseau sous-jacent est en fibre optique à certaines adresses et par câble à d’autres (Orange, en particulier, fournit désormais ses services via l’ancien réseau câblé de Voo dans de nombreux endroits). Deuxièmement, Slim ne couvre pas encore les forfaits Internet résidentiels de Telenet, et les forfaits mobiles d’Orange Belgium ne sont pas pris en compte : cette page affiche ses prix via JavaScript, et une nouvelle vérification effectuée le 08/02/2026 a confirmé que les prix mensuels indiqués en tête de page sont toujours absents du code HTML statique. Slim préfère laisser un espace vide plutôt que d’indiquer un chiffre qu’il ne peut pas vérifier. Lorsque Slim ne peut pas effectuer de comparaison à ce jour, la page de résultats l’indique clairement.",
         "para3": "Mobile Vikings, Scarlet, hey! et d'autres petits opérateurs belges ne font pas non plus l'objet de comparaisons pour l'instant — consultez la liste complète des opérateurs exclus sur <link1></link1>. Si un opérateur n'apparaît pas, Slim le précise clairement ; l'application ne l'exclut pas sans le signaler."
       },
       "section4": {
@@ -782,7 +782,7 @@
             "col1": "Mobile disponible sur Slim",
             "col2": "Oui",
             "col3": "Oui (formules « Basic » et « Unlimited » uniquement)",
-            "col4": "À venir au prochain cycle — HTML statique reconfirmé en juillet 2026"
+            "col4": "Non pris en compte — les prix sont générés par JavaScript (vérifié à nouveau le 16/08/2026)"
           },
           "row4": {
             "col1": "Accès à Internet inclus avec Slim",
