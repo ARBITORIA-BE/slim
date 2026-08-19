@@ -2398,7 +2398,9 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
   - **잔여 리스크**: Youfone BE 는 전 후보 도메인 미해결로 시드 보류 — 4.26.b 진입 과제. MVNO 편입 시 "호스트망 같은데 가격만 다른" 중복 노출 = 비교 UX 복잡도 상승, 별 검토.
   - **sub-task 분해**:
     - [ ] **4.26.a** 번들 fetcher 라운드 (Q3 잠금 = 우선 트랙) — 3사 번들 페이지 정적 파싱 → `bundle_mobile_internet` / `bundle_internet_tv` / `bundle_mobile_internet_tv` 커버. **정찰 완료 = 진입 게이트 열림.** 커버리지 15칸 중 4 → 목표 9~13칸.
-      - 진입 게이트: ADR-0053 §D6 정찰 실측 (완료 2026-08-15) + 공급사별 GTC/robots legal 검토 (§D5 — **미완, 착수 전 필수**).
+      - 진입 게이트: ADR-0053 §D6 정찰 실측 (완료 2026-08-15) + 공급사별 GTC/robots legal 검토 (§D5) — **2026-08-19 조건부 OPEN** ([ADR-0013 Appendix B Amendment 2026-08-19](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)). Orange Love 번들 GTC 확보(2026-06-05 WAF 차단 해제 + 로컬 `pdftotext` 가용 → **운영자 개입 0**) + 키워드 직접 금지 **0건**. Proximus/Telenet 은 2026-05-28 일반 GTC 검토 재사용.
+      - ⚠️ **B.10.5 잠금 조건**: 번들 fetcher 는 **쿼리 파라미터가 붙은 configurer URL 을 요청하지 않는다** (정적 상품 목록 페이지만). Orange robots `Disallow: /*internet=` / `/*mobile=` 이 configurer URL 을 차단하므로, 이 조건을 깨면 robots 위반이 된다.
+      - ⚠️ **잔여 (footnote 정직 표기)**: Proximus `Special-Terms-and-Conditions---Internet/TV/Fixed-telephony/Mobile-phone---EN` 4종 **미검토**. 웹사이트 자동수집 조항은 통상 일반 GTC 에 위치하므로 리스크 낮다고 **추정**하나 확인 안 함 — 실 가격 수집 시작 후 조기 확인 권장. Orange Love **NL 판 미검토** (FR 판만, 2026-06-05 선례와 동일 범위).
       - 게이트 A (builder 첫 fetch): 셀렉터 후보 3종 잠금 + 티어명↔가격↔프로모 기간 매핑 성공 + 챌린지 페이지 미검출.
       - 게이트 B (로컬): 7단 게이트 통과 + `confidence` 분포 확인.
       - 게이트 C (머지 후 24h): 프로덕션 IP 실 fetch 성공 (메모리 `project_fetcher_prod_ip`) + `tariff_snapshot` 번들 누적 + admin 헬스 번들 카테고리 활성.
