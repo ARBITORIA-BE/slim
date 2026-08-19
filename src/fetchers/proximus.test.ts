@@ -1,5 +1,5 @@
 /**
- * Proximus 실 스크래핑 fetcher 단위 테스트 (PLAN 1.5.6)
+ * Proximus 실 스크래핑 fetcher 단위 테스트 (PLAN 1.5.6 + PLAN 4.26.a)
  *
  * 외부 호출 0 — global.fetch를 vi.fn()으로 모킹.
  * fixture HTML은 최소 마크업(실 HTML 200KB 커밋 금지).
@@ -10,6 +10,7 @@
  *   (c) 빈 HTML 양 페이지 → ok:false kind:'parse'
  *   (d) STUB_FAIL_PROXIMUS=1 → ok:false kind:'network' + fetch 미호출
  *   (e) 챌린지 페이지 → degrade (ok:false)
+ *   (f) bundle 페이지 정상 → bundle_mobile_internet_tv 파싱 (PLAN 4.26.a)
  */
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { proximus } from './proximus';
@@ -78,6 +79,45 @@ const FIXTURE_HTML_CHALLENGE = `<!DOCTYPE html>
 <html><head><title>Just a moment...</title></head>
 <body><p>Just a moment</p><p>cf-browser-verification</p></body></html>`;
 
+// ─── 최소 fixture HTML — bundle (PLAN 4.26.a, 실 HTML 구조 2026-08-19 기준) ─
+//
+// data-tms-cart-products 속성(JSON) 이 가격의 단일 출처 — Telenet inputs
+// 속성 패턴과 동일 계열. Ultra Fiber는 유럽 콤마 소수점(Gbps) 케이스 재현.
+
+const FIXTURE_BUNDLE_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head><title>Packs - Proximus</title></head>
+<body>
+
+<!-- Internet Go + Mobile + TV: 표준 €90.99, 프로모 €0 × 3개월 -->
+<div class="panel">
+  <span class="rs-txt-s4">Internet Go + Mobile + TV</span>
+  <p>100 Mbps max download speed 30 Mbps max upload speed</p>
+  <p>20 GB mobile data + 5G network</p>
+  <p>Unlimited internet with Wi-Fi 6</p>
+  <p>More than 80 TV channels</p>
+  <p>You will pay €0/month for 3 month(s), then €90.99/month</p>
+  <button data-tms-cart-products='{"id":"DDVSB","name":"Internet Go + Mobile + TV","quantity":1,"price":{"recurring":90.99,"recurringPromo":0,"oneTime":90.99},"products":[]}'>Check availability</button>
+</div>
+
+<!-- Ultra Fiber + Mobile + TV: 표준 €137.99, 프로모 €30 × 3개월, 유럽 콤마 소수점 -->
+<div class="rs-panel-big">
+  <span class="rs-txt-s4">Ultra Fiber Internet + Mobile + TV</span>
+  <p>8,5 Gbps max download speed + 1,5 Gbps reserved for transmission quality</p>
+  <p>8 Gbps max upload speed + 2 Gbps reserved for transmission quality</p>
+  <p>20 GB mobile data + 5G network</p>
+  <p>Unlimited internet with Wi-Fi 7</p>
+  <p>More than 80 TV channels</p>
+  <p>You will pay €30/month for 3 month(s), then €137.99/month</p>
+  <button data-tms-cart-products='{"id":"KMTRS","name":"Ultra Fiber Internet + Mobile + TV","quantity":1,"price":{"recurring":137.99,"recurringPromo":30,"oneTime":137.99,"oneTimePromo":30},"products":[]}'>Check availability</button>
+</div>
+
+<!-- 중복 렌더 카드 (실측에서 관찰된 패턴) — dedupe 대상, id 동일 -->
+<button data-tms-cart-products='{"id":"DDVSB","name":"Internet Go + Mobile + TV","quantity":1,"price":{"recurring":90.99,"recurringPromo":0,"oneTime":90.99},"products":[]}'>Check availability (dup)</button>
+
+</body>
+</html>`;
+
 // ─── fetch 모킹 헬퍼 ─────────────────────────────────────────────────────
 
 function makeMockResponse(status: number, body: string): Response {
@@ -88,17 +128,20 @@ function makeMockResponse(status: number, body: string): Response {
 }
 
 /**
- * 두 페이지(mobile, internet)에 각각 다른 응답을 주는 fetch mock.
- * URL 문자열 매칭으로 분기.
+ * 세 페이지(mobile, internet, bundle)에 각각 다른 응답을 주는 fetch mock.
+ * URL 문자열 매칭으로 분기. 인자는 factory(각 호출마다 새 Response 인스턴스
+ * 생성) — Response.text()는 1회만 읽을 수 있어 인스턴스 재사용은 위험.
  */
-function mockTwoPages(
-  mobileResponse: Response,
-  internetResponse: Response,
+function mockThreePages(
+  mobileFactory: () => Response,
+  internetFactory: () => Response,
+  bundleFactory: () => Response,
 ): void {
   vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
-    if (url.includes('mobile')) return Promise.resolve(mobileResponse);
-    return Promise.resolve(internetResponse);
+    if (url.includes('mobile-subscription')) return Promise.resolve(mobileFactory());
+    if (url.includes('packs')) return Promise.resolve(bundleFactory());
+    return Promise.resolve(internetFactory());
   });
 }
 
@@ -122,14 +165,23 @@ describe('ProximusFetcher — metadata', () => {
     expect(metadata.version).toMatch(/^proximus-be@\d{4}-\d{2}-\d{2}$/);
     expect(metadata.homepageUrl).toBe('https://www.proximus.be');
   });
+
+  it('categories에 mobile + internet_fixed + bundle_mobile_internet_tv 포함 (PLAN 4.26.a)', () => {
+    expect(proximus.metadata.categories).toEqual([
+      'mobile',
+      'internet_fixed',
+      'bundle_mobile_internet_tv',
+    ]);
+  });
 });
 
 // ─── 2. 정상 HTML → mobile + internet 파싱 ──────────────────────────────
 describe('ProximusFetcher — fetch() 정상 케이스 (a)', () => {
   beforeEach(() => {
-    mockTwoPages(
-      makeMockResponse(200, FIXTURE_MOBILE_HTML),
-      makeMockResponse(200, FIXTURE_INTERNET_HTML),
+    mockThreePages(
+      () => makeMockResponse(200, FIXTURE_MOBILE_HTML),
+      () => makeMockResponse(200, FIXTURE_INTERNET_HTML),
+      () => makeMockResponse(200, FIXTURE_HTML_EMPTY), // bundle 노이즈 배제
     );
   });
 
@@ -301,9 +353,10 @@ describe('ProximusFetcher — fetch() 정상 케이스 (a)', () => {
 // ─── 3. HTTP 403 양 페이지 → ok:false kind:'network' (b) ─────────────────
 describe('ProximusFetcher — HTTP 403 양 페이지 (b)', () => {
   it('양 페이지 403 → FetchOutcome.ok=false kind=network (B.5)', async () => {
-    mockTwoPages(
-      makeMockResponse(403, 'Forbidden'),
-      makeMockResponse(403, 'Forbidden'),
+    mockThreePages(
+      () => makeMockResponse(403, 'Forbidden'),
+      () => makeMockResponse(403, 'Forbidden'),
+      () => makeMockResponse(403, 'Forbidden'),
     );
 
     const outcome = await proximus.fetch();
@@ -319,9 +372,10 @@ describe('ProximusFetcher — HTTP 403 양 페이지 (b)', () => {
 // ─── 4. 빈 HTML 양 페이지 → ok:false kind:'parse' (c) ────────────────────
 describe('ProximusFetcher — 빈 HTML 양 페이지 (c)', () => {
   it('셀렉터 0 매칭 → ok:false kind=parse', async () => {
-    mockTwoPages(
-      makeMockResponse(200, FIXTURE_HTML_EMPTY),
-      makeMockResponse(200, FIXTURE_HTML_EMPTY),
+    mockThreePages(
+      () => makeMockResponse(200, FIXTURE_HTML_EMPTY),
+      () => makeMockResponse(200, FIXTURE_HTML_EMPTY),
+      () => makeMockResponse(200, FIXTURE_HTML_EMPTY),
     );
 
     const outcome = await proximus.fetch();
@@ -354,9 +408,10 @@ describe('ProximusFetcher — STUB_FAIL 환경변수 (d)', () => {
 // ─── 6. 챌린지 페이지 → degrade (e) ─────────────────────────────────────
 describe('ProximusFetcher — 챌린지 페이지 degrade (e)', () => {
   it('양 페이지 챌린지 → ok:false (0개 추출)', async () => {
-    mockTwoPages(
-      makeMockResponse(200, FIXTURE_HTML_CHALLENGE),
-      makeMockResponse(200, FIXTURE_HTML_CHALLENGE),
+    mockThreePages(
+      () => makeMockResponse(200, FIXTURE_HTML_CHALLENGE),
+      () => makeMockResponse(200, FIXTURE_HTML_CHALLENGE),
+      () => makeMockResponse(200, FIXTURE_HTML_CHALLENGE),
     );
 
     const outcome = await proximus.fetch();
@@ -368,9 +423,10 @@ describe('ProximusFetcher — 챌린지 페이지 degrade (e)', () => {
   });
 
   it('mobile 챌린지 + internet 정상 → ok:true (internet만 반환)', async () => {
-    mockTwoPages(
-      makeMockResponse(200, FIXTURE_HTML_CHALLENGE),
-      makeMockResponse(200, FIXTURE_INTERNET_HTML),
+    mockThreePages(
+      () => makeMockResponse(200, FIXTURE_HTML_CHALLENGE),
+      () => makeMockResponse(200, FIXTURE_INTERNET_HTML),
+      () => makeMockResponse(200, FIXTURE_HTML_EMPTY), // bundle 노이즈 배제
     );
 
     const outcome = await proximus.fetch();
@@ -381,6 +437,82 @@ describe('ProximusFetcher — 챌린지 페이지 degrade (e)', () => {
     expect(outcome.result.data.length).toBe(2);
     for (const t of outcome.result.data) {
       expect(t.category).toBe('internet_fixed');
+    }
+  });
+});
+
+// ─── 7. bundle 페이지 정상 파싱 (PLAN 4.26.a) ────────────────────────────
+describe('ProximusFetcher — fetch() bundle 정상 케이스 (f)', () => {
+  beforeEach(() => {
+    mockThreePages(
+      () => makeMockResponse(200, FIXTURE_HTML_EMPTY), // mobile 노이즈 배제
+      () => makeMockResponse(200, FIXTURE_HTML_EMPTY), // internet 노이즈 배제
+      () => makeMockResponse(200, FIXTURE_BUNDLE_HTML),
+    );
+  });
+
+  it('중복 렌더 카드 dedupe — id 기준 실질 2개 pack만 반환', async () => {
+    const outcome = await proximus.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+    expect(outcome.result.data.length).toBe(2);
+  });
+
+  it('모든 bundle tariff가 category=bundle_mobile_internet_tv', async () => {
+    const outcome = await proximus.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+    for (const t of outcome.result.data) {
+      expect(t.category).toBe('bundle_mobile_internet_tv');
+    }
+  });
+
+  it('Internet Go + Mobile + TV: monthly=9099, promo=0, promoMonths=3', async () => {
+    const outcome = await proximus.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    const go = outcome.result.data.find((t) => t.tariffSlug === 'proximus-bundle-ddvsb');
+    expect(go).toBeDefined();
+    expect(go?.monthlyPriceCents).toBe(9099);
+    expect(go?.promoPriceCents).toBe(0);
+    expect(go?.promoMonths).toBe(3);
+    expect(go?.attributes['download_mbps']).toBe(100);
+    expect(go?.attributes['upload_mbps']).toBe(30);
+    expect(go?.attributes['data_gb']).toBe(20);
+    expect(go?.attributes['tv_channels']).toBe(80);
+  });
+
+  it('Ultra Fiber: 유럽 콤마 소수점 Gbps 파싱 — download=8500, upload=8000', async () => {
+    const outcome = await proximus.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+
+    const ultra = outcome.result.data.find((t) => t.tariffSlug === 'proximus-bundle-kmtrs');
+    expect(ultra).toBeDefined();
+    expect(ultra?.monthlyPriceCents).toBe(13799);
+    expect(ultra?.promoPriceCents).toBe(3000);
+    expect(ultra?.attributes['download_mbps']).toBe(8500); // 8,5 Gbps → 8500 Mbps
+    expect(ultra?.attributes['upload_mbps']).toBe(8000); // 8 Gbps → 8000 Mbps
+  });
+
+  it('included_services={mobile:true, internet:true, tv:true}', async () => {
+    const outcome = await proximus.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+    for (const t of outcome.result.data) {
+      expect(t.attributes['included_services']).toEqual({ mobile: true, internet: true, tv: true });
+    }
+  });
+
+  it('modemRentalCents=0 (Internet Box 기본 포함)', async () => {
+    const outcome = await proximus.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+    for (const t of outcome.result.data) {
+      expect(t.modemRentalCents).toBe(0);
+    }
+  });
+
+  it('sourceUrl이 실 bundle URL(/en/packs)', async () => {
+    const outcome = await proximus.fetch();
+    if (!outcome.ok) throw new Error('fetch 실패');
+    for (const t of outcome.result.data) {
+      expect(t.sourceUrl).toBe('https://www.proximus.be/en/packs');
     }
   });
 });
