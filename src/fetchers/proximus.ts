@@ -1,7 +1,7 @@
 /**
- * Proximus 실 스크래핑 fetcher (PLAN 1.5.6)
+ * Proximus 실 스크래핑 fetcher (PLAN 1.5.6 + PLAN 4.26.a)
  *
- * mobile 5개 + internet 4개 = 9개 요금제를 2개 페이지에서 추출한다.
+ * mobile 5개 + internet 4개 + bundle 4개 = 13개 요금제를 3개 페이지에서 추출한다.
  *
  * 왜 스크래핑인가?
  *   Proximus는 공식 가격 API를 제공하지 않는다. HTML 페이지에서 가격을 파싱한다.
@@ -16,15 +16,30 @@
  *     - span.rs-txt-s4 의 own-text가 /^Internet .*Fiber$/ 정규식 매칭
  *     - €X.XX 고유값 목록에서 displayed보다 큰 값이 있으면 hasPromo
  *
+ * Bundle 페이지 (2026-08-19 실측, PLAN 4.26.a 게이트 A):
+ *   - `/en/packs` (쿼리 파라미터 없음)는 Internet+Mobile+TV 트리플 플레이 4종을
+ *     `[data-tms-cart-products]` 속성(JSON, 카트 담기 버튼)으로 서버 렌더한다.
+ *     `{"id":"DDVSB","name":"Internet Go + Mobile + TV","price":{"recurring":90.99,
+ *     "recurringPromo":0}}` 형태 — 텍스트 정규식보다 신뢰도 높은 구조화 소스.
+ *   - DOM에 각 pack이 정확히 2회 중복 렌더됨(원인 미상 — 반응형 breakpoint 추정)
+ *     → cart JSON의 `id` 로 dedupe.
+ *   - duo 조합(Internet+Mobile, Internet+TV)은 `?products=internet,mobile` 같은
+ *     쿼리 파라미터 URL 에서만 노출 — ADR-0013 §B.10.5 "configurer URL 미요청"
+ *     제약으로 본 fetcher 는 요청하지 않는다. **본 fetcher 는 트리플 플레이
+ *     (bundle_mobile_internet_tv) 만 커버, duo 번들 2종은 커버하지 않는다 (정직 표기).**
+ *
  * B.5 컴플라이언스:
  *   HTTP !ok / 403 / 429 / 챌린지 페이지 → throw 없이 ok:false 반환.
  *   한 페이지 실패 시 나머지 페이지로 계속 (페이지 단위 degrade).
- *   두 페이지 모두 0개 추출 시 → ok:false parse.
+ *   세 페이지 모두 0개 추출 시 → ok:false parse.
  *
  * STUB_FAIL_PROXIMUS=1:
  *   1.9 격리 수동 검증용 — 실 fetcher에도 유지 (테스트 격리 시나리오 보호).
  *
- * 결정 근거: docs/adr/0013-fetcher-real-scraping-risk-assessment.md Amendment 3
+ * 결정 근거:
+ *   - docs/adr/0013-fetcher-real-scraping-risk-assessment.md Amendment 3
+ *   - docs/adr/0013-fetcher-real-scraping-risk-assessment.md §B.10.5 (2026-08-19)
+ *   - docs/adr/0053-telecom-provider-ecosystem-expansion.md §D6
  */
 
 import * as cheerio from 'cheerio';
@@ -34,11 +49,14 @@ import { STUB_FETCH_TIMEOUT_MS, stubFailOutcome } from './_shared';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────
 
-const FETCHER_VERSION = 'proximus-be@2026-05-29';
+const FETCHER_VERSION = 'proximus-be@2026-08-19';
 
 const MOBILE_SOURCE_URL = 'https://www.proximus.be/en/mobile-subscription';
 
 const INTERNET_SOURCE_URL = 'https://www.proximus.be/en/internet';
+
+/** PLAN 4.26.a — 쿼리 파라미터 없는 base 경로만 (ADR-0013 §B.10.5). */
+const BUNDLE_SOURCE_URL = 'https://www.proximus.be/en/packs';
 
 const HOMEPAGE_URL = 'https://www.proximus.be';
 
@@ -396,6 +414,199 @@ function parseInternetPlans(
   return extracted;
 }
 
+// ─── Bundle 추출 (PLAN 4.26.a) ────────────────────────────────────────────
+
+/** `data-tms-cart-products` 속성 JSON의 안전 파싱 결과 모양. */
+interface ProximusCartProduct {
+  id: string;
+  name: string;
+  recurringEuros: number;
+  recurringPromoEuros: number | null;
+}
+
+/**
+ * `data-tms-cart-products` 속성값(JSON 문자열)을 파싱한다.
+ * cheerio가 `&quot;` 를 자동 디코딩하므로 JSON.parse 바로 가능 (Telenet
+ * `extractPriceFromInputs` 패턴 재사용).
+ */
+function parseCartProductsAttr(raw: string): ProximusCartProduct | null {
+  try {
+    // @builder-justification: JSON.parse 결과는 unknown이며 즉시 타입 가드로 검증
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== 'object' || parsed === null) return null;
+    const obj = parsed as Record<string, unknown>;
+    const id = obj['id'];
+    const name = obj['name'];
+    if (typeof id !== 'string' || typeof name !== 'string') return null;
+
+    const priceRaw = obj['price'];
+    if (typeof priceRaw !== 'object' || priceRaw === null) return null;
+    const p = priceRaw as Record<string, unknown>;
+    const recurring = p['recurring'];
+    if (typeof recurring !== 'number' || recurring <= 0) return null;
+    const recurringPromo = p['recurringPromo'];
+
+    return {
+      id,
+      name,
+      recurringEuros: recurring,
+      recurringPromoEuros: typeof recurringPromo === 'number' ? recurringPromo : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 다운로드/업로드 속도를 카드 텍스트에서 추출.
+ * "100 Mbps max download speed" / "8,5 Gbps max download speed" (유럽 콤마
+ * 소수점, Ultra Fiber) 양쪽 지원. Gbps는 ×1000 하여 Mbps로 정규화.
+ */
+function extractPackSpeed(cardText: string, direction: 'download' | 'upload'): number | null {
+  const re = new RegExp(`([\\d.,]+)\\s*(Mbps|Gbps)\\s*max ${direction} speed`, 'i');
+  const m = cardText.match(re);
+  if (!m?.[1] || !m[2]) return null;
+  const num = parseFloat(m[1].replace(',', '.'));
+  if (isNaN(num)) return null;
+  return m[2].toLowerCase() === 'gbps' ? Math.round(num * 1000) : Math.round(num);
+}
+
+/**
+ * bundle(`/en/packs`) 페이지 HTML에서 Internet+Mobile+TV 트리플 플레이
+ * 요금제를 추출한다.
+ *
+ * 셀렉터 전략:
+ *   `[data-tms-cart-products]` 속성이 붙은 CTA 버튼을 anchor로 잡는다. 이
+ *   속성은 이미 구조화된 JSON — 가격은 여기서, 나머지 스펙(속도/데이터/TV
+ *   채널)은 `[class*="panel"]` 조상 카드의 텍스트에서 정규식으로 추출한다
+ *   (Proximus mobile/internet의 `cardOf()` 패턴 응용).
+ *
+ * dedupe:
+ *   2026-08-19 실측 — 동일 pack이 DOM에 정확히 2회 렌더된다(원인 불명 —
+ *   반응형 breakpoint 추정). cart JSON의 `id` 기준으로 첫 occurrence만 채택.
+ */
+function parseBundlePlans(
+  $: ReturnType<typeof cheerio.load>,
+  httpStatus: number,
+  elapsedMs: number,
+  fetchedAt: string,
+  warnings: string[],
+): TariffSnapshotInput[] {
+  const extracted: TariffSnapshotInput[] = [];
+  const seenIds = new Set<string>();
+
+  $('[data-tms-cart-products]').each((_, el) => {
+    const wrapped = $(el);
+    const raw = wrapped.attr('data-tms-cart-products');
+    if (!raw) return;
+
+    const cart = parseCartProductsAttr(raw);
+    if (!cart) return;
+    if (seenIds.has(cart.id)) return; // 중복 렌더 dedupe
+    seenIds.add(cart.id);
+
+    const planName = cart.name; // 예: "Internet Go + Mobile + TV"
+    const card = wrapped.closest('[class*="panel"]');
+    const t = card.length > 0 ? card.text().replace(/\s+/g, ' ') : '';
+
+    if (card.length === 0) {
+      warnings.push(`${planName}: panel card container not found`);
+    }
+
+    const monthlyCents = Math.round(cart.recurringEuros * 100);
+    const hasPromo =
+      cart.recurringPromoEuros !== null && cart.recurringPromoEuros < cart.recurringEuros;
+    const promoPriceCents = hasPromo ? Math.round((cart.recurringPromoEuros as number) * 100) : null;
+
+    const promoMonthMatch = t.match(/for\s+(\d+)\s+month/i);
+    const promoMonths = hasPromo && promoMonthMatch?.[1] ? parseInt(promoMonthMatch[1], 10) : null;
+    const promoDescription =
+      hasPromo && promoMonths !== null
+        ? `처음 ${promoMonths}개월 €${((promoPriceCents ?? 0) / 100).toFixed(2)} 프로모`
+        : null;
+
+    const downloadMbps = extractPackSpeed(t, 'download');
+    const uploadMbps = extractPackSpeed(t, 'upload');
+    if (downloadMbps === null) warnings.push(`${planName}: download_mbps not extracted`);
+    if (uploadMbps === null) warnings.push(`${planName}: upload_mbps not extracted`);
+
+    // "20 GB mobile data" — 팩에 포함된 모바일 데이터 한도
+    const dataMatch = t.match(/(\d+)\s*GB mobile data/i);
+    const dataGb = dataMatch?.[1] ? parseInt(dataMatch[1], 10) : null;
+    if (dataGb === null) warnings.push(`${planName}: data_gb not extracted`);
+
+    // "More than 80 TV channels"
+    const tvMatch = t.match(/More than\s+(\d+)\s+TV channels/i);
+    const tvChannels = tvMatch?.[1] ? parseInt(tvMatch[1], 10) : null;
+    if (tvChannels === null) warnings.push(`${planName}: tv_channels not extracted`);
+
+    const unlimitedData = /Unlimited (internet|surfing)/i.test(t);
+
+    const sanity = checkMonthlySanity(monthlyCents);
+    const planWarnings = warnings.filter((w) => w.includes(planName));
+    const confidenceResult = computeConfidence({
+      selectorMatched: true,
+      sanityChecks: [sanity],
+      parseWarnings: planWarnings,
+    });
+
+    // slug: cart.id (Proximus 내부 SKU 코드, 예: DDVSB) → proximus-bundle-ddvsb
+    const tariffSlug = `proximus-bundle-${cart.id.toLowerCase()}`;
+
+    extracted.push({
+      providerSlug: 'proximus-be',
+      tariffSlug,
+      tariffName: planName,
+      category: 'bundle_mobile_internet_tv',
+      monthlyPriceCents: monthlyCents,
+      activationFeeCents: 0, // 페이지 명시: "Free installation by a technician"
+      modemRentalCents: 0, // Internet Box(+) 기본 포함
+      promoPriceCents,
+      promoMonths,
+      promoDescription,
+      commitmentMonths: 0, // "Non-binding subscription" (페이지 명시, mobile/internet과 동일)
+      earlyTerminationFeeCents: null,
+      attributes: {
+        category: 'bundle_mobile_internet_tv',
+        download_mbps: downloadMbps ?? 1, // 추출 실패 시 최소값 (warning 추가됨)
+        upload_mbps: uploadMbps ?? 1,
+        unlimited_data: unlimitedData,
+        fair_use_gb: null,
+        wifi_booster_included: false, // 페이지에 Wi-Fi booster 언급 없음
+        tv_channels: tvChannels ?? 0, // 추출 실패 시 0 (warning 추가됨)
+        tv_4k_included: false, // 페이지는 "eHD"만 명시, 4K 언급 없음 (추측 금지)
+        dvr_hours: null, // "Up to 7 days of TV Replay"는 dvr_hours 매핑 근거 불충분
+        data_gb: dataGb ?? 'unlimited', // 추출 실패 시 보수적 fallback (warning 추가됨)
+        voice_minutes: 'unlimited' as const, // 페이지 명시: "Unlimited calls and SMSes"
+        eu_roaming_included: true, // "in Belgium + the EU Zone" 명시 + EU 규제 로밍
+        included_services: { mobile: true, internet: true, tv: true },
+      },
+      sourceUrl: BUNDLE_SOURCE_URL,
+      confidence: confidenceResult.confidence,
+      confidenceReason: confidenceResult.reason,
+      rawPayload: {
+        stub: false,
+        fetcher_version: FETCHER_VERSION,
+        url: BUNDLE_SOURCE_URL,
+        fetched_at: fetchedAt,
+        http: { status: httpStatus, elapsed_ms: elapsedMs },
+        extracted: {
+          plan_id: cart.id,
+          plan_name: planName,
+          monthly_cents: monthlyCents,
+          promo_cents: promoPriceCents,
+          download_mbps: downloadMbps,
+          upload_mbps: uploadMbps,
+        },
+        warnings: planWarnings,
+        ...sanity,
+      },
+    });
+  });
+
+  return extracted;
+}
+
 // ─── HTTP fetch 헬퍼 ──────────────────────────────────────────────────────
 
 interface PageFetchResult {
@@ -482,10 +693,12 @@ export const proximus: Fetcher = {
      */
     method: 'scraping',
     /**
-     * Proximus 는 mobile + internet_fixed 두 카테고리를 커버한다.
+     * Proximus 는 mobile + internet_fixed + bundle_mobile_internet_tv 세
+     * 카테고리를 커버한다 (PLAN 4.26.a — 트리플 플레이만, duo 번들은 §B.10.5
+     * configurer URL 제약으로 미커버).
      * admin-metrics 의 CASE WHEN 매핑 자동 생성 용 (PLAN 1.5.6).
      */
-    categories: ['mobile', 'internet_fixed'] as const,
+    categories: ['mobile', 'internet_fixed', 'bundle_mobile_internet_tv'] as const,
     version: FETCHER_VERSION,
     homepageUrl: HOMEPAGE_URL,
   },
@@ -503,10 +716,11 @@ export const proximus: Fetcher = {
     );
     if (failure) return failure;
 
-    // ─── 두 페이지 순차 fetch ───────────────────────────────────────────────
+    // ─── 세 페이지 순차 fetch ───────────────────────────────────────────────
     // Promise.all로 병렬화 가능하나, Proximus IP 차단 위험 완화를 위해 순차 실행.
     const mobPage = await fetchPage(MOBILE_SOURCE_URL);
     const intPage = await fetchPage(INTERNET_SOURCE_URL);
+    const bundlePage = await fetchPage(BUNDLE_SOURCE_URL);
 
     const allWarnings: string[] = [];
     const allExtracted: TariffSnapshotInput[] = [];
@@ -533,23 +747,42 @@ export const proximus: Fetcher = {
       allWarnings.push(`internet page: ${intPage.warning}`);
     }
 
+    // bundle 페이지 파싱 (PLAN 4.26.a)
+    if (bundlePage.html !== null) {
+      const $ = cheerio.load(bundlePage.html);
+      const bundleWarnings: string[] = [];
+      const bundlePlans = parseBundlePlans(
+        $,
+        bundlePage.httpStatus,
+        bundlePage.elapsedMs,
+        fetchedAt,
+        bundleWarnings,
+      );
+      allExtracted.push(...bundlePlans);
+      allWarnings.push(...bundleWarnings);
+    } else if (bundlePage.warning) {
+      allWarnings.push(`bundle page: ${bundlePage.warning}`);
+    }
+
     // ─── 결과 검증 ──────────────────────────────────────────────────────────
-    // 두 페이지 모두 0개면 실패. 한 페이지만 성공해도 ok:true.
+    // 세 페이지 모두 0개면 실패. 한 페이지만 성공해도 ok:true.
     if (allExtracted.length === 0) {
       return {
         ok: false,
         error: {
           fetcherSlug: 'proximus-be',
           fetchedAt,
-          kind: mobPage.warning && intPage.warning ? 'network' : 'parse',
-          message: `No tariffs parsed from either page. mobile: ${mobPage.warning ?? `${mobPage.httpStatus} ok`}, internet: ${intPage.warning ?? `${intPage.httpStatus} ok`}`,
+          kind: mobPage.warning && intPage.warning && bundlePage.warning ? 'network' : 'parse',
+          message: `No tariffs parsed from any page. mobile: ${mobPage.warning ?? `${mobPage.httpStatus} ok`}, internet: ${intPage.warning ?? `${intPage.httpStatus} ok`}, bundle: ${bundlePage.warning ?? `${bundlePage.httpStatus} ok`}`,
           rawPayload: {
             stub: false,
             fetcher_version: FETCHER_VERSION,
             mobile_url: MOBILE_SOURCE_URL,
             internet_url: INTERNET_SOURCE_URL,
+            bundle_url: BUNDLE_SOURCE_URL,
             mobile_http: { status: mobPage.httpStatus, elapsed_ms: mobPage.elapsedMs },
             internet_http: { status: intPage.httpStatus, elapsed_ms: intPage.elapsedMs },
+            bundle_http: { status: bundlePage.httpStatus, elapsed_ms: bundlePage.elapsedMs },
             warnings: allWarnings,
           },
         },
