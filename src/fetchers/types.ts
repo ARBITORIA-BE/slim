@@ -172,6 +172,21 @@ export interface FetchResult {
   readonly fetchedAt: string;
   /** 한 provider의 *모든* tariff. 빈 배열도 정상 (페이지에서 모든 요금제 제거 케이스). */
   readonly data: readonly TariffSnapshotInput[];
+  /**
+   * 이 fetcher 가 **더 이상 커버하지 않는다고 선언한** 카테고리 (PLAN 4.26.a 신설).
+   *
+   * 왜 필요한가? (2026-08-19 Orange BE 사고)
+   *   persist 의 단종 처리는 *이번에 본* 카테고리 안에서만 isActive=false 를 놓는다.
+   *   그래서 공급사가 페이지를 개편해 한 카테고리를 통째로 못 긁게 되면, 그 카테고리
+   *   요금제는 "아무도 보지 않았으므로" 영원히 isActive=true 로 남는다 — 존재하지
+   *   않는 상품(Orange Start/Zen/Giga Internet)이 현재가처럼 노출된다 (P1 위반).
+   *   fetcher 가 스스로 "이 카테고리는 이제 내 소관이 아니다" 라고 밝히면 persist 가
+   *   해당 카테고리를 비활성화한다. data 에 실제로 담긴 카테고리가 우선 —
+   *   둘 다 있으면 본 필드는 무시된다 (실측이 선언을 이긴다).
+   *
+   * ADR-0008 §T4 인터페이스 확장 — optional 이므로 기존 fetcher 변경 0.
+   */
+  readonly retiredCategories?: readonly TariffCategory[];
 }
 
 /**

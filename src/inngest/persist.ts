@@ -171,4 +171,18 @@ export async function persistFetchResult(result: FetchResult): Promise<void> {
         ),
       );
   }
+
+  // 4. 커버 중단 선언 처리 (PLAN 4.26.a — FetchResult.retiredCategories).
+  //
+  // 3번은 "이번에 본 카테고리" 안에서만 청소하므로, 공급사 페이지 개편으로 한
+  // 카테고리를 통째로 못 긁게 되면 그 요금제들이 영원히 살아남는다 (Orange BE
+  // internet_fixed 사고, 2026-08-19). fetcher 가 명시적으로 은퇴를 선언하면 여기서
+  // 비활성화한다. 이번에 실제로 데이터가 들어온 카테고리는 제외 — 실측이 선언을 이긴다.
+  const retired = (result.retiredCategories ?? []).filter((c) => !seenCategories.has(c));
+  if (retired.length > 0) {
+    await db
+      .update(tariff)
+      .set({ isActive: false })
+      .where(and(eq(tariff.providerId, providerId), inArray(tariff.category, retired)));
+  }
 }

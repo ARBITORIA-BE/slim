@@ -124,6 +124,61 @@ PR #84 로 10건 시드 완료 (Mobile Vikings · Scarlet · BASE · Edpnet · L
 
 `producten/internet.html` 도 200 + 가격 토큰 36건(고유 17)으로 관측됐다. Telenet internet 은 현재 fetcher `categories` 에서 빠져 **manual 폴백** 상태다(`src/fetchers/telenet.ts:137`). 번들 라운드와 동일 도메인·동일 마크업 계열이므로 **같은 라운드에서 함께 처리하는 것이 효율적**일 수 있다 — 4.26.a 착수 시 builder 판단.
 
+### D6.1 구현 라운드 결과 (2026-08-19, PLAN 4.26.a — 게이트 A/B 통과)
+
+정찰(§D6)이 예고한 "셀렉터 확정" 을 실제 구현으로 마쳤다. **커버리지 15칸 중 4 → 10칸 (27% → 67%).**
+
+| 카테고리 | Proximus | Telenet | Orange BE |
+|---|---|---|---|
+| `mobile` | ✅ | ✅ | ❌ (JS 렌더 — 4.24 취소) |
+| `internet_fixed` | ✅ | ✅ **신규** | ❌ **회귀 — 아래 참조** |
+| `bundle_mobile_internet` | ❌ | ✅ **신규** | ❌ |
+| `bundle_internet_tv` | ❌ | ✅ **신규** | ❌ |
+| `bundle_mobile_internet_tv` | ✅ **신규** | ✅ **신규** | ✅ **신규** |
+
+#### 잠근 셀렉터 (게이트 A)
+
+| 공급사 | 앵커 | 티어명 | 가격 | 프로모 |
+|---|---|---|---|---|
+| Proximus | `[data-testid="PromoSpeed"]` / `PromoPrice` / `Pack-Composer-Product-Internet-Details` (문서 순서 zip) | PromoSpeed 텍스트 | `"€0 /month for 3 month(s), then €97.99 /month"` 파싱 | 같은 문장 |
+| Telenet | `div.cmp-product-summary` + `tg-lazy-loading-standalone[component-id="tg-marketing-cafe-pricing"]` | `.heading--4` + `.heading--3` | `inputs` 속성 JSON `customProduct.price` | 같은 JSON `promoPrice` + `duration` (**추정 0**) |
+| Orange | `div.obe-card` + `.obe-pricebox` | icon-table 제품명 3개 조합 | `.obe-price-amount` | `.obe-price-suffix` `"71 €/mois après 12 mois"` |
+
+**셀렉터 선택 원칙**: `ssa-instance-<uuid>`(Orange) / `rs-*` 유틸리티 클래스(Proximus)는 렌더·디자인마다 바뀌므로 앵커로 쓰지 않는다. testid / 의미 클래스만 사용.
+
+**오분류 가드**: 페이지 URL 을 카테고리 근거로 삼지 않는다. Orange 는 카드 헤더 `.obe-tag` 3종(Internet/Mobile/TV), Telenet 은 카드 본문의 구성 증거(다운로드 속도 / "mobiele data" / "TV-box")를 **카드가 스스로 밝힐 때만** 편입한다. 페이지 개편으로 다른 상품이 섞여도 조용히 오분류되지 않는다.
+
+#### 실측으로 잡은 함정 4건
+
+1. **Telenet 반응형 중복 카드** — 같은 요금제가 최대 4벌 렌더된다 (`startingFrom` 변형 등). 중복 제거 없이는 같은 slug 가 4번 upsert 되어 마지막 값이 이긴다. `heading|속도` 키 first-wins + 가격이 다르면 warning.
+2. **Telenet mobile 결합가 혼입** — `"In combinatie met internet nu vanaf € 56"` 카드의 €10/€21 은 **인터넷과 함께 살 때의 조건부 가격**이다. 단독가(€21/€41)와 이름이 같아 걸러내지 않으면 요금제가 절반 가격으로 노출된다. (이 카드들은 1.5.6 당시 `price=0` 이라 자동 skip 됐으나 2026-08 페이지 개편으로 실가격이 채워졌다 — **조용한 회귀**였다.)
+3. **`2,5 Gbps` → data_gb 5** — `(\d+)\s*GB/i` 가 "2,**5 Gb**ps" 를 데이터 용량으로 오인. `(?![a-z])` 경계 필요.
+4. **정수 유로 표기** — Proximus 프로모가가 `€0` / `€30` 처럼 정수다. 소수점 필수 파서(`eurToCents`)로는 못 읽는다. §D6 "부정 판정 시 2개 표기 패턴 재확인" 교훈의 **코드판**.
+
+#### ⚠️ 회귀 발견 — Orange `internet_fixed` 가 죽어 있었다
+
+4.26.a 검증 중 발견. `/fr/produits-et-services/internet-chez-vous` 를 raw fetch 하면:
+
+- `.obe-pricebox` **0개** (2026-06-05 정찰 시 3개) → 정적 가격 마크업 소멸
+- `obe-dps-price` 마커 **8개** → JS 런타임 렌더 (Orange mobile 이 막힌 것과 동일 패턴, [ADR-0013](0013-fetcher-real-scraping-risk-assessment.md) Amendment 4)
+- 상품명 개편: Start / Zen / Giga Internet → **Livebox / Livebox Up / Livebox Giga**
+- 실가격은 configurer(`?internet=` — robots Disallow) 뒤로 이동
+
+즉 **Orange internet fetcher 는 언젠가부터 매일 파싱 실패 중**이었고, 그 결과 DB 에는 *더 이상 존재하지 않는 상품*(Start/Zen/Giga)이 `isActive=true` 로 남아 있었다. persist 의 단종 처리는 "이번에 본 카테고리" 스코프라 아무도 이 행들을 정리하지 못했다.
+
+**조치**: (a) `orange-be` metadata 에서 `internet_fixed` 선언 제거 — 없는 커버리지를 주장하지 않는다 (P3), (b) [ADR-0008 Amendment 1](0008-fetcher-interface-and-cron.md) `retiredCategories` 신설 — fetcher 가 커버 중단을 선언하면 persist 가 잔존 요금제를 비활성화, (c) 파서 코드는 존치 — Orange 가 정적 가격을 되돌리면 실측이 선언을 이겨 자동 복구.
+
+**교훈**: fetcher 실패는 "데이터가 안 늘어난다" 가 아니라 **"틀린 데이터가 계속 살아 있다"** 로 나타난다. fetcher 별 연속 실패 알림이 없다는 것이 부채로 확인됐다 (후속 항목 필요).
+
+#### 남은 5칸 (정직 표기)
+
+| 빈칸 | 사유 |
+|---|---|
+| Orange `mobile` | `obe-dps-price` JS 렌더 (ADR-0013 Amd 4 에서 반증 완료) |
+| Orange `internet_fixed` | 위 회귀 — JS 렌더 전환 |
+| Orange `bundle_mobile_internet` / `bundle_internet_tv` | 해당 조합의 정적 목록 페이지 없음 (configurer 쿼리 URL 뒤 = robots Disallow) |
+| Proximus `bundle_mobile_internet` / `bundle_internet_tv` | `/en/packs?products=internet,mobile` 형태의 **쿼리 URL** 로만 노출. Proximus robots 는 이를 금지하지 않지만(2026-08-19 실측), §B.10.5 잠금 조건("정적 상품 목록 페이지만")을 공급사 구분 없이 지켰다. 완화하려면 ADR Amendment. |
+
 ### D7. 공급사 확장 트랙 (후행)
 
 PR #84 로 시드된 제외 공급사 10건에 §D1 6축 심사를 적용하는 라운드. **Q1 / Q2 는 이 트랙 진입 시점에 잠근다.** Youfone BE 도메인 확인이 진입 과제에 포함된다.

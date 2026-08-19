@@ -181,7 +181,9 @@ describe('orangeBe fetcher', () => {
       expect(orangeBe.metadata.providerSlug).toBe('orange-be');
       expect(orangeBe.metadata.country).toBe('BE');
       expect(orangeBe.metadata.method).toBe('scraping');
-      expect(orangeBe.metadata.categories).toEqual(['internet_fixed']);
+      // PLAN 4.26.a (2026-08-19): internet 페이지가 JS 렌더로 전환돼 정적 가격이
+      // 사라짐 → 선언에서 internet_fixed 제거, Love 번들로 교체 (fetcher 주석 참조).
+      expect(orangeBe.metadata.categories).toEqual(['bundle_mobile_internet_tv']);
       expect(orangeBe.metadata.homepageUrl).toBe('https://www.orange.be');
       expect(orangeBe.metadata.version).toMatch(/^orange-be@\d{4}-\d{2}-\d{2}$/);
     });

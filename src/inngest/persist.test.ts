@@ -248,3 +248,43 @@ describe('persistFetchResult — 단종 처리 스코프 (ADR-0005 §T5)', () =>
     expect(notIn?.vals).toContain('tariff-existing-1');
   });
 });
+
+// ─── 5. 커버 중단 선언 (PLAN 4.26.a — retiredCategories) ────────────────────
+describe('persistFetchResult — 커버 중단 카테고리 비활성화 (PLAN 4.26.a)', () => {
+  it('retiredCategories 선언 → 해당 카테고리 전체 isActive=false (미관측이라도)', async () => {
+    state.existingLookups = [null];
+
+    await persistFetchResult({
+      ...makeResult([mobileInput('proximus-mobile-easy', 'Mobile Easy')]),
+      retiredCategories: ['internet_fixed'],
+    });
+
+    // 단종 UPDATE 2건: (a) seen 카테고리 청소 (b) 은퇴 카테고리 통째 비활성화
+    const deacts = state.recordedUpdates.filter((u) => u.set['isActive'] === false);
+    expect(deacts.length).toBe(2);
+
+    const retiredUpdate = deacts.find((u) =>
+      (u.where.args ?? []).some(
+        (a) => a.__op === 'inArray' && (a.vals ?? []).includes('internet_fixed'),
+      ),
+    );
+    if (!retiredUpdate) throw new Error('은퇴 카테고리 UPDATE 가 기록되지 않음');
+
+    // 은퇴 UPDATE 는 notInArray(seen id) 조건이 없다 — 카테고리 전체가 대상
+    expect((retiredUpdate.where.args ?? []).some((a) => a.__op === 'notInArray')).toBe(false);
+  });
+
+  it('실측이 선언을 이긴다 — 같은 카테고리가 data 에 있으면 은퇴 UPDATE 없음', async () => {
+    state.existingLookups = [null];
+
+    await persistFetchResult({
+      ...makeResult([internetInput('proximus-internet-go-fiber', 'Internet Go Fiber')]),
+      retiredCategories: ['internet_fixed'],
+    });
+
+    // seen 카테고리 청소 1건만 — 은퇴 처리는 걸러진다
+    const deacts = state.recordedUpdates.filter((u) => u.set['isActive'] === false);
+    expect(deacts.length).toBe(1);
+    expect((deacts[0]?.where.args ?? []).some((a) => a.__op === 'notInArray')).toBe(true);
+  });
+});

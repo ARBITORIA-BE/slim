@@ -81,10 +81,33 @@ import { STUB_FETCH_TIMEOUT_MS, stubFailOutcome } from './_shared';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────
 
-const FETCHER_VERSION = 'orange-be@2026-06-05';
+const FETCHER_VERSION = 'orange-be@2026-08-19';
 
 const INTERNET_SOURCE_URL =
   'https://www.orange.be/fr/produits-et-services/internet-chez-vous';
+
+/**
+ * 번들(Love) 팩 목록 페이지 — PLAN 4.26.a (2026-08-19).
+ *
+ * B.10.5 잠금 조건 준수: *쿼리 파라미터가 붙은 configurer URL 을 요청하지 않는다.*
+ *   robots.txt `Disallow: /*internet=` / `/*mobile=` 이 `configurer-votre-pack?...`
+ *   을 차단한다. 본 fetcher 는 쿼리 없는 정적 목록 페이지만 요청하고, 카드 안의
+ *   configurer 링크는 *읽기만* 한다 (slug 안정화용 제품 코드 추출 — 요청 0).
+ */
+const BUNDLE_SOURCE_URL =
+  'https://www.orange.be/fr/produits-et-services/internet-tv-mobile';
+
+/**
+ * 커버 중단 선언 (PLAN 4.26.a) — persist 가 이 카테고리의 잔존 요금제를 비활성화한다.
+ *
+ * 2026-08-19 이전에 수집된 Orange internet_fixed 요금제(Start/Zen/Giga Internet)는
+ * **더 이상 존재하지 않는 상품** 이다 (Livebox 계열로 개편). 그대로 두면 6월 가격이
+ * 현재가처럼 노출된다. parseInternetPlans 가 다시 1건이라도 뽑으면 실측이 이 선언을
+ * 덮으므로 (persist §4), Orange 가 정적 가격을 되돌리면 자동 복구된다.
+ * → 정적 가격이 복구되어 metadata.categories 에 internet_fixed 를 되돌릴 때
+ *   이 상수도 함께 지운다.
+ */
+const RETIRED_CATEGORIES = ['internet_fixed'] as const;
 
 const HOMEPAGE_URL = 'https://www.orange.be';
 
@@ -332,6 +355,261 @@ function parseInternetPlans(
   return extracted;
 }
 
+// ─── 번들(Love 팩) 추출 — PLAN 4.26.a ────────────────────────────────────
+
+/**
+ * 카드 헤더 태그 3종(Internet / Mobile / TV)이 모두 있는지 판정.
+ *
+ * 왜 태그 기반인가?
+ *   Orange 는 번들 구성(무엇이 들어있는지)을 카드 헤더 `.obe-tag` 로 *공급사가
+ *   직접* 선언한다. 우리가 카드 본문을 해석해 추측하지 않고 그 선언을 그대로
+ *   카테고리로 옮긴다 (P1 — 공급사 분류를 가공하지 않음, ADR-0042 §D2).
+ *   fr/nl 두 로케일 표기를 모두 인식 (Mobile/Mobiel).
+ */
+function classifyBundleTags(tags: readonly string[]): {
+  internet: boolean;
+  mobile: boolean;
+  tv: boolean;
+} {
+  const lower = tags.map((t) => t.toLowerCase());
+  return {
+    internet: lower.some((t) => t === 'internet'),
+    mobile: lower.some((t) => t === 'mobile' || t === 'mobiel'),
+    tv: lower.some((t) => t === 'tv'),
+  };
+}
+
+/**
+ * `.obe-icon-table-item` 한 줄에서 "라벨: 제품명" + 상세 문구를 뽑는다.
+ * 예: <strong>Internet </strong>: Livebox / "Téléchargement jusqu'à 200 Mbps"
+ */
+function readIconRows(
+  $: ReturnType<typeof cheerio.load>,
+  card: ReturnType<ReturnType<typeof cheerio.load>>,
+): Array<{ label: string; product: string; detail: string }> {
+  const rows: Array<{ label: string; product: string; detail: string }> = [];
+  card.find('.obe-icon-table-item').each((_, itemEl) => {
+    const item = $(itemEl);
+    const proses = item.find('.obe-prose');
+    const head = proses.eq(0).text().replace(/\s+/g, ' ').trim();
+    const detail = proses.eq(1).text().replace(/\s+/g, ' ').trim();
+    const label = item.find('strong').first().text().replace(/\s+/g, ' ').trim();
+    // "Internet : Livebox" → product = "Livebox"
+    const product = head.includes(':') ? head.slice(head.indexOf(':') + 1).trim() : head;
+    rows.push({ label, product, detail });
+  });
+  return rows;
+}
+
+/** "Téléchargement jusqu'à 200 Mbps" / "1 Gbps" → Mbps 정수. */
+function speedToMbps(raw: string): number | null {
+  const gbps = raw.match(/(\d+(?:[.,]\d+)?)\s*Gbps/i);
+  if (gbps?.[1]) return Math.round(parseFloat(gbps[1].replace(',', '.')) * 1000);
+  const mbps = raw.match(/(\d+)\s*Mbps/i);
+  if (mbps?.[1]) return parseInt(mbps[1], 10);
+  return null;
+}
+
+/**
+ * 번들 페이지 HTML 에서 Love 팩을 추출한다 (2026-08-19 실 HTML 정찰 기준).
+ *
+ * 구조:
+ *   div.obe-card
+ *     .obe-product-header .obe-tag × N     ← 번들 구성 선언 (Internet/Mobile/TV)
+ *     .obe-icon-table-item × 3             ← 제품명 + 상세 (속도 / GB / 채널)
+ *     .obe-pricebox
+ *       strong.obe-price-amount  "61"      ← *표시* 가격 (프로모 진행 시 프로모가)
+ *       .obe-price-suffix "71 €/mois après 12 mois" | "à vie"
+ *
+ * 프로모 판정 (Internet 페이지의 `<del>` 패턴과 다름 — 여기선 suffix 문장):
+ *   "N €/mois après M mois" → 정가 = N, 프로모가 = amount, 프로모 개월 = M
+ *   "à vie" (평생가) / suffix 없음 → 프로모 없음, 정가 = amount
+ *
+ * `.obe-banner-header` 안의 hero pricebox 는 `.obe-card` 조상이 없어 자동 제외
+ * (Internet 파서와 동일한 false-positive 가드).
+ */
+function parseBundlePacks(
+  $: ReturnType<typeof cheerio.load>,
+  httpStatus: number,
+  elapsedMs: number,
+  fetchedAt: string,
+): TariffSnapshotInput[] {
+  const extracted: TariffSnapshotInput[] = [];
+
+  $('div.obe-card').each((_, cardEl) => {
+    const card = $(cardEl);
+
+    const tags = card
+      .find('.obe-product-header .obe-tag')
+      .map((_i, tagEl) => $(tagEl).text().trim())
+      .get();
+    const parts = classifyBundleTags(tags);
+
+    // 현재 라운드가 커버하는 조합은 트리플(Internet+Mobile+TV) 하나.
+    // 다른 조합(듀얼 등)이 이 페이지에 등장하면 카테고리 매핑 근거가 없으므로
+    // 조용히 건너뛴다 — 추측 편입 금지 (ADR-0053 §D2 "미정 금지"의 fetcher 판).
+    if (!parts.internet || !parts.mobile || !parts.tv) return;
+
+    const pricebox = card.find('.obe-pricebox').first();
+    if (pricebox.length === 0) return;
+
+    const warnings: string[] = [];
+
+    const amountCents = eurToCents(pricebox.find('.obe-price-amount').first().text());
+    if (amountCents === null) return;
+
+    const suffix = pricebox.find('.obe-price-suffix').first().text().replace(/\s+/g, ' ').trim();
+    // "71 €/mois après 12 mois" / "71 €/maand na 12 maanden"
+    const afterMatch =
+      suffix.match(/(\d+(?:[.,]\d+)?)\s*€\s*\/\s*mois\s*apr[eè]s\s*(\d+)\s*mois/i) ??
+      suffix.match(/(\d+(?:[.,]\d+)?)\s*€\s*\/\s*maand\s*na\s*(\d+)\s*maanden/i);
+
+    let monthlyCents = amountCents;
+    let promoPriceCents: number | null = null;
+    let promoMonths: number | null = null;
+
+    if (afterMatch?.[1] && afterMatch[2]) {
+      const regularCents = eurToCents(afterMatch[1]);
+      if (regularCents !== null && regularCents > amountCents) {
+        monthlyCents = regularCents;
+        promoPriceCents = amountCents;
+        promoMonths = parseInt(afterMatch[2], 10);
+      }
+    } else if (suffix.length > 0 && !/à vie|voor altijd/i.test(suffix)) {
+      // 알 수 없는 suffix 문장 = 프로모 구조 변경 신호 → confidence 격하
+      warnings.push(`unknown price suffix: "${suffix}"`);
+    }
+
+    const rows = readIconRows($, card);
+    const internetRow = rows.find((r) => /^internet/i.test(r.label));
+    const mobileRow = rows.find((r) => /^mobi/i.test(r.label));
+    const tvRow = rows.find((r) => /^tv/i.test(r.label));
+
+    const downloadMbps = internetRow ? speedToMbps(internetRow.detail) : null;
+    if (downloadMbps === null) warnings.push('download_mbps not extracted');
+    // 업로드 속도는 번들 페이지에 미표기 (Internet 페이지에만 존재).
+    warnings.push('upload_mbps not published on bundle page');
+
+    // "12 GB, appels et SMS illimités" / "300 GB"
+    let dataGb: number | 'unlimited' | null = null;
+    if (mobileRow) {
+      const gb = mobileRow.detail.match(/(\d+)\s*GB/i);
+      if (gb?.[1]) dataGb = parseInt(gb[1], 10);
+      else if (/illimit|onbeperkt|unlimited/i.test(mobileRow.detail)) dataGb = 'unlimited';
+    }
+    if (dataGb === null) warnings.push('data_gb not extracted');
+
+    // "20 chaînes essentielle via streaming" / "Jusqu'à 70 chaînes avec décodeur"
+    let tvChannels: number | null = null;
+    if (tvRow) {
+      const ch = tvRow.detail.match(/(\d+)\s*(?:cha[îi]nes|zenders|channels)/i);
+      if (ch?.[1]) tvChannels = parseInt(ch[1], 10);
+    }
+
+    // 표시명 — 공급사 제품명 3개 조합 ("Orange " 접두는 중복이라 제거).
+    const strip = (s: string): string => s.replace(/^Orange\s+/i, '').trim();
+    const nameParts = [internetRow?.product, mobileRow?.product, tvRow?.product]
+      .filter((p): p is string => typeof p === 'string' && p.length > 0)
+      .map(strip);
+    const marketingLabel = card
+      .find('.obe-product-header-text')
+      .first()
+      .text()
+      .replace(/\s+/g, ' ')
+      .trim();
+    const tariffName = nameParts.length === 3 ? nameParts.join(' + ') : `Pack ${marketingLabel}`;
+
+    /**
+     * slug 안정성: 카드의 configurer 링크에 붙은 *제품 코드* 를 읽는다
+     * (`?internet=net-s&mobile=mob-s&tv=tv-lite`). 마케팅 라벨("Le moins cher")은
+     * 캠페인마다 바뀌지만 제품 코드는 카탈로그 식별자라 시계열 연결이 끊기지 않는다.
+     * ⚠️ 링크는 *읽기만* 한다 — 이 URL 을 fetch 하면 robots 위반 (B.10.5).
+     */
+    const configHref = card.find('a[href*="configurer"]').first().attr('href') ?? '';
+    const codes = ['internet', 'mobile', 'tv']
+      .map((k) => new RegExp(`[?&]${k}=([a-z0-9-]+)`, 'i').exec(configHref)?.[1] ?? null)
+      .filter((c): c is string => c !== null);
+    const tariffSlug =
+      codes.length === 3
+        ? `orange-be-pack-${codes.join('-')}`
+        : `orange-be-pack-${marketingLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+
+    const sanity = checkMonthlySanity(monthlyCents);
+    const confidenceResult = computeConfidence({
+      selectorMatched: true,
+      sanityChecks: [sanity],
+      parseWarnings: warnings,
+    });
+
+    extracted.push({
+      providerSlug: 'orange-be',
+      tariffSlug,
+      tariffName,
+      category: 'bundle_mobile_internet_tv',
+      monthlyPriceCents: monthlyCents,
+      // 번들 페이지에 설치비 미표기 — Internet 페이지 푸터의 €39 를 동일 적용
+      // (rawPayload.assumptions 에 근거 명시. 추측이 아니라 *같은 공급사의 공표값*).
+      activationFeeCents: 3900,
+      modemRentalCents: 0, // Livebox 기본 포함 (Internet 파서와 동일 근거)
+      promoPriceCents,
+      promoMonths,
+      promoDescription:
+        promoPriceCents !== null && promoMonths !== null
+          ? `처음 ${promoMonths}개월 €${(promoPriceCents / 100).toFixed(0)} 프로모`
+          : null,
+      commitmentMonths: 0, // Orange BE 소비자 상품 무약정 (GTC 확인 — Appendix B)
+      earlyTerminationFeeCents: null,
+      attributes: {
+        category: 'bundle_mobile_internet_tv',
+        download_mbps: downloadMbps ?? 1, // 추출 실패 시 최소값 (warning 동반)
+        upload_mbps: 1, // 번들 페이지 미표기 (warning 동반) — 값 자체는 미신뢰
+        unlimited_data: true, // "internet illimité" (Orange BE 공통 — Internet 파서와 동일)
+        fair_use_gb: null,
+        wifi_booster_included: false,
+        tv_channels: tvChannels, // null = 공급사 미표기 (ADR-0042 Amendment 2)
+        tv_4k_included: null, // 번들 페이지 미표기
+        data_gb: dataGb ?? undefined,
+        voice_minutes:
+          mobileRow && /illimit|onbeperkt|unlimited/i.test(mobileRow.detail)
+            ? ('unlimited' as const)
+            : undefined,
+        eu_roaming_included: true, // EU Roam-like-at-home (2017+ 법적 의무)
+        included_services: { internet: true, mobile: true, tv: true },
+      },
+      sourceUrl: BUNDLE_SOURCE_URL,
+      confidence: confidenceResult.confidence,
+      confidenceReason: confidenceResult.reason,
+      rawPayload: {
+        stub: false,
+        fetcher_version: FETCHER_VERSION,
+        url: BUNDLE_SOURCE_URL,
+        fetched_at: fetchedAt,
+        http: { status: httpStatus, elapsed_ms: elapsedMs },
+        extracted: {
+          tags,
+          marketing_label: marketingLabel,
+          product_codes: codes,
+          monthly_cents: monthlyCents,
+          promo_cents: promoPriceCents,
+          promo_months: promoMonths,
+          price_suffix: suffix,
+          download_mbps: downloadMbps,
+          data_gb: dataGb,
+          tv_channels: tvChannels,
+        },
+        assumptions: [
+          'activation_fee 3900 = Internet 페이지 공표 설치비 €39 (번들 페이지 미표기)',
+          'upload_mbps 미표기 — attributes 값 1 은 placeholder, rawPayload 가 진실',
+        ],
+        warnings,
+        ...sanity,
+      },
+    });
+  });
+
+  return extracted;
+}
+
 // ─── HTTP fetch 헬퍼 ──────────────────────────────────────────────────────
 
 interface PageFetchResult {
@@ -407,7 +685,21 @@ export const orangeBe: Fetcher = {
     displayName: 'Orange BE',
     country: 'BE',
     method: 'scraping',
-    categories: ['internet_fixed'] as const,
+    /**
+     * PLAN 4.26.a (2026-08-19): `internet_fixed` → `bundle_mobile_internet_tv` 로 *교체*.
+     *
+     * 왜 internet_fixed 를 뺐는가? (2026-08-19 raw fetch 실측)
+     *   `/fr/produits-et-services/internet-chez-vous` 가 개편되며 (a) 요금제명이
+     *   Start/Zen/Giga → Livebox / Livebox Up / Livebox Giga 로 바뀌고 (b) 정적
+     *   HTML 에서 가격 마크업(`.obe-pricebox`)이 **전부 사라졌다** (0개). 대신
+     *   `obe-dps-price` 웹 컴포넌트 마커 8개 = JS 런타임 렌더 — Orange mobile 이
+     *   막힌 것과 동일 패턴 ([ADR-0013](../../docs/adr/0013-fetcher-real-scraping-risk-assessment.md) Amendment 4).
+     *   실 가격은 configurer(쿼리 URL, robots Disallow) 뒤로 이동.
+     *   → 자동 수집 0건인데 카테고리를 선언하면 /data-sources 가 없는 커버리지를
+     *     주장하게 된다 (P3 위반). 선언에서 제거하고 사유를 남긴다.
+     *   parseInternetPlans 코드는 존치 — Orange 가 정적 가격을 되돌리면 즉시 복구.
+     */
+    categories: ['bundle_mobile_internet_tv'] as const,
     version: FETCHER_VERSION,
     homepageUrl: HOMEPAGE_URL,
   },
@@ -424,7 +716,31 @@ export const orangeBe: Fetcher = {
     );
     if (failure) return failure;
 
+    // 두 페이지 순차 fetch (병렬 X — 공급사 IP 차단 위험 완화, Proximus 패턴 동일).
     const intPage = await fetchPage(INTERNET_SOURCE_URL);
+    const bundlePage = await fetchPage(BUNDLE_SOURCE_URL);
+
+    const bundleExtracted: TariffSnapshotInput[] =
+      bundlePage.html !== null
+        ? parseBundlePacks(
+            cheerio.load(bundlePage.html),
+            bundlePage.httpStatus,
+            bundlePage.elapsedMs,
+            fetchedAt,
+          )
+        : [];
+
+    // Internet 페이지가 죽어도 번들이 살아 있으면 그만큼은 신선하게 보존
+    // (페이지 단위 degrade — Proximus 패턴).
+    if (intPage.html === null && bundleExtracted.length > 0) {
+      const result: FetchResult = {
+        fetcherSlug: 'orange-be',
+        fetchedAt,
+        data: bundleExtracted,
+        retiredCategories: RETIRED_CATEGORIES,
+      };
+      return { ok: true, result };
+    }
 
     if (intPage.html === null) {
       return {
@@ -448,7 +764,10 @@ export const orangeBe: Fetcher = {
     }
 
     const $ = cheerio.load(intPage.html);
-    const extracted = parseInternetPlans($, intPage.httpStatus, intPage.elapsedMs, fetchedAt);
+    const extracted = [
+      ...parseInternetPlans($, intPage.httpStatus, intPage.elapsedMs, fetchedAt),
+      ...bundleExtracted,
+    ];
 
     if (extracted.length === 0) {
       return {
@@ -457,13 +776,16 @@ export const orangeBe: Fetcher = {
           fetcherSlug: 'orange-be',
           fetchedAt,
           kind: 'parse',
-          message: `No tariffs parsed from ${INTERNET_SOURCE_URL} (selector .obe-pricebox matched ${$('.obe-pricebox').length} elements)`,
+          message: `No tariffs parsed from ${INTERNET_SOURCE_URL} (selector .obe-pricebox matched ${$('.obe-pricebox').length} elements) nor from ${BUNDLE_SOURCE_URL} (${bundlePage.warning ?? 'parsed 0 packs'})`,
           rawPayload: {
             stub: false,
             fetcher_version: FETCHER_VERSION,
             internet_url: INTERNET_SOURCE_URL,
             internet_http: { status: intPage.httpStatus, elapsed_ms: intPage.elapsedMs },
             pricebox_count: $('.obe-pricebox').length,
+            bundle_url: BUNDLE_SOURCE_URL,
+            bundle_http: { status: bundlePage.httpStatus, elapsed_ms: bundlePage.elapsedMs },
+            bundle_warning: bundlePage.warning,
           },
         },
       };
@@ -473,6 +795,7 @@ export const orangeBe: Fetcher = {
       fetcherSlug: 'orange-be',
       fetchedAt,
       data: extracted,
+      retiredCategories: RETIRED_CATEGORIES,
     };
     return { ok: true, result };
   },

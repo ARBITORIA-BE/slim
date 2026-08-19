@@ -272,7 +272,8 @@ describe('TelenetFetcher — 셀렉터 0 매칭 (구조 변경)', () => {
     if (outcome.ok) throw new Error('ok=false 기대');
 
     expect(outcome.error.kind).toBe('parse');
-    expect(outcome.error.message).toContain('No mobile plans parsed');
+    // PLAN 4.26.a: mobile 단독 → 5페이지 fetcher 로 확장되며 메시지가 페이지 전체 기준으로 바뀜.
+    expect(outcome.error.message).toContain('No tariffs parsed from any Telenet page');
   });
 });
 

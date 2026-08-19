@@ -11,6 +11,25 @@
 
 ### Added
 
+- **2026-08-19 — 4.26.a 번들 fetcher 구현 (게이트 A/B 통과) — 커버리지 4 → 10칸 (27% → 67%)** ([ADR-0053 §D6.1](docs/adr/0053-telecom-provider-ecosystem-expansion.md)):
+  - **새로 자동 수집되는 것**: Telenet `internet_fixed` + `bundle_mobile_internet` + `bundle_internet_tv` + `bundle_mobile_internet_tv`, Proximus `bundle_mobile_internet_tv`(Flex+ 4팩), Orange `bundle_mobile_internet_tv`(Love 3팩). 실 HTML raw fetch 검증 산출 = Telenet 15 / Proximus 팩 4 / Orange 팩 3, 전부 `confidence=high`.
+  - **잠근 셀렉터**: Proximus = `data-testid` 3종 문서순 zip (`PromoSpeed` / `PromoPrice` / `Pack-Composer-Product-Internet-Details`). Telenet = `div.cmp-product-summary` + `tg-lazy-loading-standalone` inputs JSON (`customProduct.promoPrice` + `duration` 이 프로모 금액·기간을 **추정 없이** 준다). Orange = `div.obe-card` + `.obe-pricebox` + `.obe-price-suffix`("71 €/mois après 12 mois"). 렌더마다 바뀌는 `ssa-instance-<uuid>` / 유틸 클래스는 앵커로 쓰지 않았다.
+  - **오분류 가드**: 페이지 URL 을 카테고리 근거로 쓰지 않는다 — Orange 는 카드 헤더 태그(Internet/Mobile/TV), Telenet 은 카드 본문 구성 증거(다운로드 속도 / "mobiele data" / "TV-box")를 **카드가 스스로 밝힐 때만** 편입.
+  - **실측으로 잡은 함정 4건**: (1) Telenet 반응형 중복 카드 최대 4벌 → `heading|속도` first-wins + 가격 상이 시 warning. (2) Telenet mobile **"In combinatie met internet"** 결합가(€10/€21) 혼입 — 단독가(€21/€41)와 이름이 같아 **요금제가 절반 가격으로 노출될 뻔한 조용한 회귀** (1.5.6 당시엔 `price=0` 이라 자동 skip 됐으나 페이지 개편으로 실가격이 채워짐). (3) `2,5 Gbps` 를 `data_gb: 5` 로 오인(`(?![a-z])` 경계 추가). (4) Proximus 프로모가가 `€0`/`€30` 정수 표기 — 소수점 필수 파서로는 못 읽음.
+  - **B.10.5 준수 검증**: 쿼리 파라미터 URL 미요청을 **테스트로 고정** (Orange/Proximus 각 1건).
+  - **동반 결정 2건**: [ADR-0042 Amendment 2](docs/adr/0042-telecom-bundle-taxonomy-extension.md) — `tv_channels` / `tv_4k_included` **nullable 격상** (3사 중 2사가 채널 수를 숫자로 공표하지 않는다. `0`/`false` 는 "채널 0개"/"4K 미포함"이라는 **허위 주장** = P1 위반, `null` = "공급사가 밝히지 않음"). [ADR-0008 Amendment 1](docs/adr/0008-fetcher-interface-and-cron.md) — `FetchResult.retiredCategories` 신설.
+  - **게이트**: typecheck 0 / lint 0 / **test:run 908 → 945 (신규 13: 번들 파서 11 + persist 은퇴 2)** / harness data·cross-ref·doc-links GREEN. **게이트 C(프로덕션 24h 실 fetch)는 머지 후 확인 잔여** (메모리 `project_fetcher_prod_ip`).
+
+### Fixed
+
+- **2026-08-19 — Orange BE `internet_fixed` 회귀 봉합 — 존재하지 않는 상품이 DB 에 살아 있었다** ([ADR-0053 §D6.1](docs/adr/0053-telecom-provider-ecosystem-expansion.md) + [ADR-0008 Amendment 1](docs/adr/0008-fetcher-interface-and-cron.md)):
+  - **무엇이 잘못돼 있었나**: `/fr/produits-et-services/internet-chez-vous` 를 raw fetch 하면 `.obe-pricebox` **0개**(2026-06-05 정찰 시 3개) + `obe-dps-price` **8마커** = JS 런타임 렌더로 전환, 상품명도 **Start/Zen/Giga → Livebox / Livebox Up / Livebox Giga** 로 개편됐다. 즉 Orange internet fetcher 는 **언젠가부터 매일 파싱 실패 중**이었고, DB 에는 *더 이상 팔지 않는 요금제* 3건이 `isActive=true` 로 남아 있었다.
+  - **왜 아무도 못 지웠나**: persist 의 단종 처리(ADR-0005 §T5)는 **이번 fetch 가 실제로 본 카테고리** 안에서만 비활성화한다 (manual 데이터 보호 목적). 카테고리가 통째로 사라지면 아무도 관측하지 않으므로 영원히 살아남는다.
+  - **조치**: (a) `orange-be` metadata 에서 `internet_fixed` 선언 제거 — 없는 커버리지를 주장하지 않는다 (P3). (b) `FetchResult.retiredCategories` 신설 — fetcher 가 커버 중단을 선언하면 persist 가 해당 카테고리 잔존 요금제를 비활성화. **`data` 에 실제로 담긴 카테고리는 선언을 이긴다** → Orange 가 정적 가격을 되돌리면 코드 수정 없이 자동 복구. (c) 파서 코드는 존치.
+  - **드러난 부채 (미해결, 정직 표기)**: **fetcher 별 연속 실패 알림이 없다.** 이번 회귀가 조용히 지속된 근본 원인이며, 다음 architect 라운드 편입 후보로 PLAN 4.26.a 에 기록했다.
+
+### Added
+
 - **2026-08-19 — 4.26.a 번들 fetcher legal 게이트 조건부 OPEN — Orange Love 번들 GTC 확보 + 직접 금지 0건** ([ADR-0013 Appendix B Amendment 2026-08-19](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)):
   - **왜 공백이 있었나**: Amendment (2026-06-05) 이 Orange 3종(postpaid/sales/fiber)만 검토하고 **Love 번들 GTC 를 명시적으로 제외**했다 — 사유는 *"Imperva WAF 403 차단"* + *"1.5.8 fetcher 범위는 단품이라 스코프 밖"*. [ADR-0053](docs/adr/0053-telecom-provider-ecosystem-expansion.md) §D6 이 Q3 = 번들 먼저를 잠그면서 **번들이 스코프 안으로 들어와** 그 면제 논리가 소멸했다.
   - **두 장벽이 해소됐다**: (1) Love PDF 가 `orange.be/sites/b2c/files/2024-10/` 경로에서 **200 OK** (정상 `%PDF-`, 593,680 bytes) — WAF 차단 해제. (2) 로컬 `pdftotext` (poppler v4.00) **가용 확인** — B.8 체크리스트가 "운영자 수동 열람"을 전제한 이유(WebFetch FlateDecode 실패)가 사라졌다. **본 검토는 운영자 개입 0 으로 수행**됐다.

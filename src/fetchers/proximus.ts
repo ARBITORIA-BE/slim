@@ -34,11 +34,21 @@ import { STUB_FETCH_TIMEOUT_MS, stubFailOutcome } from './_shared';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────
 
-const FETCHER_VERSION = 'proximus-be@2026-05-29';
+const FETCHER_VERSION = 'proximus-be@2026-08-19';
 
 const MOBILE_SOURCE_URL = 'https://www.proximus.be/en/mobile-subscription';
 
 const INTERNET_SOURCE_URL = 'https://www.proximus.be/en/internet';
+
+/**
+ * Flex+ 팩 목록 페이지 — PLAN 4.26.a (2026-08-19).
+ *
+ * 쿼리 파라미터 조합 URL (`/en/packs?products=internet,tv`) 은 요청하지 않는다.
+ * Proximus robots.txt 는 이를 금지하지 않지만 (2026-08-19 실측), ADR-0053 §B.10.5
+ * 잠금 조건("정적 상품 목록 페이지만")을 공급사 구분 없이 그대로 지킨다 —
+ * 조건 완화는 ADR Amendment 로만.
+ */
+const PACKS_SOURCE_URL = 'https://www.proximus.be/en/packs';
 
 const HOMEPAGE_URL = 'https://www.proximus.be';
 
@@ -69,6 +79,26 @@ function eurToCents(raw: string): number | null {
   const m = raw.replace(/\s/g, '').match(/(\d{1,3})[.,](\d{2})/);
   if (!m || !m[1] || !m[2]) return null;
   return parseInt(m[1], 10) * 100 + parseInt(m[2], 10);
+}
+
+/**
+ * 소수점 *또는* 정수 유로 문자열 → cents (PLAN 4.26.a 팩 페이지용).
+ *
+ * 왜 eurToCents 와 따로 두는가?
+ *   기존 eurToCents 는 소수점을 *필수* 로 요구한다 (mobile/internet 페이지가 항상
+ *   "16.99" 형식). 팩 페이지는 프로모가가 "€0" / "€30" 처럼 정수로도 나온다.
+ *   기존 함수를 느슨하게 바꾸면 mobile/internet 파싱의 오탐이 늘 수 있어 분리한다.
+ *   (ADR-0053 §D6 "부정 판정 시 최소 2개 표기 패턴 재확인" 의 코드판.)
+ */
+function eurIntOrDecimalToCents(raw: string): number | null {
+  const cleaned = raw.replace(/\s/g, '');
+  const decimal = cleaned.match(/(\d{1,4})[.,](\d{2})\b/);
+  if (decimal?.[1] && decimal[2]) {
+    return parseInt(decimal[1], 10) * 100 + parseInt(decimal[2], 10);
+  }
+  const int = cleaned.match(/€(\d{1,4})/) ?? cleaned.match(/(\d{1,4})/);
+  if (int?.[1]) return parseInt(int[1], 10) * 100;
+  return null;
 }
 
 /**
@@ -396,6 +426,207 @@ function parseInternetPlans(
   return extracted;
 }
 
+// ─── Flex+ 팩(번들) 추출 — PLAN 4.26.a ───────────────────────────────────
+
+/** "2 Gbps" / "8,5 Gbps" / "500 Mbps" → Mbps 정수. */
+function toMbps(raw: string): number | null {
+  const gbps = raw.match(/(\d+(?:[.,]\d+)?)\s*Gbps/i);
+  if (gbps?.[1]) return Math.round(parseFloat(gbps[1].replace(',', '.')) * 1000);
+  const mbps = raw.match(/(\d+)\s*Mbps/i);
+  if (mbps?.[1]) return parseInt(mbps[1], 10);
+  return null;
+}
+
+/**
+ * 앵커 요소에서 조상을 올라가며 `re` 에 매칭되는 텍스트를 가진 최초 조상의 텍스트를 반환.
+ * 페이지 전체로 번지지 않도록 최대 `maxUp` 단계까지만 (가장 가까운 카드가 먼저 걸린다).
+ */
+function nearestAncestorText(
+  anchor: ReturnType<ReturnType<typeof cheerio.load>>,
+  re: RegExp,
+  maxUp = 8,
+): string | null {
+  let cur = anchor;
+  for (let i = 0; i < maxUp; i++) {
+    cur = cur.parent();
+    if (cur.length === 0) return null;
+    const text = cur.text().replace(/\s+/g, ' ');
+    if (re.test(text)) return text;
+  }
+  return null;
+}
+
+/**
+ * Flex+ 팩 페이지에서 트리플 플레이(Internet + Mobile + TV) 번들을 추출한다.
+ * (2026-08-19 실 HTML 정찰 기준)
+ *
+ * 앵커 = Angular 컴포넌트가 심는 `data-testid` 3종. 문서 순서가 팩 순서와 1:1:
+ *   [data-testid="PromoSpeed"]                       "Mega Fiber 500 Mbps"
+ *   [data-testid="PromoPrice"]                       "€0 /month for 3 month(s), then €97.99 /month"
+ *   [data-testid="Pack-Composer-Product-Internet-Details"]
+ *                                                    "500 Mbps max download speed 500 Mbps max upload speed"
+ *
+ * 왜 클래스가 아니라 data-testid 인가?
+ *   `.rs-*` 유틸리티 클래스는 디자인 변경에 취약하고, `ssa-instance-<uuid>` 류는
+ *   렌더마다 바뀐다. testid 는 Proximus 자체 E2E 앵커라 상대적으로 안정적.
+ *
+ * 왜 인덱스 zip 인가?
+ *   팩 카드의 DOM 중첩이 팩마다 다르다 (4번째 Ultra 카드는 프로모 블록 위치가 다름).
+ *   조상 탐색은 카드마다 다른 깊이에서 끊기지만, 세 리스트의 *개수와 순서* 는
+ *   페이지 의미상 일치한다. 개수가 어긋나면 구조 변경 신호로 보고 0건 반환.
+ */
+function parsePackBundles(
+  $: ReturnType<typeof cheerio.load>,
+  httpStatus: number,
+  elapsedMs: number,
+  fetchedAt: string,
+  warnings: string[],
+): TariffSnapshotInput[] {
+  const speeds = $('[data-testid="PromoSpeed"]');
+  const prices = $('[data-testid="PromoPrice"]');
+  const details = $('[data-testid="Pack-Composer-Product-Internet-Details"]');
+
+  if (speeds.length === 0) return [];
+
+  if (speeds.length !== prices.length || speeds.length !== details.length) {
+    warnings.push(
+      `packs: testid count mismatch (speed=${speeds.length} price=${prices.length} details=${details.length}) — 구조 변경 의심, 0건 반환`,
+    );
+    return [];
+  }
+
+  const pageText = $.root().text().replace(/\s+/g, ' ');
+  // "Free installation by a technician (value: €79)" — 페이지가 무료라고 공표한 경우만 0.
+  const freeInstall = /free installation/i.test(pageText);
+  const extracted: TariffSnapshotInput[] = [];
+
+  speeds.each((idx, speedEl) => {
+    const planName = $(speedEl).text().replace(/\s+/g, ' ').trim();
+    if (!planName) {
+      warnings.push(`pack ${idx}: PromoSpeed empty, skipping`);
+      return;
+    }
+
+    const planWarnings: string[] = [];
+
+    // 가격: "€0 /month for 3 month(s), then €90.99 /month"
+    const priceText = $(prices[idx]).text().replace(/\s+/g, ' ').trim();
+    const promoPattern = priceText.match(
+      /€\s*([\d.,]+)\s*\/month\s*for\s*(\d+)\s*month\(?s?\)?\s*,?\s*then\s*€\s*([\d.,]+)/i,
+    );
+
+    let monthlyCents: number | null = null;
+    let promoPriceCents: number | null = null;
+    let promoMonths: number | null = null;
+
+    if (promoPattern?.[1] && promoPattern[2] && promoPattern[3]) {
+      promoPriceCents = eurIntOrDecimalToCents(promoPattern[1]);
+      promoMonths = parseInt(promoPattern[2], 10);
+      monthlyCents = eurIntOrDecimalToCents(promoPattern[3]);
+    } else {
+      // 프로모 없는 단순 표기 "€97.99 /month"
+      monthlyCents = eurIntOrDecimalToCents(priceText);
+      if (priceText.length > 0 && monthlyCents !== null) {
+        planWarnings.push(`${planName}: promo pattern not matched (raw: "${priceText}")`);
+      }
+    }
+
+    if (monthlyCents === null) {
+      warnings.push(`${planName}: monthly price not parseable (raw: "${priceText}")`);
+      return;
+    }
+
+    // 속도: "500 Mbps max download speed 500 Mbps max upload speed"
+    const detailText = $(details[idx]).text().replace(/\s+/g, ' ').trim();
+    const downMatch = detailText.match(/([\d.,]+\s*[GM]bps)\s*max\s*download/i);
+    const upMatch = detailText.match(/([\d.,]+\s*[GM]bps)\s*max\s*upload/i);
+    const downloadMbps = downMatch?.[1] ? toMbps(downMatch[1]) : null;
+    const uploadMbps = upMatch?.[1] ? toMbps(upMatch[1]) : null;
+    if (downloadMbps === null) planWarnings.push(`${planName}: download_mbps not extracted`);
+    if (uploadMbps === null) planWarnings.push(`${planName}: upload_mbps not extracted`);
+
+    // 카드 본문 — "20 GB mobile data + 5G network"
+    const cardText = nearestAncestorText($(speedEl), /GB mobile data/i);
+    const gbMatch = cardText?.match(/(\d+)\s*GB mobile data/i);
+    const dataGb = gbMatch?.[1] ? parseInt(gbMatch[1], 10) : null;
+    if (dataGb === null) planWarnings.push(`${planName}: data_gb not extracted`);
+
+    const unlimitedData = /unlimited internet/i.test(cardText ?? pageText);
+
+    const sanity = checkMonthlySanity(monthlyCents);
+    const confidenceResult = computeConfidence({
+      selectorMatched: true,
+      sanityChecks: [sanity],
+      parseWarnings: planWarnings,
+    });
+
+    warnings.push(...planWarnings);
+
+    const kebab = planName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    extracted.push({
+      providerSlug: 'proximus-be',
+      tariffSlug: `proximus-pack-${kebab}`,
+      tariffName: `${planName} + Mobile + TV`,
+      category: 'bundle_mobile_internet_tv',
+      monthlyPriceCents: monthlyCents,
+      activationFeeCents: freeInstall ? 0 : 7900, // 페이지 공표: 기술자 설치 €79, 현재 무료 프로모
+      modemRentalCents: 0, // Internet Box 기본 포함
+      promoPriceCents,
+      promoMonths,
+      promoDescription:
+        promoPriceCents !== null && promoMonths !== null
+          ? `처음 ${promoMonths}개월 €${(promoPriceCents / 100).toFixed(2)} 프로모`
+          : null,
+      commitmentMonths: 0, // 페이지 명시 "Non-binding subscription"
+      earlyTerminationFeeCents: null,
+      attributes: {
+        category: 'bundle_mobile_internet_tv',
+        download_mbps: downloadMbps ?? 1,
+        upload_mbps: uploadMbps ?? 1,
+        unlimited_data: unlimitedData,
+        fair_use_gb: null,
+        wifi_booster_included: false,
+        tv_channels: null, // 페이지가 채널 수를 숫자로 밝히지 않음 (ADR-0042 Amendment 2)
+        tv_4k_included: null,
+        data_gb: dataGb ?? undefined,
+        voice_minutes: undefined,
+        eu_roaming_included: true, // EU Roam-like-at-home (2017+ 법적 의무)
+        included_services: { internet: true, mobile: true, tv: true },
+      },
+      sourceUrl: PACKS_SOURCE_URL,
+      confidence: confidenceResult.confidence,
+      confidenceReason: confidenceResult.reason,
+      rawPayload: {
+        stub: false,
+        fetcher_version: FETCHER_VERSION,
+        url: PACKS_SOURCE_URL,
+        fetched_at: fetchedAt,
+        http: { status: httpStatus, elapsed_ms: elapsedMs },
+        extracted: {
+          plan_name: planName,
+          price_text: priceText,
+          monthly_cents: monthlyCents,
+          promo_cents: promoPriceCents,
+          promo_months: promoMonths,
+          speed_text: detailText,
+          download_mbps: downloadMbps,
+          upload_mbps: uploadMbps,
+          data_gb: dataGb,
+        },
+        assumptions: [
+          // 페이지 각주 원문 — 이 가격이 "어떤 구성"의 가격인지 사용자에게 전달할 근거 (P1).
+          'Proximus 각주: "Price is based on the basic composition with Internet + mobile 20 GB + TV and may vary according to further configuration."',
+        ],
+        warnings: planWarnings,
+        ...sanity,
+      },
+    });
+  });
+
+  return extracted;
+}
+
 // ─── HTTP fetch 헬퍼 ──────────────────────────────────────────────────────
 
 interface PageFetchResult {
@@ -485,7 +716,7 @@ export const proximus: Fetcher = {
      * Proximus 는 mobile + internet_fixed 두 카테고리를 커버한다.
      * admin-metrics 의 CASE WHEN 매핑 자동 생성 용 (PLAN 1.5.6).
      */
-    categories: ['mobile', 'internet_fixed'] as const,
+    categories: ['mobile', 'internet_fixed', 'bundle_mobile_internet_tv'] as const,
     version: FETCHER_VERSION,
     homepageUrl: HOMEPAGE_URL,
   },
@@ -507,6 +738,7 @@ export const proximus: Fetcher = {
     // Promise.all로 병렬화 가능하나, Proximus IP 차단 위험 완화를 위해 순차 실행.
     const mobPage = await fetchPage(MOBILE_SOURCE_URL);
     const intPage = await fetchPage(INTERNET_SOURCE_URL);
+    const packPage = await fetchPage(PACKS_SOURCE_URL);
 
     const allWarnings: string[] = [];
     const allExtracted: TariffSnapshotInput[] = [];
@@ -533,6 +765,23 @@ export const proximus: Fetcher = {
       allWarnings.push(`internet page: ${intPage.warning}`);
     }
 
+    // packs 페이지 파싱 (PLAN 4.26.a — 트리플 플레이 번들)
+    if (packPage.html !== null) {
+      const $ = cheerio.load(packPage.html);
+      const packWarnings: string[] = [];
+      const packs = parsePackBundles(
+        $,
+        packPage.httpStatus,
+        packPage.elapsedMs,
+        fetchedAt,
+        packWarnings,
+      );
+      allExtracted.push(...packs);
+      allWarnings.push(...packWarnings);
+    } else if (packPage.warning) {
+      allWarnings.push(`packs page: ${packPage.warning}`);
+    }
+
     // ─── 결과 검증 ──────────────────────────────────────────────────────────
     // 두 페이지 모두 0개면 실패. 한 페이지만 성공해도 ok:true.
     if (allExtracted.length === 0) {
@@ -541,15 +790,18 @@ export const proximus: Fetcher = {
         error: {
           fetcherSlug: 'proximus-be',
           fetchedAt,
-          kind: mobPage.warning && intPage.warning ? 'network' : 'parse',
-          message: `No tariffs parsed from either page. mobile: ${mobPage.warning ?? `${mobPage.httpStatus} ok`}, internet: ${intPage.warning ?? `${intPage.httpStatus} ok`}`,
+          kind:
+            mobPage.warning && intPage.warning && packPage.warning ? 'network' : 'parse',
+          message: `No tariffs parsed from any page. mobile: ${mobPage.warning ?? `${mobPage.httpStatus} ok`}, internet: ${intPage.warning ?? `${intPage.httpStatus} ok`}, packs: ${packPage.warning ?? `${packPage.httpStatus} ok`}`,
           rawPayload: {
             stub: false,
             fetcher_version: FETCHER_VERSION,
             mobile_url: MOBILE_SOURCE_URL,
             internet_url: INTERNET_SOURCE_URL,
+            packs_url: PACKS_SOURCE_URL,
             mobile_http: { status: mobPage.httpStatus, elapsed_ms: mobPage.elapsedMs },
             internet_http: { status: intPage.httpStatus, elapsed_ms: intPage.elapsedMs },
+            packs_http: { status: packPage.httpStatus, elapsed_ms: packPage.elapsedMs },
             warnings: allWarnings,
           },
         },
