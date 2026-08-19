@@ -34,7 +34,8 @@ A §조건 C) — 본 Amendment 가 숨기지 않음. 옵션 X 자동 비활성�
 - Accepted 옵션 C (2026-05-10) — 운영자 결정, GATE-F 통과
 - Amendment 1 (2026-05-17) — 옵션 C → 진입 (ADR-0034 D3, 운영자 의식 수용)
 - Amendment 3 (2026-05-28) — 정찰 스텁 전제 붕괴 정정 (페이지 단위 하이브리드 Cheerio)
-- **Amendment 4 (2026-07-13, Draft)** — Orange BE mobile 재정찰: JS-rendered 전제 붕괴 → mobile 정적 파싱 가능 확인, fetcher 스코프 확장 (internet_fixed → +mobile). PLAN 4.24 트리거.
+- ~~**Amendment 4 (2026-07-13, Draft)**~~ — **❌ Rejected (2026-08-16)**: Orange BE mobile "정적 파싱 가능" 주장이 raw fetch 재검증에서 반증 (근거 정찰이 WebFetch — Amendment 3 이 경고한 함정 재발). PLAN 4.24 취소. → §Amendment 4 재검증 (2026-08-16)
+- **Appendix B Amendment (2026-08-19)** — Orange Love 번들 GTC 확보(WAF 해제 + 로컬 pdftotext) + 키워드 직접 금지 0건 → **PLAN 4.26.a 번들 라운드 legal 게이트 조건부 OPEN** (B.10.5 configurer URL 미요청 조건).
 
 본 ADR은 **결정 + 권장만** 한다. 실 fetcher 코드 변경 X, fetcher 메타 변경 X,
 새 의존성 X. 옵션 C 채택의 직접 후속 = PLAN 1.5.6 status 갱신 + 본문 인용
@@ -2118,6 +2119,94 @@ ADR-0004 §결정 3 기준에서 현재 진행 가능.
 **Appendix B Amendment 작성: legal 에이전트 (2026-06-05)**
 **결론**: 1.5.8 (Orange BE fetcher) 코드 머지 게이트 **OPEN** (B.5 공통 조건 준수 전제).
 **직접 금지 0건, false positive만 매칭 — Proximus/Telenet과 동일 패턴.**
+
+---
+
+## Appendix B Amendment (2026-08-19) — Orange Love 번들 GTC 확보 + 4.26.a 번들 라운드 legal 게이트
+
+**실행 주체**: Pieter (1차 기계 스캔). 변호사 아님. **법률 자문 아님.**
+
+**트리거**: [ADR-0053](0053-telecom-provider-ecosystem-expansion.md) §D5 — 번들 fetcher 라운드(PLAN 4.26.a) 착수 전 공급사별 GTC/robots 검토 선행 조건.
+
+---
+
+### B.10.1 왜 새 Amendment 가 필요했나 — 2026-06-05 가 남긴 공백
+
+Appendix B Amendment (2026-06-05) 는 Orange BE 3종(postpaid / sales / fiber)을 검토하고 **4번째 문서를 명시적으로 제외**했다:
+
+> 4번째 PDF (Love bundle — Conditions internet et TV 번들)는 Imperva WAF 403 차단으로 운영자가 다운로드 불가 상태. (…) PLAN 1.5.8 fetcher 범위는 mobile + internet_fixed **단품**으로 정의되어 있어 Love bundle 페이지는 fetcher 스코프 밖 — **Love PDF WAF 차단은 본 Amendment 판정에 영향 없음**.
+
+그 면제 논리는 **fetcher 스코프가 단품이라는 전제**에 걸려 있었다. ADR-0053 §D6 이 Q3 = "번들 먼저" 를 잠그면서 **번들이 스코프 안으로 들어왔고**, 따라서 그 전제가 소멸했다. Love GTC 는 이제 직접 적용 문서다.
+
+### B.10.2 두 가지 기술 장벽이 해소됐다
+
+| 장벽 | 2026-06-05 상태 | 2026-08-19 실측 |
+|---|---|---|
+| Love PDF 접근 | Imperva WAF **403 차단** | **200 OK** — 경로가 `orange.be/sites/b2c/files/2024-10/` 로 확인됨. 브라우저 UA, 정상 `%PDF-` 매직, 593,680 bytes |
+| PDF 텍스트 추출 | WebFetch FlateDecode 실패 → **운영자 브라우저 다운로드 필수** | 로컬 `pdftotext` (poppler, `/mingw64/bin/pdftotext` v4.00) **가용 확인** |
+
+두 번째가 특히 중요하다 — B.8 체크리스트가 "운영자 수동 열람" 을 전제한 이유는 텍스트 추출 실패였고, 그 제약이 사라졌다. **본 Amendment 는 운영자 개입 0 으로 수행됐다.**
+
+### B.10.3 검토 파일
+
+| 파일 | 원본 PDF | 발행 | 분량 |
+|---|---|---|---|
+| `C:\Users\kimwo\gtc-review\orange-be-love-fr.txt` | `GC_2309010 Love_FR_202410.pdf` | Orange Belgium, 10/2024 | 927줄 (UTF-8) |
+
+문서 제목 확인: *"Conditions générales — Services internet, TV et téléphonie fixe d'Orange"* — Love 번들(인터넷·TV·유선전화) 직접 적용 약관이 맞다.
+
+NL 대응본 존재 확인: `GC_2309010 Love_NL_202410.pdf` (동일 디렉토리). 본 검토는 FR 판 기준 — 2026-06-05 검토가 FR 판 기준이었던 것과 정합.
+
+### B.10.4 B.8 키워드 검색 결과 — 직접 금지 **0건**
+
+| 키워드 | 매칭 |
+|---|---|
+| `scraping` / `robot` / `extraction` / `aspiration` | **0** |
+| `strictement personnel` / `usage commercial` / `utilisation commerciale` / `revente` | **0** |
+| `automatis` | 1 (false positive) |
+| `systématique` | 1 (false positive) |
+
+매칭 2건 원문:
+
+| 위치 | 원문 | 실제 스코프 | 판정 |
+|---|---|---|---|
+| L88 | *"Les notions suivantes apparaissent dans les présentes Conditions Générales et ont **systématiquement** la signification donnée ci-dessous"* | 정의 조항 상용구 | false positive |
+| L824 | *"…en raison de l'échange obligatoire de données via le processus **automatisé** de la [base de référence centrale]"* | 번호이식(portabilité) 인프라의 사업자 간 자동 DB 처리 | false positive |
+
+**2026-06-05 postpaid 검토의 L303/356 매칭과 동일 패턴이다** (번호이식 인프라 조항). 웹사이트 공개 가격 페이지 수집과 무관.
+
+### B.10.5 robots.txt 재확인 (2026-08-15/19 실측)
+
+- Proximus / Telenet: 번들 경로 `Disallow` **없음**.
+- Orange: `Disallow` 2건 존재하나 전부 `support/assistance-technique` **도움말 경로** — 상품 페이지 무관.
+- 2026-06-05 이 지적한 `Disallow: /*internet=` / `Disallow: /*mobile=` **쿼리 파라미터 패턴**은 Love **configurer** URL 을 차단한다. 4.26.a 정찰 대상인 `orange.be/fr/produits-et-services/internet-tv-mobile` 은 **쿼리 파라미터가 없어 해당 패턴에 매칭되지 않는다**.
+  > **B.10.5 잠금 조건**: 번들 fetcher 는 **쿼리 파라미터가 붙은 configurer URL 을 요청하지 않는다.** 정적 상품 목록 페이지만 대상으로 한다. 이 조건을 깨면 robots 위반이 된다.
+
+### B.10.6 판정
+
+**4.26.a 번들 fetcher 라운드 legal 게이트 = 조건부 OPEN.**
+
+| 공급사 | 번들 적용 약관 | 검토 | 판정 |
+|---|---|---|---|
+| Proximus | 소비자 일반 GTC (2025-01판) | 2026-05-28 | 직접 금지 0건 (WEAK) |
+| Telenet | Algemene voorwaarden (2025-03판) | 2026-05-28 | 직접 금지 0건 (WEAK) |
+| Orange | **Love 번들 GTC** (10/2024) | **2026-08-19 (본 Amendment)** | **직접 금지 0건 (WEAK)** |
+
+조건 = B.5 공통 조건 준수 + **B.10.5 configurer URL 미요청**.
+
+### B.10.7 잔여 / 한계 (정직 표기)
+
+1. **Proximus Special T&C 4종 미검토** — Proximus 는 *일반 GTC + 서비스별 Special T&C* 구조다. `Special-Terms-and-Conditions---Internet---EN` / `---TV---EN` / `---Fixed-telephony---EN` / `---Mobile-phone---EN` 은 검토하지 않았다. 웹사이트 이용·자동수집 조항은 통상 일반 GTC 에 위치하므로 리스크는 낮다고 **추정**하나 **확인하지 않았다**. 번들 fetcher 가 실제 가격 수집을 시작한 뒤 조기 확인 권장.
+2. **Telenet 번들 전용 약관 부재 확인** — 약관 페이지 PDF 3건(Play Sports / DAZN / kabelbrochure) 중 번들 GTC 없음. 일반 Algemene voorwaarden 가 적용된다고 판단.
+3. **본 검토는 기계 키워드 스캔 + 매칭 원문 확인**이다. 조항 전문(全文) 법적 독해가 아니다. Amendment 3/4 선례대로 **1차 법무 검토 의견**이며 변호사 검토를 대체하지 않는다.
+4. Orange Love **NL 판 미검토** (FR 판만). 2026-06-05 선례와 동일한 범위.
+
+---
+
+**Appendix B Amendment 작성: Pieter (2026-08-19) — 운영자 개입 0 (WAF 해제 + 로컬 pdftotext 가용)**
+**결론**: PLAN 4.26.a 번들 fetcher 라운드 legal 게이트 **조건부 OPEN** (B.5 + B.10.5 준수 전제).
+**Orange Love 직접 금지 0건 — Proximus/Telenet 및 Orange 3종과 동일 패턴.**
+
 
 ---
 

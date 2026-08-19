@@ -9,6 +9,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- **2026-08-19 — 4.26.a 번들 fetcher legal 게이트 조건부 OPEN — Orange Love 번들 GTC 확보 + 직접 금지 0건** ([ADR-0013 Appendix B Amendment 2026-08-19](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)):
+  - **왜 공백이 있었나**: Amendment (2026-06-05) 이 Orange 3종(postpaid/sales/fiber)만 검토하고 **Love 번들 GTC 를 명시적으로 제외**했다 — 사유는 *"Imperva WAF 403 차단"* + *"1.5.8 fetcher 범위는 단품이라 스코프 밖"*. [ADR-0053](docs/adr/0053-telecom-provider-ecosystem-expansion.md) §D6 이 Q3 = 번들 먼저를 잠그면서 **번들이 스코프 안으로 들어와** 그 면제 논리가 소멸했다.
+  - **두 장벽이 해소됐다**: (1) Love PDF 가 `orange.be/sites/b2c/files/2024-10/` 경로에서 **200 OK** (정상 `%PDF-`, 593,680 bytes) — WAF 차단 해제. (2) 로컬 `pdftotext` (poppler v4.00) **가용 확인** — B.8 체크리스트가 "운영자 수동 열람"을 전제한 이유(WebFetch FlateDecode 실패)가 사라졌다. **본 검토는 운영자 개입 0 으로 수행**됐다.
+  - **검토 결과 — 직접 금지 0건**: `GC_2309010 Love_FR_202410.pdf` (927줄, UTF-8 추출). `scraping`/`robot`/`extraction`/`strictement personnel`/`usage commercial`/`revente` = **0**. 매칭 2건은 false positive — L88 정의 조항 상용구(`systématiquement`), L824 번호이식 인프라(`processus automatisé`). **2026-06-05 postpaid L303/356 과 동일 패턴.**
+  - **B.10.5 잠금 조건 신설**: 번들 fetcher 는 **쿼리 파라미터가 붙은 configurer URL 을 요청하지 않는다** (정적 상품 목록 페이지만). Orange robots `Disallow: /*internet=` / `/*mobile=` 이 configurer URL 을 차단하므로 이 조건을 깨면 robots 위반이 된다. 4.26.a 정찰 대상 `/fr/produits-et-services/internet-tv-mobile` 은 쿼리 파라미터가 없어 매칭되지 않음.
+  - **3사 번들 적용 약관 종합**: Proximus 일반 GTC(2026-05-28) / Telenet Algemene voorwaarden(2026-05-28) / **Orange Love(2026-08-19)** — 전부 직접 금지 0건 (WEAK).
+  - **잔여 (정직 표기)**: Proximus `Special-Terms-and-Conditions---Internet/TV/Fixed-telephony/Mobile-phone---EN` 4종 **미검토** (일반 GTC 에 웹사이트 조항이 위치한다는 **추정** — 확인 안 함, 실 수집 시작 후 조기 확인 권장). Orange Love **NL 판 미검토** (FR 판만). 본 검토는 **기계 키워드 스캔 + 매칭 원문 확인**이며 조항 전문 법적 독해가 아니다 — 1차 법무 검토 의견, 변호사 검토를 대체하지 않는다.
+  - **부수 정정**: `GTC_ONE` 을 Proximus 번들 약관으로 추정해 받았으나 열어보니 **"General Terms and Conditions for Professional Customers"** = B2B 문서였다. 소비자용은 이미 검토된 일반 GTC 가 맞다.
+
 ### Removed
 
 - **2026-08-16 — PLAN 4.24 취소 (107 → 106) + [ADR-0013 Amendment 4](docs/adr/0013-fetcher-real-scraping-risk-assessment.md) **Rejected** — Orange BE mobile "정적 파싱 가능" 주장 반증**:
