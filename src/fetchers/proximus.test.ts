@@ -384,3 +384,74 @@ describe('ProximusFetcher — 챌린지 페이지 degrade (e)', () => {
     }
   });
 });
+
+// ─── "3 months free" 캠페인 마크업 회귀 (2026-08-20) ──────────────────────
+//
+// 2026-08-20 실 페이지 발췌. 캠페인이 시작되며 표시가가 "€0 /month" 정수가 됐고,
+// 소수점 필수 파서가 이를 못 읽어 4개 중 3개(Go/Mega/Giga)가 조용히 유실됐다.
+// 카드 본문에는 총 할인액(€179.97 = 3 × €59.99)도 함께 있어, "displayed 보다 큰
+// 값 중 최댓값" 규칙은 총액을 월정액으로 오인한다 — PromoPrice 한 문장이 진실.
+const FIXTURE_INTERNET_PROMO_ZERO_HTML = `<!DOCTYPE html>
+<html lang="en"><head><title>Internet - Proximus</title></head><body>
+
+<div class="panel">
+  <span data-testid="PromoTitle" class="rs-txt-s4"> Internet Light Fiber </span>
+  <div data-testid="PromoPrice"><div data-testid="atomic-price" class="rs-price-neutral rs-price-sm">€39.99 /month</div></div>
+  <p>100 Mbps max download speed 20 Mbps max upload speed</p>
+  <p>Surf volume: 200 GB</p>
+</div>
+
+<div class="panel">
+  <span data-testid="PromoTitle" class="rs-txt-s4"> Internet Go Fiber </span>
+  <div data-testid="PromoPrice"><div data-testid="atomic-price" class="rs-price-sm"><span class="rs-price-promo">€0 /month</span></div><p><span> for 3 month(s), then </span><span> €<span>59.99</span></span><span> /month</span></p></div>
+  <p>3 months free -€59.99/month for 3 months on your subscription, a discount of €179.97</p>
+  <p>150 Mbps max download speed 30 Mbps max upload speed</p>
+</div>
+
+</body></html>`;
+
+describe('ProximusFetcher — internet "3 months free" 캠페인 (2026-08-20 회귀)', () => {
+  it('표시가가 €0 정수여도 정가/프로모/기간을 PromoPrice 문장에서 읽는다', async () => {
+    mockTwoPages(
+      makeMockResponse(200, FIXTURE_HTML_EMPTY),
+      makeMockResponse(200, FIXTURE_INTERNET_PROMO_ZERO_HTML),
+    );
+
+    const outcome = await proximus.fetch();
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) throw new Error('ok=true 기대');
+
+    const internet = outcome.result.data.filter((t) => t.category === 'internet_fixed');
+    expect(internet.map((t) => t.tariffSlug)).toEqual([
+      'proximus-internet-light-fiber',
+      'proximus-internet-go-fiber',
+    ]);
+
+    // 프로모 없는 카드
+    expect(internet[0]?.monthlyPriceCents).toBe(3999);
+    expect(internet[0]?.promoPriceCents).toBeNull();
+
+    // €0 프로모 카드 — 월정액은 정가(59.99), 총 할인액(179.97)이 아니다
+    expect(internet[1]?.monthlyPriceCents).toBe(5999);
+    expect(internet[1]?.promoPriceCents).toBe(0);
+    expect(internet[1]?.promoMonths).toBe(3);
+  });
+
+  it('packs 파서는 모바일 데이터 증거가 없는 카드를 번들로 편입하지 않는다', async () => {
+    // internet 페이지와 packs 페이지는 testid 3종을 동일하게 쓴다 (2026-08-20 실측).
+    // packs URL 이 internet 마크업을 돌려주는 상황에서도 오분류 0 이어야 한다.
+    mockTwoPages(
+      makeMockResponse(200, FIXTURE_HTML_EMPTY),
+      makeMockResponse(200, FIXTURE_INTERNET_PROMO_ZERO_HTML),
+    );
+
+    const outcome = await proximus.fetch();
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) throw new Error('ok=true 기대');
+
+    const bundles = outcome.result.data.filter(
+      (t) => t.category === 'bundle_mobile_internet_tv',
+    );
+    expect(bundles).toEqual([]);
+  });
+});

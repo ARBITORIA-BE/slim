@@ -155,6 +155,27 @@ PR #84 로 10건 시드 완료 (Mobile Vikings · Scarlet · BASE · Edpnet · L
 3. **`2,5 Gbps` → data_gb 5** — `(\d+)\s*GB/i` 가 "2,**5 Gb**ps" 를 데이터 용량으로 오인. `(?![a-z])` 경계 필요.
 4. **정수 유로 표기** — Proximus 프로모가가 `€0` / `€30` 처럼 정수다. 소수점 필수 파서(`eurToCents`)로는 못 읽는다. §D6 "부정 판정 시 2개 표기 패턴 재확인" 교훈의 **코드판**.
 
+#### ⚠️ 회귀 발견 2 — Proximus `internet_fixed` 가 4 → 1 로 줄어 있었다 (2026-08-20)
+
+같은 라운드의 후속 점검에서 발견. `/en/internet` 이 **4개 요금제 중 1개(Light Fiber)만** 산출하고 있었다.
+
+원인은 위 함정 4번(**정수 유로 표기**)과 **동일 캠페인**이다. "3 months free" 가 시작되며 표시가가 `€0 /month` 정수가 됐고, 소수점 필수 파서(`eurToCents`)가 이를 읽지 못해 Go / Mega / Giga Fiber 3개가 조용히 유실됐다.
+
+| 요금제 | `[data-testid="PromoPrice"]` 원문 | 이전 | 이후 |
+|---|---|---|---|
+| Internet Light Fiber | `€39.99 /month` | ✅ | ✅ €39.99 |
+| Internet Go Fiber | `€0 /month for 3 month(s), then €59.99 /month` | ❌ 유실 | ✅ €59.99 (프로모 €0 × 3개월) |
+| Internet Mega Fiber | `€0 /month for 3 month(s), then €64.99 /month` | ❌ 유실 | ✅ €64.99 |
+| Internet Giga Fiber | `€0 /month for 3 month(s), then €77.99 /month` | ❌ 유실 | ✅ €77.99 |
+
+**단순히 정수 파서로 바꾸는 것으로는 부족했다.** 카드 본문에 총 할인액(`€179.97` = 3 × €59.99)이 함께 있어, 기존의 *"표시가보다 큰 값 중 최댓값 = 정가"* 규칙은 **총 할인액을 월정액으로 오인**한다. `PromoPrice` 한 문장이 프로모가·기간·정가를 모두 명시하므로 그 문장을 1순위 경로로 삼고, testid 가 없는 구조에서는 기존 로직으로 fallback 한다 (구 마크업 회귀 테스트 존치).
+
+#### ⚠️ 구조적 취약점 — Proximus 두 페이지가 같은 앵커를 쓴다
+
+같은 점검에서 확인: `/en/internet` 과 `/en/packs` 가 **`PromoSpeed` / `PromoPrice` / `Pack-Composer-Product-Internet-Details` 를 각각 4쌍씩 동일하게** 쓴다. 즉 testid 앵커만으로는 두 페이지를 구분할 수 없고, **페이지 URL 이 유일한 카테고리 근거**인 상태였다 — Telenet/Orange 파서에 적용한 원칙의 예외가 Proximus 에만 남아 있었던 셈이다.
+
+두 페이지의 유일한 판별 신호는 카드 본문의 `"N GB mobile data"` (packs 8건 / internet 0건). 번들 파서가 이 증거가 없는 카드는 **warning 후 건너뛰도록** 바꿨다. 지금 당장의 오분류는 없었지만(URL 이 달라서), Proximus 가 레이아웃·리다이렉트를 바꾸면 인터넷 단품이 트리플 플레이로 둔갑했을 것이다.
+
 #### ⚠️ 회귀 발견 — Orange `internet_fixed` 가 죽어 있었다
 
 4.26.a 검증 중 발견. `/fr/produits-et-services/internet-chez-vous` 를 raw fetch 하면:

@@ -296,40 +296,83 @@ function parseInternetPlans(
 
     const t = card.text().replace(/\s+/g, ' ');
 
-    // displayed price
-    const displayedRaw = card.find('.rs-price-sm, .rs-price-promo').first().text();
-    const displayedCents = eurToCents(displayedRaw);
-    if (displayedCents === null) {
-      warnings.push(`${planName}: displayed price not parseable (raw: "${displayedRaw}")`);
-      return;
+    /**
+     * 가격 — `[data-testid="PromoPrice"]` 문장이 있으면 **그것이 진실**이다.
+     *
+     * 왜 이 경로를 우선하는가? (2026-08-20 회귀)
+     *   "3 months free" 캠페인이 시작되면서 표시가가 `€0 /month` 정수가 됐다.
+     *   아래 fallback 은 소수점 필수 파서(`eurToCents`)라 `€0` 을 못 읽어
+     *   **4개 요금제 중 3개(Go/Mega/Giga Fiber)가 조용히 유실**됐다 —
+     *   PLAN 4.26.a 가 packs 페이지에서 잡은 "정수 유로 표기" 함정과 동일 사례.
+     *   또한 카드 본문에는 총 할인액(€179.97 = 3 × €59.99)도 같이 있어,
+     *   "displayed 보다 큰 값 중 최댓값" 규칙은 이 캠페인에서 총액을 월정액으로
+     *   오인한다. PromoPrice 한 문장이 프로모가·기간·정가를 모두 명시하므로
+     *   추정 없이 그대로 옮긴다 (packs 파서와 동일 형식).
+     */
+    const promoPriceText = card
+      .find('[data-testid="PromoPrice"]')
+      .first()
+      .text()
+      .replace(/\s+/g, ' ')
+      .trim();
+    const promoSentence = promoPriceText.match(
+      /€\s*([\d.,]+)\s*\/month\s*for\s*(\d+)\s*month\(?s?\)?\s*,?\s*then\s*€\s*([\d.,]+)/i,
+    );
+
+    let monthlyCents: number;
+    let promoPriceCents: number | null = null;
+    let promoMonths: number | null = null;
+
+    if (promoSentence?.[1] && promoSentence[2] && promoSentence[3]) {
+      const promo = eurIntOrDecimalToCents(promoSentence[1]);
+      const regular = eurIntOrDecimalToCents(promoSentence[3]);
+      if (regular === null) {
+        warnings.push(`${planName}: PromoPrice regular price not parseable (raw: "${promoPriceText}")`);
+        return;
+      }
+      monthlyCents = regular;
+      promoPriceCents = promo;
+      promoMonths = parseInt(promoSentence[2], 10);
+    } else if (promoPriceText.length > 0 && eurIntOrDecimalToCents(promoPriceText) !== null) {
+      // 프로모 없는 단순 표기 "€39.99 /month" (Light Fiber)
+      monthlyCents = eurIntOrDecimalToCents(promoPriceText) as number;
+    } else {
+      // ─── fallback: PromoPrice testid 가 없는 구조 (구 마크업 / 다른 레이아웃) ───
+      const displayedRaw = card.find('.rs-price-sm, .rs-price-promo').first().text();
+      const displayedCents = eurToCents(displayedRaw);
+      if (displayedCents === null) {
+        warnings.push(`${planName}: displayed price not parseable (raw: "${displayedRaw}")`);
+        return;
+      }
+
+      // rs-price-neutral = 할인 없는 정가 표시 (Light Fiber 등)
+      const isNeutral = card.find('.rs-price-neutral').length > 0;
+
+      // 패널 내 모든 €X.XX 고유값 집합
+      // €180/€240 "web discount" 같은 정수 금액은 소수점 없어 자동 제외됨
+      const allCents = [
+        ...new Set(
+          [...t.matchAll(/€\s*(\d{1,3}[.,]\d{2})/g)]
+            .map((m) => eurToCents(m[1] ?? ''))
+            .filter((c): c is number => c !== null),
+        ),
+      ];
+
+      // displayed보다 큰 값이 있으면 → hasPromo (displayed가 promo 가격)
+      const higher = allCents.filter((c) => c > displayedCents);
+      const hasPromo = !isNeutral && higher.length > 0;
+
+      monthlyCents = hasPromo ? Math.max(...higher) : displayedCents;
+      promoPriceCents = hasPromo ? displayedCents : null;
+
+      // 프로모 개월: "for X months" (internet은 12개월)
+      const forMatch = t.match(/for\s*(\d+)\s*month/i);
+      promoMonths = hasPromo && forMatch?.[1] ? parseInt(forMatch[1], 10) : null;
     }
 
-    // rs-price-neutral = 할인 없는 정가 표시 (Light Fiber 등)
-    const isNeutral = card.find('.rs-price-neutral').length > 0;
-
-    // 패널 내 모든 €X.XX 고유값 집합
-    // €180/€240 "web discount" 같은 정수 금액은 소수점 없어 자동 제외됨
-    const allCents = [
-      ...new Set(
-        [...t.matchAll(/€\s*(\d{1,3}[.,]\d{2})/g)]
-          .map((m) => eurToCents(m[1] ?? ''))
-          .filter((c): c is number => c !== null),
-      ),
-    ];
-
-    // displayed보다 큰 값이 있으면 → hasPromo (displayed가 promo 가격)
-    const higher = allCents.filter((c) => c > displayedCents);
-    const hasPromo = !isNeutral && higher.length > 0;
-
-    const monthlyCents = hasPromo ? Math.max(...higher) : displayedCents;
-    const promoPriceCents = hasPromo ? displayedCents : null;
-
-    // 프로모 개월: "for X months" (internet은 12개월)
-    const forMatch = t.match(/for\s*(\d+)\s*month/i);
-    const promoMonths = hasPromo && forMatch?.[1] ? parseInt(forMatch[1], 10) : null;
     const promoDescription =
-      hasPromo && promoMonths !== null
-        ? `처음 ${promoMonths}개월 €${(displayedCents / 100).toFixed(2)} 프로모`
+      promoPriceCents !== null && promoMonths !== null
+        ? `처음 ${promoMonths}개월 €${(promoPriceCents / 100).toFixed(2)} 프로모`
         : null;
 
     // download_mbps: Gbps 먼저(× 1000), 없으면 Mbps
@@ -545,11 +588,27 @@ function parsePackBundles(
     if (downloadMbps === null) planWarnings.push(`${planName}: download_mbps not extracted`);
     if (uploadMbps === null) planWarnings.push(`${planName}: upload_mbps not extracted`);
 
-    // 카드 본문 — "20 GB mobile data + 5G network"
+    /**
+     * 구성 증거 — "20 GB mobile data + 5G network" (2026-08-20 신설 가드).
+     *
+     * 왜 없으면 *건너뛰는가* (warning 이 아니라)?
+     *   `/en/internet` 단품 페이지가 packs 와 **동일한 testid 3종을 4쌍씩** 쓴다
+     *   (2026-08-20 실측: PromoSpeed/PromoPrice/Internet-Details 각 4). 즉 앵커만으로는
+     *   두 페이지를 구분할 수 없다. 지금은 URL 이 달라 사고가 안 나지만, Proximus 가
+     *   레이아웃·리다이렉트를 바꾸면 **인터넷 단품이 트리플 플레이 번들로 둔갑**한다.
+     *   페이지 URL 을 카테고리 근거로 삼지 않는다는 원칙(Telenet/Orange 파서와 동일)을
+     *   Proximus 에도 적용 — 모바일 데이터가 카드에 *명시된 경우에만* 번들로 편입한다.
+     *   두 페이지의 유일한 판별 신호가 이것이다 (packs 8건 vs internet 0건).
+     */
     const cardText = nearestAncestorText($(speedEl), /GB mobile data/i);
     const gbMatch = cardText?.match(/(\d+)\s*GB mobile data/i);
     const dataGb = gbMatch?.[1] ? parseInt(gbMatch[1], 10) : null;
-    if (dataGb === null) planWarnings.push(`${planName}: data_gb not extracted`);
+    if (dataGb === null) {
+      warnings.push(
+        `${planName}: no mobile-data evidence on card — 번들 아님으로 판정하고 건너뜀 (페이지 구조 변경 신호)`,
+      );
+      return;
+    }
 
     const unlimitedData = /unlimited internet/i.test(cardText ?? pageText);
 

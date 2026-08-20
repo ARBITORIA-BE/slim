@@ -22,6 +22,13 @@
 
 ### Fixed
 
+- **2026-08-20 — Proximus `internet_fixed` 회귀 봉합 (4개 중 1개만 수집되고 있었다)** ([ADR-0053 §D6.1](docs/adr/0053-telecom-provider-ecosystem-expansion.md)):
+  - **원인 = 같은 캠페인, 같은 함정**: "3 months free" 로 표시가가 **`€0 /month` 정수**가 됐고 소수점 필수 파서가 못 읽어 **Go / Mega / Giga Fiber 3개가 조용히 유실**됐다 (Light Fiber 만 생존). 4.26.a 가 packs 페이지에서 잡은 함정 4번과 동일 사례가 internet 페이지에도 있었다.
+  - **정수 파서로 바꾸는 것만으로는 틀린다**: 카드 본문의 총 할인액(`€179.97` = 3 × €59.99) 때문에 기존 *"표시가보다 큰 값 중 최댓값 = 정가"* 규칙이 **총액을 월정액으로 오인**한다. `[data-testid="PromoPrice"]` 한 문장(`"€0 /month for 3 month(s), then €59.99 /month"`)이 프로모가·기간·정가를 모두 명시하므로 이를 1순위 경로로 삼고, testid 없는 구조는 기존 로직으로 fallback (구 마크업 회귀 테스트 존치).
+  - **결과**: Light €39.99 / Go €59.99 / Mega €64.99 / Giga €77.99 — 전부 `confidence=high`, 프로모 €0 × 3개월 정확 반영.
+  - **동반 가드**: `/en/internet` 과 `/en/packs` 가 `PromoSpeed`/`PromoPrice`/`Pack-Composer-Product-Internet-Details` 를 **각 4쌍씩 동일하게** 쓴다는 것을 실측 확인 — 앵커만으로 두 페이지를 구분할 수 없어 **페이지 URL 이 유일한 카테고리 근거**인 상태였다. 번들 파서가 `"N GB mobile data"` 증거(packs 8건 / internet 0건)가 없는 카드를 건너뛰도록 변경 — Telenet/Orange 에 적용한 "URL 을 믿지 않는다" 원칙을 Proximus 에도 확장.
+  - 회귀 테스트 2건 추가 (`€0` 프로모 문장 파싱 / 모바일 데이터 증거 없는 카드 번들 미편입). test:run 945 → 947.
+
 - **2026-08-19 — Orange BE `internet_fixed` 회귀 봉합 — 존재하지 않는 상품이 DB 에 살아 있었다** ([ADR-0053 §D6.1](docs/adr/0053-telecom-provider-ecosystem-expansion.md) + [ADR-0008 Amendment 1](docs/adr/0008-fetcher-interface-and-cron.md)):
   - **무엇이 잘못돼 있었나**: `/fr/produits-et-services/internet-chez-vous` 를 raw fetch 하면 `.obe-pricebox` **0개**(2026-06-05 정찰 시 3개) + `obe-dps-price` **8마커** = JS 런타임 렌더로 전환, 상품명도 **Start/Zen/Giga → Livebox / Livebox Up / Livebox Giga** 로 개편됐다. 즉 Orange internet fetcher 는 **언젠가부터 매일 파싱 실패 중**이었고, DB 에는 *더 이상 팔지 않는 요금제* 3건이 `isActive=true` 로 남아 있었다.
   - **왜 아무도 못 지웠나**: persist 의 단종 처리(ADR-0005 §T5)는 **이번 fetch 가 실제로 본 카테고리** 안에서만 비활성화한다 (manual 데이터 보호 목적). 카테고리가 통째로 사라지면 아무도 관측하지 않으므로 영원히 살아남는다.
