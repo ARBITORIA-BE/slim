@@ -54,6 +54,14 @@
 | 2 신규 issue | 첫 발생 | 1시간 | 패턴 인지 시간 |
 | 3 LCP | >5s sample | daily | 점진적 회귀 — 빠른 조치 불요 |
 
+## fetcher 산출 감시가 이 룰들을 타는 방식 (2026-08-21, PLAN 4.27)
+
+[ADR-0054](../adr/0054-fetcher-yield-drop-alerting.md)가 `Sentry.captureMessage(level='error')` 로 **조용한 데이터 유실**(fetcher 가 예외 없이 산출만 줄어드는 고장)을 올린다. 별도 룰 신설 없이 위 룰 1/2 를 그대로 쓴다.
+
+- **왜 warning 이 아니라 error 인가**: 룰 1 이 `level:error` OR `level:fatal` 만 이메일로 보낸다(warning 은 노이즈 회피 목적으로 제외). warning 으로 올리면 *아무도 보지 않는 로그가 하나 더 생길 뿐* 이고, 그건 4.27 이 없애려는 상태 그 자체다.
+- **알림 피로 억제**: fingerprint 를 `['fetcher-yield', kind, providerSlug, category]` 로 고정한다. 같은 고장이 매일 반복돼도 issue 는 하나로 묶여 **룰 2(신규 issue 첫 발생)가 1회만** 이메일을 보낸다. 룰 1(5분 내 5건)은 3 fetcher × 카테고리 규모에서 사실상 동시 다발 고장일 때만 걸린다.
+- **⚠️ DSN 미등록 시**: `sentry.server.config.ts` 가 `enabled:false` no-op 이므로 **이메일은 발송되지 않고** Inngest 로그 기록만 남는다. 아래 "미해결 (1)" 이 해소되기 전까지 4.27 의 실효는 로그 수준이다.
+
 ## 운영자 €300/월 cap 정합
 
 Sentry Developer plan (무료) = 5K events/월 + Performance 10K transactions/월. 솔로 + 사용자 1~10명 단계 충분. 베타 트래픽 증가 시 Team plan (€26/월) reactivate (운영자 시간 cap 정합).

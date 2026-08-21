@@ -11,6 +11,15 @@
 
 ### Added
 
+- **2026-08-21 — PLAN 4.27 신설 (106 → 107): fetcher 산출 급감 알림 — "조용한 데이터 유실" 감지** ([ADR-0054](docs/adr/0054-fetcher-yield-drop-alerting.md) **Accepted**, 운영자 Q1/Q2/Q3 추천안 잠금):
+  - **왜**: 4.26.a 한 라운드에서 **예외 0 · HTTP 200 인데 숫자만 줄어드는** 유실이 3건 나왔고 (Orange internet 전멸 / Proximus internet 4→1 / Telenet mobile 결합가 혼입) **전부 사람이 우연히** 발견했다. 못 잡은 이유 3가지: (1) `ok:false` 가 `logger.error` 로만 남고 **Sentry 로 가지 않는다** — `functions.ts` 주석의 *"logger로 Sentry까지 전이 (4.5.2 정식화 예정)"* 가정이 실제로는 미연결이었다 (2) 부분 유실은 `ok:true` 로 집계된다 (3) `/data-sources` 신선도 표기는 사람이 보러 가야 안다.
+  - **조건 3종**: `fetch_failed`(fetcher 전체 실패) / `zero_yield`(선언한 카테고리인데 0건) / `sharp_drop`(직전 대비 −30% 이상, 직전 건수 ≥ 3). `retiredCategories` 로 커버 중단을 선언한 카테고리는 제외 — 의도된 0건이다. 0건이면 `zero_yield` 하나만 (이중 알림 억제).
+  - **채널**: Sentry `level='error'` + Inngest logger. **warning 을 쓰지 않은 이유** = [운영 룰 1](docs/runbook/sentry-alert-rules.md)이 `level:error` 이상만 이메일로 보낸다 — warning 으로 올리면 아무도 보지 않는 로그가 하나 더 생길 뿐이고 그게 이 항목이 없애려는 상태다. 알림 피로는 **fingerprint 고정**(`['fetcher-yield', kind, provider, category]`)으로 막는다 → 같은 고장은 issue 1개 → 룰 2 가 1회만 이메일.
+  - **비교 기준**: `tariff_snapshot` 집계 — 한 실행이 하나의 `fetched_at` 을 공유하므로 "직전 실행" = 이번 `fetchedAt` 미만의 최대값. **신규 테이블 0 / 마이그레이션 0**. 조회 실패 시 빈 객체 반환으로 비교를 건너뛴다 (감시가 수집을 깨뜨리지 않는다).
+  - **배선 순서 주의**: 직전 산출 조회를 **persist 이전에** 한다 — 이후에 읽으면 방금 쓴 이번 실행이 "직전"으로 잡힌다.
+  - **한계 (정직 표기)**: **`SENTRY_DSN` 미등록이면 이메일은 안 간다** (DSN 부재 시 `enabled:false` no-op → Inngest 로그만). 건수가 유지되는 **가격 오염**(Telenet 결합가 형태)은 사각지대 — 테스트로 명시해 두었다. 감지 지연 최대 24h (cron 일 1회).
+  - 테스트 17건 신규 (실제 사고 3건 재현 + 오탐 억제 6건 + 한계 명시 1건 + 보고 경로 4건 + 헬퍼 3건). test:run 947 → 964.
+
 - **2026-08-19 — 4.26.a 번들 fetcher 구현 (게이트 A/B 통과) — 커버리지 4 → 10칸 (27% → 67%)** ([ADR-0053 §D6.1](docs/adr/0053-telecom-provider-ecosystem-expansion.md)):
   - **새로 자동 수집되는 것**: Telenet `internet_fixed` + `bundle_mobile_internet` + `bundle_internet_tv` + `bundle_mobile_internet_tv`, Proximus `bundle_mobile_internet_tv`(Flex+ 4팩), Orange `bundle_mobile_internet_tv`(Love 3팩). 실 HTML raw fetch 검증 산출 = Telenet 15 / Proximus 팩 4 / Orange 팩 3, 전부 `confidence=high`.
   - **잠근 셀렉터**: Proximus = `data-testid` 3종 문서순 zip (`PromoSpeed` / `PromoPrice` / `Pack-Composer-Product-Internet-Details`). Telenet = `div.cmp-product-summary` + `tg-lazy-loading-standalone` inputs JSON (`customProduct.promoPrice` + `duration` 이 프로모 금액·기간을 **추정 없이** 준다). Orange = `div.obe-card` + `.obe-pricebox` + `.obe-price-suffix`("71 €/mois après 12 mois"). 렌더마다 바뀌는 `ssa-instance-<uuid>` / 유틸 클래스는 앵커로 쓰지 않았다.
