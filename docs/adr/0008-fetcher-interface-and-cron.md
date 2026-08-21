@@ -470,6 +470,48 @@ parse하지만 [x] 마킹은 사용자 승인 후 plan-tracker가 처리. 본 AD
 - 일 1회 cron 실 가동 후 Inngest UI에서 step run 카운트 ≤ 6/cron 확인
 - Neon DB에 `tariff_snapshot` 행 3 fetcher × N tariff 매일 1행씩 누적 확인
 
+## Amendment 1 (2026-08-19) — `FetchResult.retiredCategories` (커버 중단 선언)
+
+**Status: Accepted (2026-08-19)** — PLAN 4.26.a 중 Orange BE 사고로 발화.
+
+### 문제 (실측)
+
+`persistFetchResult` 의 단종 처리(ADR-0005 §T5)는 **이번 fetch 가 실제로 본
+카테고리** 안에서만 `isActive=false` 를 놓는다. 이 스코프 제한은 "mobile 만
+긁는 fetcher 가 manual internet 데이터를 지우는" 사고를 막기 위한 것이었다.
+
+그런데 공급사가 페이지를 개편해 한 카테고리를 **통째로 못 긁게 되면** 부작용이
+생긴다: 그 카테고리 요금제는 아무도 관측하지 않으므로 영원히 `isActive=true` 로
+남는다. 2026-08-19 Orange BE 가 정확히 이 상태였다 — `internet-chez-vous` 가
+JS 렌더로 전환되며 정적 가격이 사라졌고 (`.obe-pricebox` 0개 / `obe-dps-price`
+마커 8개), 상품명도 Start·Zen·Giga → Livebox 계열로 개편됐다. 즉 **더 이상
+존재하지 않는 상품이 현재가처럼 노출될 수 있는 상태**였다 (P1/P3 위반).
+
+### 결정
+
+`FetchResult` 에 optional 필드 하나를 더한다:
+
+```ts
+readonly retiredCategories?: readonly TariffCategory[];
+```
+
+fetcher 가 "이 카테고리는 더 이상 내 소관이 아니다" 라고 선언하면 persist 가
+해당 (provider, category) 요금제를 전부 비활성화한다. **`data` 에 실제로 담긴
+카테고리는 이 선언을 이긴다** — 공급사가 정적 가격을 되돌리면 코드 수정 없이
+자동 복구된다.
+
+- optional 이므로 기존 fetcher 3종 중 선언하지 않는 것은 동작 변화 0.
+- 첫 사용처: `orange-be` 의 `internet_fixed`.
+- 회귀 테스트: `src/inngest/persist.test.ts` 케이스 5 (선언 → 카테고리 전체
+  비활성화 / 실측이 선언을 이김) 2건.
+
+### 대안 (기각)
+
+- **일회성 운영자 스크립트** — 지금 한 번은 해결하지만 다음 공급사 개편에서
+  같은 사고가 반복된다. 사고 재발 방지가 안 됨.
+- **fetcher 실패 시 provider 전체 비활성화** — 일시적 네트워크 장애로 공급사가
+  통째로 사라진다. 원래 스코프 제한이 막으려던 사고 그대로.
+
 ## 다음 단계
 
 1. **사용자 작업** (수동, 1회):

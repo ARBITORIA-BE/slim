@@ -108,10 +108,18 @@ export const bundleInternetTvAttributesSchema = internetFixedAttributesSchema
   .omit({ category: true })
   .extend({
     category: z.literal('bundle_internet_tv'),
-    /** 포함된 TV 채널 수. */
-    tv_channels: z.number().nonnegative(),
-    /** 4K 화질 TV 포함 여부. */
-    tv_4k_included: z.boolean(),
+    /**
+     * 포함된 TV 채널 수. null = 공급사 페이지 미표기 (ADR-0042 Amendment 2).
+     *
+     * 왜 nullable인가? (2026-08-19 PLAN 4.26.a 실측)
+     *   Telenet `internet-tv.html` / Proximus `/en/packs` 는 TV 채널 수를 숫자로
+     *   표기하지 않는다 ("Telenet TV-box met TV-zenders" / "Watch TV & stream").
+     *   0을 넣으면 "채널 0개"라는 *허위 주장*이 되고 (P1 위반), 임의 추정값은
+     *   출처가 없다. null = "공급사가 밝히지 않음" 을 정직하게 표현.
+     */
+    tv_channels: z.number().nonnegative().nullable(),
+    /** 4K 화질 TV 포함 여부. null = 공급사 페이지 미표기 (ADR-0042 Amendment 2). */
+    tv_4k_included: z.boolean().nullable(),
     /** DVR 녹화 용량 (시간). null = DVR 없음 또는 미상. */
     dvr_hours: z.number().nonnegative().nullable().optional(),
     /**
@@ -158,10 +166,10 @@ export const bundleMobileInternetTvAttributesSchema = internetFixedAttributesSch
   .omit({ category: true })
   .extend({
     category: z.literal('bundle_mobile_internet_tv'),
-    /** 포함된 TV 채널 수. */
-    tv_channels: z.number().nonnegative(),
-    /** 4K 화질 TV 포함 여부. */
-    tv_4k_included: z.boolean(),
+    /** 포함된 TV 채널 수. null = 공급사 페이지 미표기 (ADR-0042 Amendment 2 — 위 §bundle_internet_tv 주석 참조). */
+    tv_channels: z.number().nonnegative().nullable(),
+    /** 4K 화질 TV 포함 여부. null = 공급사 페이지 미표기 (ADR-0042 Amendment 2). */
+    tv_4k_included: z.boolean().nullable(),
     /** DVR 녹화 용량 (시간). null = DVR 없음 또는 미상. */
     dvr_hours: z.number().nonnegative().nullable().optional(),
     /** 데이터 한도 (GB). 'unlimited' = 무제한. */

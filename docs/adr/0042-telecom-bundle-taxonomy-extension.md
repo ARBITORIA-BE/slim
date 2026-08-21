@@ -475,6 +475,50 @@ TYPE tariff_category ADD VALUE 'bundle_mobile_internet'` (b) `ALTER TYPE
   실데이터로 격상 (ADR-0029 §T2 정직성 토큰 해제, ADR-0041 V5 conversion
   신호 cross-ref).
 
+## Amendment 2 (2026-08-19) — `tv_channels` / `tv_4k_included` nullable 격상
+
+**Status: Accepted (2026-08-19)** — PLAN 4.26.a 번들 fetcher 구현 중 실측으로 발화.
+
+### 무엇이 바뀌나
+
+`src/types/tariff-attributes.ts` 의 두 스키마에서 TV 관련 두 필드를 nullable 로 넓힌다.
+
+| 필드 | 이전 | 이후 |
+|---|---|---|
+| `bundle_internet_tv.tv_channels` | `z.number().nonnegative()` | `.nullable()` |
+| `bundle_internet_tv.tv_4k_included` | `z.boolean()` | `.nullable()` |
+| `bundle_mobile_internet_tv.tv_channels` | `z.number().nonnegative()` | `.nullable()` |
+| `bundle_mobile_internet_tv.tv_4k_included` | `z.boolean()` | `.nullable()` |
+
+### 왜 (실측 근거, 2026-08-19 raw fetch)
+
+| 공급사 | 번들 페이지 TV 표기 | 채널 수 |
+|---|---|---|
+| Telenet | "Telenet TV-box met TV-zenders" | **없음** |
+| Proximus | "Watch TV & stream your favourite apps" | **없음** |
+| Orange | "20 chaînes essentielle" / "Jusqu'à 70 chaînes" | 있음 |
+
+3사 중 2사가 채널 수를 숫자로 공표하지 않는다. 필수 필드를 유지하면 fetcher 가
+셋 중 하나를 해야 한다: (a) `0` 을 넣는다 → "채널 0개"라는 **허위 주장** (P1 위반),
+(b) 임의 추정값을 넣는다 → 출처 없는 숫자 (P1 위반), (c) 카드를 버린다 → 가격
+비교 자체가 사라진다. 넷째 길이 `null` = **"공급사가 밝히지 않음"** 이다.
+
+`tv_4k_included` 도 같은 이유 (3사 번들 페이지 모두 미표기 — false 는 "미포함"
+이라는 주장이 된다).
+
+### 잃는 것 / 위험
+
+- 소비자 코드가 `tv_channels` 를 숫자로 가정하면 런타임 `null` 을 만난다.
+  현재 유일한 소비자 `ComparisonTable.tsx` 는 이미 `typeof tv === 'number'`
+  타입 가드를 쓰고 있어 자동으로 "표시 생략" 으로 degrade 한다 (2026-08-19 확인).
+  비교 엔진(`src/engine`)은 `tv_channels` 를 점수에 쓰지 않는다.
+- DB 마이그레이션 **불필요** — attributes 는 JSONB, 스키마는 Zod 런타임 검증만.
+
+### 후속
+
+채널 수를 공표하는 공급사(Orange)는 계속 숫자를 채운다. Telenet/Proximus 는
+GTC/상품 상세 페이지에 채널 수가 있으면 후속 라운드에서 보강 (별 항목).
+
 ## 다음 단계
 
 1. **운영자 Q1~Q3 잠금** (architect 추천 디폴트 = Q1.B + Q2.A + Q3.A).
