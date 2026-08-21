@@ -84,8 +84,9 @@ export const dailyFetchAll = inngest.createFunction(
         //
         // PLAN 4.27: logger.error 는 Sentry 로 전이되지 *않는다* (Inngest logger 와
         // Sentry 는 연결돼 있지 않음 — 2026-08-21 확인). 이전 주석의 "logger로
-        // Sentry까지 전이" 가정이 틀렸고, 그래서 Orange internet 이 매일 실패하는데도
-        // 몇 주간 아무도 몰랐다. 명시적으로 캡처한다.
+        // Sentry까지 전이" 가정이 틀렸고, 그래서 Orange internet 이 3일간 매일
+        // 실패하는데도 아무도 몰랐다 (prod /data-sources 마지막 성공 수집 실측).
+        // 명시적으로 캡처한다.
         reportYieldFindings(
           [fetchFailureFinding(slug, outcome.error.kind, outcome.error.message)],
           logger,

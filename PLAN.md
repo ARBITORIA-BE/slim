@@ -2402,8 +2402,17 @@ scope cut), 비교 엔진 + **6케이스** 검증 = 3주 (ADR-0010 옵션 B 추�
       - **✅ 후속 회귀 봉합 (2026-08-20)** — Proximus `internet_fixed` 가 4개 중 **1개만** 수집되고 있었다 (같은 "3 months free" 캠페인의 `€0` 정수 표기 함정). `[data-testid="PromoPrice"]` 문장 파싱으로 전환 → Light €39.99 / Go €59.99 / Mega €64.99 / Giga €77.99 복구. 동반 가드: `/en/internet` 과 `/en/packs` 가 동일 testid 3종을 각 4쌍씩 써서 앵커로 구분 불가 → 번들 파서가 모바일 데이터 증거 없는 카드를 건너뛰도록 변경 ("URL 을 믿지 않는다" 원칙을 Proximus 로 확장). 상세 = ADR-0053 §D6.1.
       - **동반 결정 2건**: [ADR-0042 Amendment 2](docs/adr/0042-telecom-bundle-taxonomy-extension.md) `tv_channels`·`tv_4k_included` nullable 격상 (3사 중 2사가 채널 수 미표기 — 0/false 는 허위 주장, P1). [ADR-0008 Amendment 1](docs/adr/0008-fetcher-interface-and-cron.md) `FetchResult.retiredCategories` 신설 (커버 중단 선언 → persist 가 잔존 요금제 비활성화).
       - **⚠️ 회귀 발견 — Orange `internet_fixed` 사망**: `internet-chez-vous` 가 JS 렌더(`obe-dps-price` 8마커)로 전환 + 상품명 Start/Zen/Giga → Livebox 계열 개편 → 정적 가격 마크업 0개. **존재하지 않는 상품이 `isActive=true` 로 DB 잔존 중이었다.** 조치 = categories 선언 제거 + `retiredCategories` 로 자동 비활성화 + 파서 존치(자동 복구). 상세 = ADR-0053 §D6.1.
-      - **후속 과제 (미번호 — 다음 architect 라운드 편입 후보)**: (1) **fetcher 연속 실패 알림 부재** — 이번 회귀가 몇 주간 조용했던 근본 원인. (2) Orange internet_fixed 복구 경로 (Orange API 탐색 or manual). (3) Proximus 듀얼 2칸 = 쿼리 URL 완화 여부 (§B.10.5 Amendment 필요).
+      - **후속 과제**: (1) **fetcher 연속 실패 알림 부재** — 이번 회귀가 조용했던 근본 원인. → **[4.27](docs/adr/0054-fetcher-yield-drop-alerting.md) 로 항목화 (2026-08-21)**. 노출 기간 실측 = **3일** (prod `/data-sources` Orange 마지막 성공 수집 "3 days ago", 2026-08-21 08:44 UTC 조회) — 초안의 *"몇 주간"* 은 근거 없는 추정이었고 실측으로 정정. (2) Orange internet_fixed 복구 경로 (Orange API 탐색 or manual). (3) Proximus 듀얼 2칸 = 쿼리 URL 완화 여부 (§B.10.5 Amendment 필요).
       - **잔여 게이트 C (머지 후 24h)**: 프로덕션 IP 실 fetch 성공 + `tariff_snapshot` 번들 누적 + admin 헬스 번들 카테고리 활성 (메모리 `project_fetcher_prod_ip`).
+        - **기준선 실측 (2026-08-21 08:44 UTC, prod `/en/data-sources`)** — 머지(06:30 UTC)가 cron(06:00 UTC)보다 30분 늦어 **오늘 실행분은 구버전**이다. 아래가 "before", 내일 06:00 UTC 실행 후가 "after":
+
+          | 공급사 | 마지막 수집 | 해석 |
+          |---|---|---|
+          | Proximus | 2 hours ago | 구버전 성공 — internet 4개 중 1개만 (회귀 미봉합 상태) |
+          | Telenet | 2 hours ago | 구버전 성공 — mobile 만 (번들 0) |
+          | Orange | **3 days ago** | **매일 실패 중** — 마지막 성공 ≈ 2026-08-18 |
+
+        - **after 기대값**: 3사 모두 "hours ago" + Telenet 15 / Proximus 8 / Orange 3 요금제 + Orange internet 3건 `isActive=false` (`retiredCategories` 첫 실전) + 번들 카테고리 활성.
       - 진입 게이트: ADR-0053 §D6 정찰 실측 (완료 2026-08-15) + 공급사별 GTC/robots legal 검토 (§D5) — **2026-08-19 조건부 OPEN** ([ADR-0013 Appendix B Amendment 2026-08-19](docs/adr/0013-fetcher-real-scraping-risk-assessment.md)). Orange Love 번들 GTC 확보(2026-06-05 WAF 차단 해제 + 로컬 `pdftotext` 가용 → **운영자 개입 0**) + 키워드 직접 금지 **0건**. Proximus/Telenet 은 2026-05-28 일반 GTC 검토 재사용.
       - ⚠️ **B.10.5 잠금 조건**: 번들 fetcher 는 **쿼리 파라미터가 붙은 configurer URL 을 요청하지 않는다** (정적 상품 목록 페이지만). Orange robots `Disallow: /*internet=` / `/*mobile=` 이 configurer URL 을 차단하므로, 이 조건을 깨면 robots 위반이 된다.
       - ⚠️ **잔여 (footnote 정직 표기)**: Proximus `Special-Terms-and-Conditions---Internet/TV/Fixed-telephony/Mobile-phone---EN` 4종 **미검토**. 웹사이트 자동수집 조항은 통상 일반 GTC 에 위치하므로 리스크 낮다고 **추정**하나 확인 안 함 — 실 가격 수집 시작 후 조기 확인 권장. Orange Love **NL 판 미검토** (FR 판만, 2026-06-05 선례와 동일 범위).
