@@ -16,9 +16,16 @@
 
 import { registry, type Fetcher } from '@/fetchers';
 import { inngest } from '@/lib/inngest';
+import { getPreviousYieldByCategory } from '@/db/queries/fetcher-yield';
 
 import { persistFetchResult } from './persist';
 import { followUpEmailFn } from './follow-up-email';
+import {
+  countByCategory,
+  evaluateYield,
+  fetchFailureFinding,
+  reportYieldFindings,
+} from './yield-alert';
 
 // ─── Cron 함수 (T6 일 1회 + 수동 이벤트) ─────────────────────────────────
 
@@ -73,21 +80,55 @@ export const dailyFetchAll = inngest.createFunction(
       });
 
       if (!outcome.ok) {
-        // 실패 격리: logger로 Sentry까지 전이 (4.5.2 정식화 예정).
-        // 다음 fetcher로 진행 — registry의 나머지는 영향 0.
-        logger.error({
-          msg: 'fetcher 실패 — 다음으로 진행 (1.9 격리)',
-          fetcherSlug: slug,
-          kind: outcome.error.kind,
-          errorMessage: outcome.error.message,
-        });
+        // 실패 격리 — 다음 fetcher로 진행 (registry의 나머지는 영향 0).
+        //
+        // PLAN 4.27: logger.error 는 Sentry 로 전이되지 *않는다* (Inngest logger 와
+        // Sentry 는 연결돼 있지 않음 — 2026-08-21 확인). 이전 주석의 "logger로
+        // Sentry까지 전이" 가정이 틀렸고, 그래서 Orange internet 이 매일 실패하는데도
+        // 몇 주간 아무도 몰랐다. 명시적으로 캡처한다.
+        reportYieldFindings(
+          [fetchFailureFinding(slug, outcome.error.kind, outcome.error.message)],
+          logger,
+        );
         summary.push({ slug, ok: false, reason: outcome.error.kind });
         continue;
       }
 
       // ─── Step B: DB write (T7 분리 — 네트워크 재시도 시 중복 insert 방지) ─
+      //
+      // 산출 감시(Step C)가 "직전 실행"을 DB 에서 읽으므로 **persist 이전에** 조회한다.
+      // persist 후에 읽으면 방금 쓴 이번 실행이 "직전"으로 잡힌다.
+      const previousCounts = await step.run(`previous-yield-${slug}`, async () => {
+        return getPreviousYieldByCategory(slug, outcome.result.fetchedAt);
+      });
+
       await step.run(`persist-${slug}`, async () => {
         await persistFetchResult(outcome.result);
+      });
+
+      // ─── Step C: 산출 감시 (PLAN 4.27 — 조용한 유실 알림) ────────────────
+      // 감시 실패가 수집을 깨면 안 되므로 step 안에서 전부 삼킨다.
+      await step.run(`yield-check-${slug}`, async () => {
+        try {
+          const findings = evaluateYield({
+            providerSlug: slug,
+            declaredCategories: fetcher.metadata.categories,
+            currentCounts: countByCategory(outcome.result.data),
+            previousCounts,
+            ...(outcome.result.retiredCategories
+              ? { retiredCategories: outcome.result.retiredCategories }
+              : {}),
+          });
+          reportYieldFindings(findings, logger);
+          return { findings: findings.length };
+        } catch (err: unknown) {
+          logger.error({
+            msg: 'yield 감시 자체가 실패 — 수집 결과는 이미 저장됨',
+            fetcherSlug: slug,
+            errorMessage: err instanceof Error ? err.message : 'unknown',
+          });
+          return { findings: -1 };
+        }
       });
 
       summary.push({ slug, ok: true });
