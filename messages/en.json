@@ -1,7 +1,7 @@
 {
   "_comment": "en — 독립 전체키 (ADR-0033 §T3 + §A2.7 G3). fallback 체인 최종 = en (region→base→en→키그대로). Phase A: 키 골격만 (ko.json 키셋 기준, 값=placeholder). Phase B (DeepL): ko→en 번역 값 채움.",
   "caveats": {
-    "commitment": "{months} Monthly contract — Early termination may result in a penalty fee",
+    "commitment": "{months}-month contract — Early termination may result in a penalty fee",
     "activationFee": "Activation fee: {amount} (one-time fee)",
     "promoEnds": "Promotional price valid for the first {months} months only — thereafter {price} /month",
     "dataOverage": "Monthly usage: {usedGb} GB → This plan: {planGb} GB exceeded. Overage charges are not displayed.",
@@ -137,7 +137,7 @@
       "monthlyCostLabel": "Monthly cost (12-month average)",
       "monthlyCostUnit": "/ mo",
       "savingsLabel": "Estimated savings",
-      "ctaButton": "Change",
+      "ctaButton": "Switch to this plan",
       "ctaDisabledTitle": "No comparable candidates",
       "caveatsHeading": "Important Notes",
       "verdicts": {
@@ -151,7 +151,8 @@
         "medium": "Reliability: Moderate — Data sources need to be reviewed",
         "low": "Low reliability — Automatically excluded by comparison engines"
       },
-      "confidenceAriaPrefix": "Reliability:"
+      "confidenceAriaPrefix": "Reliability:",
+      "savingsOverageNote": "This plan is below your data usage, so overage charges may apply — your actual saving may be smaller."
     },
     "comparisonHeading": "Comparison Table",
     "table": {
@@ -170,8 +171,8 @@
       "sourceLink": "View original",
       "sourceLinkNewTab": "(Opens in a new window)",
       "sourceChecked": "Last checked:",
-      "commitmentNone": "None",
-      "commitmentMonths": "{months} months",
+      "commitmentNone": "No contract",
+      "commitmentMonths": "{months}-month contract",
       "monthlyCostUnit": "/ mo",
       "savingMonthly": "/ mo",
       "savingYearly": "{amount} / yr",
@@ -189,7 +190,7 @@
       "subtitleTvChannels": "TV Channel: {value}",
       "promoNote": "Promotion {price} ({months} months)",
       "activationNote": "Activation fee {amount}",
-      "ctaButton": "Change",
+      "ctaButton": "Switch to this plan",
       "disclosure": {
         "summary": "Affiliate disclosure",
         "ariaLabel": "{providerName} fee information"
@@ -208,7 +209,8 @@
           "low": "Low",
           "stub": "Estimated"
         }
-      }
+      },
+      "monthlyAvgLabel": "12-month average"
     },
     "calculationDetails": {
       "summary": "View calculation basis — Assumptions used + Formula + Notes on triggers + Engine version",
@@ -273,7 +275,39 @@
       "triggerHeading": "Precautions: Trigger Conditions",
       "triggerNote": "We re-evaluated each rule based on the stored rate plan data and usage assumptions.",
       "engineHeading": "Engine version",
-      "engineNote": "The permanent link is reproduced in this version."
+      "engineNote": "The permanent link is reproduced in this version.",
+      "triggers": {
+        "triggeredLabel": "Caveat triggered",
+        "notTriggeredLabel": "Not triggered",
+        "commitmentNone": "No contract commitment",
+        "commitmentMonths": "{months}-month contract",
+        "activationFeeNone": "Activation fee €0",
+        "activationFee": "Activation fee {amount}",
+        "promoShort": "Promotion {months} months (under 12)",
+        "promoLong": "Promotion {months} months",
+        "dataUnlimited": "Unlimited data plan",
+        "dataUsage": "{usedGb} GB used per month vs {planGb} GB in this plan",
+        "roamingIncluded": "EU roaming included",
+        "roamingExcluded": "EU roaming not included",
+        "streaming4kOn": "4K streaming requested + this plan {mbps} Mbps",
+        "streaming4kOff": "4K streaming not requested",
+        "confidence": "Comparison data reliability: {confidence}",
+        "noPenaltyRisk": "No early-termination risk",
+        "penaltyRisk": "Early-termination fee applies",
+        "freeActivation": "Free",
+        "oneTimeFee": "One-time fee charged separately",
+        "revertsTo": "Reverts to {price}/month afterwards",
+        "lowValueWithin12": "Limited effect within the 12-month average",
+        "noOverage": "No data cap to exceed",
+        "overageHidden": "Overage charges are not displayed",
+        "withinLimit": "Within the plan limit",
+        "roamingMissing": "EU roaming not included",
+        "below100": "Below the recommended 100 Mbps",
+        "meets100": "Meets the recommended speed",
+        "notApplicable": "Not applicable",
+        "selectorWarning": "Selector/parsing warning",
+        "noConcern": "No concern"
+      }
     },
     "notFound": {
       "linkLabel": "Result link — 404",

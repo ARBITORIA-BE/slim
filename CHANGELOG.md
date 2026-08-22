@@ -9,6 +9,20 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **2026-08-22 — PLAN 4.28: 결과 페이지 정직성 스윕 (107 → 108)** ([ADR-0055](docs/adr/0055-result-page-truthfulness-sweep.md) **Accepted**):
+  - **P0-1 — /en · /nl · /fr 세 로케일이 같은 한국어 13건을 노출 중이었다** (`/data-sources` 3건 추가, 홈 0건). 로케일 스위처가 이 영역에서 아무 일도 하지 않았다. 노출 문구에는 **내부 로드맵 용어**(`추정값 — 실 데이터 페이즈 5 이후`)와 **개발자 디버깅 어휘**(`주의사항 발동 — 한도 초과 비용 미표시`)가 포함돼 있었다.
+    - 생성기는 둘이었고 성질이 달랐다: `_lib/caveat-triggers.ts`(렌더 시 계산 — 코드만 고치면 됨) / `engine/caveats.ts`(**DB `comparison_result_item.caveats` 에 문장으로 저장** — 코드만 고쳐도 기존 영구 링크는 그대로).
+    - **핵심 사실**: `messages/{ko,nl,fr,en}.json` 의 `caveats.*` 키 10종이 **4 로케일 모두 이미 존재**했다. 이전 라운드가 번역만 만들고 **소비자를 연결하지 않았다** — 이번 작업의 대부분은 번역이 아니라 배선이었다.
+    - **조치**: 엔진이 코드+파라미터를 직렬화해 남기고(`{"k":"promoEnds","p":{…}}`) 렌더가 번역한다. 반환 타입 `string[]` 을 유지해 **스키마 변경 0 / 마이그레이션 0 / API 계약 변경 0**. 레거시 한국어 문장은 `parseLegacyCaveat` 이 렌더 시 역매핑 → **DB 백필 없이 이미 발급된 영구 링크까지 다국어 복구**. 역매핑 실패 시 원문 노출 + `unresolved` 집계 (억지 추측 금지 — P1).
+  - **P0-2 — 추천이 사용자 조건과 반대였다.** 월 10GB 사용자에게 5GB 요금제가 1위 + "You can save €2 per month" 로 단정되고, 15GB 요금제(€21)는 "-€3.01/mo" 열위로 표기됐다. 그런데 같은 화면의 caveat 은 *"한도 초과 비용은 표시되지 않습니다"* 라고 자백하고 있었다 — `compare()` 정렬이 `monthlySavingCents` **단일 기준**이었고 `data_gb_used` 는 caveat 생성에만 쓰였다.
+    - **조치**: 정렬 1차 키를 **적합성 → 절약액** 으로. **후보를 제외하지 않는다**(P3 — 비교 대상을 지우지 않음, "5GB 로 충분" 판단은 사용자 권리). **초과요금을 추정하지 않는다**(단가 미수집 → 추정하면 출처 없는 숫자, P1). **모르면 불리하게 쓰지 않는다**(한도·사용량 미상, unlimited 는 적합). 4K 속도 부족은 순서를 바꾸지 않고 caveat 으로만 알린다. 감당하는 후보가 하나도 없으면 결론 카드가 절약액을 단정하지 않는다(`savingsOverageNote`).
+  - **P1/P2 — 표시 정직화**: 표의 대표 가격이 **라벨 없는 12개월 평균**이었다 (프로모 요금제라면 어느 달에도 청구되지 않는 금액 — €14.99 6개월 → €16.99, 평균 €15.99) → 라벨 추가. `commitmentNone: "None"` 단독 줄 → "약정 없음 / No contract". 신선도 중복(리본 + 행 내부) → 행 내부는 `sr-only`. CTA "Change" → "이 요금제로 변경 / Switch to this plan". **nl·fr `caveats.commitment` 번역이 깨져 있던 것**(`{months} Contractduur van [aantal] maanden`) 수정. 정렬 UI 2벌(SortTabs + 레거시 ComparisonControls, 어휘도 불일치) → SortTabs 로 단일화, 레거시는 필터 전용.
+  - **재발 차단**: `harness:i18n` 스캔 범위에 **`src/engine/**` + `src/app/**/_lib/**`** 추가. ADR-0036 §D2 가 "누출 실증 파일군만" 으로 좁힌 결과 **사용자 노출 문자열을 실제로 만드는 곳이 처음부터 사각지대**였다. 영구 허용 2건은 사용자 미노출 (레거시 역매핑 패턴 · 개발자 throw).
+  - **한계 (정직 표기)**: 초과요금 단가는 여전히 미수집 — 순서와 문구만 정직해졌다. 적합성 판정은 모바일 데이터 한 축뿐. 레거시 역매핑은 템플릿 9종 한정. `caveats` 컬럼 의미가 "문장" → "직렬화 값" 으로 바뀌었고 계약서는 컬럼 주석 + ADR-0055 뿐이다.
+  - 게이트: typecheck 0 / lint 0 / **test:run 964 → 1027 (신규 63)** / harness:i18n GREEN (engine 6 + app _lib 4 포함) / data · cross-ref · doc-links · plan GREEN.
+
 ### Added
 
 - **2026-08-21 — PLAN 4.27 신설 (106 → 107): fetcher 산출 급감 알림 — "조용한 데이터 유실" 감지** ([ADR-0054](docs/adr/0054-fetcher-yield-drop-alerting.md) **Accepted**, 운영자 Q1/Q2/Q3 추천안 잠금):

@@ -63,6 +63,13 @@ const PHASE_B_ALLOWLIST: readonly string[] = [];
 const OPERATOR_INTERNAL_ALLOWLIST: readonly string[] = [
   // admin/page.tsx: robots: { index: false } + 운영자 한국어 대시보드 — 영구 잔존
   'src/app/[locale]/admin/page.tsx',
+  // caveat-codes.ts: 한국어가 *출력* 이 아니라 *입력* 이다 (PLAN 4.28).
+  //   4.28 이전에 DB 에 저장된 레거시 한국어 caveat 문장을 코드로 되돌리는
+  //   패턴 매처 — 이 문자열들은 화면에 나가지 않고, 오히려 화면의 한국어를
+  //   없애는 데 쓰인다. 레거시 행이 모두 백필/만료되면 함께 삭제한다.
+  'src/engine/caveat-codes.ts',
+  // usage-estimator.ts: exhaustive switch 의 개발자용 throw 메시지 (사용자 미노출).
+  'src/engine/usage-estimator.ts',
 ];
 
 // ─── 핵심 라우트 파일 — useTranslations/getTranslations import 존재 필수 ──────
@@ -117,6 +124,20 @@ function normalizePath(p: string): string {
  *      Node fs.readdir 재귀 워크는 플랫폼 무관하게 실제 파일 시스템을 탐색한다.
  */
 async function collectTsxFiles(dirPath: string): Promise<string[]> {
+  return collectSourceFiles(dirPath, ['.tsx']);
+}
+
+/**
+ * 지정 확장자의 소스 파일을 재귀 수집 (*.test.* 제외).
+ *
+ * PLAN 4.28: 확장자 인자를 받도록 일반화했다. `src/engine/**` 과
+ * `src/app/**\/_lib/**` 은 `.ts` 인데 **사용자 노출 문자열을 실제로 만드는 곳**이라
+ * 스캔 대상에 들어와야 한다 (아래 그룹 4 참조).
+ */
+async function collectSourceFiles(
+  dirPath: string,
+  extensions: readonly string[],
+): Promise<string[]> {
   const results: string[] = [];
 
   async function walk(currentDir: string): Promise<void> {
@@ -127,8 +148,8 @@ async function collectTsxFiles(dirPath: string): Promise<string[]> {
         await walk(fullPath);
       } else if (
         entry.isFile() &&
-        entry.name.endsWith('.tsx') &&
-        !entry.name.endsWith('.test.tsx')
+        extensions.some((ext) => entry.name.endsWith(ext)) &&
+        !/\.test\.(ts|tsx)$/.test(entry.name)
       ) {
         results.push(normalizePath(fullPath));
       }
@@ -136,6 +157,31 @@ async function collectTsxFiles(dirPath: string): Promise<string[]> {
   }
 
   await walk(dirPath);
+  return results;
+}
+
+/**
+ * `src/app/**\/_lib` 디렉터리를 찾아 그 안의 .ts 파일을 모은다 (PLAN 4.28).
+ * 결과 페이지의 `_lib/caveat-triggers.ts` 가 "주의사항 발동/미발동" 같은
+ * 내부 진단 어휘를 사용자 표면에 그대로 내보내던 곳이다.
+ */
+async function collectAppLibFiles(appDir: string): Promise<string[]> {
+  const results: string[] = [];
+
+  async function walk(currentDir: string): Promise<void> {
+    const entries = await readdir(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.name === '_lib') {
+        results.push(...(await collectSourceFiles(fullPath, ['.ts', '.tsx'])));
+      } else {
+        await walk(fullPath);
+      }
+    }
+  }
+
+  await walk(appDir);
   return results;
 }
 
@@ -412,11 +458,43 @@ async function main(): Promise<void> {
   }
   console.log(`[harness:i18n] comparison-input.ts 확인됨: ${comparisonInputPath}`);
 
+  // ── 그룹 4 (PLAN 4.28, ADR-0055 §D5): 사용자 노출 문자열 *생산자* 스캔 ──────
+  //
+  // 왜 추가했나 (2026-08-22 실측)
+  //   ADR-0036 §D2 는 "누출 실증 파일군만" 으로 범위를 좁혔고, 그 결과
+  //   `src/engine/**` 과 `src/app/**\/_lib/**` 이 사각지대로 남았다. 그런데 결과
+  //   페이지의 문장을 실제로 만드는 곳이 정확히 거기였다 — caveat 10종과 트리거
+  //   진단 문구가 한국어로 /en · /nl · /fr 에 동시 노출됐다 (13건).
+  //   문자열만 고치고 범위를 그대로 두면 다음 라운드에 같은 일이 난다.
+  const engineDir = path.join(process.cwd(), 'src', 'engine');
+  const engineFiles = await collectSourceFiles(engineDir, ['.ts']);
+  const appLibFiles = await collectAppLibFiles(localeDir);
+
+  console.log(
+    `[harness:i18n] engine 대상 파일 수: ${engineFiles.length} / app _lib 대상 파일 수: ${appLibFiles.length}`,
+  );
+  if (engineFiles.length === 0) {
+    console.error(
+      `[harness:i18n] FATAL — src/engine 대상 .ts 파일 0개. 경로 확인 필요: ${engineDir}`,
+    );
+    process.exit(2);
+  }
+
   // ── 한글 리터럴 검사 실행 ──────────────────────────────────────────────────
-  // 그룹 1(locale route) + 그룹 2(components) + 그룹 3(comparison-input.ts) 통합.
+  // 그룹 1(locale route) + 그룹 2(components) + 그룹 3(comparison-input.ts)
+  // + 그룹 4(engine · app _lib) 통합.
   // import 검사(useTranslations/getTranslations)는 CORE_ROUTE_FILES 한정 — 신규 그룹엔 적용 안 함.
   await Promise.all([
-    checkNoKoreanLiterals([...targetFiles, ...componentFiles, comparisonInputPath], projectRoot),
+    checkNoKoreanLiterals(
+      [
+        ...targetFiles,
+        ...componentFiles,
+        comparisonInputPath,
+        ...engineFiles,
+        ...appLibFiles,
+      ],
+      projectRoot,
+    ),
     checkTranslationsImport(targetFiles, projectRoot),
   ]);
 
@@ -429,7 +507,7 @@ async function main(): Promise<void> {
       : `Phase B allowlist: ${phaseBCount}개 파일 대기 중.`;
     console.log(
       `[harness:i18n] GREEN — 한글 리터럴 0 + translations import 정합.\n` +
-      `  스캔 범위: [locale](${targetFiles.length}) + components(${componentFiles.length}) + comparison-input.ts(1)\n` +
+      `  스캔 범위: [locale](${targetFiles.length}) + components(${componentFiles.length}) + comparison-input.ts(1) + engine(${engineFiles.length}) + app _lib(${appLibFiles.length})\n` +
       `  ${statusMsg}\n` +
       `  OPERATOR_INTERNAL_ALLOWLIST: ${operatorCount}개 파일 영구 잔존 (admin — 운영자 internal).`,
     );

@@ -146,7 +146,7 @@
       "monthlyCostLabel": "월 비용 (12개월 평균)",
       "monthlyCostUnit": "/ 월",
       "savingsLabel": "예상 절약",
-      "ctaButton": "변경하기",
+      "ctaButton": "이 요금제로 변경",
       "ctaDisabledTitle": "비교 후보 없음",
       "caveatsHeading": "주의사항",
       "verdicts": {
@@ -160,7 +160,8 @@
         "medium": "신뢰도 보통 — 데이터 출처 검토 필요",
         "low": "신뢰도 낮음 — 비교 엔진 자동 제외 대상"
       },
-      "confidenceAriaPrefix": "신뢰도:"
+      "confidenceAriaPrefix": "신뢰도:",
+      "savingsOverageNote": "데이터 한도를 넘는 요금제라 초과 비용이 더해질 수 있습니다 — 실제 절약액은 이보다 적을 수 있습니다."
     },
     "table": {
       "ariaLabel": "요금제 비교 표",
@@ -178,8 +179,8 @@
       "sourceLink": "원본 보기",
       "sourceLinkNewTab": "(새 창에서 열림)",
       "sourceChecked": "마지막 확인:",
-      "commitmentNone": "없음",
-      "commitmentMonths": "{months}개월",
+      "commitmentNone": "약정 없음",
+      "commitmentMonths": "{months}개월 약정",
       "monthlyCostUnit": "/ 월",
       "savingMonthly": "/ 월",
       "savingYearly": "연 {amount}",
@@ -197,7 +198,7 @@
       "subtitleTvChannels": "TV {value}채널",
       "promoNote": "프로모 {price} ({months}개월)",
       "activationNote": "활성화비 {amount}",
-      "ctaButton": "변경",
+      "ctaButton": "이 요금제로 변경",
       "disclosure": {
         "summary": "제휴 수수료 공개",
         "ariaLabel": "{providerName} 수수료 정보"
@@ -216,7 +217,8 @@
           "low": "낮음",
           "stub": "추정값"
         }
-      }
+      },
+      "monthlyAvgLabel": "12개월 평균"
     },
     "sortTabs": {
       "ariaLabel": "정렬 탭",
@@ -330,7 +332,39 @@
       "triggerHeading": "주의사항 트리거 조건",
       "triggerNote": "저장된 요금제 데이터와 사용량 가정으로 각 규칙을 재평가했습니다.",
       "engineHeading": "엔진 버전",
-      "engineNote": "영구 링크는 본 버전으로 재현됩니다."
+      "engineNote": "영구 링크는 본 버전으로 재현됩니다.",
+      "triggers": {
+        "triggeredLabel": "주의사항 발동",
+        "notTriggeredLabel": "해당 없음",
+        "commitmentNone": "약정 없음 (비구속)",
+        "commitmentMonths": "약정 {months}개월",
+        "activationFeeNone": "활성화 비용 €0",
+        "activationFee": "활성화 비용 {amount}",
+        "promoShort": "프로모 {months}개월 (12개월 미만)",
+        "promoLong": "프로모 {months}개월",
+        "dataUnlimited": "데이터 무제한 요금제",
+        "dataUsage": "월 {usedGb}GB 사용 vs 본 요금제 {planGb}GB",
+        "roamingIncluded": "EU 로밍 포함",
+        "roamingExcluded": "EU 로밍 미포함",
+        "streaming4kOn": "4K 스트리밍 요청 + 본 요금제 {mbps} Mbps",
+        "streaming4kOff": "4K 스트리밍 미요청",
+        "confidence": "비교 데이터 신뢰도: {confidence}",
+        "noPenaltyRisk": "위약금 위험 없음",
+        "penaltyRisk": "조기 해지 시 위약금",
+        "freeActivation": "무료",
+        "oneTimeFee": "1회성 비용 별도",
+        "revertsTo": "이후 {price}/월 정상가 전환",
+        "lowValueWithin12": "12개월 평균 시나리오 안에서 영향 작음",
+        "noOverage": "한도 초과 없음",
+        "overageHidden": "한도 초과 비용 미표시",
+        "withinLimit": "한도 내",
+        "roamingMissing": "EU 로밍 미포함",
+        "below100": "권장 100 Mbps 미만",
+        "meets100": "권장 속도 충족",
+        "notApplicable": "해당 없음",
+        "selectorWarning": "셀렉터/파싱 경고",
+        "noConcern": "문제 없음"
+      }
     }
   },
   "legal": {

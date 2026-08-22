@@ -22,6 +22,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { parseCaveat } from './caveat-codes';
 import { compare, ENGINE_VERSION, avgMonthlyCents } from './compare';
 import type { TariffSnapshotLike, UsageProfile } from './types';
 
@@ -64,8 +65,24 @@ export function makeSnapshot(
  *   vitest 의 `toContain` 은 strict equality 기반 — asymmetricMatcher 를
  *   원소로 받지 않는다. 부분 문자열 매칭에는 .some() 이 명료하고 견고.
  */
-export function hasCaveatLike(caveats: readonly string[], needle: string): boolean {
-  return caveats.some((c) => c.includes(needle));
+export function hasCaveatLike(caveats: readonly string[], code: string): boolean {
+  return caveats.some((c) => parseCaveat(c)?.code === code);
+}
+
+/**
+ * PLAN 4.28: 엔진은 문장이 아니라 caveat *코드* 를 낸다. 파라미터 단언용 helper.
+ * 예: caveatParam(caveats, 'dataOverage', 'usedGb') === 50
+ */
+export function caveatParam(
+  caveats: readonly string[],
+  code: string,
+  key: string,
+): string | number | undefined {
+  for (const raw of caveats) {
+    const c = parseCaveat(raw);
+    if (c?.code === code) return c.params[key];
+  }
+  return undefined;
 }
 
 // ─── 케이스 1: 평균 커플 모바일 (€25 → €15) — €10/월 절약 ──────────────
@@ -261,14 +278,14 @@ describe('compare() — 케이스 3: 고사용 family 모바일 한도 초과', 
     // 왜 candidate Smart 70 의 caveats 에 한도 초과가 없는가?
     //   T6 규칙 4: candidate.attributes.data_gb (70) > usage (50) — 한도 안.
     //   currentTariff 의 한도 초과는 6 케이스에서 다루지 않음 (Amendment 가능).
-    expect(hasCaveatLike(top.caveats, '한도')).toBe(false);
+    expect(hasCaveatLike(top.caveats, 'dataOverage')).toBe(false);
 
     // 2위 = Unlimited
     const second = result.ranked[1];
     if (!second) throw new Error('ranked[1] missing');
     expect(second.tariffSnapshotId).toBe('cand-unlimited');
     // attributes.data_gb='unlimited' — caveat 4 없음 (typeof !== 'number')
-    expect(hasCaveatLike(second.caveats, '한도')).toBe(false);
+    expect(hasCaveatLike(second.caveats, 'dataOverage')).toBe(false);
   });
 
   it('candidate 가 한도 미만이면 caveat 4 발동 — 보조 검증', () => {
@@ -295,9 +312,9 @@ describe('compare() — 케이스 3: 고사용 family 모바일 한도 초과', 
     const top = result.ranked[0];
     if (!top) throw new Error('ranked[0] missing');
     // T6 규칙 4 발동
-    expect(hasCaveatLike(top.caveats, '한도')).toBe(true);
-    expect(hasCaveatLike(top.caveats, '50GB')).toBe(true);
-    expect(hasCaveatLike(top.caveats, '10GB')).toBe(true);
+    expect(hasCaveatLike(top.caveats, 'dataOverage')).toBe(true);
+    expect(caveatParam(top.caveats, 'dataOverage', 'usedGb')).toBe(50);
+    expect(caveatParam(top.caveats, 'dataOverage', 'planGb')).toBe(10);
   });
 });
 
@@ -375,10 +392,10 @@ describe('compare() — 케이스 4: VDSL → 케이블 (€35 → €59 프로�
     expect(top.breakdown.monthlySaving24Cents).toBe(-2275);
 
     // T6 규칙 1 (12개월 약정) + 3 (프로모 12개월 미만) caveat 발동
-    expect(hasCaveatLike(top.caveats, '12개월 약정')).toBe(true);
-    expect(hasCaveatLike(top.caveats, '프로모 가격은 첫 3개월')).toBe(true);
+    expect(hasCaveatLike(top.caveats, 'commitment')).toBe(true);
+    expect(caveatParam(top.caveats, 'promoEnds', 'months')).toBe(3);
     // 400 Mbps >= 100 → 4K caveat 없음 (조건 미달)
-    expect(hasCaveatLike(top.caveats, '4K')).toBe(false);
+    expect(hasCaveatLike(top.caveats, 'speed4kInsufficient')).toBe(false);
   });
 });
 
@@ -443,11 +460,11 @@ describe('compare() — 케이스 5: 신규 가입자, 같은 €49 도 프로�
     expect(second.monthlySavingCents).toBe(-5650);
 
     // 두 candidate 모두 12개월 약정 caveat
-    expect(hasCaveatLike(top.caveats, '12개월 약정')).toBe(true);
-    expect(hasCaveatLike(second.caveats, '12개월 약정')).toBe(true);
+    expect(hasCaveatLike(top.caveats, 'commitment')).toBe(true);
+    expect(hasCaveatLike(second.caveats, 'commitment')).toBe(true);
     // ONE Internet 만 프로모 caveat (Essential 은 promo null → 발동 X)
-    expect(hasCaveatLike(second.caveats, '프로모')).toBe(true);
-    expect(hasCaveatLike(top.caveats, '프로모')).toBe(false);
+    expect(hasCaveatLike(second.caveats, 'promoEnds')).toBe(true);
+    expect(hasCaveatLike(top.caveats, 'promoEnds')).toBe(false);
   });
 });
 

@@ -1,7 +1,7 @@
 {
   "_comment": "nl base — nl-BE 와 nl-NL 공통 번역 정본 (ADR-0033 §T3 + §A2.7 G3). Phase A: 키 골격만 (ko.json 키셋 기준, 값=placeholder). Phase B (DeepL): ko→nl 번역 값 채움. region delta(nl-BE.json/nl-NL.json)는 이 base 대비 차이만 override.",
   "caveats": {
-    "commitment": "{months} Contractduur van [aantal] maanden — Bij vroegtijdige opzegging wordt een boete in rekening gebracht",
+    "commitment": "Contractduur van {months} maanden — Bij vroegtijdige opzegging kan een opzegvergoeding gelden",
     "activationFee": "Activeringskosten {amount}, exclusief (eenmalig)",
     "promoEnds": "De promotieprijs geldt alleen voor de eerste {months} maanden — daarna {price} per maand",
     "dataOverage": "Maandelijkse verbruik van {usedGb} GB → Dit abonnement {planGb} GB overschreden. Er worden geen kosten voor overschrijding weergegeven.",
@@ -137,7 +137,7 @@
       "monthlyCostLabel": "Maandelijkse kosten (gemiddelde over 12 maanden)",
       "monthlyCostUnit": "/ maand",
       "savingsLabel": "Verwachte besparing",
-      "ctaButton": "Wijzigen",
+      "ctaButton": "Overstappen naar dit abonnement",
       "ctaDisabledTitle": "Geen vergelijkbare kandidaten",
       "caveatsHeading": "Opmerkingen",
       "verdicts": {
@@ -151,7 +151,8 @@
         "medium": "Betrouwbaarheid: gemiddeld — bron van de gegevens moet worden gecontroleerd",
         "low": "Lage betrouwbaarheid — Wordt automatisch uitgesloten door vergelijkingssites"
       },
-      "confidenceAriaPrefix": "Betrouwbaarheid:"
+      "confidenceAriaPrefix": "Betrouwbaarheid:",
+      "savingsOverageNote": "Dit abonnement ligt onder uw dataverbruik, dus er kunnen kosten voor overschrijding bijkomen — uw werkelijke besparing kan lager liggen."
     },
     "comparisonHeading": "Vergelijkingstabel",
     "table": {
@@ -170,8 +171,8 @@
       "sourceLink": "Bekijk origineel",
       "sourceLinkNewTab": "(Wordt in een nieuw venster geopend)",
       "sourceChecked": "Laatste controle:",
-      "commitmentNone": "Geen",
-      "commitmentMonths": "{months} maanden",
+      "commitmentNone": "Geen contract",
+      "commitmentMonths": "Contract van {months} maanden",
       "monthlyCostUnit": "/ maand",
       "savingMonthly": "/ maand",
       "savingYearly": "Per jaar {amount}",
@@ -189,7 +190,7 @@
       "subtitleTvChannels": "TV-{value}-kanaal",
       "promoNote": "Promotie {price} ({months} maanden)",
       "activationNote": "Activeringskosten {amount}",
-      "ctaButton": "Wijzigen",
+      "ctaButton": "Overstappen naar dit abonnement",
       "disclosure": {
         "summary": "Affiliate bekendmaking",
         "ariaLabel": "{providerName} kosteninformatie"
@@ -208,7 +209,8 @@
           "low": "Laag",
           "stub": "Geschat"
         }
-      }
+      },
+      "monthlyAvgLabel": "Gemiddelde over 12 maanden"
     },
     "calculationDetails": {
       "summary": "Berekeningsbasis bekijken — Gebruikte aannames + Formule + Opmerkingen Triggers + Engineversie",
@@ -273,7 +275,39 @@
       "triggerHeading": "Voorwaarden voor het activeren van de waarschuwing",
       "triggerNote": "We hebben elke regel opnieuw beoordeeld op basis van de opgeslagen tariefgegevens en verbruiksveronderstellingen.",
       "engineHeading": "Motorversie",
-      "engineNote": "De permanente link wordt in deze versie weergegeven."
+      "engineNote": "De permanente link wordt in deze versie weergegeven.",
+      "triggers": {
+        "triggeredLabel": "Aandachtspunt geactiveerd",
+        "notTriggeredLabel": "Niet geactiveerd",
+        "commitmentNone": "Geen contractduur (niet-bindend)",
+        "commitmentMonths": "Contractduur {months} maanden",
+        "activationFeeNone": "Activeringskosten €0",
+        "activationFee": "Activeringskosten {amount}",
+        "promoShort": "Promotie {months} maanden (minder dan 12)",
+        "promoLong": "Promotie {months} maanden",
+        "dataUnlimited": "Abonnement met onbeperkte data",
+        "dataUsage": "{usedGb} GB per maand gebruikt vs {planGb} GB in dit abonnement",
+        "roamingIncluded": "EU-roaming inbegrepen",
+        "roamingExcluded": "EU-roaming niet inbegrepen",
+        "streaming4kOn": "4K-streaming gevraagd + dit abonnement {mbps} Mbps",
+        "streaming4kOff": "4K-streaming niet gevraagd",
+        "confidence": "Betrouwbaarheid vergelijkingsgegevens: {confidence}",
+        "noPenaltyRisk": "Geen risico op opzegvergoeding",
+        "penaltyRisk": "Opzegvergoeding bij vroegtijdige beëindiging",
+        "freeActivation": "Gratis",
+        "oneTimeFee": "Eenmalige kosten apart aangerekend",
+        "revertsTo": "Daarna {price}/maand",
+        "lowValueWithin12": "Beperkt effect binnen het gemiddelde over 12 maanden",
+        "noOverage": "Geen datalimiet om te overschrijden",
+        "overageHidden": "Kosten voor overschrijding worden niet getoond",
+        "withinLimit": "Binnen de limiet van het abonnement",
+        "roamingMissing": "EU-roaming niet inbegrepen",
+        "below100": "Onder de aanbevolen 100 Mbps",
+        "meets100": "Voldoet aan de aanbevolen snelheid",
+        "notApplicable": "Niet van toepassing",
+        "selectorWarning": "Selector-/parseerwaarschuwing",
+        "noConcern": "Geen probleem"
+      }
     },
     "notFound": {
       "linkLabel": "Link naar resultaten — 404",

@@ -1,7 +1,7 @@
 {
   "_comment": "fr base — fr-BE 와 fr-LU 공통 번역 정본 (ADR-0033 §T3 + §A2.7 G3). Phase A: 키 골격만 (ko.json 키셋 기준, 값=placeholder). Phase B (DeepL): ko→fr 번역 값 채움. region delta(fr-BE.json/fr-LU.json)는 이 base 대비 차이만 override.",
   "caveats": {
-    "commitment": "{months} Engagement de X mois — Des frais de résiliation s'appliquent en cas de résiliation anticipée",
+    "commitment": "Engagement de {months} mois — Des frais de résiliation peuvent s’appliquer en cas de résiliation anticipée",
     "activationFee": "Frais d'activation : {amount} (en sus, paiement unique)",
     "promoEnds": "Prix promotionnel valable uniquement pendant les {months} premiers mois — ensuite {price} /mois",
     "dataOverage": "Utilisation mensuelle de {usedGb} Go → Forfait actuel : {planGb} Go dépassés. Les frais de dépassement ne sont pas indiqués.",
@@ -137,7 +137,7 @@
       "monthlyCostLabel": "Coût mensuel (moyenne sur 12 mois)",
       "monthlyCostUnit": "/ mois",
       "savingsLabel": "Économies estimées",
-      "ctaButton": "Modifier",
+      "ctaButton": "Passer à ce forfait",
       "ctaDisabledTitle": "Aucun candidat comparable",
       "caveatsHeading": "Remarques",
       "verdicts": {
@@ -151,7 +151,8 @@
         "medium": "Fiabilité moyenne — Il convient de vérifier la source des données",
         "low": "Faible fiabilité — Exclu automatiquement par le comparateur"
       },
-      "confidenceAriaPrefix": "Fiabilité :"
+      "confidenceAriaPrefix": "Fiabilité :",
+      "savingsOverageNote": "Ce forfait est inférieur à votre consommation de données : des frais de dépassement peuvent s’appliquer — votre économie réelle peut être moindre."
     },
     "comparisonHeading": "Tableau comparatif",
     "table": {
@@ -170,8 +171,8 @@
       "sourceLink": "Voir l'original",
       "sourceLinkNewTab": "(S'ouvre dans une nouvelle fenêtre)",
       "sourceChecked": "Dernière vérification :",
-      "commitmentNone": "Aucun",
-      "commitmentMonths": "{months} mois",
+      "commitmentNone": "Sans engagement",
+      "commitmentMonths": "Engagement de {months} mois",
       "monthlyCostUnit": "/ mois",
       "savingMonthly": "/ mois",
       "savingYearly": "Par an {amount}",
@@ -189,7 +190,7 @@
       "subtitleTvChannels": "Chaîne de télévision «{value}»",
       "promoNote": "Offre promotionnelle {price} ({months} mois)",
       "activationNote": "Frais d'activation {amount}",
-      "ctaButton": "Changer",
+      "ctaButton": "Passer à ce forfait",
       "disclosure": {
         "summary": "Déclaration d'affiliation",
         "ariaLabel": "Informations sur les frais {providerName}"
@@ -208,7 +209,8 @@
           "low": "Faible",
           "stub": "Estimé"
         }
-      }
+      },
+      "monthlyAvgLabel": "Moyenne sur 12 mois"
     },
     "calculationDetails": {
       "summary": "Afficher les bases de calcul — Hypothèses utilisées + Formules + Remarques + Version du moteur",
@@ -273,7 +275,39 @@
       "triggerHeading": "Conditions de déclenchement des avertissements",
       "triggerNote": "Nous avons réévalué chaque règle à la lumière des données enregistrées relatives aux forfaits et des hypothèses de consommation.",
       "engineHeading": "Version du moteur",
-      "engineNote": "Le lien permanent est reproduit dans cette version."
+      "engineNote": "Le lien permanent est reproduit dans cette version.",
+      "triggers": {
+        "triggeredLabel": "Point d’attention déclenché",
+        "notTriggeredLabel": "Non déclenché",
+        "commitmentNone": "Sans engagement",
+        "commitmentMonths": "Engagement de {months} mois",
+        "activationFeeNone": "Frais d’activation €0",
+        "activationFee": "Frais d’activation {amount}",
+        "promoShort": "Promotion {months} mois (moins de 12)",
+        "promoLong": "Promotion {months} mois",
+        "dataUnlimited": "Forfait avec données illimitées",
+        "dataUsage": "{usedGb} Go utilisés par mois contre {planGb} Go dans ce forfait",
+        "roamingIncluded": "Itinérance UE incluse",
+        "roamingExcluded": "Itinérance UE non incluse",
+        "streaming4kOn": "Streaming 4K demandé + ce forfait {mbps} Mbps",
+        "streaming4kOff": "Streaming 4K non demandé",
+        "confidence": "Fiabilité des données comparatives : {confidence}",
+        "noPenaltyRisk": "Aucun risque de frais de résiliation",
+        "penaltyRisk": "Frais de résiliation anticipée applicables",
+        "freeActivation": "Gratuit",
+        "oneTimeFee": "Frais uniques facturés séparément",
+        "revertsTo": "Ensuite {price}/mois",
+        "lowValueWithin12": "Effet limité dans la moyenne sur 12 mois",
+        "noOverage": "Aucun plafond de données à dépasser",
+        "overageHidden": "Les frais de dépassement ne sont pas affichés",
+        "withinLimit": "Dans la limite du forfait",
+        "roamingMissing": "Itinérance UE non incluse",
+        "below100": "En dessous des 100 Mbps recommandés",
+        "meets100": "Conforme à la vitesse recommandée",
+        "notApplicable": "Sans objet",
+        "selectorWarning": "Avertissement de sélecteur/parsing",
+        "noConcern": "Aucun problème"
+      }
     },
     "notFound": {
       "linkLabel": "Lien vers les résultats — 404",
