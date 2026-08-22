@@ -162,7 +162,12 @@ function SourceLink({
         {label} <span aria-hidden="true">↗</span>
         <span className="sr-only"> {newTabLabel}</span>
       </span>
-      <span className="text-fg-soft">{checkedLabel} {relative}</span>
+      {/*
+        PLAN 4.28: 갱신 시각은 카드 상단 FreshnessRibbon 이 이미 "N시간 전 갱신 ·
+        출처: …" 로 말한다. 같은 카드 안에서 두 번 말하면 정보가 아니라 소음이다.
+        스크린리더에는 링크 맥락으로 남겨 정보 손실 0 (sr-only).
+      */}
+      <span className="sr-only">{checkedLabel} {relative}</span>
     </a>
   );
 }
@@ -259,6 +264,12 @@ function ComparisonCard({
             {formatEuro(r.monthlyAvg12Cents)}{' '}
             <span className="text-xs font-normal">{t('monthlyCostUnit')}</span>
           </span>
+          {/*
+            PLAN 4.28: 이 숫자는 **12개월 평균**이다 — 프로모 요금제라면 어느 달에도
+            실제로 청구되지 않는 금액이다 (예: 6개월 €14.99 → 이후 €16.99 → 평균 €15.99).
+            결론 카드에는 라벨이 있었는데 표에는 "/ mo" 만 있어 현재가처럼 읽혔다.
+          */}
+          <span className="text-[10px] text-fg-soft">{t('monthlyAvgLabel')}</span>
           {(promoNote ?? actNote) && (
             <span className="text-[10px] text-fg-soft">
               {[promoNote, actNote].filter(Boolean).join(' · ')}

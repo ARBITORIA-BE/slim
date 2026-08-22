@@ -24,6 +24,7 @@ import type {
 } from '@/types/comparison-input';
 
 import type { CaveatTriggerRow } from '../_lib/caveat-triggers';
+import { formatCaveats } from '../_lib/caveat-text';
 
 // ─── Props ────────────────────────────────────────────────────────────────
 
@@ -89,6 +90,11 @@ export async function CalculationDetails(props: CalculationDetailsProps) {
     engineVersion,
     estimatorVersion,
   } = props;
+
+  // PLAN 4.28: caveat 은 코드로 저장되고 여기서 현재 로케일로 번역된다
+  // (ResultConclusionCard 와 같은 함수 — 문구 불일치 0).
+  const tCaveat = await getTranslations('caveats');
+  const { texts: caveatTexts } = formatCaveats(caveats, tCaveat);
 
   const hasInputAttrs = Object.keys(inputAttributes).length > 0;
   const usageSource = inputsAbsent
@@ -176,10 +182,10 @@ export async function CalculationDetails(props: CalculationDetailsProps) {
           </dl>
         </Section>
 
-        {caveats.length > 0 && (
+        {caveatTexts.length > 0 && (
           <Section title={t('caveatsHeading')}>
             <ul className="flex list-inside list-disc flex-col gap-1 text-sm text-fg">
-              {caveats.map((c, i) => (
+              {caveatTexts.map((c, i) => (
                 <li key={i}>{c}</li>
               ))}
             </ul>
@@ -202,8 +208,19 @@ export async function CalculationDetails(props: CalculationDetailsProps) {
                         : 'mt-0.5 inline-block size-1.5 shrink-0 rounded-full border border-fg/30 sm:mt-0'
                     }
                   />
-                  <span className="text-fg">{r.condition}</span>
-                  <span className="text-fg-soft">— {r.note}</span>
+                  <span className="text-fg">
+                    {t(`triggers.${r.conditionKey}`, { ...r.conditionParams })}
+                  </span>
+                  <span className="text-fg-soft">
+                    {/* 점 표시는 aria-hidden 이라 상태를 스크린리더에 따로 알린다 (4.28). */}
+                    <span className="sr-only">
+                      {r.triggered
+                        ? t('triggers.triggeredLabel')
+                        : t('triggers.notTriggeredLabel')}
+                      {' — '}
+                    </span>
+                    — {t(`triggers.${r.noteKey}`, { ...r.noteParams })}
+                  </span>
                 </li>
               ))}
             </ul>

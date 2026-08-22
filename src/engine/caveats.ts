@@ -7,10 +7,12 @@
  *   T6 규칙이 8건 (페이즈 1) — compare.ts 안에 두면 비교 산식 가독성 ↓.
  *   1.13 사용자 노출 (페이즈 3.5) 시 결과 카드 컴포넌트도 직접 import 가능.
  *
- * 왜 nl-BE 단일 문자열인가?
- *   ADR-0010 §T6: 페이즈 1~4 시점 i18n 인프라 (next-intl) 미도입. 페이즈 2
- *   도입 시 일괄 변환 (자동화 가능). 키화는 빈 키 file 만 만들고 솔로 디버깅
- *   부담만 추가됨.
+ * 출력은 *번역된 문장이 아니라 코드+파라미터* 다 (PLAN 4.28, ADR-0055).
+ *   과거에는 한국어 문장을 직접 만들어 DB 에 저장했고, 그 값이 /en·/nl·/fr 에
+ *   그대로 렌더돼 **세 로케일이 같은 한국어를 노출**했다 (2026-08-22 실측 13건).
+ *   이제 `serializeCaveat()` 로 코드를 남기고, 번역은 렌더 시점에 `caveats.*`
+ *   네임스페이스가 담당한다. 반환 타입이 여전히 `string[]` 인 이유는
+ *   `comparison_result_item.caveats`(text[]) 스키마를 건드리지 않기 위해서다.
  *
  * 순수성:
  *   - 입력 동일하면 출력 동일 (순서 결정적, Date.now() 호출 X)
@@ -18,6 +20,7 @@
  */
 
 import type { TariffSnapshotLike, UsageProfile } from './types';
+import { serializeCaveat } from './caveat-codes';
 
 // ─── 입력 ─────────────────────────────────────────────────────────────────
 
@@ -90,11 +93,17 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
   //   체감 다름.
   if (candidate.commitmentMonths >= 24) {
     caveats.push(
-      `${candidate.commitmentMonths}개월 약정 — 조기 해지 시 위약금 발생`,
+      serializeCaveat({
+        code: 'commitment',
+        params: { months: candidate.commitmentMonths },
+      }),
     );
   } else if (candidate.commitmentMonths >= 12) {
     caveats.push(
-      `${candidate.commitmentMonths}개월 약정 — 조기 해지 시 위약금 발생`,
+      serializeCaveat({
+        code: 'commitment',
+        params: { months: candidate.commitmentMonths },
+      }),
     );
   }
   // commitmentMonths 0 = non-binding → caveat 0 (Proximus 광고 카테고리)
@@ -104,7 +113,10 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
   // null 이 오면 fetcher 버그). 양수일 때만 caveat.
   if (candidate.activationFeeCents > 0) {
     caveats.push(
-      `활성화 비용 ${formatCentsAsEuro(candidate.activationFeeCents)} 별도 (1회성)`,
+      serializeCaveat({
+        code: 'activationFee',
+        params: { amount: formatCentsAsEuro(candidate.activationFeeCents) },
+      }),
     );
   }
 
@@ -119,7 +131,13 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
     candidate.promoPriceCents !== null
   ) {
     caveats.push(
-      `프로모 가격은 첫 ${candidate.promoMonths}개월만 — 이후 ${formatCentsAsEuro(candidate.monthlyPriceCents)}/월`,
+      serializeCaveat({
+        code: 'promoEnds',
+        params: {
+          months: candidate.promoMonths,
+          price: formatCentsAsEuro(candidate.monthlyPriceCents),
+        },
+      }),
     );
   }
 
@@ -139,7 +157,10 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
       usedGb > dataGb
     ) {
       caveats.push(
-        `월 ${usedGb}GB 사용 → 본 요금제 ${dataGb}GB 초과. 한도 초과 비용은 표시되지 않습니다.`,
+        serializeCaveat({
+          code: 'dataOverage',
+          params: { usedGb, planGb: dataGb },
+        }),
       );
     }
   }
@@ -152,7 +173,7 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
     candidate.category === 'mobile' &&
     candidate.attributes['eu_roaming_included'] === false
   ) {
-    caveats.push('EU 로밍 미포함');
+    caveats.push(serializeCaveat({ code: 'noEuRoaming', params: {} }));
   }
 
   // ─── 6. 4K 스트리밍 권장 속도 (internet_fixed / bundle_* 모두) ─────────
@@ -171,7 +192,10 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
     const downloadMbps = candidate.attributes['download_mbps'];
     if (typeof downloadMbps === 'number' && downloadMbps < 100) {
       caveats.push(
-        `4K 스트리밍에 권장 100 Mbps 미만 (본 요금제 ${downloadMbps} Mbps)`,
+        serializeCaveat({
+          code: 'speed4kInsufficient',
+          params: { mbps: downloadMbps },
+        }),
       );
     }
   }
@@ -181,15 +205,27 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
   //   compare() 가 입력 단계에서 'low' 후보를 제외 (T5). 여기 도달하는 candidate
   //   는 medium 또는 high — medium 만 caveat.
   if (candidate.confidence === 'medium') {
-    const reason = candidate.confidenceReason ?? '셀렉터 fragile 또는 파싱 경고';
-    caveats.push(`비교 데이터 신뢰도: medium (${reason})`);
+    // reason 은 파서 기술 문구다 (예: "parse warnings: upload_mbps not published").
+    // 없으면 빈 문자열로 넘기고, 렌더가 messages 의 중립 기본값으로 대체한다 —
+    // 엔진이 로케일 문자열을 만들지 않는다 (ADR-0055 §D1).
+    caveats.push(
+      serializeCaveat({
+        code: 'confidenceMedium',
+        params: { reason: candidate.confidenceReason ?? '' },
+      }),
+    );
   }
 
   // ─── 8. currentTariff 신뢰도 ────────────────────────────────────────────
   // 왜 currentTariff 가 high 가 아니면 caveat? — 비교 *기준* 의 신뢰도가 낮으면
   // 절약액 자체의 정밀도가 낮음. 사용자에게 *기준의 한계* 를 노출 (P3).
   if (currentTariff && currentTariff.confidence !== 'high') {
-    caveats.push(`현재 요금제 데이터 신뢰도: ${currentTariff.confidence}`);
+    caveats.push(
+      serializeCaveat({
+        code: 'currentTariffConfidence',
+        params: { confidence: currentTariff.confidence },
+      }),
+    );
   }
 
   // ─── 9. stub 추정값 (ADR-0013 Amendment 1) ──────────────────────────────
@@ -199,7 +235,7 @@ export function deriveCaveats(input: DeriveCaveatsInput): string[] {
   //   해당. 사용자에게 "추정값임"을 짧게 고지 (P1 + ADR-0013 Amendment 1).
   //   긴 고지는 BetaEstimatedBanner (배너) 에서 담당 — 여기는 caveat 단 1줄.
   if (isStub === true) {
-    caveats.push('추정값 — 실 데이터 페이즈 5 이후');
+    caveats.push(serializeCaveat({ code: 'stubEstimate', params: {} }));
   }
 
   return caveats;

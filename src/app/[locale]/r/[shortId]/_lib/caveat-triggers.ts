@@ -1,17 +1,20 @@
 /**
  * caveat-triggers — 계산 근거 펼치기의 "주의사항 트리거 조건" 표 (PLAN 3.5,
- * ADR-0021 §T5 계산 근거 컬럼 + §T7).
+ * ADR-0021 §T5 계산 근거 컬럼 + §T7 / PLAN 4.28 i18n 전환)
  *
- * `deriveCaveats()` (src/engine/caveats.ts) 는 *한국어 caveat 텍스트* 만 출력한다
- * (ADR-0021 §T5 Amendment 1 — i18n 모듈 미신설). 그래서 caveat 문자열만으로는
- * "왜 이게 떴는지" 를 사용자에게 보여줄 수 없다. 본 모듈은 *저장된 스냅샷 데이터*
+ * `deriveCaveats()` (src/engine/caveats.ts) 는 caveat *코드* 만 낸다. 코드만으로는
+ * "왜 이게 떴는지" 를 보여줄 수 없으므로, 본 모듈이 *저장된 스냅샷 데이터*
  * (`comparison_result_item` JOIN `tariff` / `tariff_snapshot`) 와 `lockedInputs`
- * 의 usageProfile 로 deriveCaveats 의 규칙 1~7 을 *거울처럼* 재평가해 트리거 근거
- * 행을 만든다. 규칙 8 (현재 요금제 신뢰도) 은 비교 baseline 의 confidence 가
- * 별도 컬럼으로 저장되지 않으므로 (caveats 배열 안에 텍스트로만 보존) 본 표에서는
- * 생략 — flat caveats 리스트가 그것을 이미 노출한다.
+ * 의 usageProfile 로 규칙 1~7 을 *거울처럼* 재평가해 근거 행을 만든다. 규칙 8
+ * (현재 요금제 신뢰도) 은 baseline confidence 가 별도 컬럼으로 저장되지 않으므로
+ * 생략 — flat caveats 리스트가 이미 노출한다.
  *
- * 순수성: 입력 동일 → 출력 동일, 입력 변형 X. 단위 테스트 대상 (`caveat-triggers.test.ts`).
+ * PLAN 4.28 (2026-08-22): 한국어 문장 대신 **i18n 키 + 파라미터** 를 낸다.
+ *   이전에는 "주의사항 발동 — 한도 초과 비용 미표시" 같은 *내부 진단 어휘* 가
+ *   /en · /nl · /fr 에 그대로 노출됐다. 번역은 CalculationDetails 가 담당한다
+ *   (`result.calculationDetails.triggers.*`).
+ *
+ * 순수성: 입력 동일 → 출력 동일, 입력 변형 X. 단위 테스트 대상.
  */
 
 import type { TariffCategory } from '@/db/schema/tariff';
@@ -20,13 +23,17 @@ import type { UsageProfile } from '@/engine/types';
 
 // ─── 입출력 ───────────────────────────────────────────────────────────────
 
+export type TriggerParams = Readonly<Record<string, string | number>>;
+
 export interface CaveatTriggerRow {
-  /** 검사한 조건 (예: "약정 24개월", "활성화 비용 €50"). */
-  readonly condition: string;
+  /** `result.calculationDetails.triggers.<conditionKey>` — 검사한 조건. */
+  readonly conditionKey: string;
+  readonly conditionParams?: TriggerParams;
   /** 이 조건이 주의사항을 발동시켰는가? */
   readonly triggered: boolean;
-  /** 발동/미발동의 결과 설명 (예: "조기 해지 시 위약금 — 발동", "무료 — 미발동"). */
-  readonly note: string;
+  /** `result.calculationDetails.triggers.<noteKey>` — 발동/미발동의 결과 설명. */
+  readonly noteKey: string;
+  readonly noteParams?: TriggerParams;
 }
 
 export interface CaveatTriggerInput {
@@ -44,7 +51,7 @@ export interface CaveatTriggerInput {
   readonly candidateConfidence: Confidence;
 }
 
-// ─── cents → € 문자열 (caveats.ts formatCentsAsEuro 동형 — UI 가 아닌 텍스트) ──
+// ─── cents → € 문자열 (caveats.ts formatCentsAsEuro 동형 — 숫자 파라미터) ──
 
 function euro(cents: number): string {
   const sign = cents < 0 ? '-' : '';
@@ -55,9 +62,6 @@ function euro(cents: number): string {
     ? `${sign}€${whole}`
     : `${sign}€${whole}.${sub.toString().padStart(2, '0')}`;
 }
-
-const TRIGGERED = '주의사항 발동';
-const NOT_TRIGGERED = '미발동';
 
 // ─── 핵심 ─────────────────────────────────────────────────────────────────
 
@@ -74,15 +78,16 @@ export function deriveCaveatTriggers(
   // 1. 약정 길이 (caveats.ts 규칙 1) — 모든 카테고리.
   if (input.commitmentMonths <= 0) {
     rows.push({
-      condition: '약정 없음 (비구속)',
+      conditionKey: 'commitmentNone',
       triggered: false,
-      note: `${NOT_TRIGGERED} — 위약금 위험 없음`,
+      noteKey: 'noPenaltyRisk',
     });
   } else {
     rows.push({
-      condition: `약정 ${input.commitmentMonths}개월`,
+      conditionKey: 'commitmentMonths',
+      conditionParams: { months: input.commitmentMonths },
       triggered: true,
-      note: `${TRIGGERED} — 조기 해지 시 위약금`,
+      noteKey: 'penaltyRisk',
     });
   }
 
@@ -90,14 +95,15 @@ export function deriveCaveatTriggers(
   rows.push(
     input.activationFeeCents > 0
       ? {
-          condition: `활성화 비용 ${euro(input.activationFeeCents)}`,
+          conditionKey: 'activationFee',
+          conditionParams: { amount: euro(input.activationFeeCents) },
           triggered: true,
-          note: `${TRIGGERED} — 1회성 비용 별도`,
+          noteKey: 'oneTimeFee',
         }
       : {
-          condition: '활성화 비용 €0',
+          conditionKey: 'activationFeeNone',
           triggered: false,
-          note: `${NOT_TRIGGERED} — 무료`,
+          noteKey: 'freeActivation',
         },
   );
 
@@ -107,14 +113,17 @@ export function deriveCaveatTriggers(
     rows.push(
       ends12
         ? {
-            condition: `프로모 ${input.promoMonths}개월 (< 12개월)`,
+            conditionKey: 'promoShort',
+            conditionParams: { months: input.promoMonths },
             triggered: true,
-            note: `${TRIGGERED} — 이후 ${euro(input.monthlyPriceCents)}/월 정상가 전환`,
+            noteKey: 'revertsTo',
+            noteParams: { price: euro(input.monthlyPriceCents) },
           }
         : {
-            condition: `프로모 ${input.promoMonths}개월`,
+            conditionKey: 'promoLong',
+            conditionParams: { months: input.promoMonths },
             triggered: false,
-            note: `${NOT_TRIGGERED} — 12개월 평균 시나리오 내 가치 ↓`,
+            noteKey: 'lowValueWithin12',
           },
     );
   }
@@ -125,22 +134,24 @@ export function deriveCaveatTriggers(
     const usedGb = input.usageProfile.data_gb_used;
     if (dataGb === 'unlimited') {
       rows.push({
-        condition: '데이터 무제한 요금제',
+        conditionKey: 'dataUnlimited',
         triggered: false,
-        note: `${NOT_TRIGGERED} — 한도 초과 없음`,
+        noteKey: 'noOverage',
       });
     } else if (typeof dataGb === 'number' && typeof usedGb === 'number') {
       rows.push(
         usedGb > dataGb
           ? {
-              condition: `월 ${usedGb}GB 사용 vs 본 요금제 ${dataGb}GB`,
+              conditionKey: 'dataUsage',
+              conditionParams: { usedGb, planGb: dataGb },
               triggered: true,
-              note: `${TRIGGERED} — 한도 초과 비용 미표시`,
+              noteKey: 'overageHidden',
             }
           : {
-              condition: `월 ${usedGb}GB 사용 vs 본 요금제 ${dataGb}GB`,
+              conditionKey: 'dataUsage',
+              conditionParams: { usedGb, planGb: dataGb },
               triggered: false,
-              note: `${NOT_TRIGGERED} — 한도 내`,
+              noteKey: 'withinLimit',
             },
       );
     }
@@ -151,15 +162,15 @@ export function deriveCaveatTriggers(
     const roaming = input.attributes['eu_roaming_included'];
     if (roaming === false) {
       rows.push({
-        condition: 'EU 로밍 포함 여부: 미포함',
+        conditionKey: 'roamingExcluded',
         triggered: true,
-        note: `${TRIGGERED} — EU 로밍 미포함`,
+        noteKey: 'roamingMissing',
       });
     } else if (roaming === true) {
       rows.push({
-        condition: 'EU 로밍 포함 여부: 포함',
+        conditionKey: 'roamingIncluded',
         triggered: false,
-        note: `${NOT_TRIGGERED}`,
+        noteKey: 'noConcern',
       });
     }
     // undefined → 정보 부재. 거짓 정보 회피 (P1) — 행 생성 X.
@@ -179,22 +190,24 @@ export function deriveCaveatTriggers(
         rows.push(
           mbps < 100
             ? {
-                condition: `4K 스트리밍 요청 + 본 요금제 ${mbps} Mbps`,
+                conditionKey: 'streaming4kOn',
+                conditionParams: { mbps },
                 triggered: true,
-                note: `${TRIGGERED} — 권장 100 Mbps 미만`,
+                noteKey: 'below100',
               }
             : {
-                condition: `4K 스트리밍 요청 + 본 요금제 ${mbps} Mbps`,
+                conditionKey: 'streaming4kOn',
+                conditionParams: { mbps },
                 triggered: false,
-                note: `${NOT_TRIGGERED} — 권장 속도 충족`,
+                noteKey: 'meets100',
               },
         );
       }
     } else {
       rows.push({
-        condition: '4K 스트리밍 미요청',
+        conditionKey: 'streaming4kOff',
         triggered: false,
-        note: `${NOT_TRIGGERED} — 해당 없음`,
+        noteKey: 'notApplicable',
       });
     }
   }
@@ -203,14 +216,16 @@ export function deriveCaveatTriggers(
   rows.push(
     input.candidateConfidence === 'medium'
       ? {
-          condition: '비교 데이터 신뢰도: medium',
+          conditionKey: 'confidence',
+          conditionParams: { confidence: input.candidateConfidence },
           triggered: true,
-          note: `${TRIGGERED} — 셀렉터/파싱 경고`,
+          noteKey: 'selectorWarning',
         }
       : {
-          condition: `비교 데이터 신뢰도: ${input.candidateConfidence}`,
+          conditionKey: 'confidence',
+          conditionParams: { confidence: input.candidateConfidence },
           triggered: false,
-          note: `${NOT_TRIGGERED}`,
+          noteKey: 'noConcern',
         },
   );
 

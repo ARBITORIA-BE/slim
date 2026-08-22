@@ -189,6 +189,28 @@ function avgMonthlyCents(
  *   currentTariff 가 null (신규 가입자) 이면 candidate 의 신뢰도가 결과를
  *   결정. min 이 정의되지 않으므로 null 케이스 분리.
  */
+/**
+ * 이 후보가 사용자의 사용량을 감당하는가? (PLAN 4.28, ADR-0055 §D2)
+ *
+ * 현재 판정 대상은 **모바일 데이터 한도 하나** 다. 초과요금 단가를 우리가 수집하지
+ * 않으므로 "얼마나 더 비싼가" 는 계산할 수 없다 — 그건 출처 없는 숫자가 된다 (P1).
+ * 대신 "감당하는가/못하는가" 라는 *우리가 아는 사실* 로만 순서를 가른다.
+ *
+ * 판정 불가(한도 미상 / 사용량 미상 / unlimited)는 **적합으로 본다** — 모르는 것을
+ * 불리하게 쓰지 않는다. 4K 속도 부족은 caveat 으로만 알린다 (요금제를 못 쓰는 것이
+ * 아니라 화질이 떨어지는 문제라 성격이 다르다).
+ */
+function fitsUsage(
+  item: { readonly category: TariffCategory; readonly attributes: Readonly<Record<string, unknown>> },
+  usageProfile: UsageProfile,
+): boolean {
+  if (item.category !== 'mobile') return true;
+  const planGb = item.attributes['data_gb'];
+  const usedGb = usageProfile.data_gb_used;
+  if (typeof planGb !== 'number' || typeof usedGb !== 'number') return true;
+  return usedGb <= planGb;
+}
+
 function combineConfidence(
   current: Confidence | null,
   candidate: Confidence,
@@ -270,7 +292,9 @@ export function compare(input: CompareInput): CompareResult {
   // 왜 미정렬 array 를 먼저 만들고 정렬하는가?
   //   정렬 전 monthlySaving 을 한 번만 계산. 정렬 비교 함수 안에서 재계산하면
   //   O(N log N) × 2 — 비효율.
-  type Pre = Omit<ComparisonItem, 'rank'>;
+  // `fitsUsage` 는 정렬에만 쓰는 내부 필드다 — ComparisonItem(저장/전송 모양)에
+  // 새 필드를 더하면 DB/API 계약이 바뀌므로, 정렬 후 버린다 (PLAN 4.28).
+  type Pre = Omit<ComparisonItem, 'rank'> & { readonly fitsUsage: boolean };
   const preItems: Pre[] = eligible.map((c) => {
     const monthlyAvg12Cents = avgMonthlyCents(c, 12);
     const monthlyAvg24Cents = avgMonthlyCents(c, 24);
@@ -324,6 +348,7 @@ export function compare(input: CompareInput): CompareResult {
       confidence,
       caveats,
       breakdown,
+      fitsUsage: fitsUsage(c, usageProfile),
     };
   });
 
@@ -338,13 +363,31 @@ export function compare(input: CompareInput): CompareResult {
   //   동률 (절약액 동일) 케이스에 대한 결정적 순서 보장 — 같은 입력이 항상
   //   같은 결과. tariffSnapshotId 보조 키 (오름차순) 로 tie-break.
   const sorted = [...preItems].sort((a, b) => {
+    // PLAN 4.28 (ADR-0055 §D2): 사용량을 감당하는 후보가 먼저다.
+    //
+    // 왜 절약액보다 앞에 두는가? (2026-08-22 프로덕션 실측)
+    //   월 10GB 사용자에게 5GB 요금제가 1위로 뜨고 "€2 절약" 이라고 단정하면서,
+    //   같은 화면의 caveat 이 "한도 초과 비용은 표시되지 않습니다" 라고 자백하고
+    //   있었다. 총비용의 핵심 변수를 모른다고 밝히면서 결론은 단정한 셈이다.
+    //   15GB 요금제(€21)는 "-€3.01" 로 열위 표기됐다 — 초과요금을 넣으면 뒤집혔을
+    //   개연성이 큰 순서다.
+    //
+    // 왜 후보를 *제외* 하지 않는가?
+    //   비교 대상을 임의로 지우는 것은 P3(제외한 것도 이름을 밝힌다) 위반이고,
+    //   "5GB 로 충분하다" 고 판단할 권리는 사용자에게 있다. 순서만 바꾸고 전부
+    //   보여준다 — caveat 이 이유를 설명한다.
+    //
+    // 사용자가 정렬 탭을 명시적으로 고르면(compare-view) 그 정렬이 이 순서를 덮는다.
+    if (a.fitsUsage !== b.fitsUsage) return a.fitsUsage ? -1 : 1;
+
     if (b.monthlySavingCents !== a.monthlySavingCents) {
       return b.monthlySavingCents - a.monthlySavingCents;
     }
     return a.tariffSnapshotId.localeCompare(b.tariffSnapshotId);
   });
 
-  const ranked: ComparisonItem[] = sorted.map((item, idx) => ({
+  // fitsUsage 는 정렬 전용 내부 필드 — 저장/전송 모양에서 제거한다.
+  const ranked: ComparisonItem[] = sorted.map(({ fitsUsage: _fits, ...item }, idx) => ({
     ...item,
     rank: idx + 1,
   }));

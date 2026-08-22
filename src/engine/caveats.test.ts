@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { parseCaveat } from './caveat-codes';
 import { deriveCaveats } from './caveats';
 import type { DeriveCaveatsInput } from './caveats';
 import type { TariffSnapshotLike, UsageProfile } from './types';
@@ -64,17 +65,35 @@ function makeInput(
   };
 }
 
+// ─── helper: 직렬화된 caveat → 코드/파라미터 (PLAN 4.28) ─────────────────
+//
+// 엔진은 더 이상 문장을 만들지 않는다. 테스트도 문장이 아니라 *코드* 를 단언한다 —
+// 이전 방식(한국어 substring)은 "엔진이 한국어를 만든다"는 잘못된 전제를 고정시켰다.
+
+function codes(result: readonly string[]): string[] {
+  return result.map((raw) => parseCaveat(raw)?.code ?? 'UNPARSEABLE');
+}
+
+function paramsOf(result: readonly string[], code: string) {
+  for (const raw of result) {
+    const c = parseCaveat(raw);
+    if (c?.code === code) return c.params;
+  }
+  return undefined;
+}
+
 // ─── 규칙 1: 약정 길이 ───────────────────────────────────────────────────
 
 describe('deriveCaveats — 규칙 1: 약정 길이', () => {
   it('commitmentMonths=24 → 약정 caveat 포함', () => {
     const result = deriveCaveats(makeInput({ commitmentMonths: 24 }));
-    expect(result.some((c) => c.includes('24개월 약정'))).toBe(true);
+    expect(codes(result)).toContain('commitment');
+    expect(paramsOf(result, 'commitment')).toEqual({ months: 24 });
   });
 
   it('commitmentMonths=0 → 약정 caveat 없음', () => {
     const result = deriveCaveats(makeInput({ commitmentMonths: 0 }));
-    expect(result.some((c) => c.includes('약정'))).toBe(false);
+    expect(codes(result)).not.toContain('commitment');
   });
 });
 
@@ -83,12 +102,12 @@ describe('deriveCaveats — 규칙 1: 약정 길이', () => {
 describe('deriveCaveats — 규칙 2: 활성화 비용', () => {
   it('activationFeeCents=5000 → 활성화 비용 caveat 포함', () => {
     const result = deriveCaveats(makeInput({ activationFeeCents: 5000 }));
-    expect(result.some((c) => c.includes('활성화 비용'))).toBe(true);
+    expect(codes(result)).toContain('activationFee');
   });
 
   it('activationFeeCents=0 → 활성화 비용 caveat 없음', () => {
     const result = deriveCaveats(makeInput({ activationFeeCents: 0 }));
-    expect(result.some((c) => c.includes('활성화 비용'))).toBe(false);
+    expect(codes(result)).not.toContain('activationFee');
   });
 });
 
@@ -97,12 +116,12 @@ describe('deriveCaveats — 규칙 2: 활성화 비용', () => {
 describe('deriveCaveats — 규칙 7: candidate confidence=medium', () => {
   it('confidence=medium → 신뢰도 caveat 포함', () => {
     const result = deriveCaveats(makeInput({ confidence: 'medium' }));
-    expect(result.some((c) => c.includes('비교 데이터 신뢰도: medium'))).toBe(true);
+    expect(codes(result)).toContain('confidenceMedium');
   });
 
   it('confidence=high → 신뢰도 caveat 없음', () => {
     const result = deriveCaveats(makeInput({ confidence: 'high' }));
-    expect(result.some((c) => c.includes('비교 데이터 신뢰도'))).toBe(false);
+    expect(codes(result)).not.toContain('confidenceMedium');
   });
 });
 
@@ -111,15 +130,12 @@ describe('deriveCaveats — 규칙 7: candidate confidence=medium', () => {
 describe('deriveCaveats — 규칙 9: stub 추정값', () => {
   it('9a. isStub=true → "추정값 — 실 데이터 페이즈 5 이후" caveat 1건 추가', () => {
     const result = deriveCaveats(makeInput({}, { isStub: true }));
-    const stubCaveats = result.filter((c) =>
-      c.includes('추정값 — 실 데이터 페이즈 5 이후'),
-    );
-    expect(stubCaveats).toHaveLength(1);
+    expect(codes(result).filter((c) => c === 'stubEstimate')).toHaveLength(1);
   });
 
   it('9b. isStub=false → 규칙 9 트리거 X', () => {
     const result = deriveCaveats(makeInput({}, { isStub: false }));
-    expect(result.some((c) => c.includes('추정값'))).toBe(false);
+    expect(codes(result)).not.toContain('stubEstimate');
   });
 
   it('9c. isStub 미전달 (기본) → 규칙 9 트리거 X', () => {
@@ -134,13 +150,13 @@ describe('deriveCaveats — 규칙 9: stub 추정값', () => {
       // isStub 필드 없음 → 기본 false
     };
     const result = deriveCaveats(input);
-    expect(result.some((c) => c.includes('추정값'))).toBe(false);
+    expect(codes(result)).not.toContain('stubEstimate');
   });
 
   it('9a-2. isStub=true 시 기존 8 규칙과 독립 — 다른 조건 없는 기본 케이스에서 caveat 개수=1', () => {
     // 순수 base input (약정/활성화비/프로모/한도초과/로밍/속도/신뢰도 caveat 0건)
     const result = deriveCaveats(makeInput({}, { isStub: true }));
     expect(result).toHaveLength(1);
-    expect(result[0]).toBe('추정값 — 실 데이터 페이즈 5 이후');
+    expect(codes(result)).toEqual(['stubEstimate']);
   });
 });

@@ -21,6 +21,8 @@ import type { Confidence } from '@/db/schema/tariff_snapshot';
 import type { AffiliateStatus } from '@/db/schema/provider';
 import { getTranslations } from 'next-intl/server';
 
+import { formatCaveats } from '../_lib/caveat-text';
+
 import { Link } from '@/i18n/navigation';
 
 import { AffiliateDisclosureLine } from './AffiliateDisclosureLine';
@@ -56,6 +58,8 @@ function formatEuro(cents: number): string {
 export async function ResultConclusionCard(props: ResultConclusionCardProps) {
   // why: RSC 이므로 getTranslations 사용. 'result.conclusionCard' 네임스페이스.
   const t = await getTranslations('result.conclusionCard');
+  // PLAN 4.28: caveat 은 엔진이 코드로 남기고 여기서 현재 로케일로 번역한다.
+  const tCaveat = await getTranslations('caveats');
 
   const {
     providerName,
@@ -70,6 +74,16 @@ export async function ResultConclusionCard(props: ResultConclusionCardProps) {
     providerId,
     affiliateStatus,
   } = props;
+
+  const { texts: caveatTexts, codes: caveatCodes } = formatCaveats(caveats, tCaveat);
+
+  /**
+   * PLAN 4.28 (ADR-0055 §D2): 데이터 한도를 넘는 요금제가 1위로 올라온 경우
+   * (= 감당하는 후보가 하나도 없는 경우) 절약액을 단정하지 않는다.
+   * 초과요금 단가를 수집하지 않으므로 "얼마" 는 말할 수 없지만,
+   * **"이 숫자가 전부가 아니다"** 는 말할 수 있다.
+   */
+  const savingsUncertain = caveatCodes.includes('dataOverage');
 
   // verdict 결정 — t() 로 텍스트 조회
   let verdictHeadline: string;
@@ -117,6 +131,11 @@ export async function ResultConclusionCard(props: ResultConclusionCardProps) {
             <dt className="text-fg-soft">{t('savingsLabel')}</dt>
             <dd className="text-fg">
               {formatEuro(monthlySavingCents)} {t('monthlyCostUnit')} · {formatEuro(yearlySavingCents)}
+              {savingsUncertain && (
+                <span className="mt-0.5 block text-xs text-fg-soft">
+                  {t('savingsOverageNote')}
+                </span>
+              )}
             </dd>
           </>
         )}
@@ -140,7 +159,7 @@ export async function ResultConclusionCard(props: ResultConclusionCardProps) {
             {t('caveatsHeading')}
           </h3>
           <ul className="mt-1 flex list-inside list-disc flex-col gap-1 text-sm text-fg">
-            {caveats.map((c, i) => (
+            {caveatTexts.map((c, i) => (
               <li key={i}>{c}</li>
             ))}
           </ul>
